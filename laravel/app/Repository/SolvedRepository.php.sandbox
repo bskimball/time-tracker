@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Repository;
+
+use Carbon\Carbon;
+use GuzzleHttp\Exception\RequestException;
+use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
+
+class SolvedRepository
+{
+    private function getToken()
+    {
+        $provider = new GenericProvider([
+            'clientId' => 'd218b0ac3cf340b98a66a3bddebf03af',
+            'clientSecret' => 'q51VUVFtVqBckpPwAf3lDUb2rluXcX+8eyvbeJGJmJvauWq8CDiR157m8LkrNXG3IZf814yDN/ARrYdfoA1u4g==',
+            'redirectUri' => '/',
+            'urlAuthorize' => 'http://brentertainment.com/oauth2/lockdin/authorize', // required but not used
+            'urlAccessToken' => 'https://devpartner.isolvedhcm.com/rest/api/token',
+            'urlResourceOwnerDetails' => 'https://devpartner.isolvedhcm.com/rest/api/clients/userProfile'
+        ]);
+
+        try {
+            return $accessToken = $provider->getAccessToken('client_credentials');
+        } catch (IdentityProviderException $exception) {
+            exit($exception->getMessage());
+        }
+    }
+
+    public function http()
+    {
+        return new Client([
+            'base_uri' => 'https://devpartner.isolvedhcm.com',
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->getToken()
+            ]
+        ]);
+    }
+
+    public function getDepartments()
+    {
+        $response = $this->http()->get('/rest/api/clients/2869/organizations/5773');
+        $data = json_decode($response->getBody());
+        return $data->lookups;
+    }
+
+    public function getEmployees()
+    {
+        $response = $this->http()->get("/rest/api/clients/2869/legals/4604/employees?pageSize=500&includeOrganizations=true");
+        $data = json_decode($response->getBody());
+        return $data->results;
+    }
+
+    public function getCustomerServiceRepresentatives()
+    {
+        $employees = $this->getEmployees();
+        $collection = collect($employees);
+        return $collection->filter(function ($value, $key) {
+            return $value->organizations[0]->value != "Warehouse";
+        });
+    }
+
+    public function getEmployeeById($id)
+    {
+        try {
+            $response = $this->http()->get("/rest/api/clients/2869/legals/4604/employees/{$id}?includeOrganizations=true");
+            return json_decode($response->getBody());
+        } catch (RequestException $exception) {
+            Log::error($exception->getResponse());
+            return null;
+        }
+
+    }
+
+    public function getEmployeeByCardNumber($card)
+    {
+        $employees = $this->getEmployees();
+        $collection = collect($employees);
+        return $collection->firstWhere('timeclockId', $card);
+    }
+
+    public function getTodayPunches($id)
+    {
+        $year = Carbon::today()->format('Y');
+        $month = Carbon::today()->format('m');
+        $day = Carbon::today()->format('d');
+        try {
+            $response = $this->http()->get("/rest/api/clients/2869/legals/4604/employees/{$id}/timecardView/{$year}/{$month}/{$day}");
+            $data = json_decode($response->getBody());
+            return $data->timecardHours;
+        } catch (RequestException $exception) {
+            Log::error($exception->getResponse());
+            return null;
+        }
+
+    }
+}

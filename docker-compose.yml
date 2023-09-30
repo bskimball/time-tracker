@@ -1,0 +1,86 @@
+version: "3"
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./laravel:/var/www/backend
+      - ./client:/var/www/client
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - client
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    working_dir: /var/www/client
+    volumes:
+      - ./client:/var/www/client
+      - /var/www/client/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      args:
+        user: bdktech
+        uid: 1000
+      context: ./laravel
+      dockerfile: Dockerfile
+    working_dir: /var/www/backend
+    environment:
+      - COMPOSER_MEMORY_LIMIT=-1
+    volumes:
+      - ./laravel:/var/www/backend
+    depends_on:
+      - db
+
+  websockets:
+    build:
+      args:
+        user: bdktech
+        uid: 1000
+      context: ./laravel
+      dockerfile: Dockerfile
+    working_dir: /var/www/backend
+    ports:
+      - 6001:6001
+    volumes:
+      - ./laravel:/var/www/backend
+    depends_on:
+      - backend
+    command: [bash, -c, "php artisan websockets:serve"]
+
+  queue:
+    build:
+      args:
+        user: bdktech
+        uid: 1000
+      context: ./laravel
+      dockerfile: Dockerfile
+    working_dir: /var/www/backend
+    volumes:
+      - ./laravel:/var/www/backend
+    depends_on:
+      - backend
+    command: [bash, -c, "php artisan queue:work"]
+
+  redis:
+    image: redis
+    volumes:
+      - ./redis:/data
+    ports:
+      - 6379:6379
+    command: redis-server --appendonly yes --requirepass timetracker
+
+  db:
+    image: "mcr.microsoft.com/mssql/server"
+    ports:
+      - 1433:1433
+    volumes:
+      - ./mssql/data:/var/opt/mssql/data
+    environment:
+      SA_PASSWORD: "W@ts0n#1"
+      ACCEPT_EULA: "Y"
