@@ -82,5 +82,5 @@ services:
     volumes:
       - ./mssql/data:/var/opt/mssql/data
     environment:
-      SA_PASSWORD: "W@ts0n#1"
+      SA_PASSWORD: "timetracker"
       ACCEPT_EULA: "Y"
