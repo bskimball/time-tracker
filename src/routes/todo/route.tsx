@@ -7,12 +7,11 @@ import { validateRequest } from "../../lib/auth";
 // Fetch data directly in Server Component instead of using loader
 // This is the correct pattern for React Server Components
 export default async function Component() {
-	// Get current user for the header only
-	// Note: Pre-auth in entry.rsc.tsx already validates session cookie, so full validation here is safe
-	// We don't throw redirect here; pre-auth handled that
+	// Get authenticated user from middleware
+	// Middleware ensures user is authenticated before this component renders
 	const { user } = await validateRequest();
 	const headerName = user?.name ?? user?.email ?? null;
-	const headerRole = user?.role ?? null;
+	const headerRole = user?.role ?? "USER";
 
 	const todos = await db.todo.findMany({
 		orderBy: { createdAt: "desc" },

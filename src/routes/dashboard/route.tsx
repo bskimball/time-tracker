@@ -5,12 +5,11 @@ import { validateRequest } from "../../lib/auth";
 
 // Fetch dashboard data directly in Server Component
 export default async function Component() {
-	// Get current user for the header only
-	// Note: Pre-auth in entry.rsc.tsx already validates session cookie, so full validation here is safe
-	// We don't throw redirect here; pre-auth handled that
+	// Get authenticated user from middleware
+	// Middleware ensures user is authenticated before this component renders
 	const { user } = await validateRequest();
 	const headerName = user?.name ?? user?.email ?? null;
-	const headerRole = user?.role ?? null;
+	const headerRole = user?.role ?? "USER";
 
 	// Get metrics for the dashboard
 	const [totalEmployees, totalStations, activeClocks, activeBreaks, pendingTodos, completedTodos] =

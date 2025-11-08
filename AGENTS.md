@@ -60,7 +60,8 @@ The architecture follows this flow:
 **Best practices:**
 
 - **DO NOT use `loader` functions** - They cause hanging in this RSC Data mode setup
-- **DO NOT return redirects from `fetchServer`** - Always handle redirects in the main handler before calling `generateHTML`. Returning redirects from `fetchServer` causes "Missing body in server response" errors
+- **DO NOT return redirects from `fetchServer`** - The `fetchServer` function must ONLY return RSC payload. All redirects happen via middleware during route matching
+- **DO NOT throw redirects in Server Components** - Use middleware for authentication/authorization. Components should use `validateRequest()` to access user data
 - Fetch data directly in async Server Components using `await`
 - Use Server Components by default for data fetching and static content
 - Use Client Components only for interactive UI elements
@@ -104,6 +105,42 @@ export default async function Component() {
 
 The request context is set up in `src/entry.rsc.tsx` using `runWithRequest()` which wraps the RSC rendering. The `getRequest()` function in `src/lib/request-context.ts` retrieves the request from AsyncLocalStorage.
 
+**Authentication Pattern:**
+
+Authentication is handled using React Router middleware, NOT in Server Components:
+
+```typescript
+// ✅ CORRECT - Define middleware in route config (src/routes/config.ts)
+{
+	id: "dashboard",
+	path: "dashboard",
+	middleware: [authMiddleware], // Auth happens during route matching
+	lazy: () => import("./dashboard/route.tsx"),
+}
+
+// ✅ CORRECT - Access user in protected Server Component
+export default async function Component() {
+	// Middleware ensures user exists, component just reads it
+	const { user } = await validateRequest();
+	// user is guaranteed to exist here due to middleware
+	// ...
+}
+
+// ❌ WRONG - Do NOT throw redirects in Server Components
+export default async function Component() {
+	const user = await requireAuth(); // Throws redirect during RSC rendering
+	// This causes "Missing body in server response" errors
+}
+```
+
+**Why middleware for auth:**
+
+- Redirects happen BEFORE RSC rendering (no "missing body" errors)
+- Follows React Router's recommended pattern
+- Proper separation of concerns (auth at router level, not component level)
+- Better performance (auth check happens once during route matching)
+- RSC compatible (no redirects during component rendering)
+
 ### CRITICAL: fetchServer Requirements
 
 **The `fetchServer` function in `entry.rsc.tsx` MUST always return a Response with an RSC payload body.**
@@ -120,22 +157,35 @@ async function fetchServer(request: Request) {
 }
 ```
 
-**✅ ALWAYS handle redirects in the main handler before calling `generateHTML`:**
+**✅ The `fetchServer` function should ONLY handle RSC rendering:**
 
 ```typescript
-export default async function handler(request: Request) {
-	// ✅ CORRECT - Handle redirects BEFORE generateHTML
-	if (needsAuth) {
-		return Response.redirect(url, 302);
-	}
-
-	const ssr = await import.meta.viteRsc.loadModule<typeof import("./entry.ssr")>("ssr", "index");
-	return ssr.generateHTML(request, fetchServer);
+async function fetchServer(request: Request) {
+	// Wrap the RSC rendering in the request context
+	return runWithRequest(request, async () => {
+		return matchRSCServerRequest({
+			createTemporaryReferenceSet,
+			decodeAction,
+			decodeFormState,
+			decodeReply,
+			loadServerAction,
+			request,
+			routes: routes(),
+			generateResponse(match, options) {
+				return new Response(renderToReadableStream(match.payload, options), {
+					status: match.statusCode,
+					headers: match.headers,
+				});
+			},
+		});
+	});
 }
 
-async function fetchServer(request: Request) {
-	// Only RSC rendering - always returns payload body
-	return matchRSCServerRequest({...});
+export default async function handler(request: Request) {
+	// Import the generateHTML function from the client environment
+	const ssr = await import.meta.viteRsc.loadModule<typeof import("./entry.ssr")>("ssr", "index");
+
+	return ssr.generateHTML(request, fetchServer);
 }
 ```
 
@@ -143,8 +193,9 @@ async function fetchServer(request: Request) {
 
 - `routeRSCServerRequest` expects `fetchServer` to return RSC payload data
 - Redirects have no body, causing "Missing body in server response" errors
-- All routing logic (auth, redirects, 404s) must happen in the main handler
-- Keep `fetchServer` purely for RSC rendering
+- All routing logic (auth, redirects, 404s) is handled by React Router middleware
+- `fetchServer` stays purely focused on RSC rendering
+- Middleware in route config handles authentication BEFORE RSC rendering begins
 
 ## Tech Stack
 

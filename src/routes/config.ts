@@ -1,4 +1,5 @@
 import { type unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+import { authMiddleware } from "../lib/middleware";
 
 export function routes() {
 	return [
@@ -10,7 +11,6 @@ export function routes() {
 				{
 					id: "home",
 					index: true,
-					// @ts-expect-error - This route throws redirect() for routing logic
 					lazy: () => import("./home/route.tsx"),
 				},
 				{
@@ -26,41 +26,38 @@ export function routes() {
 				{
 					id: "logout",
 					path: "logout",
-					// @ts-expect-error - This route throws a Response for logout redirect
 					lazy: () => import("./logout/route.ts"),
 				},
 				{
 					id: "auth-google-start",
 					path: "auth/google/start",
-					// @ts-expect-error - This route throws redirect() for OAuth flow
 					lazy: () => import("./auth/google/start.ts"),
 				},
 				{
 					id: "auth-google-callback",
 					path: "auth/google/callback",
-					// @ts-expect-error - This route throws a Response for redirect handling
 					lazy: () => import("./auth/google/callback.ts"),
 				},
 				{
 					id: "auth-microsoft-start",
 					path: "auth/microsoft/start",
-					// @ts-expect-error - This route throws redirect() for OAuth flow
 					lazy: () => import("./auth/microsoft/start.ts"),
 				},
 				{
 					id: "auth-microsoft-callback",
 					path: "auth/microsoft/callback",
-					// @ts-expect-error - This route throws a Response for redirect handling
 					lazy: () => import("./auth/microsoft/callback.ts"),
 				},
 				{
 					id: "dashboard",
 					path: "dashboard",
+					middleware: [authMiddleware],
 					lazy: () => import("./dashboard/route.tsx"),
 				},
 				{
 					id: "time-clock",
 					path: "time-clock",
+					// Public route - no auth required for guest access
 					lazy: () => import("./time-clock/route.tsx"),
 				},
 				{
@@ -71,22 +68,24 @@ export function routes() {
 				{
 					id: "time-clock-reports",
 					path: "time-clock/reports",
+					middleware: [authMiddleware],
 					lazy: () => import("./time-clock/reports/route.tsx"),
 				},
 				{
 					id: "time-clock-reports-csv",
 					path: "time-clock/reports/reports.csv",
-					// @ts-expect-error - This route throws a Response for file download
 					lazy: () => import("./time-clock/reports/reports.csv/route.tsx"),
 				},
 				{
 					id: "settings",
 					path: "settings",
+					middleware: [authMiddleware],
 					lazy: () => import("./settings/route.tsx"),
 				},
 				{
 					id: "todo",
 					path: "todo",
+					middleware: [authMiddleware],
 					lazy: () => import("./todo/route.tsx"),
 				},
 			],

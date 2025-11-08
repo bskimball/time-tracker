@@ -3,6 +3,7 @@ import { ReportsPage } from "./client";
 import { Header } from "../../../components/header";
 import { Footer } from "../../../components/footer";
 import { validateRequest } from "../../../lib/auth";
+import { getRequest } from "../../../lib/request-context";
 
 type GroupBy = "daily" | "weekly" | "monthly";
 
@@ -44,13 +45,15 @@ function formatDateKey(date: Date, groupBy: GroupBy): string {
 
 // Fetch data directly in Server Component instead of using loader
 // This is the correct pattern for React Server Components
-export default async function Component({ request }: { request?: Request }) {
-	// Get current user for the header
-	const { user } = request ? await validateRequest(request) : { user: null };
+export default async function Component() {
+	// Get authenticated user from middleware
+	// Middleware ensures user is authenticated before this component renders
+	const { user } = await validateRequest();
 	const headerName = user?.name ?? user?.email ?? null;
-	const headerRole = user?.role ?? null;
+	const headerRole = user?.role ?? "USER";
 
-	// Parse query params - in RSC we might get request differently
+	// Parse query params using request context from AsyncLocalStorage
+	const request = getRequest();
 	const url = request ? new URL(request.url) : new URL("http://localhost");
 	const startDate = url.searchParams.get("startDate") || undefined;
 	const endDate = url.searchParams.get("endDate") || undefined;
