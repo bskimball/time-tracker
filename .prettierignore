@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+.react-router
+.next
+.cache
+coverage
+*.min.js
+*.min.css
+package-lock.json
+src/generated

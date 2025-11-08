@@ -1,0 +1,47 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app-dev:
+    image: node:24-alpine
+    container_name: app-dev
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    command: sh -c "npm install && npx prisma db push && npm run dev"
+    depends_on:
+      - mysql
+    profiles:
+      - dev
+
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app-prod
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - mysql
+    profiles:
+      - prod
+
+volumes:
+  mysql_data:

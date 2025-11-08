@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id               String    @id
+  name             String
+  email            String    @unique
+  pinHash          String?   @db.VarChar(72)
+  lastStationId    String?
+  dailyHoursLimit  Float?
+  weeklyHoursLimit Float?
+  createdAt        DateTime  @default(now())
+  TimeLog          TimeLog[]
+  User             User?
+}
+
+model OAuthAccount {
+  provider       String
+  providerUserId String
+  userId         String
+  accessToken    String?   @db.Text
+  refreshToken   String?   @db.Text
+  expiresAt      DateTime?
+  scope          String?
+  tokenType      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerUserId])
+  @@index([userId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Station {
+  id        String       @id
+  name      Station_name @unique
+  createdAt DateTime     @default(now())
+  TimeLog   TimeLog[]
+}
+
+model TimeLog {
+  id         String       @id
+  employeeId String
+  stationId  String?
+  type       TimeLog_type @default(WORK)
+  startTime  DateTime     @default(now())
+  endTime    DateTime?
+  note       String?
+  deletedAt  DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  Employee   Employee     @relation(fields: [employeeId], references: [id])
+  Station    Station?     @relation(fields: [stationId], references: [id])
+
+  @@index([employeeId, endTime])
+  @@index([startTime])
+  @@index([stationId], map: "TimeLog_stationId_fkey")
+}
+
+model Todo {
+  id        String   @id
+  title     String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model User {
+  id           String         @id
+  email        String         @unique
+  name         String?
+  image        String?
+  role         User_role      @default(WORKER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  employeeId   String?        @unique
+  OAuthAccount OAuthAccount[]
+  Session      Session[]
+  Employee     Employee?      @relation(fields: [employeeId], references: [id])
+}
+
+enum Station_name {
+  PICKING
+  PACKING
+  FILLING
+}
+
+enum TimeLog_type {
+  WORK
+  BREAK
+}
+
+enum User_role {
+  ADMIN
+  MANAGER
+  WORKER
+}
