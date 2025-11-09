@@ -4,7 +4,7 @@ import { Link } from "react-router";
 
 export function Nav({ userRole }: { userRole: string | null }) {
 	const buttonClass =
-		"px-4 py-2 text-gray-700 hover:bg-gray-100 active:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
+		"px-4 py-2 text-foreground hover:bg-muted active:bg-accent disabled:text-muted disabled:cursor-not-allowed rounded transition-colors focus:outline-none focus:ring-2 focus:ring-ring-offset-background focus:ring-primary";
 
 	return (
 		<nav className="flex space-x-4">

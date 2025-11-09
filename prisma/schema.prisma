@@ -8,16 +8,33 @@ datasource db {
 }
 
 model Employee {
-  id               String    @id
+  id               String    @id @default(cuid())
   name             String
   email            String    @unique
   pinHash          String?   @db.VarChar(72)
   lastStationId    String?
-  dailyHoursLimit  Float?
-  weeklyHoursLimit Float?
+  dailyHoursLimit  Float?    @default(8.0)
+  weeklyHoursLimit Float?    @default(40.0)
+  employeeCode     String?   @unique // NEW: Employee badge/code
+  phoneNumber      String?               // NEW: Contact info
+  hireDate         DateTime?             // NEW: For tenure tracking
+  status           EmployeeStatus @default(ACTIVE) // NEW
+  defaultStationId String?               // NEW: Primary assignment
   createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt  // NEW
   TimeLog          TimeLog[]
   User             User?
+  TaskAssignment   TaskAssignment[]      // NEW
+  PerformanceMetric PerformanceMetric[]  // NEW
+  defaultStation   Station?  @relation("DefaultStation", fields: [defaultStationId], references: [id])
+  lastStation      Station?  @relation("LastStation", fields: [lastStationId], references: [id])
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  TERMINATED
 }
 
 model OAuthAccount {
@@ -38,7 +55,7 @@ model OAuthAccount {
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -48,33 +65,106 @@ model Session {
 }
 
 model Station {
-  id        String       @id
-  name      Station_name @unique
-  createdAt DateTime     @default(now())
-  TimeLog   TimeLog[]
+  id          String       @id @default(cuid())
+  name        Station_name @unique
+  description String?                      // NEW: Station details
+  capacity    Int?                         // NEW: Max employees
+  isActive    Boolean      @default(true)  // NEW: Station availability
+  zone        String?                      // NEW: Warehouse zone
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt      // NEW
+  TimeLog     TimeLog[]
+  TaskType    TaskType[]                   // NEW
+  employeesAtLastStation Employee[] @relation("LastStation")
+  employeesWithDefault   Employee[] @relation("DefaultStation")
 }
 
 model TimeLog {
-  id         String       @id
-  employeeId String
-  stationId  String?
-  type       TimeLog_type @default(WORK)
-  startTime  DateTime     @default(now())
-  endTime    DateTime?
-  note       String?
-  deletedAt  DateTime?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime
-  Employee   Employee     @relation(fields: [employeeId], references: [id])
-  Station    Station?     @relation(fields: [stationId], references: [id])
+  id          String       @id @default(cuid())
+  employeeId  String
+  stationId   String?
+  type        TimeLog_type @default(WORK)
+  startTime   DateTime     @default(now())
+  endTime     DateTime?
+  note        String?
+  deletedAt   DateTime?    // Soft delete for corrections
+  correctedBy String?                      // NEW: Who made correction
+  taskId      String?                      // NEW: Link to task
+  clockMethod ClockMethod  @default(PIN)   // NEW: How they clocked in
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  Employee    Employee     @relation(fields: [employeeId], references: [id])
+  Station     Station?     @relation(fields: [stationId], references: [id])
+  Task        TaskAssignment? @relation(fields: [taskId], references: [id]) // NEW
 
   @@index([employeeId, endTime])
   @@index([startTime])
-  @@index([stationId], map: "TimeLog_stationId_fkey")
+  @@index([stationId])
+  @@index([taskId])
+}
+
+enum ClockMethod {
+  PIN
+  CARD
+  BIOMETRIC
+  MANUAL // Manager correction
+}
+
+// NEW: Task management
+model TaskType {
+  id          String   @id @default(cuid())
+  name        String
+  stationId   String
+  description String?
+  estimatedMinutesPerUnit Float? // For productivity calculation
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Station     Station  @relation(fields: [stationId], references: [id])
+  TaskAssignment TaskAssignment[]
+}
+
+model TaskAssignment {
+  id          String   @id @default(cuid())
+  employeeId  String
+  taskTypeId  String
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  unitsCompleted Int?   // For productivity tracking
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Employee    Employee @relation(fields: [employeeId], references: [id])
+  TaskType    TaskType @relation(fields: [taskTypeId], references: [id])
+  TimeLogs    TimeLog[]
+
+  @@index([employeeId])
+  @@index([taskTypeId])
+  @@index([startTime])
+}
+
+// NEW: Performance metrics for analytics
+model PerformanceMetric {
+  id          String   @id @default(cuid())
+  employeeId  String
+  date        DateTime @db.Date
+  stationId   String?
+  hoursWorked Float
+  unitsProcessed Int?
+  efficiency  Float?   // Units per hour or similar
+  qualityScore Float?  // If quality metrics tracked
+  overtimeHours Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date, stationId])
+  @@index([date])
+  @@index([employeeId])
 }
 
 model Todo {
-  id        String   @id
+  id        String   @id @default(cuid())
   title     String
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -82,7 +172,7 @@ model Todo {
 }
 
 model User {
-  id           String         @id
+  id           String         @id @default(cuid())
   email        String         @unique
   name         String?
   image        String?
@@ -99,6 +189,10 @@ enum Station_name {
   PICKING
   PACKING
   FILLING
+  RECEIVING    // NEW
+  SHIPPING     // NEW
+  QUALITY      // NEW
+  INVENTORY    // NEW
 }
 
 enum TimeLog_type {

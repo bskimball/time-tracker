@@ -14,9 +14,9 @@ type TimeLogWithRelations = TimeLog & {
 // Fetch data directly in Server Component instead of using loader
 // This is the correct pattern for React Server Components
 export default async function Component() {
-    // Public page (no auth). Provide explicit nulls for header props to avoid TS issues.
-    const headerName: string | null = null;
-    const headerRole: string | null = null;
+	// Public page (no auth). Provide explicit nulls for header props to avoid TS issues.
+	const headerName: string | null = null;
+	const headerRole: string | null = null;
 
 	let employees: Employee[] = [];
 	let stations: Station[] = [];

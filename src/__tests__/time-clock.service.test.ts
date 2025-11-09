@@ -8,13 +8,10 @@ import {
 	clockOutLog,
 	startBreakForEmployee,
 	endBreakForEmployee,
-	generateId,
 	updateTimeLogEntry,
 	deleteTimeLogEntry,
 	pinToggleClockAction,
 } from "~/services/time-clock";
-
-const mockedDb = db;
 
 describe("time clock service", () => {
 	beforeEach(() => {
@@ -27,18 +24,18 @@ describe("time clock service", () => {
 		});
 
 		it("creates work log and updates employee", async () => {
-			mockedDb.timeLog.findFirst.mockResolvedValue(null);
-			mockedDb.$transaction.mockImplementation(async (cb) => {
+			(db.timeLog.findFirst as any).mockResolvedValue(null);
+			(db.$transaction as any).mockImplementation(async (cb: any) => {
 				const tx = {
 					timeLog: { create: vi.fn().mockResolvedValue({}) },
 					employee: { update: vi.fn().mockResolvedValue({}) },
 				};
-				await cb(tx as typeof mockedDb);
+				await cb(tx);
 			});
 
 			await clockInEmployee("employee", "station");
 
-			expect(mockedDb.timeLog.findFirst).toHaveBeenCalledWith({
+			expect(db.timeLog.findFirst as any).toHaveBeenCalledWith({
 				where: {
 					employeeId: "employee",
 					endTime: null,
@@ -48,14 +45,14 @@ describe("time clock service", () => {
 			});
 
 			// Verify transaction was called and timeLog.create has the right structure
-			expect(mockedDb.$transaction).toHaveBeenCalled();
+			expect(db.$transaction as any).toHaveBeenCalled();
 		});
 	});
 
 	describe("clockOutLog", () => {
 		it("updates log with end time", async () => {
 			await clockOutLog("log-id");
-			expect(mockedDb.timeLog.update).toHaveBeenCalledWith({
+			expect(db.timeLog.update as any).toHaveBeenCalledWith({
 				where: { id: "log-id" },
 				data: expect.objectContaining({ endTime: expect.any(Date) }),
 			});
@@ -64,19 +61,19 @@ describe("time clock service", () => {
 
 	describe("startBreakForEmployee", () => {
 		it("requires active work log", async () => {
-			mockedDb.timeLog.findFirst.mockResolvedValueOnce(null);
+			(db as any).timeLog.findFirst.mockResolvedValueOnce(null);
 
 			await expect(startBreakForEmployee("emp")).rejects.toThrowError(/clocked in/);
 		});
 
 		it("creates break when eligible", async () => {
-			mockedDb.timeLog.findFirst
+			(db as any).timeLog.findFirst
 				.mockResolvedValueOnce({ stationId: "station", id: "work-1" } as any)
 				.mockResolvedValueOnce(null);
-			mockedDb.timeLog.create.mockResolvedValue({});
+			(db as any).timeLog.create.mockResolvedValue({});
 
 			await startBreakForEmployee("emp");
-			expect(mockedDb.timeLog.create).toHaveBeenCalledWith({
+			expect((db as any).timeLog.create).toHaveBeenCalledWith({
 				data: {
 					id: expect.any(String),
 					employeeId: "emp",
@@ -90,18 +87,18 @@ describe("time clock service", () => {
 
 	describe("endBreakForEmployee", () => {
 		it("requires active break", async () => {
-			mockedDb.timeLog.findFirst.mockResolvedValueOnce(null);
+			(db as any).timeLog.findFirst.mockResolvedValueOnce(null);
 
 			await expect(endBreakForEmployee("emp")).rejects.toThrowError(/No active break/);
 		});
 
 		it("updates break end time", async () => {
-			mockedDb.timeLog.findFirst.mockResolvedValueOnce({
+			(db as any).timeLog.findFirst.mockResolvedValueOnce({
 				id: "break-id",
 			} as any);
 
 			await endBreakForEmployee("emp");
-			expect(mockedDb.timeLog.update).toHaveBeenCalledWith({
+			expect((db as any).timeLog.update).toHaveBeenCalledWith({
 				where: { id: "break-id" },
 				data: { endTime: expect.any(Date) },
 			});
@@ -123,11 +120,11 @@ describe("time clock service", () => {
 		});
 
 		it("updates log when valid", async () => {
-			mockedDb.timeLog.findUnique.mockResolvedValueOnce({
+			(db as any).timeLog.findUnique.mockResolvedValueOnce({
 				employeeId: "emp",
 			} as any);
-			mockedDb.timeLog.findFirst.mockResolvedValue(null);
-			mockedDb.timeLog.update.mockResolvedValue({});
+			(db as any).timeLog.findFirst.mockResolvedValue(null);
+			(db as any).timeLog.update.mockResolvedValue({});
 
 			await updateTimeLogEntry(
 				"log",
@@ -138,7 +135,7 @@ describe("time clock service", () => {
 				"note"
 			);
 
-			expect(mockedDb.timeLog.update).toHaveBeenCalledWith({
+			expect((db as any).timeLog.update).toHaveBeenCalledWith({
 				where: { id: "log" },
 				data: expect.objectContaining({
 					startTime: new Date("2024-01-01T10:00:00.000Z"),
@@ -154,7 +151,7 @@ describe("time clock service", () => {
 	describe("deleteTimeLogEntry", () => {
 		it("marks log deleted", async () => {
 			await deleteTimeLogEntry("log");
-			expect(mockedDb.timeLog.update).toHaveBeenCalledWith({
+			expect((db as any).timeLog.update).toHaveBeenCalledWith({
 				where: { id: "log" },
 				data: { deletedAt: expect.any(Date) },
 			});
@@ -167,7 +164,7 @@ describe("time clock service", () => {
 		});
 
 		it("clocks out when active log exists", async () => {
-			mockedDb.employee.findMany.mockResolvedValue([
+			(db as any).employee.findMany.mockResolvedValue([
 				{
 					id: "emp",
 					pinHash: "hash",
@@ -176,13 +173,13 @@ describe("time clock service", () => {
 				} as any,
 			]);
 			vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
-			mockedDb.timeLog.findFirst.mockResolvedValue({
+			(db as any).timeLog.findFirst.mockResolvedValue({
 				id: "log",
 			} as any);
 
 			await pinToggleClockAction("1234", null);
 
-			expect(mockedDb.timeLog.update).toHaveBeenCalledWith({
+			expect((db as any).timeLog.update).toHaveBeenCalledWith({
 				where: { id: "log" },
 				data: { endTime: expect.any(Date) },
 			});

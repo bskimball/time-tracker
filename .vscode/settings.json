@@ -9,5 +9,7 @@
 	"files.trimTrailingWhitespace": true,
 	"files.insertFinalNewline": true,
 	"files.trimFinalNewlines": true,
-	"[markdown]": { "files.trimTrailingWhitespace": false }
+	"[markdown]": {
+		"files.trimTrailingWhitespace": false
+	}
 }

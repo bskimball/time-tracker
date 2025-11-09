@@ -173,7 +173,7 @@ function ClockInForm({
 					</Button>
 				</div>
 
-				<div className="mt-3 flex flex-col gap-1">
+				<div className="mt-3 flex flex-col gap-1 mb-6">
 					<div className="flex items-center justify-between">
 						<label className="text-xs font-medium text-gray-700">Device API Key</label>
 						<button

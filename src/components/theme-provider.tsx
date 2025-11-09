@@ -40,7 +40,6 @@ export function ThemeProvider({
 
 		root.classList.remove("light", "dark");
 		root.classList.add(effectiveTheme);
-		root.setAttribute("data-theme", effectiveTheme);
 	}, [theme]);
 
 	const value = useMemo(

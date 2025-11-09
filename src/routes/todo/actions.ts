@@ -15,7 +15,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
 	}
 
 	await db.todo.create({
-		data: { 
+		data: {
 			id: crypto.randomUUID(),
 			title: title.trim(),
 			updatedAt: new Date(),

@@ -9,11 +9,13 @@ import {
 	Navigate,
 } from "react-router";
 import { ThemeProvider } from "~/components/theme-provider";
+import { ThemeBlockingScript } from "~/components/theme-blocking-script";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
 			<head>
+				<ThemeBlockingScript />
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
@@ -44,7 +46,7 @@ export function ErrorBoundary() {
 	}
 
 	return (
-		<main className="mx-auto max-w-screen-xl px-4 py-8 lg:py-12">
+		<main className="mx-auto max-w-7xl px-4 py-8 lg:py-12">
 			<article className="prose mx-auto">
 				<h1>{status}</h1>
 				<p>{message}</p>

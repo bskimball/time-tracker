@@ -43,7 +43,7 @@ const employeesResponseSchema = z.object({
 // Station schemas
 const stationSchema = z.object({
 	id: z.string(),
-	name: z.enum(["PICKING", "PACKING", "FILLING"]),
+	name: z.enum(["PICKING", "PACKING", "FILLING", "RECEIVING", "SHIPPING", "QUALITY", "INVENTORY"]),
 	createdAt: z.string(),
 });
 

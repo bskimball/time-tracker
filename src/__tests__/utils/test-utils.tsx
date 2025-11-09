@@ -1,5 +1,6 @@
 import React from "react";
-import { render, RenderOptions } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import type { RenderOptions } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 

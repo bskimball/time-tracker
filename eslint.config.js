@@ -38,6 +38,9 @@ export default [
 				Headers: "readonly",
 				setInterval: "readonly",
 				clearInterval: "readonly",
+				setTimeout: "readonly",
+				clearTimeout: "readonly",
+				setImmediate: "readonly",
 				HTMLFormElement: "readonly",
 				confirm: "readonly",
 				URLSearchParams: "readonly",
@@ -54,17 +57,21 @@ export default [
 				HTMLTextAreaElement: "readonly",
 				HTMLSelectElement: "readonly",
 				HTMLButtonElement: "readonly",
+				HTMLDivElement: "readonly",
+				SVGSVGElement: "readonly",
 				Node: "readonly",
 				NodeFilter: "readonly",
 				CustomEvent: "readonly",
 				KeyboardEvent: "readonly",
 				MouseEvent: "readonly",
+				TouchEvent: "readonly",
 				FocusEvent: "readonly",
 				MessageChannel: "readonly",
 				MessagePort: "readonly",
 				AbortController: "readonly",
 				navigator: "readonly",
 				matchMedia: "readonly",
+				Audio: "readonly",
 				sessionStorage: "readonly",
 				location: "readonly",
 				IntersectionObserver: "readonly",
@@ -78,6 +85,7 @@ export default [
 				__REACT_DEVTOOLS_GLOBAL_HOOK__: "readonly",
 				global: "readonly",
 				Buffer: "readonly",
+				NodeJS: "readonly",
 			},
 		},
 		rules: {
@@ -116,6 +124,22 @@ export default [
 		rules: {
 			"@typescript-eslint/no-explicit-any": "off", // Allow any in tests
 			"prefer-const": "off",
+		},
+	},
+	// Node.js files (scripts, config)
+	{
+		files: ["scripts/**/*.{js,ts}", "*.config.{js,ts}", "server.js"],
+		languageOptions: {
+			globals: {
+				require: "readonly",
+				module: "readonly",
+				process: "readonly",
+				console: "readonly",
+				__dirname: "readonly",
+				__filename: "readonly",
+				global: "readonly",
+				Buffer: "readonly",
+			},
 		},
 	},
 	// Ignore patterns

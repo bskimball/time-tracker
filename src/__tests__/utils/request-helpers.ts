@@ -67,24 +67,29 @@ export class MockReadableStream {
 	}
 
 	async getReader(): Promise<any> {
+		let chunks = [...this.chunks];
+		let completed = this.completed;
+
+		const read = async (): Promise<any> => {
+			if (chunks.length > 0) {
+				return {
+					done: false,
+					value: chunks.shift()!,
+				};
+			}
+			if (completed) {
+				return {
+					done: true,
+					value: "",
+				};
+			}
+			// Wait for more chunks
+			await new Promise((resolve) => (global as any).setTimeout(resolve, 10));
+			return read();
+		};
+
 		return {
-			read: async () => {
-				if (this.chunks.length > 0) {
-					return {
-						done: false,
-						value: this.chunks.shift()!,
-					};
-				}
-				if (this.completed) {
-					return {
-						done: true,
-						value: "",
-					};
-				}
-				// Wait for more chunks
-				await new Promise((resolve) => (global as any).setTimeout(resolve, 10));
-				return this.read();
-			},
+			read,
 			releaseLock: () => {},
 		} as any;
 	}
@@ -98,8 +103,8 @@ export const createMockReadableStream = (chunks: string[]): any => {
 };
 
 // Helper for testing database transactions
-export const mockTransaction = <T>(
-	operations: Promise<T>,
+export const mockTransaction = async <T>(
+	_operations: Promise<T>,
 	callback: (tx: any) => Promise<T>
 ): Promise<T> => {
 	const { vi } = await import("vitest");
@@ -183,7 +188,7 @@ export const createMockUser = (overrides: Partial<any> = {}) => ({
 });
 
 // Helper for testing RSC rendering
-export const mockRSCEnvironment = () => {
+export const mockRSCEnvironment = async () => {
 	const originalFetch = global.fetch;
 	const originalCrypto = global.crypto;
 
@@ -194,7 +199,13 @@ export const mockRSCEnvironment = () => {
 	// Mock crypto for UUID generation
 	global.crypto = {
 		...originalCrypto,
-		randomUUID: vi.fn(() => "mock-uuid-" + Math.random().toString(36).slice(2)),
+		randomUUID: vi.fn(
+			() =>
+				("mock-uuid-" +
+					Math.random()
+						.toString(36)
+						.slice(2)) as `${string}-${string}-${string}-${string}-${string}`
+		),
 	};
 
 	return {

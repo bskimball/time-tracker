@@ -1,0 +1,236 @@
+"use client";
+
+import { useState } from "react";
+import { Link } from "react-router";
+import { Button, Input, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+
+type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TERMINATED";
+
+type EmployeeWithDetails = {
+	id: string;
+	name: string;
+	email: string;
+	pinHash: string | null;
+	lastStationId: string | null;
+	dailyHoursLimit: number | null;
+	weeklyHoursLimit: number | null;
+	employeeCode: string | null;
+	phoneNumber: string | null;
+	hireDate: Date | null;
+	status: EmployeeStatus;
+	defaultStationId: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+	defaultStation: { id: string; name: string } | null;
+	lastStation: { id: string; name: string } | null;
+	User?: { role: string } | null;
+	_count: { TimeLog: number };
+};
+
+interface EmployeeRosterProps {
+	initialEmployees: EmployeeWithDetails[];
+	total: number;
+	totalPages: number;
+	currentPage: number;
+	search?: string;
+	status?: EmployeeStatus;
+	stations: Array<{ id: string; name: string }>;
+}
+
+export function EmployeeRoster({
+	initialEmployees,
+	total,
+	totalPages,
+	currentPage,
+	search: initialSearch = "",
+	status: initialStatus,
+	stations,
+}: EmployeeRosterProps) {
+	const [employees] = useState(initialEmployees);
+	const [search, setSearch] = useState(initialSearch);
+	const [status, setStatus] = useState<EmployeeStatus | undefined>(initialStatus);
+	const [page, setPage] = useState(currentPage);
+	const [loading, setLoading] = useState(false);
+
+	const statusOptions: { value: EmployeeStatus | undefined; label: string }[] = [
+		{ value: undefined, label: "All Status" },
+		{ value: "ACTIVE", label: "Active" },
+		{ value: "INACTIVE", label: "Inactive" },
+		{ value: "ON_LEAVE", label: "On Leave" },
+		{ value: "TERMINATED", label: "Terminated" },
+	];
+
+	const handleSearch = async (newSearch?: string, newStatus?: EmployeeStatus, newPage = 1) => {
+		setLoading(true);
+		try {
+			const params = new URLSearchParams();
+			if (newSearch || search) params.set("search", newSearch || search);
+			if (newStatus || status) params.set("status", (newStatus || status)?.toString() || "");
+			if (newPage > 1) params.set("page", newPage.toString());
+
+			// In a real app, you'd use React Router's navigation
+			// For now, we'll just reload
+			window.location.href = `/manager/employees?${params.toString()}`;
+		} catch (error) {
+			console.error("Search failed:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const getStatusBadge = (status: EmployeeStatus) => {
+		const styles = {
+			ACTIVE: "bg-green-100 text-green-800",
+			INACTIVE: "bg-gray-100 text-gray-800",
+			ON_LEAVE: "bg-yellow-100 text-yellow-800",
+			TERMINATED: "bg-red-100 text-red-800",
+		};
+
+		return (
+			<span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status]}`}>
+				{status.replace("_", " ")}
+			</span>
+		);
+	};
+
+	const getStationName = (stationId: string | null) => {
+		return stations.find((s) => s.id === stationId)?.name || "Unassigned";
+	};
+
+	return (
+		<div className="space-y-6">
+			{/* Search and Filters */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Employee Search</CardTitle>
+				</CardHeader>
+				<CardBody>
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<Input
+							placeholder="Search by name, email, or code..."
+							value={search}
+							onChange={(e) => {
+								setSearch(e.target.value);
+							}}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									handleSearch();
+								}
+							}}
+						/>
+
+						<select
+							className="px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+							value={status || ""}
+							onChange={(e) =>
+								setStatus(e.target.value ? (e.target.value as EmployeeStatus) : undefined)
+							}
+						>
+							{statusOptions.map((option) => (
+								<option key={option.value || "all"} value={option.value || ""}>
+									{option.label}
+								</option>
+							))}
+						</select>
+
+						<Button onClick={() => handleSearch()} variant="primary" disabled={loading}>
+							{loading ? "Searching..." : "Search"}
+						</Button>
+					</div>
+				</CardBody>
+			</Card>
+
+			{/* Results Summary */}
+			<div className="flex justify-between items-center">
+				<p className="text-sm text-muted-foreground">
+					Showing {employees.length} of {total} employees
+				</p>
+				<Link to="/manager/employees/new">
+					<Button variant="primary">Add Employee</Button>
+				</Link>
+			</div>
+
+			{/* Employee List */}
+			<Card>
+				<CardBody className="p-0">
+					{employees.length === 0 ? (
+						<div className="text-center py-8">
+							<p className="text-muted-foreground">No employees found</p>
+						</div>
+					) : (
+						<div className="overflow-x-auto">
+							<table className="w-full">
+								<thead>
+									<tr className="border-b">
+										<th className="text-left p-4">Name</th>
+										<th className="text-left p-4">Email</th>
+										<th className="text-left p-4">Code</th>
+										<th className="text-left p-4">Status</th>
+										<th className="text-left p-4">Default Station</th>
+										<th className="text-left p-4">Today's Activity</th>
+										<th className="text-left p-4">Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									{employees.map((employee) => (
+										<tr key={employee.id} className="border-b hover:bg-muted/50">
+											<td className="p-4">
+												<div className="font-medium">{employee.name}</div>
+											</td>
+											<td className="p-4">{employee.email}</td>
+											<td className="p-4">
+												<code className="px-2 py-1 bg-muted rounded text-sm">
+													{employee.employeeCode}
+												</code>
+											</td>
+											<td className="p-4">{getStatusBadge(employee.status)}</td>
+											<td className="p-4">
+												<span className="text-sm">{getStationName(employee.defaultStationId)}</span>
+											</td>
+											<td className="p-4">
+												<div className="text-sm">{employee._count.TimeLog} time entries today</div>
+											</td>
+											<td className="p-4">
+												<div className="flex space-x-2">
+													<Link to={`/manager/employees/${employee.id}`}>
+														<Button variant="outline" size="sm">
+															View
+														</Button>
+													</Link>
+													<Link to={`/manager/employees/${employee.id}/edit`}>
+														<Button variant="outline" size="sm">
+															Edit
+														</Button>
+													</Link>
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					)}
+				</CardBody>
+			</Card>
+
+			{/* Pagination */}
+			{totalPages > 1 && (
+				<div className="flex justify-center space-x-2">
+					{Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+						<Button
+							key={pageNum}
+							variant={pageNum === page ? "primary" : "outline"}
+							size="sm"
+							onClick={() => {
+								setPage(pageNum);
+								handleSearch(search, status, pageNum);
+							}}
+						>
+							{pageNum}
+						</Button>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}

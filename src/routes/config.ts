@@ -1,5 +1,6 @@
 import { type unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
-import { authMiddleware } from "../lib/middleware";
+import { authMiddleware, roleMiddleware } from "../lib/middleware";
+import type { User_role } from "@prisma/client";
 
 export function routes() {
 	return [
@@ -54,6 +55,104 @@ export function routes() {
 					middleware: [authMiddleware],
 					lazy: () => import("./dashboard/route.tsx"),
 				},
+
+				// Floor experience (public with PIN-based auth)
+				{
+					id: "floor",
+					path: "floor",
+					lazy: () => import("./floor/layout.tsx"),
+					children: [
+						{
+							id: "floor-index",
+							index: true,
+							lazy: () => import("./floor/index/route.tsx"),
+						},
+						{
+							id: "floor-kiosk",
+							path: "kiosk",
+							lazy: () => import("./floor/kiosk/route.tsx"),
+						},
+					],
+				},
+
+				// Manager experience (MANAGER, ADMIN roles)
+				{
+					id: "manager",
+					path: "manager",
+					middleware: [authMiddleware, roleMiddleware(["MANAGER", "ADMIN"] as User_role[])],
+					lazy: () => import("./manager/layout.tsx"),
+					children: [
+						{
+							id: "manager-dashboard",
+							index: true,
+							lazy: () => import("./manager/dashboard/route.tsx"),
+						},
+						{
+							id: "manager-monitor",
+							path: "monitor",
+							lazy: () => import("./manager/monitor/route.tsx"),
+						},
+						{
+							id: "manager-employees",
+							path: "employees",
+							lazy: () => import("./manager/employees/route.tsx"),
+							children: [
+								{
+									id: "manager-employees-detail",
+									path: ":id",
+									lazy: () => import("./manager/employees/[id]/route.tsx"),
+								},
+								{
+									id: "manager-employees-edit",
+									path: ":id/edit",
+									lazy: () => import("./manager/employees/[id]/edit/route.tsx"),
+								},
+								{
+									id: "manager-employees-new",
+									path: "new",
+									lazy: () => import("./manager/employees/new/route.tsx"),
+								},
+							],
+						},
+						{
+							id: "manager-timesheets",
+							path: "timesheets",
+							lazy: () => import("./manager/timesheets/route.tsx"),
+						},
+						{
+							id: "manager-tasks",
+							path: "tasks",
+							lazy: () => import("./manager/tasks/route.tsx"),
+						},
+						{
+							id: "manager-reports",
+							path: "reports",
+							lazy: () => import("./manager/reports/route.tsx"),
+						},
+					],
+				},
+
+				// Executive experience (ADMIN role only)
+				{
+					id: "executive",
+					path: "executive",
+					middleware: [authMiddleware, roleMiddleware(["ADMIN"] as User_role[])],
+					lazy: () => import("./executive/layout.tsx"),
+					children: [
+						{
+							id: "executive-dashboard",
+							index: true,
+							lazy: () => import("./executive/dashboard/route.tsx"),
+						},
+						{
+							id: "executive-analytics",
+							path: "analytics",
+							lazy: () => import("./executive/analytics/route.tsx"),
+						},
+					],
+				},
+
+				// Legacy time-clock route (keep for transition)
 				{
 					id: "time-clock",
 					path: "time-clock",
@@ -90,5 +189,5 @@ export function routes() {
 				},
 			],
 		},
-	] satisfies RSCRouteConfig;
+	] as RSCRouteConfig;
 }

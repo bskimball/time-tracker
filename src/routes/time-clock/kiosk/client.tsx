@@ -28,7 +28,7 @@ type Employee = {
 
 type Station = {
 	id: string;
-	name: "PICKING" | "PACKING" | "FILLING";
+	name: "PICKING" | "PACKING" | "FILLING" | "RECEIVING" | "SHIPPING" | "QUALITY" | "INVENTORY";
 	createdAt: string;
 };
 
