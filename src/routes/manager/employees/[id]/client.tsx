@@ -53,7 +53,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 	const getStatusBadge = (status: string) => {
 		const styles = {
 			ACTIVE: "bg-green-100 text-green-800",
-			INACTIVE: "bg-gray-100 text-gray-800",
+			INACTIVE: "bg-accent text-muted-foreground",
 			ON_LEAVE: "bg-yellow-100 text-yellow-800",
 			TERMINATED: "bg-red-100 text-red-800",
 		};
@@ -248,8 +248,8 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 												<td className="p-4">
 													<span
 														className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
-																? "bg-blue-100 text-blue-800"
-																: "bg-gray-100 text-gray-800"
+																? "bg-accent text-foreground"
+																: "bg-accent text-muted-foreground"
 															}`}
 													>
 														{log.type}
@@ -300,7 +300,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 												)}
 												<span
 													className={`text-xs px-2 py-1 rounded ${task.endTime
-															? "bg-gray-100 text-gray-800"
+															? "bg-accent text-muted-foreground"
 															: "bg-green-100 text-green-800"
 														}`}
 												>

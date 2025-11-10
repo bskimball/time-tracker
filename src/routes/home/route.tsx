@@ -1,14 +1,5 @@
-import { redirect } from "react-router";
-import { validateRequest } from "../../lib/auth";
-
-// Home route: authenticated users go to dashboard, unauthenticated to login
-export default async function Component(): Promise<never> {
-	const { user } = await validateRequest();
-
-	if (user) {
-		// User is authenticated, send to dashboard
-		throw redirect("/dashboard");
-	}
-	// User is not authenticated, send to login
-	throw redirect("/login");
+// Home route: redirects are handled at entry.rsc.tsx level
+// This component should never be rendered as the redirect happens before RSC rendering
+export default function Component() {
+	return null;
 }

@@ -14,18 +14,19 @@ export default async function Component() {
 					<div className="flex h-16 items-center justify-between">
 						<div className="flex items-center space-x-4">
 							<Link to="/executive" className="flex items-center space-x-2">
-								<span className="text-xl font-bold">Executive Dashboard</span>
+								<span className="text-xl font-bold">Executive Portal</span>
 							</Link>
 							<div className="flex space-x-1">
-								<Button variant="ghost" size="sm">
-									Analytics
-								</Button>
-								<Button variant="ghost" size="sm">
-									Performance
-								</Button>
-								<Button variant="ghost" size="sm">
-									Capacity
-								</Button>
+								<Link to="/executive">
+									<Button variant="ghost" size="sm">
+										Dashboard
+									</Button>
+								</Link>
+								<Link to="/executive/analytics">
+									<Button variant="ghost" size="sm">
+										Analytics
+									</Button>
+								</Link>
 							</div>
 						</div>
 						<div className="flex items-center space-x-2">

@@ -45,7 +45,7 @@ export function TimesheetManager({
 
 	const getMethodBadge = (method: string) => {
 		const styles = {
-			PIN: "bg-blue-100 text-blue-800",
+			PIN: "bg-accent text-foreground",
 			CARD: "bg-green-100 text-green-800",
 			BIOMETRIC: "bg-purple-100 text-purple-800",
 			MANUAL: "bg-orange-100 text-orange-800",
@@ -136,8 +136,8 @@ export function TimesheetManager({
 											<td className="p-4">
 												<span
 													className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
-															? "bg-blue-100 text-blue-800"
-															: "bg-gray-100 text-gray-800"
+															? "bg-accent text-foreground"
+															: "bg-accent text-muted-foreground"
 														}`}
 												>
 													{log.type}

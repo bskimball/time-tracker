@@ -52,6 +52,46 @@ async function fetchServer(request: Request) {
 }
 
 export default async function handler(request: Request) {
+	const url = new URL(request.url);
+	const { validateRequest } = await import("./lib/auth");
+
+	// Handle home page redirects BEFORE calling generateHTML
+	if (url.pathname === "/") {
+		// Check authentication to determine redirect destination
+		const { user } = await validateRequest(request);
+
+		if (user) {
+			// Redirect authenticated users to role-based dashboard
+			if (user.role === "ADMIN") {
+				return Response.redirect(new URL("/executive", url.origin), 302);
+			} else if (user.role === "MANAGER") {
+				return Response.redirect(new URL("/manager", url.origin), 302);
+			} else {
+				return Response.redirect(new URL("/floor", url.origin), 302);
+			}
+		}
+		// User is not authenticated, redirect to login
+		return Response.redirect(new URL("/login", url.origin), 302);
+	}
+
+	// Handle /dashboard redirects to role-based dashboards
+	if (url.pathname === "/dashboard") {
+		const { user } = await validateRequest(request);
+
+		if (!user) {
+			return Response.redirect(new URL("/login", url.origin), 302);
+		}
+
+		// Redirect to appropriate role-based dashboard
+		if (user.role === "ADMIN") {
+			return Response.redirect(new URL("/executive", url.origin), 302);
+		} else if (user.role === "MANAGER") {
+			return Response.redirect(new URL("/manager", url.origin), 302);
+		} else {
+			return Response.redirect(new URL("/floor", url.origin), 302);
+		}
+	}
+
 	// Import the generateHTML function from the client environment
 	const ssr = await import.meta.viteRsc.loadModule<typeof import("./entry.ssr")>("ssr", "index");
 

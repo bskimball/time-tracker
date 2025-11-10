@@ -48,15 +48,29 @@ export async function loginAsUser(formData: FormData) {
 		throw new Error("User ID is required");
 	}
 
+	// Get user to determine redirect location
+	const user = await db.user.findUnique({ where: { id: userId } });
+	if (!user) {
+		throw new Error("User not found");
+	}
+
 	const token = generateSessionToken();
 	const session = await createSession(token, userId);
 	const cookie = setSessionTokenCookie(token, session.expiresAt);
+
+	// Redirect based on user role
+	let location = "/floor";
+	if (user.role === "ADMIN") {
+		location = "/executive/dashboard";
+	} else if (user.role === "MANAGER") {
+		location = "/manager/dashboard";
+	}
 
 	// Create a redirect response with the session cookie
 	const response = new Response(null, {
 		status: 302,
 		headers: {
-			Location: "/dashboard",
+			Location: location,
 			"Set-Cookie": cookie,
 		},
 	});

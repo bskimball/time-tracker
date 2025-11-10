@@ -335,18 +335,18 @@ export function MobileTimeClock({
 										<div className="space-y-3">
 											<div>
 												<h3 className="font-bold text-lg">{log.employee.name}</h3>
-												<p className="text-sm text-gray-600">{log.station?.name || "No station"}</p>
+												<p className="text-sm text-muted-foreground">{log.station?.name || "No station"}</p>
 											</div>
 
 											<div className="flex items-center justify-between">
 												<div>
-													<p className="text-xs text-gray-500">Started</p>
+													<p className="text-xs text-muted-foreground">Started</p>
 													<p className="font-mono text-lg">
 														{new Date(log.startTime).toLocaleTimeString()}
 													</p>
 												</div>
 												<div className="text-right">
-													<p className="text-xs text-gray-500">Duration</p>
+													<p className="text-xs text-muted-foreground">Duration</p>
 													<p className="font-mono text-lg">{formatDuration(log.startTime)}</p>
 												</div>
 											</div>
@@ -420,7 +420,7 @@ export function MobileTimeClock({
 							</svg>
 							<div>
 								<p className="font-medium">Offline Mode</p>
-								<p className="text-sm text-gray-600">
+								<p className="text-sm text-muted-foreground">
 									Actions will be queued and synced when connection is restored
 								</p>
 							</div>

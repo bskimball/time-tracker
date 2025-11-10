@@ -64,9 +64,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 	const currentScenario = scenarios.find((s) => s.id === activeScenario);
 
 	const costPerUnitColor = (costPerUnit: number) => {
-		if (costPerUnit > 0.9) return "text-red-600 bg-red-50 border-red-200";
-		if (costPerUnit > 0.8) return "text-yellow-600 bg-yellow-50 border-yellow-200";
-		return "text-green-600 bg-green-50 border-green-200";
+		if (costPerUnit > 0.9) return "text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-700";
+		if (costPerUnit > 0.8) return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700";
+		return "text-green-600 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-900/30 dark:border-green-700";
 	};
 
 	return (
@@ -80,28 +80,27 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 						{scenarios.map((scenario) => (
 							<div
 								key={scenario.id}
-								className={`cursor-pointer transition-all ${
-									scenario.id === activeScenario
-										? "ring-2 ring-blue-500 border-blue-200"
-										: "border hover:border-gray-300"
-								}`}
+								className={`cursor-pointer transition-all ${scenario.id === activeScenario
+										? "ring-2 ring-primary border-primary"
+										: "border hover:border-border"
+									}`}
 								onClick={() => setActiveScenario(scenario.id)}
 								style={{ display: "block" }}
 							>
 								<div className="p-4 border rounded-lg">
 									<h3 className="text-base font-medium mb-2">{scenario.name}</h3>
-									<p className="text-sm text-gray-600 mb-3">{scenario.description}</p>
+									<p className="text-sm text-muted-foreground mb-3">{scenario.description}</p>
 									<div className="space-y-3">
 										<div className="flex justify-between">
-											<span className="text-sm text-gray-600">Employees:</span>
+											<span className="text-sm text-muted-foreground">Employees:</span>
 											<span className="font-medium">{scenario.employees}</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-sm text-gray-600">Projected Units:</span>
+											<span className="text-sm text-muted-foreground">Projected Units:</span>
 											<span className="font-medium">{scenario.projectedUnits}</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-sm text-gray-600">Cost/Unit:</span>
+											<span className="text-sm text-muted-foreground">Cost/Unit:</span>
 											<span
 												className={`font-medium px-2 py-1 rounded-full border ${costPerUnitColor(
 													scenario.costPerUnit
@@ -111,9 +110,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-sm text-gray-600">Utilization:</span>
+											<span className="text-sm text-muted-foreground">Utilization:</span>
 											<span
-												className={`font-medium px-2 py-1 rounded-full border text-red-600 bg-red-50 border-red-200`}
+												className={`font-medium px-2 py-1 rounded-full border text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-700`}
 											>
 												{scenario.utilization}%
 											</span>
@@ -147,21 +146,21 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 										<div key={station.name} className="border rounded-lg p-3">
 											<div className="flex justify-between items-start mb-2">
 												<h4 className="font-medium text-sm">{station.name}</h4>
-												<span className="text-xs text-gray-500">
+												<span className="text-xs text-muted-foreground">
 													{station.avgUnitsPerHour.toFixed(1)} u/h per employee
 												</span>
 											</div>
 											<div className="grid grid-cols-3 gap-2 text-sm">
 												<div>
-													<span className="text-gray-600">Employees:</span>
+													<span className="text-muted-foreground">Employees:</span>
 													<span className="ml-1 font-medium">{allocatedEmployees}</span>
 												</div>
 												<div>
-													<span className="text-gray-600">Units:</span>
+													<span className="text-muted-foreground">Units:</span>
 													<span className="ml-1 font-medium">{projectedUnits}</span>
 												</div>
 												<div>
-													<span className="text-gray-600">Efficiency:</span>
+													<span className="text-muted-foreground">Efficiency:</span>
 													<span className="ml-1 font-medium">
 														{station.occupancyRate.toFixed(0)}%
 													</span>
@@ -181,9 +180,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 						</CardHeader>
 						<CardBody>
 							<div className="space-y-4">
-								<div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-									<h4 className="font-medium text-blue-900 mb-1">Workforce Optimization</h4>
-									<p className="text-sm text-blue-800">
+								<div className="p-3 bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-700 rounded-lg">
+									<h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Workforce Optimization</h4>
+									<p className="text-sm text-blue-800 dark:text-blue-200">
 										{currentScenario.utilization > 90
 											? "Utilization is very high. Consider adding more staff to prevent burnout."
 											: currentScenario.utilization < 70
@@ -192,9 +191,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 									</p>
 								</div>
 
-								<div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-									<h4 className="font-medium text-green-900 mb-1">Cost Efficiency</h4>
-									<p className="text-sm text-green-800">
+								<div className="p-3 bg-green-50 border border-green-200 dark:bg-green-900/30 dark:border-green-700 rounded-lg">
+									<h4 className="font-medium text-green-900 dark:text-green-100 mb-1">Cost Efficiency</h4>
+									<p className="text-sm text-green-800 dark:text-green-200">
 										{currentScenario.costPerUnit < 0.8
 											? "Excellent cost efficiency. This scenario provides good value per unit."
 											: currentScenario.costPerUnit < 0.9
@@ -203,9 +202,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 									</p>
 								</div>
 
-								<div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-									<h4 className="font-medium text-purple-900 mb-1">Bottleneck Analysis</h4>
-									<div className="text-sm text-purple-800">
+								<div className="p-3 bg-purple-50 border border-purple-200 dark:bg-purple-900/30 dark:border-purple-700 rounded-lg">
+									<h4 className="font-medium text-purple-900 dark:text-purple-100 mb-1">Bottleneck Analysis</h4>
+									<div className="text-sm text-purple-800 dark:text-purple-200">
 										<p className="mb-2">Based on current performance patterns:</p>
 										<ul className="list-disc ml-4 space-y-1">
 											<li>
@@ -217,9 +216,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 									</div>
 								</div>
 
-								<div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-									<h4 className="font-medium text-gray-900 mb-1">Seasonal Planning</h4>
-									<p className="text-sm text-gray-800">
+								<div className="p-3 bg-accent border rounded-lg">
+									<h4 className="font-medium mb-1">Seasonal Planning</h4>
+									<p className="text-sm text-muted-foreground">
 										Historical data shows peak demand increases by 25-30% during holiday seasons.
 										Consider temporary staffing or cross-training to handle seasonal volume.
 									</p>
@@ -238,33 +237,27 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 					<div className="space-y-4">
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Scenario Name
-								</label>
+								<label className="block text-sm font-medium mb-1">Scenario Name</label>
 								<input
 									type="text"
 									placeholder="e.g., Summer 2024"
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
 								/>
 							</div>
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Total Employees
-								</label>
+								<label className="block text-sm font-medium mb-1">Total Employees</label>
 								<input
 									type="number"
 									placeholder="30"
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
 								/>
 							</div>
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Expected Daily Volume
-								</label>
+								<label className="block text-sm font-medium mb-1">Expected Daily Volume</label>
 								<input
 									type="number"
 									placeholder="1000"
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
 								/>
 							</div>
 						</div>

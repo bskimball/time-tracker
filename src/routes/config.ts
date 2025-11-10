@@ -49,13 +49,6 @@ export function routes() {
 					path: "auth/microsoft/callback",
 					lazy: () => import("./auth/microsoft/callback.ts"),
 				},
-				{
-					id: "dashboard",
-					path: "dashboard",
-					middleware: [authMiddleware],
-					lazy: () => import("./dashboard/route.tsx"),
-				},
-
 				// Floor experience (public with PIN-based auth)
 				{
 					id: "floor",
@@ -66,11 +59,6 @@ export function routes() {
 							id: "floor-index",
 							index: true,
 							lazy: () => import("./floor/index/route.tsx"),
-						},
-						{
-							id: "floor-kiosk",
-							path: "kiosk",
-							lazy: () => import("./floor/kiosk/route.tsx"),
 						},
 					],
 				},
@@ -163,17 +151,6 @@ export function routes() {
 					id: "time-clock-kiosk",
 					path: "time-clock/kiosk",
 					lazy: () => import("./time-clock/kiosk/route.tsx"),
-				},
-				{
-					id: "time-clock-reports",
-					path: "time-clock/reports",
-					middleware: [authMiddleware],
-					lazy: () => import("./time-clock/reports/route.tsx"),
-				},
-				{
-					id: "time-clock-reports-csv",
-					path: "time-clock/reports/reports.csv",
-					lazy: () => import("./time-clock/reports/reports.csv/route.tsx"),
 				},
 				{
 					id: "settings",

@@ -81,7 +81,7 @@ export function EmployeeRoster({
 	const getStatusBadge = (status: EmployeeStatus) => {
 		const styles = {
 			ACTIVE: "bg-green-100 text-green-800",
-			INACTIVE: "bg-gray-100 text-gray-800",
+			INACTIVE: "bg-accent text-muted-foreground",
 			ON_LEAVE: "bg-yellow-100 text-yellow-800",
 			TERMINATED: "bg-red-100 text-red-800",
 		};

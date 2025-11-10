@@ -269,7 +269,7 @@ export function TaskManager({
 												className={`px-2 py-1 text-xs rounded ${
 													taskType.isActive
 														? "bg-green-100 text-green-800"
-														: "bg-gray-100 text-gray-800"
+														: "bg-accent text-muted-foreground"
 												}`}
 											>
 												{taskType.isActive ? "Active" : "Inactive"}

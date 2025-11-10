@@ -31,7 +31,18 @@
       "Bash(curl -s http://localhost:5173/dashboard)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run lint)",
-      "Bash(for file in /home/bskimball/apps/rsc-hono-app/src/components/kiosk/kiosk-time-clock.tsx /home/bskimball/apps/rsc-hono-app/src/routes/executive/analytics/actions.ts /home/bskimball/apps/rsc-hono-app/src/routes/executive/dashboard/actions.ts /home/bskimball/apps/rsc-hono-app/src/routes/executive/dashboard/route.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/kiosk/route.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/mobile-time-clock/client.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/time-clock/mobile.tsx)"
+      "Bash(for file in /home/bskimball/apps/rsc-hono-app/src/components/kiosk/kiosk-time-clock.tsx /home/bskimball/apps/rsc-hono-app/src/routes/executive/analytics/actions.ts /home/bskimball/apps/rsc-hono-app/src/routes/executive/dashboard/actions.ts /home/bskimball/apps/rsc-hono-app/src/routes/executive/dashboard/route.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/kiosk/route.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/mobile-time-clock/client.tsx /home/bskimball/apps/rsc-hono-app/src/routes/floor/time-clock/mobile.tsx)",
+      "Bash(git log:*)",
+      "Bash(cat:*)",
+      "Bash(/tmp/LINTING_GUIDE.md)",
+      "Bash(/tmp/RSC_AUTH_FIX.md)",
+      "Bash(/tmp/TESTING_GUIDE.md)",
+      "Bash(src/routes/time-clock/client.tsx)",
+      "Bash(src/routes/time-clock/kiosk/client.tsx)",
+      "Bash(timeout 3 curl:*)",
+      "Bash(/home/bskimball/apps/rsc-hono-app/src/routes/executive/dashboard/route.tsx)",
+      "Bash(/home/bskimball/apps/rsc-hono-app/src/routes/executive/analytics/route.tsx)",
+      "Bash(/home/bskimball/apps/rsc-hono-app/src/routes/executive/capacity-planning.tsx)"
     ],
     "deny": [],
     "ask": []

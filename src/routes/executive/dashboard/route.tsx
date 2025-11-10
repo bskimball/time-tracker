@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
 import { Alert } from "~/components/ds/alert";
 import { Button } from "~/components/ds/button";
-import { KPICard } from "~/components/executive/kpi-card";
+import { KPICard } from "~/routes/executive/kpi-card";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
 import {
@@ -68,8 +68,8 @@ export default async function Component({
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 				<div>
-					<h1 className="text-3xl font-bold text-gray-900">Executive Dashboard</h1>
-					<p className="text-gray-600 mt-1">
+					<h1 className="text-3xl font-bold text-foreground">Executive Dashboard</h1>
+					<p className="text-muted-foreground mt-1">
 						Strategic performance insights and workforce analytics
 					</p>
 				</div>
@@ -94,14 +94,14 @@ export default async function Component({
 							</Link>
 						))}
 					</div>
-					<p className="text-sm text-gray-600 mt-2">{dateRange.display}</p>
+					<p className="text-sm text-muted-foreground mt-2">{dateRange.display}</p>
 				</CardBody>
 			</Card>
 
 			{/* Critical Alerts */}
 			{alerts.length > 0 && (
 				<div className="space-y-2">
-					<h2 className="text-lg font-semibold text-gray-900">Critical Alerts</h2>
+					<h2 className="text-lg font-semibold text-foreground">Critical Alerts</h2>
 					{alerts.map((alert) => (
 						<Alert key={alert.id} variant={alert.type}>
 							<div className="flex justify-between items-start">
@@ -111,10 +111,10 @@ export default async function Component({
 								</div>
 								<span
 									className={`px-2 py-1 text-xs font-medium rounded-full ${alert.priority === "high"
-											? "bg-red-100 text-red-800"
-											: alert.priority === "medium"
-												? "bg-yellow-100 text-yellow-800"
-												: "bg-blue-100 text-blue-800"
+										? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+										: alert.priority === "medium"
+											? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+											: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
 										}`}
 								>
 									{alert.priority}
@@ -217,7 +217,7 @@ export default async function Component({
 
 			{/* Station Performance Overview */}
 			<div>
-				<h2 className="text-lg font-semibold text-gray-900 mb-4">Station Performance</h2>
+				<h2 className="text-lg font-semibold text-foreground mb-4">Station Performance</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{stationData.slice(0, 6).map((station) => (
 						<Card key={station.stationId} className="border">
@@ -227,21 +227,21 @@ export default async function Component({
 							<CardBody>
 								<div className="space-y-2">
 									<div className="flex justify-between">
-										<span className="text-sm text-gray-600">Employees:</span>
+										<span className="text-sm text-muted-foreground">Employees:</span>
 										<span className="font-medium">{station.totalEmployees}</span>
 									</div>
 									<div className="flex justify-between">
-										<span className="text-sm text-gray-600">Units/Hour:</span>
+										<span className="text-sm text-muted-foreground">Units/Hour:</span>
 										<span className="font-medium">{station.avgUnitsPerHour.toFixed(1)}</span>
 									</div>
 									<div className="flex justify-between">
-										<span className="text-sm text-gray-600">Occupancy:</span>
+										<span className="text-sm text-muted-foreground">Occupancy:</span>
 										<span
 											className={`font-medium ${station.occupancyRate > 90
-													? "text-red-600"
-													: station.occupancyRate > 70
-														? "text-yellow-600"
-														: "text-green-600"
+												? "text-red-600"
+												: station.occupancyRate > 70
+													? "text-yellow-600"
+													: "text-green-600"
 												}`}
 										>
 											{station.occupancyRate.toFixed(0)}%

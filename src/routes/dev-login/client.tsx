@@ -31,11 +31,11 @@ export function CreateAdminForm() {
 			<CardBody>
 				<form action={formAction} className="space-y-4">
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+						<label className="block text-sm font-medium mb-1">Name</label>
 						<SimpleInput type="text" name="name" placeholder="Admin Name" required />
 					</div>
 					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+						<label className="block text-sm font-medium mb-1">Email</label>
 						<SimpleInput type="email" name="email" placeholder="admin@example.com" required />
 					</div>
 					{state.error && <Alert variant="error">{state.error}</Alert>}

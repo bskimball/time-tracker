@@ -295,7 +295,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<div className="text-center">
 							<h3 className="text-lg font-medium mb-2">Workforce</h3>
 							<div className="space-y-2">
-								<p className="text-3xl font-bold text-blue-600">
+								<p className="text-3xl font-bold text-primary">
 									{data.summaryStats.totalEmployees}
 								</p>
 								<p className="text-sm text-muted-foreground">Total Employees</p>
@@ -311,12 +311,12 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<div className="text-center">
 							<h3 className="text-lg font-medium mb-2">Hours Worked</h3>
 							<div className="space-y-2">
-								<p className="text-3xl font-bold text-blue-600">
+								<p className="text-3xl font-bold text-primary">
 									{data.summaryStats.totalHoursWorked.toFixed(1)}h
 								</p>
 								<p className="text-sm text-muted-foreground">Total Hours</p>
 								<div className="pt-2 border-t">
-									<p className="text-xl font-semibold text-gray-600">
+									<p className="text-xl font-semibold text-foreground">
 										{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
 									</p>
 									<p className="text-sm text-muted-foreground">Avg per Employee</p>

@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
 import { Button } from "~/components/ds/button";
 import { Link } from "react-router";
-import { LineChart, BarChart, PieChart } from "~/components/executive/charts";
-import { CapacityPlanningTool } from "~/components/executive/capacity-planning";
+import { LineChart, BarChart, PieChart } from "~/routes/executive/charts";
+import { CapacityPlanningTool } from "~/routes/executive/capacity-planning";
 import {
 	getProductivityTrendData,
 	getLaborCostTrendData,
@@ -71,8 +71,8 @@ export default async function Component({
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 				<div>
-					<h1 className="text-3xl font-bold text-gray-900">Analytics & Reporting</h1>
-					<p className="text-gray-600 mt-1">
+					<h1 className="text-3xl font-bold text-foreground">Analytics & Reporting</h1>
+					<p className="text-muted-foreground mt-1">
 						Comprehensive workforce productivity and cost analysis
 					</p>
 				</div>
@@ -182,7 +182,7 @@ export default async function Component({
 												<td className="text-right py-3 px-4">{employee.hours}</td>
 												<td className="text-right py-3 px-4 font-medium">{employee.rate}</td>
 												<td className="py-3 px-4">
-													<span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+													<span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
 														{employee.station}
 													</span>
 												</td>
@@ -196,7 +196,7 @@ export default async function Component({
 
 					{/* Station Performance */}
 					<div>
-						<h2 className="text-lg font-semibold text-gray-900 mb-4">Station Performance</h2>
+						<h2 className="text-lg font-semibold text-foreground mb-4">Station Performance</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 							{placeholderData.stations.map((station) => (
 								<Card key={station.name} className="border">
@@ -206,33 +206,33 @@ export default async function Component({
 									<CardBody>
 										<div className="space-y-3">
 											<div className="flex justify-between items-center">
-												<span className="text-sm text-gray-600">Efficiency:</span>
+												<span className="text-sm text-muted-foreground">Efficiency:</span>
 												<span className="font-medium">{station.efficiency} u/h</span>
 											</div>
 											<div className="flex justify-between items-center">
-												<span className="text-sm text-gray-600">Occupancy:</span>
+												<span className="text-sm text-muted-foreground">Occupancy:</span>
 												<span
 													className={`font-medium ${station.occupancy > 85
-															? "text-red-600"
-															: station.occupancy > 70
-																? "text-yellow-600"
-																: "text-green-600"
+														? "text-red-600"
+														: station.occupancy > 70
+															? "text-yellow-600"
+															: "text-green-600"
 														}`}
 												>
 													{station.occupancy}%
 												</span>
 											</div>
 											<div className="flex justify-between items-center">
-												<span className="text-sm text-gray-600">Employees:</span>
+												<span className="text-sm text-muted-foreground">Employees:</span>
 												<span className="font-medium">{station.employees}</span>
 											</div>
-											<div className="w-full bg-gray-200 rounded-full h-2">
+											<div className="w-full bg-accent rounded-full h-2">
 												<div
 													className={`h-2 rounded-full ${station.efficiency > 30
-															? "bg-green-500"
-															: station.efficiency > 20
-																? "bg-yellow-500"
-																: "bg-red-500"
+														? "bg-green-500"
+														: station.efficiency > 20
+															? "bg-yellow-500"
+															: "bg-red-500"
 														}`}
 													style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
 												></div>
@@ -252,35 +252,35 @@ export default async function Component({
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-gray-600">Regular Hours</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">Regular Hours</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold">
 									${placeholderData.costs.regular.toFixed(2)}
 								</div>
-								<p className="text-sm text-gray-500 mt-1">840 hours</p>
+								<p className="text-sm text-muted-foreground mt-1">840 hours</p>
 							</CardBody>
 						</Card>
 
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-gray-600">Overtime</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">Overtime</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold text-orange-600">
 									${placeholderData.costs.overtime.toFixed(2)}
 								</div>
-								<p className="text-sm text-gray-500 mt-1">95 hours</p>
+								<p className="text-sm text-muted-foreground mt-1">95 hours</p>
 							</CardBody>
 						</Card>
 
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-gray-600">Total Cost</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold">${placeholderData.costs.total.toFixed(2)}</div>
-								<p className="text-sm text-gray-500 mt-1">935 hours</p>
+								<p className="text-sm text-muted-foreground mt-1">935 hours</p>
 							</CardBody>
 						</Card>
 
@@ -288,7 +288,7 @@ export default async function Component({
 							className={placeholderData.costs.variance > 0 ? "border-red-200" : "border-green-200"}
 						>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-gray-600">Variance</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">Variance</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div
@@ -297,7 +297,7 @@ export default async function Component({
 									{placeholderData.costs.variance > 0 ? "+" : ""}
 									{placeholderData.costs.variance.toFixed(2)}
 								</div>
-								<p className="text-sm text-gray-500 mt-1">
+								<p className="text-sm text-muted-foreground mt-1">
 									{placeholderData.costs.variancePercent}% vs budget
 								</p>
 							</CardBody>
@@ -453,27 +453,27 @@ export default async function Component({
 						</CardHeader>
 						<CardBody>
 							<div className="text-center py-8">
-								<h3 className="text-lg font-medium text-gray-900 mb-2">
+								<h3 className="text-lg font-medium text-foreground mb-2">
 									Benchmarking Analysis Coming Soon
 								</h3>
-								<p className="text-gray-600">
+								<p className="text-muted-foreground">
 									Comparative analysis, industry standards, and performance scoring will be
 									available here
 								</p>
 								<div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-									<div className="text-center p-4 bg-gray-50 rounded-lg">
-										<h4 className="font-medium text-gray-900">Station Benchmarks</h4>
-										<p className="text-sm text-gray-600 mt-2">
+									<div className="text-center p-4 bg-accent rounded-lg">
+										<h4 className="font-medium text-foreground">Station Benchmarks</h4>
+										<p className="text-sm text-muted-foreground mt-2">
 											Compare performance across stations
 										</p>
 									</div>
-									<div className="text-center p-4 bg-gray-50 rounded-lg">
-										<h4 className="font-medium text-gray-900">Employee Rankings</h4>
-										<p className="text-sm text-gray-600 mt-2">Performance-based evaluations</p>
+									<div className="text-center p-4 bg-accent rounded-lg">
+										<h4 className="font-medium text-foreground">Employee Rankings</h4>
+										<p className="text-sm text-muted-foreground mt-2">Performance-based evaluations</p>
 									</div>
-									<div className="text-center p-4 bg-gray-50 rounded-lg">
-										<h4 className="font-medium text-gray-900">Industry Standards</h4>
-										<p className="text-sm text-gray-600 mt-2">Compare to industry metrics</p>
+									<div className="text-center p-4 bg-accent rounded-lg">
+										<h4 className="font-medium text-foreground">Industry Standards</h4>
+										<p className="text-sm text-muted-foreground mt-2">Compare to industry metrics</p>
 									</div>
 								</div>
 							</div>

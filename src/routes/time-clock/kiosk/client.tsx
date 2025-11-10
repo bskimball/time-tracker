@@ -184,12 +184,12 @@ export function KioskTimeClock({
 
 	return (
 		<KioskContext.Provider value={contextValue}>
-			<div className="min-h-screen bg-gray-100 p-4">
+			<div className="min-h-screen bg-background p-4">
 				{/* Header */}
 				<div className="max-w-4xl mx-auto mb-8">
 					<Card>
 						<CardBody className="text-center">
-							<h1 className="text-4xl font-bold text-blue-600 mb-2">Time Clock Kiosk</h1>
+							<h1 className="text-4xl font-bold text-primary mb-2">Time Clock Kiosk</h1>
 							<div className="flex justify-center items-center gap-4 text-sm mb-4">
 								<span
 									className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${queue.length > 0 ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}
@@ -197,9 +197,9 @@ export function KioskTimeClock({
 									{queue.length > 0 ? `${queue.length} pending` : "Connected"}
 								</span>
 								{status === "syncing" && (
-									<span className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
+									<span className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></span>
 								)}
-								<span className="text-gray-700">Auto-refresh every 30s</span>
+								<span className="text-foreground">Auto-refresh every 30s</span>
 							</div>
 							<div className="flex justify-center">
 								<Button onClick={handleExitKiosk} variant="outline" size="sm">
@@ -220,13 +220,13 @@ export function KioskTimeClock({
 							<CardBody>
 								<div className="grid gap-4">
 									{activeLogs.map((log) => (
-										<div key={log.id} className="bg-gray-50 rounded-lg shadow p-4">
+										<div key={log.id} className="bg-accent rounded-lg shadow p-4">
 											<div className="flex justify-between items-center">
 												<div className="flex-1">
-													<div className="text-lg font-semibold text-gray-900">
+													<div className="text-lg font-semibold text-foreground">
 														{log.employee.name}
 													</div>
-													<div className="text-gray-700">
+													<div className="text-muted-foreground">
 														{log.station?.name || "No station"} • Started{" "}
 														{new Date(log.startTime).toLocaleTimeString()}
 													</div>
@@ -264,7 +264,7 @@ export function KioskTimeClock({
 
 							<form action={pinFormAction} onSubmit={handlePinSubmit} className="space-y-6">
 								<div className="flex flex-col gap-1">
-									<label className="text-sm font-medium text-gray-700">Enter Your PIN</label>
+									<label className="text-sm font-medium text-foreground">Enter Your PIN</label>
 									<input
 										type="password"
 										name="pin"
@@ -283,17 +283,17 @@ export function KioskTimeClock({
 										pattern="[0-9]{4,6}"
 										inputMode="numeric"
 										required
-										className="px-3 py-3 border border-gray-300 rounded text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-3 border rounded text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									/>
 								</div>
 
 								<div className="flex flex-col gap-1">
-									<label className="text-sm font-medium text-gray-700">Work Station</label>
+									<label className="text-sm font-medium text-foreground">Work Station</label>
 									<select
 										name="stationId"
 										value={stationId}
 										onChange={(e) => setStationId(e.target.value)}
-										className="px-3 py-3 border border-gray-300 rounded text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-3 border rounded text-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										required
 									>
 										<option value="">Select station</option>

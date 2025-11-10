@@ -72,7 +72,7 @@ function StationManagement({ stations }: { stations: Station[] }) {
 							{stations.map((station) => (
 								<div
 									key={station.id}
-									className="flex justify-between items-center p-4 bg-gray-50 rounded"
+									className="flex justify-between items-center p-4 bg-accent rounded"
 								>
 									<span className="font-semibold">{station.name}</span>
 									<form action={deleteAction} className="inline">
@@ -116,7 +116,7 @@ function EmployeeManagement({ employees }: { employees: Employee[] }) {
 				<CardBody>
 					<form action={addAction} className="space-y-4">
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+							<label className="block text-sm font-medium mb-1">Name</label>
 							<SimpleInput
 								name="name"
 								placeholder="Employee name"
@@ -125,7 +125,7 @@ function EmployeeManagement({ employees }: { employees: Employee[] }) {
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+							<label className="block text-sm font-medium mb-1">Email</label>
 							<SimpleInput
 								name="email"
 								type="email"
@@ -135,7 +135,7 @@ function EmployeeManagement({ employees }: { employees: Employee[] }) {
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">PIN (optional)</label>
+							<label className="block text-sm font-medium mb-1">PIN (optional)</label>
 							<SimpleInput
 								name="pin"
 								type="text"
@@ -164,12 +164,12 @@ function EmployeeManagement({ employees }: { employees: Employee[] }) {
 					) : (
 						<div className="space-y-2">
 							{employees.map((employee) => (
-								<div key={employee.id} className="p-4 bg-gray-50 rounded">
+								<div key={employee.id} className="p-4 bg-accent rounded">
 									<div className="flex justify-between items-center">
 										<div>
 											<p className="font-semibold">{employee.name}</p>
-											<p className="text-sm text-gray-600">{employee.email}</p>
-											<p className="text-xs text-gray-500 mt-1">
+											<p className="text-sm text-muted-foreground">{employee.email}</p>
+											<p className="text-xs text-muted-foreground mt-1">
 												{employee.pinHash ? "PIN set" : "No PIN"}
 											</p>
 										</div>
@@ -253,7 +253,7 @@ export function SettingsManagement({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex gap-4 border-b border-gray-200">
+			<div className="flex gap-4 border-b">
 				<button
 					onClick={() => {
 						setActiveTab("stations");
@@ -264,8 +264,8 @@ export function SettingsManagement({
 					className={cn(
 						"px-4 py-2 font-medium border-b-2 transition-colors",
 						activeTab === "stations"
-							? "border-blue-600 text-blue-600"
-							: "border-transparent text-gray-600 hover:text-gray-900"
+							? "border-primary text-primary"
+							: "border-transparent text-muted-foreground hover:text-foreground"
 					)}
 				>
 					Stations
@@ -280,8 +280,8 @@ export function SettingsManagement({
 					className={cn(
 						"px-4 py-2 font-medium border-b-2 transition-colors",
 						activeTab === "employees"
-							? "border-blue-600 text-blue-600"
-							: "border-transparent text-gray-600 hover:text-gray-900"
+							? "border-primary text-primary"
+							: "border-transparent text-muted-foreground hover:text-foreground"
 					)}
 				>
 					Employees

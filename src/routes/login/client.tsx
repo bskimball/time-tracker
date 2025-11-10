@@ -58,9 +58,9 @@ export function LoginClient() {
 						<div className="flex-1 border-t" />
 					</div>
 
-					<Link to="/time-clock" className="flex w-full">
+					<Link to="/floor" className="flex w-full">
 						<Button variant="ghost" className="w-full" onPress={() => {}}>
-							Continue as Guest (Time Clock)
+							Continue as Guest (Floor Time Clock)
 						</Button>
 					</Link>
 				</CardBody>

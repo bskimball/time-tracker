@@ -31,7 +31,7 @@ export default async function Component() {
 
 					<div className="space-y-3">
 						{todos.length === 0 ? (
-							<p className="text-center text-gray-500 py-8">No todos yet. Add one above!</p>
+							<p className="text-center text-muted-foreground py-8">No todos yet. Add one above!</p>
 						) : (
 							todos.map((todo) => (
 								<TodoItem

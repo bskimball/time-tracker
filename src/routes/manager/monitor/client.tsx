@@ -88,8 +88,8 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 			ACTIVE: "bg-green-100 text-green-800",
 			BUSY: "bg-yellow-100 text-yellow-800",
 			FULL: "bg-red-100 text-red-800",
-			EMPTY: "bg-gray-100 text-gray-800",
-			INACTIVE: "bg-gray-200 text-gray-600",
+			EMPTY: "bg-accent text-muted-foreground",
+			INACTIVE: "bg-accent/50 text-muted-foreground",
 		};
 		return colors[status as keyof typeof colors] || colors.INACTIVE;
 	};
@@ -270,8 +270,8 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 											<p className="font-medium">{calculateDuration(log.startTime)}</p>
 											<span
 												className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
-														? "bg-blue-100 text-blue-800"
-														: "bg-gray-100 text-gray-800"
+														? "bg-accent text-foreground"
+														: "bg-accent text-muted-foreground"
 													}`}
 											>
 												{log.type}

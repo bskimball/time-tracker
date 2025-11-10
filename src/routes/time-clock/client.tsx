@@ -2,7 +2,6 @@
 
 import React, { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Link } from "react-router";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "react-aria-components";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import {
@@ -157,7 +156,7 @@ function ClockInForm({
 				<CardTitle>Clock In/Out</CardTitle>
 			</CardHeader>
 			<CardBody>
-				<div className="flex justify-between items-center text-xs text-gray-500">
+				<div className="flex justify-between items-center text-xs text-muted-foreground">
 					<span>
 						Kiosk mode {kioskEnabled ? "enabled" : "disabled"}
 						{actionQueueSize > 0 && ` • ${actionQueueSize} pending`}
@@ -175,10 +174,10 @@ function ClockInForm({
 
 				<div className="mt-3 flex flex-col gap-1 mb-6">
 					<div className="flex items-center justify-between">
-						<label className="text-xs font-medium text-gray-700">Device API Key</label>
+						<label className="text-xs font-medium text-foreground">Device API Key</label>
 						<button
 							type="button"
-							className="text-xs text-blue-600 hover:underline"
+							className="text-xs text-primary hover:underline"
 							onClick={() => {
 								if (typeof window !== "undefined") {
 									const next = window.prompt("Enter API key", apiKey) ?? apiKey;
@@ -223,7 +222,7 @@ function ClockInForm({
 					<form action={pinFormAction} onSubmit={handlePinSubmit}>
 						<div className="flex flex-col gap-1">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-gray-700 w-24 inline-block">
+								<span className="text-sm font-medium text-foreground w-24 inline-block">
 									Enter PIN
 								</span>
 							</label>
@@ -239,7 +238,7 @@ function ClockInForm({
 									}
 								}}
 								placeholder="4-6 digit PIN"
-								className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
 								inputMode="numeric"
 								autoFocus={kioskEnabled}
 								maxLength={6}
@@ -250,11 +249,11 @@ function ClockInForm({
 
 						<div className="flex flex-col gap-1 mt-3">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-gray-700 w-24 inline-block">Station</span>
+								<span className="text-sm font-medium text-foreground w-24 inline-block">Station</span>
 							</label>
 							<select
 								name="stationId"
-								className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
 							>
 								<option value="">Use last station</option>
 								{stations.map((st) => (
@@ -284,13 +283,13 @@ function ClockInForm({
 					<form action={selectFormAction} onSubmit={handleSelectSubmit}>
 						<div className="flex flex-col gap-1">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-gray-700 w-24 inline-block">
+								<span className="text-sm font-medium text-foreground w-24 inline-block">
 									Employee
 								</span>
 							</label>
 							<select
 								name="employeeId"
-								className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
 								required
 							>
 								<option value="">Select employee</option>
@@ -304,11 +303,11 @@ function ClockInForm({
 
 						<div className="flex flex-col gap-1 mt-3">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-gray-700 w-24 inline-block">Station</span>
+								<span className="text-sm font-medium text-foreground w-24 inline-block">Station</span>
 							</label>
 							<select
 								name="stationId"
-								className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
 								required
 							>
 								<option value="">Select station</option>
@@ -482,7 +481,7 @@ function ActiveSessions({
 												</span>
 											)}
 										</div>
-										<p className="text-sm text-gray-600">{log.station?.name || "No station"}</p>
+										<p className="text-sm text-muted-foreground">{log.station?.name || "No station"}</p>
 										<p className="text-xs">
 											Started: {new Date(log.startTime).toLocaleTimeString()}
 										</p>
@@ -566,37 +565,37 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 
 								<div className="flex flex-col gap-1 mb-3">
 									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-700">Start Time</span>
+										<span className="text-sm font-medium text-foreground">Start Time</span>
 									</label>
 									<input
 										type="datetime-local"
 										name="startTime"
 										defaultValue={formatDateTimeLocal(log.startTime)}
-										className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										required
 									/>
 								</div>
 
 								<div className="flex flex-col gap-1 mb-3">
 									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-700">End Time</span>
+										<span className="text-sm font-medium text-foreground">End Time</span>
 									</label>
 									<input
 										type="datetime-local"
 										name="endTime"
 										defaultValue={formatDateTimeLocal(log.endTime)}
-										className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									/>
 								</div>
 
 								<div className="flex flex-col gap-1 mb-3">
 									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-700">Type</span>
+										<span className="text-sm font-medium text-foreground">Type</span>
 									</label>
 									<select
 										name="type"
 										defaultValue={log.type}
-										className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										required
 									>
 										<option value="WORK">Work</option>
@@ -606,12 +605,12 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 
 								<div className="flex flex-col gap-1 mb-3">
 									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-700">Station</span>
+										<span className="text-sm font-medium text-foreground">Station</span>
 									</label>
 									<select
 										name="stationId"
 										defaultValue={log.stationId || ""}
-										className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									>
 										<option value="">None</option>
 										{stations.map((st) => (
@@ -624,12 +623,12 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 
 								<div className="flex flex-col gap-1 mb-4">
 									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-700">Note</span>
+										<span className="text-sm font-medium text-foreground">Note</span>
 									</label>
 									<textarea
 										name="note"
 										defaultValue={log.note || ""}
-										className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										rows={3}
 									/>
 								</div>
@@ -861,36 +860,36 @@ function TimeHistory({
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-gray-700">Start Date</span>
+							<span className="text-sm font-medium text-foreground">Start Date</span>
 						</label>
 						<input
 							type="date"
 							value={startDate}
 							onChange={(e) => setStartDate(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-gray-700">End Date</span>
+							<span className="text-sm font-medium text-foreground">End Date</span>
 						</label>
 						<input
 							type="date"
 							value={endDate}
 							onChange={(e) => setEndDate(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-gray-700">Employee</span>
+							<span className="text-sm font-medium text-foreground">Employee</span>
 						</label>
 						<select
 							value={selectedEmployeeId}
 							onChange={(e) => setSelectedEmployeeId(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent select-sm"
+							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent select-sm"
 						>
 							<option value="">All Employees</option>
 							{employees.map((emp) => (
@@ -903,12 +902,12 @@ function TimeHistory({
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-gray-700">Station</span>
+							<span className="text-sm font-medium text-foreground">Station</span>
 						</label>
 						<select
 							value={selectedStationId}
 							onChange={(e) => setSelectedStationId(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent select-sm"
+							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent select-sm"
 						>
 							<option value="">All Stations</option>
 							<option value="none">No Station</option>
@@ -922,24 +921,24 @@ function TimeHistory({
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-gray-700">Search</span>
+							<span className="text-sm font-medium text-foreground">Search</span>
 						</label>
 						<input
 							type="text"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							placeholder="Employee name..."
-							className="px-3 py-2 border border-gray-300 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
 						/>
 					</div>
 				</div>
 
-				<div className="text-sm text-gray-600 mb-2">
+				<div className="text-sm text-muted-foreground mb-2">
 					Showing {filteredLogs.length} of {completedLogs.length} entries
 				</div>
 
 				{filteredLogs.length === 0 ? (
-					<p className="text-sm text-gray-500">No completed sessions match the filters</p>
+					<p className="text-sm text-muted-foreground">No completed sessions match the filters</p>
 				) : (
 					<>
 						<div className="overflow-x-auto">
@@ -1003,19 +1002,19 @@ function TimeHistory({
 								</tbody>
 							</table>
 						</div>
-						<div className="border-t border-gray-200 my-4"></div>
+						<div className="border-t my-4"></div>
 						<div className="flex justify-end">
-							<div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4 shadow">
+							<div className="grid grid-cols-3 gap-4 bg-accent rounded-lg p-4 shadow">
 								<div>
-									<div className="text-xs font-medium text-gray-600">Gross Hours (Work)</div>
-									<div className="text-2xl font-bold text-gray-900">{grossHours.toFixed(2)}</div>
+									<div className="text-xs font-medium text-muted-foreground">Gross Hours (Work)</div>
+									<div className="text-2xl font-bold text-foreground">{grossHours.toFixed(2)}</div>
 								</div>
 								<div>
-									<div className="text-xs font-medium text-gray-600">Break Hours</div>
-									<div className="text-2xl font-bold text-gray-900">{breakHours.toFixed(2)}</div>
+									<div className="text-xs font-medium text-muted-foreground">Break Hours</div>
+									<div className="text-2xl font-bold text-foreground">{breakHours.toFixed(2)}</div>
 								</div>
 								<div>
-									<div className="text-xs font-medium text-gray-600">
+									<div className="text-xs font-medium text-muted-foreground">
 										Net Hours
 										{showOvertimeWarning && (
 											<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
@@ -1023,9 +1022,9 @@ function TimeHistory({
 											</span>
 										)}
 									</div>
-									<div className="text-2xl font-bold text-gray-900">{netHours.toFixed(2)}</div>
+									<div className="text-2xl font-bold text-foreground">{netHours.toFixed(2)}</div>
 									{selectedEmployee && (
-										<div className="text-xs text-gray-500">Daily limit: {dailyLimit}h</div>
+										<div className="text-xs text-muted-foreground">Daily limit: {dailyLimit}h</div>
 									)}
 								</div>
 							</div>
@@ -1110,10 +1109,7 @@ export function TimeTracking({
 
 	return (
 		<KioskContext.Provider value={contextValue}>
-			<div className="mb-6 flex justify-between items-center">
-				<Link to="/time-clock/reports">
-					<Button variant="outline">View Reports</Button>
-				</Link>
+			<div className="mb-6 flex justify-end items-center">
 				<Button type="button" variant="primary" onPress={() => setKioskEnabled(!kioskEnabled)}>
 					{kioskEnabled ? "Disable Kiosk Mode" : "Enable Kiosk Mode"}
 				</Button>
