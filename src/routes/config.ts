@@ -113,6 +113,11 @@ export function routes() {
 							lazy: () => import("./manager/timesheets/route.tsx"),
 						},
 						{
+							id: "manager-schedule",
+							path: "schedule",
+							lazy: () => import("./manager/schedule/route.tsx"),
+						},
+						{
 							id: "manager-tasks",
 							path: "tasks",
 							lazy: () => import("./manager/tasks/route.tsx"),

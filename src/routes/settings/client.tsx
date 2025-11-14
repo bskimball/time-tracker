@@ -15,7 +15,7 @@ import { Button } from "~/components/ds/button";
 import { SimpleInput } from "~/components/ds/input";
 import { Alert } from "~/components/ds/alert";
 import { Card, CardBody, CardHeader, CardTitle } from "~/components/ds/card";
-import { cn } from "~/lib/cn";
+import { Tabs, TabList, Tab, TabPanel } from "~/components/ds";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
 	const { pending } = useFormStatus();
@@ -253,45 +253,32 @@ export function SettingsManagement({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex gap-1 border-b border-border bg-muted/30 rounded-t-lg p-1">
-				<button
-					onClick={() => {
-						setActiveTab("stations");
-						if (typeof window !== "undefined") {
-							window.history.replaceState(null, "", "/settings?tab=stations");
-						}
-					}}
-					className={cn(
-						"px-6 py-2.5 font-medium rounded-md transition-all",
-						activeTab === "stations"
-							? "bg-background text-foreground shadow-sm"
-							: "text-muted-foreground hover:text-foreground hover:bg-background/50"
-					)}
-				>
-					Stations
-				</button>
-				<button
-					onClick={() => {
-						setActiveTab("employees");
-						if (typeof window !== "undefined") {
-							window.history.replaceState(null, "", "/settings?tab=employees");
-						}
-					}}
-					className={cn(
-						"px-6 py-2.5 font-medium rounded-md transition-all",
-						activeTab === "employees"
-							? "bg-background text-foreground shadow-sm"
-							: "text-muted-foreground hover:text-foreground hover:bg-background/50"
-					)}
-				>
-					Employees
-				</button>
-			</div>
-
-			<div className="mt-4">
-				{activeTab === "stations" && <StationManagement stations={stations} />}
-				{activeTab === "employees" && <EmployeeManagement employees={employees} />}
-			</div>
+			<Tabs
+				selectedKey={activeTab}
+				onSelectionChange={(key: React.Key) => {
+					const nextTab = key === "employees" ? "employees" : "stations";
+					setActiveTab(nextTab);
+					if (typeof window !== "undefined") {
+						window.history.replaceState(null, "", `/settings?tab=${nextTab}`);
+					}
+				}}
+				variant="pill"
+			>
+				<TabList aria-label="Settings sections">
+					<Tab id="stations">Stations</Tab>
+					<Tab id="employees">Employees</Tab>
+				</TabList>
+				<TabPanel id="stations">
+					<div className="mt-4">
+						<StationManagement stations={stations} />
+					</div>
+				</TabPanel>
+				<TabPanel id="employees">
+					<div className="mt-4">
+						<EmployeeManagement employees={employees} />
+					</div>
+				</TabPanel>
+			</Tabs>
 		</div>
 	);
 }

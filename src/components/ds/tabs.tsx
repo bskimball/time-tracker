@@ -1,83 +1,125 @@
 "use client";
 
-import React from "react";
+import React, { createContext, useContext, useMemo } from "react";
+import {
+	Tabs as AriaTabs,
+	TabList as AriaTabList,
+	Tab as AriaTab,
+	TabPanel as AriaTabPanel,
+	type TabsProps as AriaTabsProps,
+	type TabListProps as AriaTabListProps,
+	type TabProps as AriaTabProps,
+	type TabPanelProps as AriaTabPanelProps,
+} from "react-aria-components";
 import { cn } from "~/lib/cn";
 
-interface TabsProps {
+type TabVariant = "underline" | "pill";
+type TabSize = "sm" | "md";
+
+interface TabsContextValue {
+	variant: TabVariant;
+	size: TabSize;
+}
+
+const TabsContext = createContext<TabsContextValue>({ variant: "underline", size: "md" });
+
+function useTabsContext() {
+	return useContext(TabsContext);
+}
+
+type TabsProps = Omit<AriaTabsProps, "className"> & {
 	children: React.ReactNode;
 	className?: string;
-}
+	variant?: TabVariant;
+	size?: TabSize;
+};
 
-interface TabListProps {
-	children: React.ReactNode;
-	className?: string;
-}
-
-interface TabProps {
-	children: React.ReactNode;
-	isActive: boolean;
-	onClick: () => void;
-	className?: string;
-}
-
-interface TabPanelProps {
-	children: React.ReactNode;
-	isActive: boolean;
-	className?: string;
-}
-
-/**
- * Tabs container component
- */
-export function Tabs({ children, className = "" }: TabsProps) {
-	return <div className={cn("w-full", className)}>{children}</div>;
-}
-
-/**
- * Tab list component - contains Tab buttons
- */
-export function TabList({ children, className = "" }: TabListProps) {
+export function Tabs({
+	children,
+	className,
+	variant = "underline",
+	size = "md",
+	...props
+}: TabsProps) {
+	const contextValue = useMemo(() => ({ variant, size }), [variant, size]);
 	return (
-		<div className={cn("flex gap-1 border-b border-border", className)} role="tablist">
-			{children}
-		</div>
+		<TabsContext.Provider value={contextValue}>
+			<AriaTabs {...props} className={cn("w-full", className)}>
+				{children}
+			</AriaTabs>
+		</TabsContext.Provider>
 	);
 }
 
-/**
- * Individual Tab button component
- */
-export function Tab({ children, isActive, onClick, className = "" }: TabProps) {
+type TabListProps = Omit<AriaTabListProps<object>, "className"> & {
+	children: React.ReactNode;
+	className?: string;
+};
+
+export function TabList({ children, className, ...props }: TabListProps) {
+	const { variant } = useTabsContext();
 	return (
-		<button
-			type="button"
-			role="tab"
-			aria-selected={isActive}
-			onClick={onClick}
+		<AriaTabList
+			{...props}
 			className={cn(
-				"relative px-4 py-2.5 font-medium text-sm transition-all rounded-t-md",
-				"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background",
-				"after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:transition-all",
-				isActive
-					? "text-primary after:bg-primary"
-					: "text-muted-foreground hover:text-foreground hover:bg-accent/50 after:bg-transparent",
+				"flex flex-wrap gap-1",
+				variant === "underline" ? "border-b border-border" : "bg-muted/40 rounded-lg p-1",
 				className
 			)}
 		>
 			{children}
-		</button>
+		</AriaTabList>
 	);
 }
 
-/**
- * Tab panel component - contains content for a tab
- */
-export function TabPanel({ children, isActive, className = "" }: TabPanelProps) {
-	if (!isActive) return null;
+type TabProps = Omit<AriaTabProps, "className"> & {
+	children: React.ReactNode;
+	className?: string;
+};
 
+const tabSizeStyles: Record<TabSize, string> = {
+	sm: "text-sm px-3 py-2",
+	md: "text-sm px-4 py-2.5",
+};
+
+const variantStyles: Record<TabVariant, string> = {
+	underline:
+		"rounded-t-md border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary",
+	pill: "rounded-md data-[selected=true]:bg-background data-[selected=true]:text-foreground data-[selected=true]:shadow-sm",
+};
+
+export function Tab({ children, className, ...props }: TabProps) {
+	const { variant, size } = useTabsContext();
 	return (
-		<div role="tabpanel" className={cn("py-6 px-1", className)}>
+		<AriaTab
+			{...props}
+			className={cn(
+				"relative font-medium text-muted-foreground transition-all focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
+				tabSizeStyles[size],
+				variantStyles[variant],
+				className
+			)}
+		>
 			{children}
-		</div>
+		</AriaTab>
+	);
+}
+
+type TabPanelProps = Omit<AriaTabPanelProps, "className"> & {
+	children: React.ReactNode;
+	className?: string;
+};
+
+export function TabPanel({ children, className, ...props }: TabPanelProps) {
+	return (
+		<AriaTabPanel
+			{...props}
+			className={cn(
+				"pt-6 focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background",
+				className
+			)}
+		>
+			{children}
+		</AriaTabPanel>
 	);
 }

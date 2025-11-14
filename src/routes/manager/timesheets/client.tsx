@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+import type React from "react";
+import {
+	Button,
+	Input,
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+	Tabs,
+	TabList,
+	Tab,
+	TabPanel,
+} from "~/components/ds";
 import type { Employee } from "@prisma/client";
 
 type TimeLogWithDetails = {
@@ -29,7 +41,7 @@ interface TimesheetProps {
 export function TimesheetManager({ initialLogs, employees, stations }: TimesheetProps) {
 	const logs = initialLogs;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
-	const [activeTab, setActiveTab] = useState("logs");
+	const [activeTab, setActiveTab] = useState<"logs" | "corrections" | "active">("logs");
 
 	const formatDuration = (start: Date, end: Date | null) => {
 		if (!end) return "In Progress";
@@ -66,211 +78,184 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 				</Button>
 			</div>
 
-			{/* Tabs */}
-			<div className="border-b">
-				<nav className="flex space-x-8">
-					<button
-						onClick={() => setActiveTab("logs")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "logs"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
-						Current Time Logs
-					</button>
-					<button
-						onClick={() => setActiveTab("corrections")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "corrections"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
-						Corrections History
-					</button>
-					<button
-						onClick={() => setActiveTab("active")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "active"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
-						Active Employees
-					</button>
-				</nav>
-			</div>
+			<Tabs
+				selectedKey={activeTab}
+				onSelectionChange={(key: React.Key) => setActiveTab(key as typeof activeTab)}
+			>
+				<TabList aria-label="Timesheet sections">
+					<Tab id="logs">Current Time Logs</Tab>
+					<Tab id="corrections">Corrections History</Tab>
+					<Tab id="active">Active Employees</Tab>
+				</TabList>
 
-			{/* Tab Content */}
-			{activeTab === "logs" && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Time Logs</CardTitle>
-					</CardHeader>
-					<CardBody>
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead>
-									<tr className="border-b">
-										<th className="text-left p-4">Employee</th>
-										<th className="text-left p-4">Type</th>
-										<th className="text-left p-4">Station</th>
-										<th className="text-left p-4">Start Time</th>
-										<th className="text-left p-4">End Time</th>
-										<th className="text-left p-4">Duration</th>
-										<th className="text-left p-4">Method</th>
-										<th className="text-left p-4">Actions</th>
-									</tr>
-								</thead>
-								<tbody>
-									{logs.map((log) => (
-										<tr key={log.id} className="border-b hover:bg-muted/50">
-											<td className="p-4">
-												<div>
-													<p className="font-medium">{log.Employee.name}</p>
-													<p className="text-sm text-muted-foreground">{log.Employee.email}</p>
-												</div>
-											</td>
-											<td className="p-4">
-												<span
-													className={`px-2 py-1 text-xs rounded ${
-														log.type === "WORK"
-															? "bg-accent text-foreground"
-															: "bg-accent text-muted-foreground"
-													}`}
-												>
-													{log.type}
-												</span>
-											</td>
-											<td className="p-4">{log.Station?.name || "None"}</td>
-											<td className="p-4">
-												<div>
-													<p>{new Date(log.startTime).toLocaleDateString()}</p>
-													<p className="text-sm text-muted-foreground">
-														{new Date(log.startTime).toLocaleTimeString()}
-													</p>
-												</div>
-											</td>
-											<td className="p-4">
-												{log.endTime ? (
+				<TabPanel id="logs">
+					<Card>
+						<CardHeader>
+							<CardTitle>Time Logs</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<div className="overflow-x-auto">
+								<table className="w-full">
+									<thead>
+										<tr className="border-b">
+											<th className="text-left p-4">Employee</th>
+											<th className="text-left p-4">Type</th>
+											<th className="text-left p-4">Station</th>
+											<th className="text-left p-4">Start Time</th>
+											<th className="text-left p-4">End Time</th>
+											<th className="text-left p-4">Duration</th>
+											<th className="text-left p-4">Method</th>
+											<th className="text-left p-4">Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										{logs.map((log) => (
+											<tr key={log.id} className="border-b hover:bg-muted/50">
+												<td className="p-4">
 													<div>
-														<p>{new Date(log.endTime).toLocaleDateString()}</p>
+														<p className="font-medium">{log.Employee.name}</p>
+														<p className="text-sm text-muted-foreground">{log.Employee.email}</p>
+													</div>
+												</td>
+												<td className="p-4">
+													<span
+														className={`px-2 py-1 text-xs rounded ${
+															log.type === "WORK"
+																? "bg-green-100 text-green-800"
+																: "bg-accent text-muted-foreground"
+														}`}
+													>
+														{log.type}
+													</span>
+												</td>
+												<td className="p-4">{log.Station?.name || "None"}</td>
+												<td className="p-4">
+													<div>
+														<p>{new Date(log.startTime).toLocaleDateString()}</p>
 														<p className="text-sm text-muted-foreground">
-															{new Date(log.endTime).toLocaleTimeString()}
+															{new Date(log.startTime).toLocaleTimeString()}
 														</p>
 													</div>
-												) : (
-													<span className="text-orange-600 font-medium">Active</span>
-												)}
-											</td>
-											<td className="p-4">{formatDuration(log.startTime, log.endTime)}</td>
-											<td className="p-4">{getMethodBadge(log.clockMethod)}</td>
-											<td className="p-4">
-												<div className="flex space-x-2">
-													{!log.endTime && (
-														<Button size="sm" variant="outline">
-															End Shift
-														</Button>
+												</td>
+												<td className="p-4">
+													{log.endTime ? (
+														<div>
+															<p>{new Date(log.endTime).toLocaleDateString()}</p>
+															<p className="text-sm text-muted-foreground">
+																{new Date(log.endTime).toLocaleTimeString()}
+															</p>
+														</div>
+													) : (
+														<span className="text-orange-600 font-medium">Active</span>
 													)}
-													<Button size="sm" variant="outline">
-														Edit
-													</Button>
-												</div>
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-
-						{logs.length === 0 && (
-							<div className="text-center py-8">
-								<p className="text-muted-foreground">No time logs found</p>
+												</td>
+												<td className="p-4">{formatDuration(log.startTime, log.endTime)}</td>
+												<td className="p-4">{getMethodBadge(log.clockMethod)}</td>
+												<td className="p-4">
+													<div className="flex space-x-2">
+														{!log.endTime && (
+															<Button size="sm" variant="outline">
+																End Shift
+															</Button>
+														)}
+														<Button size="sm" variant="outline">
+															Edit
+														</Button>
+													</div>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
 							</div>
-						)}
-					</CardBody>
-				</Card>
-			)}
 
-			{activeTab === "corrections" && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Correction History</CardTitle>
-					</CardHeader>
-					<CardBody>
-						<div className="space-y-3">
-							<p className="text-sm text-muted-foreground">
-								Showing manual corrections and modifications made by managers
-							</p>
-							{/* Filter corrections (clockMethod: "MANUAL") from logs */}
-							{logs
-								.filter((log) => log.clockMethod === "MANUAL")
-								.map((log) => (
-									<div key={log.id} className="border rounded p-4 bg-muted/30">
-										<div className="flex justify-between items-start">
-											<div>
-												<h4 className="font-medium">
-													{log.Employee.name} - {log.type}
-												</h4>
-												<p className="text-sm text-muted-foreground">
-													{new Date(log.startTime).toLocaleString()}
-													{log.endTime && ` - ${new Date(log.endTime).toLocaleString()}`}
-												</p>
-												<p className="text-sm mt-2">{log.note}</p>
-											</div>
-											<div>
-												<span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
-													Correction
-												</span>
-											</div>
-										</div>
-									</div>
-								))}
-							{logs.filter((log) => log.clockMethod === "MANUAL").length === 0 && (
-								<p className="text-center text-muted-foreground py-8">No corrections found</p>
+							{logs.length === 0 && (
+								<div className="text-center py-8">
+									<p className="text-muted-foreground">No time logs found</p>
+								</div>
 							)}
-						</div>
-					</CardBody>
-				</Card>
-			)}
+						</CardBody>
+					</Card>
+				</TabPanel>
 
-			{activeTab === "active" && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Currently Clocked In</CardTitle>
-					</CardHeader>
-					<CardBody>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{logs
-								.filter((log) => !log.endTime && log.type === "WORK")
-								.map((log) => (
-									<div key={log.id} className="border rounded p-4">
-										<h4 className="font-medium">{log.Employee.name}</h4>
-										<p className="text-sm text-muted-foreground">Station: {log.Station?.name}</p>
-										<p className="text-sm text-muted-foreground">
-											Started: {new Date(log.startTime).toLocaleTimeString()}
-										</p>
-										<p className="text-sm font-medium mt-2">
-											Duration: {formatDuration(log.startTime, null)}
-										</p>
-										<div className="mt-3 space-x-2">
-											<Button size="sm" variant="outline">
-												End Shift
-											</Button>
+				<TabPanel id="corrections">
+					<Card>
+						<CardHeader>
+							<CardTitle>Correction History</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<div className="space-y-3">
+								<p className="text-sm text-muted-foreground">
+									Showing manual corrections and modifications made by managers
+								</p>
+								{logs
+									.filter((log) => log.clockMethod === "MANUAL")
+									.map((log) => (
+										<div key={log.id} className="border rounded p-4 bg-muted/30">
+											<div className="flex justify-between items-start">
+												<div>
+													<h4 className="font-medium">
+														{log.Employee.name} - {log.type}
+													</h4>
+													<p className="text-sm text-muted-foreground">
+														{new Date(log.startTime).toLocaleString()}
+														{log.endTime && ` - ${new Date(log.endTime).toLocaleString()}`}
+													</p>
+													<p className="text-sm mt-2">{log.note}</p>
+												</div>
+												<div>
+													<span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
+														Correction
+													</span>
+												</div>
+											</div>
 										</div>
-									</div>
-								))}
-						</div>
+									))}
+								{logs.filter((log) => log.clockMethod === "MANUAL").length === 0 && (
+									<p className="text-center text-muted-foreground py-8">No corrections found</p>
+								)}
+							</div>
+						</CardBody>
+					</Card>
+				</TabPanel>
 
-						{logs.filter((log) => !log.endTime && log.type === "WORK").length === 0 && (
-							<p className="text-center text-muted-foreground py-8">
-								No employees currently clocked in
-							</p>
-						)}
-					</CardBody>
-				</Card>
-			)}
+				<TabPanel id="active">
+					<Card>
+						<CardHeader>
+							<CardTitle>Currently Clocked In</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{logs
+									.filter((log) => !log.endTime && log.type === "WORK")
+									.map((log) => (
+										<div key={log.id} className="border rounded p-4">
+											<h4 className="font-medium">{log.Employee.name}</h4>
+											<p className="text-sm text-muted-foreground">Station: {log.Station?.name}</p>
+											<p className="text-sm text-muted-foreground">
+												Started: {new Date(log.startTime).toLocaleTimeString()}
+											</p>
+											<p className="text-sm font-medium mt-2">
+												Duration: {formatDuration(log.startTime, null)}
+											</p>
+											<div className="mt-3 space-x-2">
+												<Button size="sm" variant="outline">
+													End Shift
+												</Button>
+											</div>
+										</div>
+									))}
+							</div>
+
+							{logs.filter((log) => !log.endTime && log.type === "WORK").length === 0 && (
+								<p className="text-center text-muted-foreground py-8">
+									No employees currently clocked in
+								</p>
+							)}
+						</CardBody>
+					</Card>
+				</TabPanel>
+			</Tabs>
 
 			{showCorrectionForm && (
 				<TimeCorrectionForm
@@ -278,7 +263,6 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 					stations={stations}
 					onClose={() => setShowCorrectionForm(false)}
 					onSubmit={async (data) => {
-						// Handle form submission
 						console.log("Submitting correction:", data);
 						setShowCorrectionForm(false);
 					}}

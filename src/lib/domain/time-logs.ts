@@ -1,5 +1,7 @@
 import type { Prisma, PrismaClient, TimeLog_type } from "@prisma/client";
 
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
 export interface TimeLogFilters {
 	employeeId?: string;
 	stationId?: string;
@@ -9,7 +11,7 @@ export interface TimeLogFilters {
 	types?: TimeLog_type[];
 }
 
-export async function getActiveWorkLog(db: PrismaClient, employeeId: string) {
+export async function getActiveWorkLog(db: DbClient, employeeId: string) {
 	return db.timeLog.findFirst({
 		where: {
 			employeeId,
@@ -20,7 +22,7 @@ export async function getActiveWorkLog(db: PrismaClient, employeeId: string) {
 	});
 }
 
-export async function getActiveBreakLog(db: PrismaClient, employeeId: string) {
+export async function getActiveBreakLog(db: DbClient, employeeId: string) {
 	return db.timeLog.findFirst({
 		where: {
 			employeeId,
@@ -31,7 +33,7 @@ export async function getActiveBreakLog(db: PrismaClient, employeeId: string) {
 	});
 }
 
-export async function listTimeLogs(db: PrismaClient, filters: TimeLogFilters = {}) {
+export async function listTimeLogs(db: DbClient, filters: TimeLogFilters = {}) {
 	const where: Prisma.TimeLogWhereInput = {};
 
 	if (filters.employeeId) {
@@ -79,7 +81,7 @@ export async function listTimeLogs(db: PrismaClient, filters: TimeLogFilters = {
 }
 
 export async function listTimeLogsForRange(
-	db: PrismaClient,
+	db: DbClient,
 	employeeId: string,
 	startDate: Date,
 	endDate: Date
@@ -98,7 +100,7 @@ export async function listTimeLogsForRange(
 }
 
 export async function createWorkLog(
-	db: PrismaClient,
+	db: DbClient,
 	data: {
 		employeeId: string;
 		stationId: string;
@@ -111,12 +113,14 @@ export async function createWorkLog(
 			stationId: data.stationId,
 			type: "WORK",
 			clockMethod: data.clockMethod ?? "PIN",
+			createdAt: new Date(),
+			updatedAt: new Date(),
 		},
 	});
 }
 
 export async function createBreakLog(
-	db: PrismaClient,
+	db: DbClient,
 	data: { employeeId: string; stationId?: string | null }
 ) {
 	return db.timeLog.create({
@@ -124,18 +128,20 @@ export async function createBreakLog(
 			employeeId: data.employeeId,
 			stationId: data.stationId || undefined,
 			type: "BREAK",
+			createdAt: new Date(),
+			updatedAt: new Date(),
 		},
 	});
 }
 
-export async function stopLog(db: PrismaClient, logId: string) {
+export async function stopLog(db: DbClient, logId: string) {
 	return db.timeLog.update({
 		where: { id: logId },
 		data: { endTime: new Date() },
 	});
 }
 
-export async function softDeleteLog(db: PrismaClient, logId: string) {
+export async function softDeleteLog(db: DbClient, logId: string) {
 	return db.timeLog.update({
 		where: { id: logId },
 		data: { deletedAt: new Date() },
@@ -143,7 +149,7 @@ export async function softDeleteLog(db: PrismaClient, logId: string) {
 }
 
 export async function updateTimeLog(
-	db: PrismaClient,
+	db: DbClient,
 	logId: string,
 	data: {
 		startTime: Date;
