@@ -60,6 +60,11 @@ export function routes() {
 							index: true,
 							lazy: () => import("./floor/index/route.tsx"),
 						},
+						{
+							id: "floor-kiosk",
+							path: "kiosk",
+							lazy: () => import("./floor/kiosk/route.tsx"),
+						},
 					],
 				},
 
@@ -146,11 +151,6 @@ export function routes() {
 					path: "time-clock",
 					// Public route - no auth required for guest access
 					lazy: () => import("./time-clock/route.tsx"),
-				},
-				{
-					id: "time-clock-kiosk",
-					path: "time-clock/kiosk",
-					lazy: () => import("./time-clock/kiosk/route.tsx"),
 				},
 				{
 					id: "settings",

@@ -335,7 +335,9 @@ export function MobileTimeClock({
 										<div className="space-y-3">
 											<div>
 												<h3 className="font-bold text-lg">{log.employee.name}</h3>
-												<p className="text-sm text-muted-foreground">{log.station?.name || "No station"}</p>
+												<p className="text-sm text-muted-foreground">
+													{log.station?.name || "No station"}
+												</p>
 											</div>
 
 											<div className="flex items-center justify-between">

@@ -249,7 +249,9 @@ function ClockInForm({
 
 						<div className="flex flex-col gap-1 mt-3">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">Station</span>
+								<span className="text-sm font-medium text-foreground w-24 inline-block">
+									Station
+								</span>
 							</label>
 							<select
 								name="stationId"
@@ -303,7 +305,9 @@ function ClockInForm({
 
 						<div className="flex flex-col gap-1 mt-3">
 							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">Station</span>
+								<span className="text-sm font-medium text-foreground w-24 inline-block">
+									Station
+								</span>
 							</label>
 							<select
 								name="stationId"
@@ -481,7 +485,9 @@ function ActiveSessions({
 												</span>
 											)}
 										</div>
-										<p className="text-sm text-muted-foreground">{log.station?.name || "No station"}</p>
+										<p className="text-sm text-muted-foreground">
+											{log.station?.name || "No station"}
+										</p>
 										<p className="text-xs">
 											Started: {new Date(log.startTime).toLocaleTimeString()}
 										</p>
@@ -1006,7 +1012,9 @@ function TimeHistory({
 						<div className="flex justify-end">
 							<div className="grid grid-cols-3 gap-4 bg-accent rounded-lg p-4 shadow">
 								<div>
-									<div className="text-xs font-medium text-muted-foreground">Gross Hours (Work)</div>
+									<div className="text-xs font-medium text-muted-foreground">
+										Gross Hours (Work)
+									</div>
 									<div className="text-2xl font-bold text-foreground">{grossHours.toFixed(2)}</div>
 								</div>
 								<div>

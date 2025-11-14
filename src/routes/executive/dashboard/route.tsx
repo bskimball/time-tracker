@@ -110,12 +110,13 @@ export default async function Component({
 									<p className="text-sm mt-1">{alert.message}</p>
 								</div>
 								<span
-									className={`px-2 py-1 text-xs font-medium rounded-full ${alert.priority === "high"
-										? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-										: alert.priority === "medium"
-											? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-											: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-										}`}
+									className={`px-2 py-1 text-xs font-medium rounded-full ${
+										alert.priority === "high"
+											? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+											: alert.priority === "medium"
+												? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+												: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+									}`}
 								>
 									{alert.priority}
 								</span>
@@ -237,12 +238,13 @@ export default async function Component({
 									<div className="flex justify-between">
 										<span className="text-sm text-muted-foreground">Occupancy:</span>
 										<span
-											className={`font-medium ${station.occupancyRate > 90
-												? "text-red-600"
-												: station.occupancyRate > 70
-													? "text-yellow-600"
-													: "text-green-600"
-												}`}
+											className={`font-medium ${
+												station.occupancyRate > 90
+													? "text-red-600"
+													: station.occupancyRate > 70
+														? "text-yellow-600"
+														: "text-green-600"
+											}`}
 										>
 											{station.occupancyRate.toFixed(0)}%
 										</span>

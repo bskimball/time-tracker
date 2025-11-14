@@ -113,7 +113,11 @@ export function getSessionToken(request?: Request): string | null {
 }
 
 export async function validateRequest(request?: Request): Promise<SessionValidationResult> {
-	const token = getSessionToken(request);
+	return validateRequestWithRequest(request ?? getRequest());
+}
+
+export async function validateRequestWithRequest(req?: Request): Promise<SessionValidationResult> {
+	const token = getSessionToken(req);
 	if (!token) {
 		return { session: null, user: null };
 	}

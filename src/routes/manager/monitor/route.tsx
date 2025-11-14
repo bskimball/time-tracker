@@ -10,12 +10,7 @@ export default async function Component() {
 	}
 
 	// Fetch real-time monitoring data
-	const [activeLogs, stations] = await Promise.all([
-		getActiveTimeLogs(),
-		getStations(),
-	]);
+	const [activeLogs, stations] = await Promise.all([getActiveTimeLogs(), getStations()]);
 
-	return (
-		<FloorMonitor activeLogs={activeLogs} stations={stations} />
-	);
+	return <FloorMonitor activeLogs={activeLogs} stations={stations} />;
 }

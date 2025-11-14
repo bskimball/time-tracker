@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router";
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+import { Button, Input, Card, CardHeader, CardTitle, CardBody, Select } from "~/components/ds";
 
 type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TERMINATED";
 
@@ -52,8 +52,8 @@ export function EmployeeRoster({
 	const [page, setPage] = useState(currentPage);
 	const [loading, setLoading] = useState(false);
 
-	const statusOptions: { value: EmployeeStatus | undefined; label: string }[] = [
-		{ value: undefined, label: "All Status" },
+	const statusOptions = [
+		{ value: "", label: "All Status" },
 		{ value: "ACTIVE", label: "Active" },
 		{ value: "INACTIVE", label: "Inactive" },
 		{ value: "ON_LEAVE", label: "On Leave" },
@@ -119,19 +119,12 @@ export function EmployeeRoster({
 							}}
 						/>
 
-						<select
-							className="px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+						<Select
+							options={statusOptions}
 							value={status || ""}
-							onChange={(e) =>
-								setStatus(e.target.value ? (e.target.value as EmployeeStatus) : undefined)
-							}
-						>
-							{statusOptions.map((option) => (
-								<option key={option.value || "all"} value={option.value || ""}>
-									{option.label}
-								</option>
-							))}
-						</select>
+							onChange={(value) => setStatus(value ? (value as EmployeeStatus) : undefined)}
+							placeholder="All Status"
+						/>
 
 						<Button onClick={() => handleSearch()} variant="primary" disabled={loading}>
 							{loading ? "Searching..." : "Search"}

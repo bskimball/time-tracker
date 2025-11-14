@@ -29,7 +29,7 @@ export function Card({ children, className = "" }: CardProps) {
 	return (
 		<div
 			className={cn(
-				"bg-card text-card-foreground border rounded-lg shadow-sm hover:shadow-md transition-shadow",
+				"bg-card text-card-foreground border border-border rounded-md shadow-sm hover:shadow-md transition-all",
 				className
 			)}
 		>
@@ -42,7 +42,7 @@ export function Card({ children, className = "" }: CardProps) {
  * Card header section - typically contains the title and actions.
  */
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
-	return <div className={cn("px-6 py-4 border-b", className)}>{children}</div>;
+	return <div className={cn("px-6 py-4 border-b border-border", className)}>{children}</div>;
 }
 
 /**

@@ -9,11 +9,13 @@ The application now uses a simplified, consolidated routing structure for time t
 ### Primary Routes
 
 #### 1. `/floor` - Primary Time Clock Interface
+
 **Location:** `src/routes/floor/index/route.tsx`
 
 **Purpose:** Main entry point for floor time tracking
 
 **Features:**
+
 - Device-aware (auto-redirects mobile devices to `/floor/time-clock/mobile`)
 - Clean interface without header/footer
 - Uses shared `TimeTracking` component from `src/routes/time-clock/client.tsx`
@@ -22,11 +24,13 @@ The application now uses a simplified, consolidated routing structure for time t
 - Public access (no authentication required)
 
 **When to use:**
+
 - Primary link from login page ("Continue as Guest")
 - Floor workers accessing from any device
 - Clean, focused time tracking experience
 
 **Data fetched:**
+
 - All employees (ordered by name)
 - All stations (ordered by name)
 - Active work sessions
@@ -34,11 +38,13 @@ The application now uses a simplified, consolidated routing structure for time t
 - Completed time logs (last 30 days)
 
 #### 2. `/time-clock/kiosk` - Dedicated Kiosk Mode
+
 **Location:** `src/routes/time-clock/kiosk/route.tsx`
 
 **Purpose:** Full-screen kiosk interface for dedicated time-clock terminals
 
 **Features:**
+
 - Uses specialized `KioskTimeClock` component from `src/routes/time-clock/kiosk/client.tsx`
 - Optimized for kiosk mode workflow
 - Auto-redirects from `/floor` when kiosk mode is enabled in localStorage
@@ -48,11 +54,13 @@ The application now uses a simplified, consolidated routing structure for time t
 - Public access (no authentication required)
 
 **When to use:**
+
 - Dedicated kiosk terminals
 - Auto-activated when user enables "Kiosk Mode" on `/floor`
 - Touch-friendly interface for shared devices
 
 **Key Features:**
+
 - PIN authentication for employees
 - Offline action queue (syncs when online)
 - Auto-refresh every 60 seconds
@@ -60,6 +68,7 @@ The application now uses a simplified, consolidated routing structure for time t
 - Simplified, large-button interface
 
 #### 3. `/time-clock` - Legacy Redirect
+
 **Location:** `src/routes/time-clock/route.tsx`
 
 **Purpose:** Maintains backward compatibility with old URLs
@@ -67,6 +76,7 @@ The application now uses a simplified, consolidated routing structure for time t
 **Behavior:** Permanently redirects (301) to `/floor`
 
 **Why:**
+
 - Ensures old bookmarks/links continue to work
 - Clean URL consolidation
 - Prevents confusion from duplicate routes
@@ -74,11 +84,13 @@ The application now uses a simplified, consolidated routing structure for time t
 ### Supporting Routes
 
 #### `/floor/time-clock/mobile`
+
 **Purpose:** Mobile-optimized time tracking interface
 
 **Access:** Auto-redirect from `/floor` when mobile device is detected
 
 **Features:**
+
 - Touch-optimized UI
 - Mobile-specific components
 - Responsive design for small screens
@@ -166,15 +178,15 @@ src/routes/time-clock/
 
 ## Key Differences Between Routes
 
-| Feature | `/floor` | `/time-clock/kiosk` |
-|---------|----------|---------------------|
-| Layout | Container with heading | Full-screen, no chrome |
-| Navigation | Standard | None (kiosk mode) |
-| Auth Method | Select employee | PIN entry |
-| Auto-refresh | 60s (if kiosk enabled) | Always (60s) |
-| Offline Support | Yes | Enhanced (action queue) |
-| Device Detection | Yes (mobile redirect) | No |
-| Primary Use | General floor access | Dedicated terminals |
+| Feature          | `/floor`               | `/time-clock/kiosk`     |
+| ---------------- | ---------------------- | ----------------------- |
+| Layout           | Container with heading | Full-screen, no chrome  |
+| Navigation       | Standard               | None (kiosk mode)       |
+| Auth Method      | Select employee        | PIN entry               |
+| Auto-refresh     | 60s (if kiosk enabled) | Always (60s)            |
+| Offline Support  | Yes                    | Enhanced (action queue) |
+| Device Detection | Yes (mobile redirect)  | No                      |
+| Primary Use      | General floor access   | Dedicated terminals     |
 
 ## URL Structure
 
@@ -198,6 +210,7 @@ The application had **four overlapping routes**:
 4. `/floor/kiosk` - **BROKEN** (used loader pattern)
 
 **Problems:**
+
 - `/floor/kiosk` violated RSC architecture (loader caused hanging)
 - Duplication between `/time-clock` and `/floor`
 - Two different `KioskTimeClock` components
@@ -211,6 +224,7 @@ The application had **four overlapping routes**:
 2. `/time-clock/kiosk` - Dedicated kiosk mode
 
 **Benefits:**
+
 - No loader violations
 - Single source of truth for components
 - Clear purpose for each route
@@ -255,14 +269,14 @@ npm run dev
 "use server";
 
 export async function newAction(prevState: any, formData: FormData) {
-  const employeeId = formData.get("employeeId") as string;
+	const employeeId = formData.get("employeeId") as string;
 
-  try {
-    await db.someOperation({ data: { employeeId } });
-    return { success: true, message: "Success!" };
-  } catch (error) {
-    return { error: "Failed to perform action" };
-  }
+	try {
+		await db.someOperation({ data: { employeeId } });
+		return { success: true, message: "Success!" };
+	} catch (error) {
+		return { error: "Failed to perform action" };
+	}
 }
 ```
 
@@ -300,6 +314,7 @@ function MyComponent() {
 **Issue:** Enabling kiosk mode doesn't redirect
 
 **Solution:**
+
 - Check localStorage: `window.localStorage.getItem('timeClock:kioskMode')`
 - Ensure `KioskRedirect` component is rendered
 - Check browser console for errors
@@ -309,6 +324,7 @@ function MyComponent() {
 **Issue:** Mobile devices not redirecting to mobile view
 
 **Solution:**
+
 - Verify User-Agent header is being sent
 - Check server-side `isMobileDevice()` function
 - Test with real mobile device or mobile User-Agent string
@@ -318,6 +334,7 @@ function MyComponent() {
 **Issue:** Employees or stations not appearing
 
 **Solution:**
+
 - Check database connection
 - Verify demo data seeding logic runs
 - Check browser console for errors

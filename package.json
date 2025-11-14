@@ -15,7 +15,11 @@
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
 		"check": "npm run format:check && npm run lint && npm run typecheck",
-		"test": "vitest"
+		"test": "vitest",
+		"db:seed": "tsx prisma/seed.ts"
+	},
+	"prisma": {
+		"seed": "tsx prisma/seed.ts"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.19.6",
@@ -71,6 +75,7 @@
 		"prettier": "^3.6.2",
 		"prisma": "^6.19.0",
 		"tailwindcss": "^4.1.14",
+		"tsx": "^4.20.6",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.2",
 		"vite-plugin-devtools-json": "1.0.0",

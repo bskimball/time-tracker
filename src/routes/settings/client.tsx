@@ -253,7 +253,7 @@ export function SettingsManagement({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex gap-4 border-b">
+			<div className="flex gap-1 border-b border-border bg-muted/30 rounded-t-lg p-1">
 				<button
 					onClick={() => {
 						setActiveTab("stations");
@@ -262,10 +262,10 @@ export function SettingsManagement({
 						}
 					}}
 					className={cn(
-						"px-4 py-2 font-medium border-b-2 transition-colors",
+						"px-6 py-2.5 font-medium rounded-md transition-all",
 						activeTab === "stations"
-							? "border-primary text-primary"
-							: "border-transparent text-muted-foreground hover:text-foreground"
+							? "bg-background text-foreground shadow-sm"
+							: "text-muted-foreground hover:text-foreground hover:bg-background/50"
 					)}
 				>
 					Stations
@@ -278,18 +278,20 @@ export function SettingsManagement({
 						}
 					}}
 					className={cn(
-						"px-4 py-2 font-medium border-b-2 transition-colors",
+						"px-6 py-2.5 font-medium rounded-md transition-all",
 						activeTab === "employees"
-							? "border-primary text-primary"
-							: "border-transparent text-muted-foreground hover:text-foreground"
+							? "bg-background text-foreground shadow-sm"
+							: "text-muted-foreground hover:text-foreground hover:bg-background/50"
 					)}
 				>
 					Employees
 				</button>
 			</div>
 
-			{activeTab === "stations" && <StationManagement stations={stations} />}
-			{activeTab === "employees" && <EmployeeManagement employees={employees} />}
+			<div className="mt-4">
+				{activeTab === "stations" && <StationManagement stations={stations} />}
+				{activeTab === "employees" && <EmployeeManagement employees={employees} />}
+			</div>
 		</div>
 	);
 }

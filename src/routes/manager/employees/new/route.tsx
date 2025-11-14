@@ -22,11 +22,5 @@ export default async function Component() {
 		employeeCode: "",
 	};
 
-	return (
-		<EmployeeForm
-			employee={defaultEmployee}
-			stations={stations}
-			isEdit={false}
-		/>
-	);
+	return <EmployeeForm employee={defaultEmployee} stations={stations} isEdit={false} />;
 }

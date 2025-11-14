@@ -39,6 +39,8 @@ app.openapi(
 				select: {
 					id: true,
 					name: true,
+					isActive: true,
+					capacity: true,
 					createdAt: true,
 				},
 			});

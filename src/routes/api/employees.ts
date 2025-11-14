@@ -116,8 +116,15 @@ app.openapi(
 			if (!employee) {
 				return c.json({ success: false as const, error: "Employee not found" }, 404);
 			}
+
 			const serializedEmployee = serializeDates(employee);
-			return c.json({ success: true as const, data: serializedEmployee }, 200);
+			return c.json(
+				{
+					success: true as const,
+					data: serializedEmployee,
+				},
+				200
+			);
 		} catch (error) {
 			const errorResponse = actionError(error);
 			return c.json(errorResponse, 400);

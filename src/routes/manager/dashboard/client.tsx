@@ -60,31 +60,31 @@ export function ManagerDashboard({
 			{/* Critical Alerts */}
 			{alerts.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH").length >
 				0 && (
-					<div className="space-y-3">
-						{alerts
-							.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH")
-							.map((alert) => (
-								<Alert key={alert.id} variant={alert.severity === "CRITICAL" ? "error" : "warning"}>
-									<div className="flex justify-between items-start">
-										<div>
-											<h4 className="font-medium">{alert.title}</h4>
-											<p className="text-sm mt-1">{alert.description}</p>
-											{alert.actionUrl && (
-												<Link to={alert.actionUrl}>
-													<Button size="sm" variant="outline" className="mt-2">
-														View Details
-													</Button>
-												</Link>
-											)}
-										</div>
-										<span className="text-xs text-muted-foreground">
-											{new Date(alert.createdAt).toLocaleTimeString()}
-										</span>
+				<div className="space-y-3">
+					{alerts
+						.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH")
+						.map((alert) => (
+							<Alert key={alert.id} variant={alert.severity === "CRITICAL" ? "error" : "warning"}>
+								<div className="flex justify-between items-start">
+									<div>
+										<h4 className="font-medium">{alert.title}</h4>
+										<p className="text-sm mt-1">{alert.description}</p>
+										{alert.actionUrl && (
+											<Link to={alert.actionUrl}>
+												<Button size="sm" variant="outline" className="mt-2">
+													View Details
+												</Button>
+											</Link>
+										)}
 									</div>
-								</Alert>
-							))}
-					</div>
-				)}
+									<span className="text-xs text-muted-foreground">
+										{new Date(alert.createdAt).toLocaleTimeString()}
+									</span>
+								</div>
+							</Alert>
+						))}
+				</div>
+			)}
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -19,11 +19,5 @@ export default async function Component({ searchParams }: { searchParams?: { pag
 		getStations(),
 	]);
 
-	return (
-		<TimesheetManager
-			initialLogs={logsData.logs}
-			employees={employees}
-			stations={stations}
-		/>
-	);
+	return <TimesheetManager initialLogs={logsData.logs} employees={employees} stations={stations} />;
 }

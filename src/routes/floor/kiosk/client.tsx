@@ -5,10 +5,10 @@ import { useActionState } from "react";
 import { Button } from "~/components/ds/button";
 import { Alert } from "~/components/ds/alert";
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
-import { pinToggleClock as pinToggleAction } from "../actions";
-import { useKioskMode, useAutoRefresh } from "../hooks";
-import { useOfflineActionQueue } from "../offline-queue";
-import { KioskContext, type KioskContextValue } from "../context";
+import { pinToggleClock as pinToggleAction } from "../../time-clock/actions";
+import { useKioskMode, useAutoRefresh } from "../../time-clock/hooks";
+import { useOfflineActionQueue } from "../../time-clock/offline-queue";
+import { KioskContext, type KioskContextValue } from "../../time-clock/context";
 
 const createId = () =>
 	typeof crypto !== "undefined" && crypto.randomUUID
@@ -179,7 +179,7 @@ export function KioskTimeClock({
 	// Handle exit kiosk mode
 	const handleExitKiosk = useCallback(() => {
 		setKioskEnabled(false);
-		window.location.href = "/time-clock";
+		window.location.href = "/floor";
 	}, [setKioskEnabled]);
 
 	return (

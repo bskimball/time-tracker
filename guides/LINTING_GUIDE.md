@@ -126,7 +126,7 @@ All major IDEs support ESLint and Prettier:
 Key "rules": Key "example-rule": Could not find "example-rule"
 ```
 
-_Solution_: Check rule name spelling and plugin availability*
+_Solution_: Check rule name spelling and plugin availability\*
 
 **2. Prettier conflicts with ESLint**
 
@@ -134,7 +134,7 @@ _Solution_: Check rule name spelling and plugin availability*
 [error] "prettier/prettier" and "example" conflict
 ```
 
-_Solution_: Add `prettier` config last in ESLint array*
+_Solution_: Add `prettier` config last in ESLint array\*
 
 **3. TypeScript errors in tests**
 
@@ -142,7 +142,7 @@ _Solution_: Add `prettier` config last in ESLint array*
 error TS2339: Property 'mockResolvedValue' does not exist
 ```
 
-_Solution_: Mock types need proper typing - use `@ts-ignore` sparingly*
+_Solution_: Mock types need proper typing - use `@ts-ignore` sparingly\*
 
 **4. RSC directive warnings**
 
@@ -150,7 +150,7 @@ _Solution_: Mock types need proper typing - use `@ts-ignore` sparingly*
 "use client" directive should be at the top
 ```
 
-_Solution_: Ensure "use client" or "use server" is the very first line*
+_Solution_: Ensure "use client" or "use server" is the very first line\*
 
 ### Performance Tips
 

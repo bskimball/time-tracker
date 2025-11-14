@@ -269,10 +269,11 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 										<div className="text-right">
 											<p className="font-medium">{calculateDuration(log.startTime)}</p>
 											<span
-												className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
+												className={`px-2 py-1 text-xs rounded ${
+													log.type === "WORK"
 														? "bg-accent text-foreground"
 														: "bg-accent text-muted-foreground"
-													}`}
+												}`}
 											>
 												{log.type}
 											</span>

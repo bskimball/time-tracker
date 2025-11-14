@@ -4,7 +4,7 @@ import { Link } from "react-router";
 
 export function Nav({ userRole }: { userRole: string | null }) {
 	const buttonClass =
-		"px-4 py-2 text-foreground hover:bg-muted active:bg-accent disabled:text-muted disabled:cursor-not-allowed rounded transition-colors focus:outline-none focus:ring-2 focus:ring-ring-offset-background focus:ring-primary";
+		"px-4 py-2 text-foreground hover:bg-muted active:bg-accent disabled:text-muted disabled:cursor-not-allowed rounded transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background";
 
 	// Determine dashboard link based on role
 	const dashboardLink =

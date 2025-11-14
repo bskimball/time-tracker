@@ -64,8 +64,10 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 	const currentScenario = scenarios.find((s) => s.id === activeScenario);
 
 	const costPerUnitColor = (costPerUnit: number) => {
-		if (costPerUnit > 0.9) return "text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-700";
-		if (costPerUnit > 0.8) return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700";
+		if (costPerUnit > 0.9)
+			return "text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-700";
+		if (costPerUnit > 0.8)
+			return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700";
 		return "text-green-600 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-900/30 dark:border-green-700";
 	};
 
@@ -80,10 +82,11 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 						{scenarios.map((scenario) => (
 							<div
 								key={scenario.id}
-								className={`cursor-pointer transition-all ${scenario.id === activeScenario
+								className={`cursor-pointer transition-all ${
+									scenario.id === activeScenario
 										? "ring-2 ring-primary border-primary"
 										: "border hover:border-border"
-									}`}
+								}`}
 								onClick={() => setActiveScenario(scenario.id)}
 								style={{ display: "block" }}
 							>
@@ -181,7 +184,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 						<CardBody>
 							<div className="space-y-4">
 								<div className="p-3 bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-700 rounded-lg">
-									<h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Workforce Optimization</h4>
+									<h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+										Workforce Optimization
+									</h4>
 									<p className="text-sm text-blue-800 dark:text-blue-200">
 										{currentScenario.utilization > 90
 											? "Utilization is very high. Consider adding more staff to prevent burnout."
@@ -192,7 +197,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 								</div>
 
 								<div className="p-3 bg-green-50 border border-green-200 dark:bg-green-900/30 dark:border-green-700 rounded-lg">
-									<h4 className="font-medium text-green-900 dark:text-green-100 mb-1">Cost Efficiency</h4>
+									<h4 className="font-medium text-green-900 dark:text-green-100 mb-1">
+										Cost Efficiency
+									</h4>
 									<p className="text-sm text-green-800 dark:text-green-200">
 										{currentScenario.costPerUnit < 0.8
 											? "Excellent cost efficiency. This scenario provides good value per unit."
@@ -203,7 +210,9 @@ export function CapacityPlanningTool({ stationData }: CapacityPlanningProps) {
 								</div>
 
 								<div className="p-3 bg-purple-50 border border-purple-200 dark:bg-purple-900/30 dark:border-purple-700 rounded-lg">
-									<h4 className="font-medium text-purple-900 dark:text-purple-100 mb-1">Bottleneck Analysis</h4>
+									<h4 className="font-medium text-purple-900 dark:text-purple-100 mb-1">
+										Bottleneck Analysis
+									</h4>
 									<div className="text-sm text-purple-800 dark:text-purple-200">
 										<p className="mb-2">Based on current performance patterns:</p>
 										<ul className="list-disc ml-4 space-y-1">

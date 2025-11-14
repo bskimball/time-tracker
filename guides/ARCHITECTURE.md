@@ -113,6 +113,7 @@ Client (entry.browser.tsx)
 **The `fetchServer` function in `entry.rsc.tsx` MUST always return a Response with an RSC payload body.**
 
 ❌ **NEVER do this:**
+
 ```typescript
 async function fetchServer(request: Request) {
   if (needsAuth) {
@@ -123,6 +124,7 @@ async function fetchServer(request: Request) {
 ```
 
 ✅ **ALWAYS do this:**
+
 ```typescript
 export default async function handler(request: Request) {
   // Handle redirects BEFORE calling generateHTML
@@ -151,18 +153,21 @@ src/routes/[route-name]/
 ```
 
 **Server Components** (route.tsx):
+
 - Async functions that fetch data directly
 - Access to database, file system, env variables
 - No React hooks, event handlers, or browser APIs
 - Zero JavaScript bundle impact
 
 **Client Components** (client.tsx):
+
 - Interactive UI with React hooks
 - Event handlers and browser APIs
 - Context providers/consumers
 - Adds to JavaScript bundle
 
 **Server Actions** (actions.ts):
+
 - Form submissions and mutations
 - Database writes
 - Return serializable data
@@ -216,17 +221,17 @@ Routes are defined in `src/routes/config.ts` using React Router's configuration 
 
 ### Role-Based Routes
 
-| Route | Access Level | Purpose |
-|-------|-------------|---------|
-| `/` | Public | Redirects based on auth/role |
-| `/login` | Public | OAuth login page |
-| `/dev-login` | Development | Quick login for testing |
-| `/floor` | Public | Primary time clock interface |
-| `/time-clock/kiosk` | Public | Dedicated kiosk mode |
-| `/settings` | ADMIN | Station/employee management |
-| `/todo` | Authenticated | Todo list |
-| `/manager/*` | MANAGER, ADMIN | Management dashboard |
-| `/executive/*` | ADMIN | Executive analytics |
+| Route               | Access Level   | Purpose                      |
+| ------------------- | -------------- | ---------------------------- |
+| `/`                 | Public         | Redirects based on auth/role |
+| `/login`            | Public         | OAuth login page             |
+| `/dev-login`        | Development    | Quick login for testing      |
+| `/floor`            | Public         | Primary time clock interface |
+| `/time-clock/kiosk` | Public         | Dedicated kiosk mode         |
+| `/settings`         | ADMIN          | Station/employee management  |
+| `/todo`             | Authenticated  | Todo list                    |
+| `/manager/*`        | MANAGER, ADMIN | Management dashboard         |
+| `/executive/*`      | ADMIN          | Executive analytics          |
 
 ### Home Route Redirects
 
@@ -269,13 +274,13 @@ All under `/executive` path, require ADMIN role:
 
 **Key Differences:**
 
-| Feature | `/floor` | `/time-clock/kiosk` |
-|---------|----------|---------------------|
-| Layout | Container with heading | Full-screen |
-| Auth | Employee selection | PIN entry |
-| Auto-refresh | Optional (60s) | Always (60s) |
-| Device Detection | Yes | No |
-| Use Case | General access | Dedicated terminals |
+| Feature          | `/floor`               | `/time-clock/kiosk` |
+| ---------------- | ---------------------- | ------------------- |
+| Layout           | Container with heading | Full-screen         |
+| Auth             | Employee selection     | PIN entry           |
+| Auto-refresh     | Optional (60s)         | Always (60s)        |
+| Device Detection | Yes                    | No                  |
+| Use Case         | General access         | Dedicated terminals |
 
 See `guides/ROUTING_GUIDE.md` for detailed time clock routing information.
 
@@ -284,11 +289,13 @@ See `guides/ROUTING_GUIDE.md` for detailed time clock routing information.
 ### Core Entities
 
 #### User
+
 - OAuth-based authentication
 - Role-based access (ADMIN, MANAGER, WORKER)
 - Optional link to Employee record
 
 #### Employee
+
 - Name, email, PIN hash
 - Status (ACTIVE, INACTIVE, ON_LEAVE, TERMINATED)
 - Station assignments (last, default)
@@ -296,11 +303,13 @@ See `guides/ROUTING_GUIDE.md` for detailed time clock routing information.
 - Time logs and task assignments
 
 #### Station
+
 - Predefined types (PICKING, PACKING, FILLING, RECEIVING, SHIPPING, QUALITY, INVENTORY)
 - Zone and capacity tracking
 - Associated tasks and employees
 
 #### TimeLog
+
 - Work sessions and breaks
 - Employee and station tracking
 - Clock method (PIN, CARD, BIOMETRIC, MANUAL)
@@ -308,11 +317,13 @@ See `guides/ROUTING_GUIDE.md` for detailed time clock routing information.
 - Task linking
 
 #### TaskAssignment
+
 - Links employees to task types
 - Tracks units completed
 - Performance calculations
 
 #### PerformanceMetric
+
 - Daily employee metrics
 - Hours worked, efficiency scores
 - Overtime tracking
@@ -356,6 +367,7 @@ Defined in `src/lib/middleware.ts`:
 - **roleMiddleware(roles)** - Ensures user has required role
 
 Applied in route config:
+
 ```typescript
 {
   path: "manager",
@@ -367,6 +379,7 @@ Applied in route config:
 ### PIN Authentication
 
 Floor workers can use PIN-based authentication:
+
 - PIN hashes stored in Employee table
 - No User record required
 - Limited access (time clock only)
@@ -428,6 +441,7 @@ NODE_ENV="development"
 ### Testing
 
 Tests use Vitest with React Testing Library:
+
 - Server Component testing (async)
 - Client Component testing (interactive)
 - Database mocking via `vi.mock`
@@ -444,6 +458,7 @@ npm run build
 ```
 
 Produces:
+
 - `dist/client/` - Client bundle
 - `dist/server/` - Server bundle
 - `dist/api/` - API server bundle
@@ -455,6 +470,7 @@ npm start
 ```
 
 Runs `server.js` with:
+
 - Hono server on port 3000 (default)
 - Compression enabled
 - Static file serving
@@ -551,26 +567,31 @@ Runs `server.js` with:
 ### Common Issues
 
 **Build Errors**
+
 - Ensure Node.js 22.6+ is installed
 - Clear `node_modules` and reinstall
 - Check for TypeScript errors with `npm run typecheck`
 
 **Database Connection Issues**
+
 - Verify `DATABASE_URL` is correct
 - Ensure MySQL is running
 - Run migrations: `npx prisma migrate deploy`
 
 **Session Issues**
+
 - Check Redis is running
 - Verify `REDIS_HOST` and `REDIS_PORT`
 - Clear Redis cache if needed
 
 **Route Not Found**
+
 - Check `src/routes/config.ts` for route definition
 - Verify middleware isn't blocking access
 - Check authentication state
 
 **RSC Errors**
+
 - Never return redirects from `fetchServer`
 - Handle redirects in main handler before `generateHTML`
 - Ensure Server Components are async
@@ -596,6 +617,7 @@ Runs `server.js` with:
 ### Architecture Decisions
 
 When adding features:
+
 - Prefer Server Components for static content
 - Use Client Components only for interactivity
 - Follow existing file structure patterns

@@ -212,12 +212,13 @@ export default async function Component({
 											<div className="flex justify-between items-center">
 												<span className="text-sm text-muted-foreground">Occupancy:</span>
 												<span
-													className={`font-medium ${station.occupancy > 85
-														? "text-red-600"
-														: station.occupancy > 70
-															? "text-yellow-600"
-															: "text-green-600"
-														}`}
+													className={`font-medium ${
+														station.occupancy > 85
+															? "text-red-600"
+															: station.occupancy > 70
+																? "text-yellow-600"
+																: "text-green-600"
+													}`}
 												>
 													{station.occupancy}%
 												</span>
@@ -228,12 +229,13 @@ export default async function Component({
 											</div>
 											<div className="w-full bg-accent rounded-full h-2">
 												<div
-													className={`h-2 rounded-full ${station.efficiency > 30
-														? "bg-green-500"
-														: station.efficiency > 20
-															? "bg-yellow-500"
-															: "bg-red-500"
-														}`}
+													className={`h-2 rounded-full ${
+														station.efficiency > 30
+															? "bg-green-500"
+															: station.efficiency > 20
+																? "bg-yellow-500"
+																: "bg-red-500"
+													}`}
 													style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
 												></div>
 											</div>
@@ -252,7 +254,9 @@ export default async function Component({
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-muted-foreground">Regular Hours</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">
+									Regular Hours
+								</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold">
@@ -264,7 +268,9 @@ export default async function Component({
 
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-muted-foreground">Overtime</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">
+									Overtime
+								</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold text-orange-600">
@@ -276,7 +282,9 @@ export default async function Component({
 
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">
+									Total Cost
+								</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="text-2xl font-bold">${placeholderData.costs.total.toFixed(2)}</div>
@@ -288,7 +296,9 @@ export default async function Component({
 							className={placeholderData.costs.variance > 0 ? "border-red-200" : "border-green-200"}
 						>
 							<CardHeader>
-								<CardTitle className="text-sm font-medium text-muted-foreground">Variance</CardTitle>
+								<CardTitle className="text-sm font-medium text-muted-foreground">
+									Variance
+								</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div
@@ -469,11 +479,15 @@ export default async function Component({
 									</div>
 									<div className="text-center p-4 bg-accent rounded-lg">
 										<h4 className="font-medium text-foreground">Employee Rankings</h4>
-										<p className="text-sm text-muted-foreground mt-2">Performance-based evaluations</p>
+										<p className="text-sm text-muted-foreground mt-2">
+											Performance-based evaluations
+										</p>
 									</div>
 									<div className="text-center p-4 bg-accent rounded-lg">
 										<h4 className="font-medium text-foreground">Industry Standards</h4>
-										<p className="text-sm text-muted-foreground mt-2">Compare to industry metrics</p>
+										<p className="text-sm text-muted-foreground mt-2">
+											Compare to industry metrics
+										</p>
 									</div>
 								</div>
 							</div>

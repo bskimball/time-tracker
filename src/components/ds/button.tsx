@@ -18,11 +18,11 @@ interface ButtonProps extends Omit<AriaButtonProps, "className" | "isDisabled"> 
 
 const variantStyles: Record<ButtonVariant, string> = {
 	primary:
-		"bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
 	secondary:
 		"bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
 	outline:
-		"border-2 border-border text-foreground hover:bg-accent active:bg-accent/80 aria-disabled:border-muted aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
+		"border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 aria-disabled:border-muted aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
 	ghost:
 		"text-muted-foreground hover:bg-accent active:bg-accent/80 hover:text-foreground aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
 	error:
@@ -46,7 +46,7 @@ export function Button({
 	...props
 }: ButtonProps) {
 	const buttonClass = cn(
-		"inline-flex items-center justify-center font-medium rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
+		"inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
 		variantStyles[variant],
 		sizeStyles[size],
 		className

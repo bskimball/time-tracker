@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "../../lib/db";
+import { listTimeLogs } from "../../lib/domain/time-logs";
 import {
 	actionError,
 	errorResponseSchema,
@@ -44,32 +45,11 @@ app.openapi(
 	async (c) => {
 		try {
 			const { employeeId, stationId, startDate, endDate } = c.req.query();
-			const where: any = {};
-
-			if (employeeId) where.employeeId = employeeId;
-			if (stationId) where.stationId = stationId;
-			if (startDate || endDate) {
-				where.startTime = {};
-				if (startDate) where.startTime.gte = new Date(startDate);
-				if (endDate) where.startTime.lte = new Date(endDate);
-			}
-			where.deletedAt = null;
-
-			const timeLogs = await db.timeLog.findMany({
-				where,
-				select: {
-					id: true,
-					employeeId: true,
-					stationId: true,
-					type: true,
-					startTime: true,
-					endTime: true,
-					note: true,
-					deletedAt: true,
-					createdAt: true,
-					updatedAt: true,
-				},
-				orderBy: { startTime: "desc" },
+			const timeLogs = await listTimeLogs(db, {
+				employeeId,
+				stationId,
+				startDate: startDate ? new Date(startDate) : undefined,
+				endDate: endDate ? new Date(endDate) : undefined,
 			});
 			const serializedTimeLogs = serializeArrayDates(timeLogs);
 			return c.json({ success: true as const, data: serializedTimeLogs }, 200);

@@ -58,7 +58,7 @@ export function Alert({
 	const displayIcon = icon ?? defaultIcons[variant];
 
 	return (
-		<div className={cn("flex gap-3 rounded-lg p-4", styles.container, className)} role="alert">
+		<div className={cn("flex gap-3 rounded-md p-4", styles.container, className)} role="alert">
 			<div className={cn("flex-shrink-0 text-lg font-bold", styles.icon)}>{displayIcon}</div>
 			<div className="flex-1">
 				{title && <h3 className={cn("font-semibold", styles.text)}>{title}</h3>}

@@ -73,13 +73,21 @@ export default async function Component(): Promise<never> {
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, user.id);
 
+		// Redirect based on user role
+		let location = "/floor";
+		if (user.role === "ADMIN") {
+			location = "/executive";
+		} else if (user.role === "MANAGER") {
+			location = "/manager";
+		}
+
 		throw new Response(null, {
 			status: 302,
 			headers: [
 				["Set-Cookie", setSessionTokenCookie(sessionToken, session.expiresAt)],
 				["Set-Cookie", `microsoft_oauth_state=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`],
 				["Set-Cookie", `microsoft_code_verifier=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`],
-				["Location", "/dashboard"],
+				["Location", location],
 			],
 		});
 	} catch (error) {

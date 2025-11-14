@@ -61,9 +61,9 @@ export async function loginAsUser(formData: FormData) {
 	// Redirect based on user role
 	let location = "/floor";
 	if (user.role === "ADMIN") {
-		location = "/executive/dashboard";
+		location = "/executive";
 	} else if (user.role === "MANAGER") {
-		location = "/manager/dashboard";
+		location = "/manager";
 	}
 
 	// Create a redirect response with the session cookie

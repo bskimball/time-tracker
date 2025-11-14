@@ -1,5 +1,14 @@
 import { db } from "../lib/db";
 import bcrypt from "bcryptjs";
+import {
+	createBreakLog,
+	createWorkLog,
+	getActiveBreakLog,
+	getActiveWorkLog,
+	softDeleteLog,
+	stopLog,
+	updateTimeLog,
+} from "../lib/domain/time-logs";
 
 // Helper function for generating IDs - can be mocked in tests
 export const generateId = () => crypto.randomUUID();
@@ -23,28 +32,16 @@ export async function clockInEmployee(
 	assert(employeeId, "Employee is required");
 	assert(stationId, "Station is required");
 
-	const activeLog = await db.timeLog.findFirst({
-		where: {
-			employeeId,
-			endTime: null,
-			type: "WORK",
-			deletedAt: null,
-		},
-	});
+	const activeLog = await getActiveWorkLog(db, employeeId!);
 
 	if (activeLog) {
 		throw new ClockActionError("Employee is already clocked in at another station");
 	}
 
 	await db.$transaction(async (tx) => {
-		await tx.timeLog.create({
-			data: {
-				id: generateId(),
-				employeeId: employeeId!,
-				stationId: stationId!,
-				type: "WORK",
-				updatedAt: new Date(),
-			},
+		await createWorkLog(tx, {
+			employeeId: employeeId!,
+			stationId: stationId!,
 		});
 
 		await tx.employee.update({
@@ -59,10 +56,7 @@ export async function clockInEmployee(
 export async function clockOutLog(logId: string | null): Promise<ClockActionResult> {
 	assert(logId, "Log ID is required");
 
-	await db.timeLog.update({
-		where: { id: logId! },
-		data: { endTime: new Date() },
-	});
+	await stopLog(db, logId!);
 
 	return { message: "Clocked out successfully" };
 }
@@ -70,40 +64,21 @@ export async function clockOutLog(logId: string | null): Promise<ClockActionResu
 export async function startBreakForEmployee(employeeId: string | null): Promise<ClockActionResult> {
 	assert(employeeId, "Employee ID is required");
 
-	const activeWork = await db.timeLog.findFirst({
-		where: {
-			employeeId,
-			type: "WORK",
-			endTime: null,
-			deletedAt: null,
-		},
-	});
+	const activeWork = await getActiveWorkLog(db, employeeId!);
 
 	if (!activeWork) {
 		throw new ClockActionError("Employee must be clocked in to start a break");
 	}
 
-	const activeBreak = await db.timeLog.findFirst({
-		where: {
-			employeeId,
-			type: "BREAK",
-			endTime: null,
-			deletedAt: null,
-		},
-	});
+	const activeBreak = await getActiveBreakLog(db, employeeId!);
 
 	if (activeBreak) {
 		throw new ClockActionError("Employee is already on break");
 	}
 
-	await db.timeLog.create({
-		data: {
-			id: generateId(),
-			employeeId: employeeId!,
-			stationId: activeWork.stationId,
-			type: "BREAK",
-			updatedAt: new Date(),
-		},
+	await createBreakLog(db, {
+		employeeId: employeeId!,
+		stationId: activeWork.stationId,
 	});
 
 	return { message: "Break started" };
@@ -112,23 +87,13 @@ export async function startBreakForEmployee(employeeId: string | null): Promise<
 export async function endBreakForEmployee(employeeId: string | null): Promise<ClockActionResult> {
 	assert(employeeId, "Employee ID is required");
 
-	const activeBreak = await db.timeLog.findFirst({
-		where: {
-			employeeId,
-			type: "BREAK",
-			endTime: null,
-			deletedAt: null,
-		},
-	});
+	const activeBreak = await getActiveBreakLog(db, employeeId!);
 
 	if (!activeBreak) {
 		throw new ClockActionError("No active break found");
 	}
 
-	await db.timeLog.update({
-		where: { id: activeBreak.id },
-		data: { endTime: new Date() },
-	});
+	await stopLog(db, activeBreak.id);
 
 	return { message: "Break ended" };
 }
@@ -185,15 +150,12 @@ export async function updateTimeLogEntry(
 		}
 	}
 
-	await db.timeLog.update({
-		where: { id: logId! },
-		data: {
-			startTime: start,
-			endTime: end,
-			type,
-			stationId: stationId || undefined,
-			note: note || null,
-		},
+	await updateTimeLog(db, logId!, {
+		startTime: start,
+		endTime: end,
+		type,
+		stationId,
+		note,
 	});
 
 	return { message: "Time log updated" };
@@ -202,10 +164,7 @@ export async function updateTimeLogEntry(
 export async function deleteTimeLogEntry(logId: string | null): Promise<ClockActionResult> {
 	assert(logId, "Log ID is required");
 
-	await db.timeLog.update({
-		where: { id: logId! },
-		data: { deletedAt: new Date() },
-	});
+	await softDeleteLog(db, logId!);
 
 	return { message: "Time log deleted" };
 }
@@ -237,20 +196,10 @@ export async function pinToggleClockAction(
 		throw new ClockActionError("Invalid PIN");
 	}
 
-	const activeLog = await db.timeLog.findFirst({
-		where: {
-			employeeId: matchedEmployee.id,
-			endTime: null,
-			type: "WORK",
-			deletedAt: null,
-		},
-	});
+	const activeLog = await getActiveWorkLog(db, matchedEmployee.id);
 
 	if (activeLog) {
-		await db.timeLog.update({
-			where: { id: activeLog.id },
-			data: { endTime: new Date() },
-		});
+		await stopLog(db, activeLog.id);
 
 		return {
 			message: `${matchedEmployee.name} clocked out successfully`,
@@ -264,14 +213,9 @@ export async function pinToggleClockAction(
 	}
 
 	await db.$transaction(async (tx) => {
-		await tx.timeLog.create({
-			data: {
-				id: generateId(),
-				employeeId: matchedEmployee!.id,
-				stationId: clockInStationId,
-				type: "WORK",
-				updatedAt: new Date(),
-			},
+		await createWorkLog(tx, {
+			employeeId: matchedEmployee!.id,
+			stationId: clockInStationId,
 		});
 
 		await tx.employee.update({

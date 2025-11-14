@@ -38,10 +38,10 @@ export function Input({
 			<AriaInput
 				{...props}
 				className={cn(
-					"px-3 py-2 bg-background text-foreground border rounded transition-colors",
-					"focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
+					"px-3 py-2.5 bg-background text-foreground border border-input rounded-md transition-all",
+					"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
 					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
-					error && "border-destructive focus:ring-destructive",
+					error && "border-destructive focus:ring-destructive focus:ring-opacity-40",
 					inputClassName,
 					className
 				)}
@@ -60,8 +60,8 @@ export function SimpleInput(props: React.ComponentProps<"input">) {
 		<input
 			{...props}
 			className={cn(
-				"px-3 py-2 bg-background text-foreground border rounded transition-colors",
-				"focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
+				"px-3 py-2.5 bg-background text-foreground border border-input rounded-md transition-all",
+				"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
 				"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
 				props.className
 			)}

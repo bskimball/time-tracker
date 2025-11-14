@@ -44,6 +44,8 @@ const employeesResponseSchema = z.object({
 const stationSchema = z.object({
 	id: z.string(),
 	name: z.enum(["PICKING", "PACKING", "FILLING", "RECEIVING", "SHIPPING", "QUALITY", "INVENTORY"]),
+	isActive: z.boolean().optional(),
+	capacity: z.number().nullable().optional(),
 	createdAt: z.string(),
 });
 

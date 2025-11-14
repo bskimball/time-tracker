@@ -149,10 +149,11 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 						<button
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id)}
-							className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+							className={`py-2 px-1 border-b-2 font-medium text-sm ${
+								activeTab === tab.id
 									? "border-primary text-primary"
 									: "border-transparent text-muted-foreground hover:text-foreground"
-								}`}
+							}`}
 						>
 							{tab.label}
 						</button>
@@ -247,10 +248,11 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 												</td>
 												<td className="p-4">
 													<span
-														className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
+														className={`px-2 py-1 text-xs rounded ${
+															log.type === "WORK"
 																? "bg-accent text-foreground"
 																: "bg-accent text-muted-foreground"
-															}`}
+														}`}
 													>
 														{log.type}
 													</span>
@@ -299,10 +301,11 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 													<p className="font-medium">{task.unitsCompleted} units</p>
 												)}
 												<span
-													className={`text-xs px-2 py-1 rounded ${task.endTime
+													className={`text-xs px-2 py-1 rounded ${
+														task.endTime
 															? "bg-accent text-muted-foreground"
 															: "bg-green-100 text-green-800"
-														}`}
+													}`}
 												>
 													{task.endTime ? "Completed" : "In Progress"}
 												</span>

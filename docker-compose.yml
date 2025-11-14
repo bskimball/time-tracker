@@ -1,14 +1,16 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
 
   app-dev:
     image: node:24-alpine
@@ -23,7 +25,7 @@ services:
       - .env
     command: sh -c "npm install && npx prisma db push && npm run dev"
     depends_on:
-      - mysql
+      - postgres
     profiles:
       - dev
 
@@ -39,9 +41,9 @@ services:
     environment:
       - NODE_ENV=production
     depends_on:
-      - mysql
+      - postgres
     profiles:
       - prod
 
 volumes:
-  mysql_data:
+  postgres_data:

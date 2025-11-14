@@ -26,11 +26,7 @@ interface TimesheetProps {
 	stations: { id: string; name: string }[];
 }
 
-export function TimesheetManager({
-	initialLogs,
-	employees,
-	stations,
-}: TimesheetProps) {
+export function TimesheetManager({ initialLogs, employees, stations }: TimesheetProps) {
 	const logs = initialLogs;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 	const [activeTab, setActiveTab] = useState("logs");
@@ -75,28 +71,31 @@ export function TimesheetManager({
 				<nav className="flex space-x-8">
 					<button
 						onClick={() => setActiveTab("logs")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "logs"
+						className={`py-2 px-1 border-b-2 font-medium text-sm ${
+							activeTab === "logs"
 								? "border-primary text-primary"
 								: "border-transparent text-muted-foreground hover:text-foreground"
-							}`}
+						}`}
 					>
 						Current Time Logs
 					</button>
 					<button
 						onClick={() => setActiveTab("corrections")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "corrections"
+						className={`py-2 px-1 border-b-2 font-medium text-sm ${
+							activeTab === "corrections"
 								? "border-primary text-primary"
 								: "border-transparent text-muted-foreground hover:text-foreground"
-							}`}
+						}`}
 					>
 						Corrections History
 					</button>
 					<button
 						onClick={() => setActiveTab("active")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "active"
+						className={`py-2 px-1 border-b-2 font-medium text-sm ${
+							activeTab === "active"
 								? "border-primary text-primary"
 								: "border-transparent text-muted-foreground hover:text-foreground"
-							}`}
+						}`}
 					>
 						Active Employees
 					</button>
@@ -135,10 +134,11 @@ export function TimesheetManager({
 											</td>
 											<td className="p-4">
 												<span
-													className={`px-2 py-1 text-xs rounded ${log.type === "WORK"
+													className={`px-2 py-1 text-xs rounded ${
+														log.type === "WORK"
 															? "bg-accent text-foreground"
 															: "bg-accent text-muted-foreground"
-														}`}
+													}`}
 												>
 													{log.type}
 												</span>

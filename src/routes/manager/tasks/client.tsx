@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+import {
+	Button,
+	Input,
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+	Tabs,
+	TabList,
+	Tab,
+} from "~/components/ds";
 
 type TaskType = {
 	id: string;
@@ -155,40 +165,19 @@ export function TaskManager({
 			</div>
 
 			{/* Tabs */}
-			<div className="border-b">
-				<nav className="flex space-x-8">
-					<button
-						onClick={() => setActiveTab("assignments")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "assignments"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
+			<Tabs>
+				<TabList>
+					<Tab isActive={activeTab === "assignments"} onClick={() => setActiveTab("assignments")}>
 						Active Assignments
-					</button>
-					<button
-						onClick={() => setActiveTab("history")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "history"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
+					</Tab>
+					<Tab isActive={activeTab === "history"} onClick={() => setActiveTab("history")}>
 						Task History
-					</button>
-					<button
-						onClick={() => setActiveTab("types")}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
-							activeTab === "types"
-								? "border-primary text-primary"
-								: "border-transparent text-muted-foreground hover:text-foreground"
-						}`}
-					>
+					</Tab>
+					<Tab isActive={activeTab === "types"} onClick={() => setActiveTab("types")}>
 						Task Types
-					</button>
-				</nav>
-			</div>
+					</Tab>
+				</TabList>
+			</Tabs>
 
 			{/* Active Assignments Tab */}
 			{activeTab === "assignments" && (

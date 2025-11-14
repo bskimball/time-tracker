@@ -9,11 +9,7 @@ import {
 } from "./actions";
 
 // Create export route
-async function handleExport(
-	reportStartDate: Date,
-	reportEndDate: Date,
-	reportType: string
-) {
+async function handleExport(reportStartDate: Date, reportEndDate: Date, reportType: string) {
 	"use server";
 
 	let data;
