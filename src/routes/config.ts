@@ -15,6 +15,11 @@ export function routes() {
 					lazy: () => import("./home/route.tsx"),
 				},
 				{
+					id: "dashboard",
+					path: "dashboard",
+					lazy: () => import("./dashboard-redirect/route.ts"),
+				},
+				{
 					id: "login",
 					path: "login",
 					lazy: () => import("./login/route.tsx"),

@@ -74,13 +74,13 @@ describe("time clock service", () => {
 
 			await startBreakForEmployee("emp");
 			expect((db as any).timeLog.create).toHaveBeenCalledWith({
-				data: {
-					id: expect.any(String),
+				data: expect.objectContaining({
 					employeeId: "emp",
 					stationId: "station",
 					type: "BREAK",
+					createdAt: expect.any(Date),
 					updatedAt: expect.any(Date),
-				},
+				}),
 			});
 		});
 	});

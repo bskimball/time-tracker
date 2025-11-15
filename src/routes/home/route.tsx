@@ -1,5 +1,22 @@
-// Home route: redirects are handled at entry.rsc.tsx level
-// This component should never be rendered as the redirect happens before RSC rendering
-export default function Component() {
-	return null;
+import { validateRequest } from "~/lib/auth";
+
+function redirectTo(url: string): never {
+	throw new Response(null, {
+		status: 302,
+		headers: { Location: url },
+	});
+}
+
+export default async function Component(): Promise<never> {
+	const { user } = await validateRequest();
+
+	const destination = user
+		? user.role === "ADMIN"
+			? "/executive"
+			: user.role === "MANAGER"
+				? "/manager"
+				: "/floor"
+		: "/login";
+
+	redirectTo(destination);
 }

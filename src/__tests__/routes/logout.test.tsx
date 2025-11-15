@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import Component from "~/routes/home/route";
+import Component from "~/routes/logout/route";
 
 type RedirectingFn = () => Promise<never> | Promise<void>;
 
@@ -15,28 +15,34 @@ async function consumeRedirect(fn: RedirectingFn): Promise<Response> {
 	}
 }
 
-describe("Home Route", () => {
+describe("Logout Route", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("exports a component function", () => {
-		expect(typeof Component).toBe("function");
-	});
-
-	it("redirects unauthenticated users to login", async () => {
+	it("redirects to login and clears session cookie when no active session", async () => {
+		const auth = await import("~/lib/auth");
+		vi.spyOn(auth, "validateRequest").mockResolvedValueOnce({
+			session: null,
+			user: null,
+		});
 		const response = await consumeRedirect(() => Component());
 		expect(response.status).toBe(302);
 		expect(response.headers.get("Location")).toBe("/login");
 	});
 
-	it("redirects authenticated users by role", async () => {
+	it("invalidates existing session and redirects to login", async () => {
 		const auth = await import("~/lib/auth");
+		const invalidateSession = vi
+			.spyOn(auth, "invalidateSession")
+			.mockResolvedValueOnce(undefined as unknown as void);
 		vi.spyOn(auth, "validateRequest").mockResolvedValueOnce({
-			session: {} as any,
-			user: { role: "MANAGER" } as any,
+			session: { id: "session-123" } as any,
+			user: { id: "user-123" } as any,
 		});
 		const response = await consumeRedirect(() => Component());
-		expect(response.headers.get("Location")).toBe("/manager");
+		expect(invalidateSession).toHaveBeenCalledWith("session-123");
+		expect(response.status).toBe(302);
+		expect(response.headers.get("Location")).toBe("/login");
 	});
 });

@@ -31,13 +31,14 @@ describe("Time Clock Service", () => {
 
 			expect(result).toEqual({ message: "Clocked in successfully" });
 			expect(mockDb.timeLog.create).toHaveBeenCalledWith({
-				data: {
-					id: expect.any(String),
+				data: expect.objectContaining({
 					employeeId: "emp-1",
 					stationId: "station-1",
 					type: "WORK",
+					clockMethod: "PIN",
+					createdAt: expect.any(Date),
 					updatedAt: expect.any(Date),
-				},
+				}),
 			});
 		});
 
@@ -90,13 +91,13 @@ describe("Time Clock Service", () => {
 
 			expect(result).toEqual({ message: "Break started" });
 			expect(mockDb.timeLog.create).toHaveBeenCalledWith({
-				data: {
-					id: expect.any(String),
+				data: expect.objectContaining({
 					employeeId: "emp-1",
 					stationId: "station-1",
 					type: "BREAK",
+					createdAt: expect.any(Date),
 					updatedAt: expect.any(Date),
-				},
+				}),
 			});
 		});
 

@@ -52,6 +52,11 @@ export function AppLayout({
 									Home
 								</Button>
 							</Link>
+						<a href="/logout">
+							<Button variant="ghost" size="sm">
+								Logout
+							</Button>
+						</a>
 						</div>
 					</div>
 				</div>
