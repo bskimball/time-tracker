@@ -32,9 +32,9 @@ export function BinaryPinInput({
 			}}
 			placeholder={placeholder}
 			className={cn(
-				"px-3 py-2 border border-gray-300 rounded transition-colors",
-				"focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-				"w-full text-center text-2xl font-mono text-lg"
+				"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+				"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+				"w-full text-center text-2xl font-mono"
 			)}
 			inputMode="numeric"
 			autoComplete="off"

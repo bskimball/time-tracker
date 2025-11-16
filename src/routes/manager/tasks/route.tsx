@@ -6,6 +6,7 @@ import {
 	getEmployees,
 	getStations,
 	assignTask,
+	assignTaskAction,
 } from "./actions";
 
 export default async function Component() {
@@ -28,6 +29,7 @@ export default async function Component() {
 			activeAssignments={activeAssignments}
 			employees={employees}
 			stations={stations}
+			assignTaskAction={assignTaskAction}
 		/>
 	);
 }

@@ -110,8 +110,8 @@ const todoResponseSchema = z.object({
 });
 
 // Helper function to serialize Prisma date fields to strings
-export function serializeDates<T extends Record<string, any>>(obj: T): T {
-	const serialized: any = { ...obj };
+export function serializeDates<T extends Record<string, unknown>>(obj: T): T {
+	const serialized: Record<string, unknown> = { ...obj };
 
 	const dateFields = ["createdAt", "updatedAt", "startTime", "endTime", "deletedAt"];
 
@@ -125,7 +125,7 @@ export function serializeDates<T extends Record<string, any>>(obj: T): T {
 }
 
 // Helper function to serialize arrays of objects with dates
-export function serializeArrayDates<T extends Record<string, any>>(arr: T[]): T[] {
+export function serializeArrayDates<T extends Record<string, unknown>>(arr: T[]): T[] {
 	return arr.map(serializeDates);
 }
 

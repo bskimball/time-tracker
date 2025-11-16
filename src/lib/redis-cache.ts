@@ -9,10 +9,21 @@ interface CacheEntry<T> {
 	ttl: number;
 }
 
+type RedisClientLike = {
+	ping: () => Promise<unknown>;
+	get: (key: string) => Promise<string | null>;
+	del: (key: string) => Promise<unknown>;
+	setex: (key: string, ttlSeconds: number, value: string) => Promise<unknown>;
+	flushdb: () => Promise<unknown>;
+	info: (section: string) => Promise<string>;
+	dbsize: () => Promise<number>;
+	quit: () => Promise<unknown>;
+};
+
 class RedisCache {
 	private static instance: RedisCache;
-	private memoryCache: Map<string, CacheEntry<any>>;
-	private redisClient: any;
+	private memoryCache: Map<string, CacheEntry<unknown>>;
+	private redisClient: RedisClientLike | null = null;
 	private isRedisAvailable: boolean;
 
 	private constructor() {
@@ -87,7 +98,7 @@ class RedisCache {
 		const memoryEntry = this.memoryCache.get(key);
 		const now = Date.now();
 		if (memoryEntry && now - memoryEntry.timestamp < memoryEntry.ttl) {
-			return memoryEntry.data;
+			return memoryEntry.data as T;
 		}
 
 		// Compute new data
@@ -166,7 +177,7 @@ class RedisCache {
 			return null;
 		}
 
-		return entry.data;
+		return entry.data as T;
 	}
 
 	/**
@@ -294,7 +305,7 @@ class RedisCache {
 		warmupTasks: Array<{
 			key: string;
 			tags?: string[];
-			computeFn: () => Promise<any>;
+			computeFn: () => Promise<unknown>;
 			ttlMs?: number;
 		}>
 	): Promise<void> {
@@ -335,7 +346,7 @@ export const redisCache = RedisCache.getInstance();
 export function getDashboardCacheKey(
 	startDate: Date,
 	endDate: Date,
-	filters: Record<string, any> = {}
+	filters: Record<string, unknown> = {}
 ): string {
 	const filterStr = Object.entries(filters)
 		.sort(([a], [b]) => a.localeCompare(b))

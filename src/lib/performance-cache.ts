@@ -5,7 +5,7 @@ interface CacheEntry<T> {
 }
 
 class PerformanceCache {
-	private cache = new Map<string, CacheEntry<any>>();
+	private cache = new Map<string, CacheEntry<unknown>>();
 	private static instance: PerformanceCache;
 
 	private constructor() {
@@ -38,7 +38,7 @@ class PerformanceCache {
 
 		// Return cached data if valid
 		if (entry && now - entry.timestamp < entry.ttl) {
-			return entry.data;
+			return entry.data as T;
 		}
 
 		// Compute new data
@@ -77,7 +77,7 @@ class PerformanceCache {
 			return null;
 		}
 
-		return entry.data;
+		return entry.data as T;
 	}
 
 	/**
@@ -133,7 +133,7 @@ export function getLaborCostAnalysisCacheKey(startDate: Date, endDate: Date): st
 export function getProductivityAnalyticsCacheKey(
 	startDate: Date,
 	endDate: Date,
-	filters: Record<string, any>
+	filters: Record<string, unknown>
 ): string {
 	const filterStr = Object.entries(filters)
 		.sort(([a], [b]) => a.localeCompare(b))

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Prisma } from "@prisma/client";
 
 export interface TaskAssignmentFilters {
 	employeeId?: string;
@@ -10,8 +10,10 @@ export interface TaskAssignmentFilters {
 	limit?: number;
 }
 
+type TaskAssignmentWhereInput = Prisma.TaskAssignmentWhereInput;
+
 export async function listTaskAssignments(db: PrismaClient, filters: TaskAssignmentFilters = {}) {
-	const where: any = {};
+	const where: TaskAssignmentWhereInput = {};
 
 	if (filters.employeeId) where.employeeId = filters.employeeId;
 	if (filters.taskTypeId) where.taskTypeId = filters.taskTypeId;

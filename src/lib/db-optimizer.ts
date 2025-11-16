@@ -418,7 +418,13 @@ export class OptimizedQueries {
 				const { startDate, endDate, stationId, employeeId, groupBy = "day" } = filters;
 
 				// Build where clause
-				const whereClause: any = {
+				const whereClause: {
+					startTime: { gte: Date; lte: Date };
+					type: "WORK";
+					deletedAt: null;
+					stationId?: string;
+					employeeId?: string;
+				} = {
 					startTime: { gte: startDate, lte: endDate },
 					type: "WORK",
 					deletedAt: null,
@@ -485,12 +491,29 @@ export class OptimizedQueries {
 	 * Process productivity data for different groupings
 	 */
 	private static processProductivityData(
-		timeLogs: any[],
-		_taskAssignments: any[],
+		timeLogs: Array<{
+			id: string;
+			employeeId: string;
+			stationId: string | null;
+			startTime: Date;
+			endTime: Date | null;
+			Task?: { unitsCompleted: number | null } | null;
+		}>,
+		_taskAssignments: unknown[],
 		groupBy: "day" | "week" | "month"
 	) {
 		// Group data by the specified period
-		const groupedData: Record<string, any> = {};
+		const groupedData: Record<
+			string,
+			{
+				date: string;
+				totalHours: number;
+				totalShifts: number;
+				totalUnits: number;
+				uniqueEmployees: Set<string>;
+				uniqueStations: Set<string>;
+			}
+		> = {};
 
 		for (const log of timeLogs) {
 			if (!log.endTime) continue;

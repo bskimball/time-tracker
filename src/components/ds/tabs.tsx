@@ -84,8 +84,8 @@ const tabSizeStyles: Record<TabSize, string> = {
 
 const variantStyles: Record<TabVariant, string> = {
 	underline:
-		"rounded-t-md border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary",
-	pill: "rounded-md border-2 border-transparent data-[hovered=true]:bg-background/50 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground data-[selected=true]:shadow-lg data-[selected=true]:border-primary data-[selected=true]:border-b-4 data-[selected=true]:border-b-accent",
+		"rounded-t-md border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary transition-all",
+	pill: "rounded-md data-[hovered=true]:bg-background/80 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground data-[selected=true]:shadow-sm transition-all",
 };
 
 export function Tab({ children, className, ...props }: TabProps) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Card, CardHeader, CardTitle, CardBody, Form } from "~/components/ds";
 import type { Employee, TaskType, TaskAssignment } from "./types";
 
@@ -9,7 +9,15 @@ interface TaskAssignmentFormProps {
 	taskTypes: TaskType[];
 	activeAssignments: TaskAssignment[];
 	onClose: () => void;
-	onSubmit: (data: any) => Promise<void>;
+	onSubmit: (formData: FormData) => void;
+	onOptimisticAssign?: (data: {
+		employeeId: string;
+		taskTypeId: string;
+		priority: "LOW" | "MEDIUM" | "HIGH";
+		notes?: string;
+	}) => void;
+	isPending?: boolean;
+	state?: { error?: string | null; success?: boolean; activeAssignments?: TaskAssignment[] } | null;
 }
 
 export function TaskAssignmentForm({
@@ -18,6 +26,9 @@ export function TaskAssignmentForm({
 	activeAssignments,
 	onClose,
 	onSubmit,
+	onOptimisticAssign,
+	isPending = false,
+	state,
 }: TaskAssignmentFormProps) {
 	const [formData, setFormData] = useState<{
 		employeeId: string;
@@ -30,12 +41,36 @@ export function TaskAssignmentForm({
 		priority: "MEDIUM",
 		notes: "",
 	});
-	const handleSubmit = async () => {
-		try {
-			await onSubmit(formData);
-		} catch (error) {
-			console.error("Error assigning task:", error);
+	useEffect(() => {
+		if (!state?.success) return;
+		// Schedule reset and close after paint to avoid synchronous setState inside effect
+		const id = window.setTimeout(() => {
+			setFormData({
+				employeeId: "",
+				taskTypeId: "",
+				priority: "MEDIUM",
+				notes: "",
+			});
+			onClose();
+		}, 0);
+		return () => window.clearTimeout(id);
+	}, [state?.success, onClose]);
+
+	const handleSubmit = () => {
+		const fd = new FormData();
+		fd.append("employeeId", formData.employeeId);
+		fd.append("taskTypeId", formData.taskTypeId);
+		fd.append("priority", formData.priority);
+		if (formData.notes) {
+			fd.append("notes", formData.notes);
 		}
+		onOptimisticAssign?.({
+			employeeId: formData.employeeId,
+			taskTypeId: formData.taskTypeId,
+			priority: formData.priority,
+			notes: formData.notes || undefined,
+		});
+		onSubmit(fd);
 	};
 
 	return (
@@ -109,12 +144,16 @@ export function TaskAssignmentForm({
 							/>
 						</div>
 
+						{state?.error && (
+							<p className="text-sm text-error mt-2">{state.error}</p>
+						)}
+
 						<div className="flex justify-end space-x-2 pt-4 border-t">
 							<Button type="button" variant="outline" onClick={onClose}>
 								Cancel
 							</Button>
-							<Button type="submit" variant="primary">
-								Assign Task
+							<Button type="submit" variant="primary" disabled={isPending}>
+								{isPending ? "Assigning..." : "Assign Task"}
 							</Button>
 						</div>
 					</Form>

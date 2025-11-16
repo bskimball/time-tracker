@@ -14,22 +14,22 @@ interface AlertProps {
 
 const variantStyles: Record<AlertVariant, { container: string; text: string; icon: string }> = {
 	success: {
-		container: "bg-card border-2 border-primary text-foreground",
+		container: "bg-card border border-primary/30 text-foreground shadow-sm",
 		text: "text-foreground",
 		icon: "text-primary",
 	},
 	error: {
-		container: "bg-card border-2 border-destructive text-foreground",
+		container: "bg-card border border-destructive/30 text-foreground shadow-sm",
 		text: "text-foreground",
 		icon: "text-destructive",
 	},
 	warning: {
-		container: "bg-primary/10 border-2 border-primary text-foreground",
+		container: "bg-primary/5 border border-primary/30 text-foreground shadow-sm",
 		text: "text-foreground",
 		icon: "text-primary",
 	},
 	info: {
-		container: "bg-card border-2 border-secondary text-foreground",
+		container: "bg-card border border-secondary/30 text-foreground shadow-sm",
 		text: "text-foreground",
 		icon: "text-secondary",
 	},
@@ -43,8 +43,8 @@ const defaultIcons: Record<AlertVariant, string> = {
 };
 
 /**
- * Alert component for displaying messages to the user - Industrial style.
- * Sharp corners, bold borders, high contrast industrial colors.
+ * Alert component for displaying messages to the user - Modern style.
+ * Rounded corners, subtle borders, clean aesthetic.
  */
 export function Alert({
 	children,
@@ -58,17 +58,17 @@ export function Alert({
 	const displayIcon = icon ?? defaultIcons[variant];
 
 	return (
-		<div className={cn("panel-shadow flex gap-3 p-4", styles.container, className)} role="alert">
+		<div className={cn("rounded-md flex gap-3 p-4 animate-fade-in", styles.container, className)} role="alert">
 			<div className={cn("flex-shrink-0 text-lg font-bold", styles.icon)}>{displayIcon}</div>
 			<div className="flex-1">
-				{title && <h3 className={cn("font-industrial font-semibold uppercase tracking-wide", styles.text)}>{title}</h3>}
+				{title && <h3 className={cn("font-semibold tracking-tight mb-1", styles.text)}>{title}</h3>}
 				<div className={cn("text-sm", styles.text)}>{children}</div>
 			</div>
 			{onClose && (
 				<button
 					onClick={onClose}
 					className={cn(
-						"flex-shrink-0 text-lg font-bold hover:opacity-70 transition-opacity",
+						"flex-shrink-0 text-lg font-bold hover:opacity-70 transition-opacity rounded-md",
 						styles.text
 					)}
 					aria-label="Close alert"

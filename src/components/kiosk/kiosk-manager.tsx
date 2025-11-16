@@ -76,7 +76,14 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 	const [session, setSession] = React.useState<KioskSession | null>(null);
 	const [device, setDevice] = React.useState<KioskDevice | null>(null);
 
-	const activityTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+	const activityTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const showIdleScreen = React.useCallback(() => {
+		if (session) {
+			setSession((prev) => (prev ? { ...prev, isIdle: true } : null));
+		}
+		// Show idle screen overlay or trigger screensaver
+	}, [session]);
 
 	// Initialize device information
 	React.useEffect(() => {
@@ -92,34 +99,34 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 
 			// Monitor battery
 			if ("getBattery" in navigator) {
-				const battery = await (navigator as any).getBattery();
-				setBatteryLevel(battery.level * 100);
-				setIsCharging(battery.charging);
+				const batteryManager = await (navigator as NavigatorWithBattery).getBattery?.();
+				if (batteryManager) {
+					setBatteryLevel(batteryManager.level * 100);
+					setIsCharging(batteryManager.charging);
 
-				battery.addEventListener("levelchange", () => {
-					setBatteryLevel(battery.level * 100);
-				});
+					const handleLevelChange = () => {
+						setBatteryLevel(batteryManager.level * 100);
+					};
 
-				battery.addEventListener("chargingchange", () => {
-					setIsCharging(battery.charging);
-				});
+					const handleChargingChange = () => {
+						setIsCharging(batteryManager.charging);
+					};
+
+					batteryManager.addEventListener("levelchange", handleLevelChange);
+					batteryManager.addEventListener("chargingchange", handleChargingChange);
+				}
 			}
 
 			// Monitor fullscreen changes
-			document.addEventListener("fullscreenchange", () => {
+			const handleFullscreenChange = () => {
 				setIsFullscreen(!!document.fullscreenElement);
-			});
+			};
+
+			document.addEventListener("fullscreenchange", handleFullscreenChange);
 		};
 
-		initializeDevice();
+		void initializeDevice();
 	}, []);
-
-	const showIdleScreen = () => {
-		if (session) {
-			setSession((prev) => (prev ? { ...prev, isIdle: true } : null));
-		}
-		// Show idle screen overlay or trigger screensaver
-	};
 
 	// Activity monitoring for auto-logout
 	React.useEffect(() => {
@@ -154,16 +161,17 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 				clearTimeout(activityTimeoutRef.current);
 			}
 		};
-	}, [isKioskMode, config.autoLogoutMinutes]);
+	}, [isKioskMode, config.autoLogoutMinutes, showIdleScreen]);
 
 	const requestFullscreen = React.useCallback(async () => {
 		try {
-			if (document.documentElement.requestFullscreen) {
-				await document.documentElement.requestFullscreen();
-			} else if ((document.documentElement as any).webkitRequestFullscreen) {
-				await (document.documentElement as any).webkitRequestFullscreen();
-			} else if ((document.documentElement as any).msRequestFullscreen) {
-				await (document.documentElement as any).msRequestFullscreen();
+			const el = document.documentElement as FullscreenElement;
+			if (el.requestFullscreen) {
+				await el.requestFullscreen();
+			} else if (el.webkitRequestFullscreen) {
+				await el.webkitRequestFullscreen();
+			} else if (el.msRequestFullscreen) {
+				await el.msRequestFullscreen();
 			}
 		} catch (error) {
 			console.warn("Failed to enter fullscreen:", error);
@@ -195,7 +203,7 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 			setIsKioskMode(true);
 			saveConfig(newConfig);
 		},
-		[config, device]
+		[config, device, requestFullscreen]
 	);
 
 	const exitKioskMode = React.useCallback(() => {
@@ -221,12 +229,13 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 	);
 
 	const exitFullscreen = React.useCallback(() => {
-		if (document.exitFullscreen) {
-			document.exitFullscreen();
-		} else if ((document as any).webkitExitFullscreen) {
-			(document as any).webkitExitFullscreen();
-		} else if ((document as any).msExitFullscreen) {
-			(document as any).msExitFullscreen();
+		const doc = document as DocumentWithFullscreen;
+		if (doc.exitFullscreen) {
+			void doc.exitFullscreen();
+		} else if (doc.webkitExitFullscreen) {
+			void doc.webkitExitFullscreen();
+		} else if (doc.msExitFullscreen) {
+			void doc.msExitFullscreen();
 		}
 	}, []);
 
@@ -235,11 +244,11 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 			setSession((prev) =>
 				prev
 					? {
-							...prev,
-							lastActivity: new Date(),
-							activeTime: Date.now() - prev.startTime.getTime(),
-							isIdle: false,
-						}
+						...prev,
+						lastActivity: new Date(),
+						activeTime: Date.now() - prev.startTime.getTime(),
+						isIdle: false,
+					}
 					: null
 			);
 		}
@@ -374,6 +383,27 @@ async function detectDevice(): Promise<KioskDevice> {
 	};
 }
 
+interface BatteryManager {
+	level: number;
+	charging: boolean;
+	addEventListener: (type: "levelchange" | "chargingchange", listener: () => void) => void;
+	removeEventListener: (type: "levelchange" | "chargingchange", listener: () => void) => void;
+}
+
+interface NavigatorWithBattery {
+	getBattery?: () => Promise<BatteryManager>;
+}
+
+interface FullscreenElement extends HTMLElement {
+	webkitRequestFullscreen?: () => Promise<void> | void;
+	msRequestFullscreen?: () => Promise<void> | void;
+}
+
+interface DocumentWithFullscreen {
+	exitFullscreen?: () => Promise<void> | void;
+	webkitExitFullscreen?: () => Promise<void> | void;
+	msExitFullscreen?: () => Promise<void> | void;
+}
 function getDeviceType(): "tablet" | "phone" | "kiosk" | "desktop" {
 	const userAgent = navigator.userAgent;
 	if (/iPad/i.test(userAgent)) return "tablet";

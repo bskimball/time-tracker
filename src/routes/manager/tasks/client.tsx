@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useOptimistic, useState } from "react";
 import type React from "react";
 import {
 	Button,
@@ -22,6 +22,15 @@ interface TaskManagerProps {
 	activeAssignments: TaskAssignment[];
 	employees: Employee[];
 	stations: Station[];
+	assignTaskAction: (
+		prevState: { error?: string | null; success?: boolean } | null,
+		formData: FormData
+	) => Promise<{
+		assignment?: any;
+		activeAssignments?: TaskAssignment[];
+		error?: string | null;
+		success?: boolean;
+	}>;
 }
 
 export function TaskManager({
@@ -29,10 +38,50 @@ export function TaskManager({
 	activeAssignments,
 	employees,
 	stations,
+	assignTaskAction,
 }: TaskManagerProps) {
 	const [activeTab, setActiveTab] = useState<"assignments" | "history" | "types">("assignments");
 	const [showAssignForm, setShowAssignForm] = useState(false);
 	const [showTaskTypeForm, setShowTaskTypeForm] = useState(false);
+	const [assignState, assignAction, isAssignPending] = useActionState(assignTaskAction, null);
+	const [createTypeState, createTypeAction, isCreateTypePending] = useActionState(
+		async (
+			_prev: { error?: string | null; success?: boolean } | null,
+			formData: FormData
+		) => {
+			const { createTaskTypeAction } = await import("./actions");
+			return createTaskTypeAction(_prev, formData);
+		},
+		null
+	);
+	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
+		TaskAssignment[],
+		{
+			employeeId: string;
+			taskTypeId: string;
+			priority: "LOW" | "MEDIUM" | "HIGH";
+			notes?: string;
+		}
+	>(activeAssignments, (current, update) => {
+		const employee = employees.find((e) => e.id === update.employeeId);
+		const taskType = taskTypes.find((t) => t.id === update.taskTypeId);
+
+		if (!employee || !taskType) return current;
+
+		const optimisticAssignment: TaskAssignment = {
+			id: `optimistic-${Date.now()}`,
+			employeeId: employee.id,
+			taskTypeId: taskType.id,
+			notes: update.notes ?? null,
+			startTime: new Date().toISOString() as any,
+			endTime: null,
+			unitsCompleted: null,
+			Employee: employee,
+			TaskType: taskType,
+		};
+
+		return [optimisticAssignment, ...current];
+	});
 
 	const formatDuration = (startTime: Date, endTime: Date | null): string => {
 		if (!endTime) {
@@ -77,7 +126,7 @@ export function TaskManager({
 				<Card>
 					<CardBody>
 						<h3 className="font-semibold mb-2">Active Tasks</h3>
-						<p className="text-2xl">{activeAssignments.filter((a) => !a.endTime).length}</p>
+						<p className="text-2xl">{optimisticAssignments.filter((a) => !a.endTime).length}</p>
 						<p className="text-sm text-muted-foreground">In progress</p>
 					</CardBody>
 				</Card>
@@ -94,16 +143,16 @@ export function TaskManager({
 					<CardBody>
 						<h3 className="font-semibold mb-2">Avg Duration</h3>
 						<p className="text-2xl">
-							{activeAssignments.length > 0
+							{optimisticAssignments.length > 0
 								? Math.round(
-									activeAssignments
+									optimisticAssignments
 										.filter((a) => a.endTime)
 										.reduce((total, a) => {
 											const duration =
 												new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
 											return total + duration;
 										}, 0) /
-									(1000 * 60 * 60 * activeAssignments.filter((a) => a.endTime).length)
+									(1000 * 60 * 60 * optimisticAssignments.filter((a) => a.endTime).length)
 								)
 								: 0}
 							h
@@ -116,9 +165,9 @@ export function TaskManager({
 					<CardBody>
 						<h3 className="font-semibold mb-2">Completion Rate</h3>
 						<p className="text-2xl">
-							{activeAssignments.length > 0
+							{optimisticAssignments.length > 0
 								? Math.round(
-									(activeAssignments.filter((a) => a.endTime).length / activeAssignments.length) *
+									(optimisticAssignments.filter((a) => a.endTime).length / optimisticAssignments.length) *
 									100
 								)
 								: 0}
@@ -147,7 +196,7 @@ export function TaskManager({
 						</CardHeader>
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{activeAssignments.map((assignment) => (
+								{optimisticAssignments.map((assignment: TaskAssignment) => (
 									<div key={assignment.id} className="border rounded-lg p-4">
 										<div className="flex justify-between items-start mb-3">
 											<div>
@@ -186,7 +235,7 @@ export function TaskManager({
 								))}
 							</div>
 
-							{activeAssignments.length === 0 && (
+							{optimisticAssignments.length === 0 && (
 								<div className="text-center py-8">
 									<p className="text-muted-foreground">No active task assignments</p>
 									<Button
@@ -222,9 +271,9 @@ export function TaskManager({
 										</tr>
 									</thead>
 									<tbody>
-										{activeAssignments
-											.filter((a) => a.endTime)
-											.map((assignment) => {
+										{optimisticAssignments
+											.filter((a: TaskAssignment) => a.endTime)
+											.map((assignment: TaskAssignment) => {
 												const duration =
 													(new Date(assignment.endTime!).getTime() -
 														new Date(assignment.startTime).getTime()) /
@@ -260,7 +309,7 @@ export function TaskManager({
 								</table>
 							</div>
 
-							{activeAssignments.filter((a) => a.endTime).length === 0 && (
+							{optimisticAssignments.filter((a: TaskAssignment) => a.endTime).length === 0 && (
 								<div className="text-center py-8">
 									<p className="text-muted-foreground">No completed tasks found</p>
 								</div>
@@ -324,34 +373,12 @@ export function TaskManager({
 				<TaskAssignmentForm
 					employees={employees}
 					taskTypes={taskTypes}
-					activeAssignments={activeAssignments}
+					activeAssignments={optimisticAssignments}
 					onClose={() => setShowAssignForm(false)}
-					onSubmit={async (data) => {
-						// Submit to server action on this route
-						try {
-							const body = new FormData();
-							body.append("employeeId", data.employeeId);
-							body.append("taskTypeId", data.taskTypeId);
-							body.append("priority", data.priority);
-							if (data.notes) body.append("notes", data.notes);
-							const res = await fetch(window.location.pathname, {
-								method: "POST",
-								body,
-							});
-							if (!res.ok) {
-								const err = await res.json().catch(() => ({}));
-								console.error("Assign failed:", err);
-								alert((err && err.error) || "Failed to assign task");
-								return;
-							}
-							// Success — refresh to show new assignment
-							setShowAssignForm(false);
-							window.location.reload();
-						} catch (err) {
-							console.error("Error assigning task:", err);
-							alert("Error assigning task");
-						}
-					}}
+					onSubmit={assignAction}
+					onOptimisticAssign={(data) => addOptimisticAssignment(data)}
+					isPending={isAssignPending}
+					state={assignState}
 				/>
 			)}
 
@@ -360,10 +387,9 @@ export function TaskManager({
 				<TaskTypeForm
 					stations={stations}
 					onClose={() => setShowTaskTypeForm(false)}
-					onSubmit={async (data) => {
-						console.log("Creating task type:", data);
-						setShowTaskTypeForm(false);
-					}}
+					onSubmit={createTypeAction}
+					isPending={isCreateTypePending}
+					state={createTypeState}
 				/>
 			)}
 		</div>

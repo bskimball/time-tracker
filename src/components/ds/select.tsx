@@ -71,14 +71,20 @@ export function Select({
 			)}
 			<Button
 				className={cn(
+					// Reset button defaults to match input
+					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"px-3 py-2.5 bg-background text-foreground border border-input transition-all",
+					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
 					// Focus states matching Input
-					"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
+					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+					// Hover state - keep same as default
+					"hover:bg-background",
+					// Pressed state - keep same as default
+					"pressed:bg-background",
 					// Disabled states
 					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
 					// Error states
-					error && "border-destructive focus:ring-destructive focus:ring-opacity-40",
+					error && "border-destructive focus:ring-destructive",
 					// Select button specific styling
 					"flex items-center justify-between text-left w-full",
 					selectClassName,
@@ -92,8 +98,8 @@ export function Select({
 				</span>
 				<span className="text-muted-foreground text-xs">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto">
-				<ListBox className="p-1 bg-background border border-input w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-md">
+				<ListBox className="p-1 bg-background border border-input rounded-md w-full shadow-lg">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
@@ -144,13 +150,13 @@ export function SimpleSelect({
 					{...props}
 					className={cn(
 						// Base styles matching Input component exactly
-						"px-3 py-2.5 bg-background text-foreground border border-input transition-all appearance-none",
+						"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all appearance-none",
 						// Focus states matching Input
-						"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
+						"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
 						// Disabled states
 						"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
 						// Error states
-						error && "border-destructive focus:ring-destructive focus:ring-opacity-40",
+						error && "border-destructive focus:ring-destructive",
 						// Custom select arrow
 						"pr-8",
 						className

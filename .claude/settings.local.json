@@ -52,7 +52,8 @@
       "Bash(docker rm:*)",
       "Bash(npx prisma generate:*)",
       "Skill(frontend-design:frontend-design)",
-      "Bash(timeout 5 curl:*)"
+      "Bash(timeout 5 curl:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []

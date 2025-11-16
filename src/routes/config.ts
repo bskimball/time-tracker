@@ -1,4 +1,4 @@
-import { type unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
+import { type unstable_RSCRouteConfigEntry as RSCRouteConfig } from "react-router";
 import { authMiddleware, roleMiddleware } from "../lib/middleware";
 import type { User_role } from "@prisma/client";
 
@@ -155,13 +155,6 @@ export function routes() {
 					],
 				},
 
-				// Legacy time-clock route (keep for transition)
-				{
-					id: "time-clock",
-					path: "time-clock",
-					// Public route - no auth required for guest access
-					lazy: () => import("./time-clock/route.tsx"),
-				},
 				{
 					id: "settings",
 					path: "settings",

@@ -135,6 +135,7 @@ class SecurityMiddleware {
 			} catch (error) {
 				this.metrics.blockedRequests++;
 				this.logSecurityEvent("security_violation", requestMetadata, 500);
+				console.error("Security middleware encountered an unexpected error", error);
 				throw error;
 			}
 		};
@@ -370,7 +371,11 @@ class SecurityMiddleware {
 		);
 	}
 
-	private async logSecurityEvent(event: string, metadata: any, statusCode?: number): Promise<void> {
+	private async logSecurityEvent(
+		event: string,
+		metadata: Record<string, unknown>,
+		statusCode?: number
+	): Promise<void> {
 		if (!this.config.enableAuditLogging) return;
 
 		try {

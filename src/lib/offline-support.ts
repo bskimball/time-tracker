@@ -8,7 +8,7 @@ import React from "react";
 interface OfflineAction {
 	id: string;
 	endpoint: string;
-	payload: Record<string, any>;
+	payload: Record<string, unknown>;
 	timestamp: number;
 	retries: number;
 	maxRetries: number;
@@ -33,9 +33,9 @@ export function useOnlineStatus(): { isOnline: boolean; connectionType?: Connect
 		const updateOnlineStatus = () => {
 			setIsOnline(navigator.onLine);
 			const connection =
-				(navigator as any).connection ||
-				(navigator as any).mozConnection ||
-				(navigator as any).webkitConnection;
+				(navigator as NavigatorWithConnection).connection ||
+				(navigator as NavigatorWithConnection).mozConnection ||
+				(navigator as NavigatorWithConnection).webkitConnection;
 			if (connection) {
 				setConnectionType(connection.effectiveType);
 			}
@@ -46,10 +46,10 @@ export function useOnlineStatus(): { isOnline: boolean; connectionType?: Connect
 
 		// Listen for connection changes
 		const connection =
-			(navigator as any).connection ||
-			(navigator as any).mozConnection ||
-			(navigator as any).webkitConnection;
-		if (connection) {
+			(navigator as NavigatorWithConnection).connection ||
+			(navigator as NavigatorWithConnection).mozConnection ||
+			(navigator as NavigatorWithConnection).webkitConnection;
+		if (connection && connection.addEventListener) {
 			connection.addEventListener("change", updateOnlineStatus);
 		}
 
@@ -58,7 +58,7 @@ export function useOnlineStatus(): { isOnline: boolean; connectionType?: Connect
 		return () => {
 			window.removeEventListener("online", updateOnlineStatus);
 			window.removeEventListener("offline", updateOnlineStatus);
-			if (connection) {
+			if (connection && connection.removeEventListener) {
 				connection.removeEventListener("change", updateOnlineStatus);
 			}
 		};
@@ -86,8 +86,8 @@ export function useOfflineActionQueue(apiKey: string) {
 					actions: parsed.actions || [],
 					failedActions: parsed.failedActions || [],
 				}));
-			} catch (error) {
-				console.error("Failed to load offline queue:", error);
+			} catch {
+				// Failed to parse offline queue; ignore and start with an empty queue
 			}
 		}
 	}, []);
@@ -105,7 +105,7 @@ export function useOfflineActionQueue(apiKey: string) {
 
 	const { isOnline } = useOnlineStatus();
 
-	const enqueue = React.useCallback((endpoint: string, payload: Record<string, any>) => {
+	const enqueue = React.useCallback((endpoint: string, payload: Record<string, unknown>) => {
 		const action: OfflineAction = {
 			id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 			endpoint,
@@ -177,6 +177,7 @@ export function useOfflineActionQueue(apiKey: string) {
 				lastSync: Date.now(),
 			}));
 		} catch (error) {
+			console.error("Failed to sync offline actions", error);
 			setQueue((prev) => ({
 				...prev,
 				isProcessing: false,
@@ -189,7 +190,7 @@ export function useOfflineActionQueue(apiKey: string) {
 		if (isOnline && queue.actions.length > 0) {
 			sync();
 		}
-	}, [isOnline]);
+	}, [isOnline, queue.actions.length, sync]);
 
 	return {
 		queue: queue.actions.length,
@@ -322,29 +323,29 @@ export function useNetworkPerformance() {
 		if (typeof navigator === "undefined") return;
 
 		const connection =
-			(navigator as any).connection ||
-			(navigator as any).mozConnection ||
-			(navigator as any).webkitConnection;
+			(navigator as NavigatorWithConnection).connection ||
+			(navigator as NavigatorWithConnection).mozConnection ||
+			(navigator as NavigatorWithConnection).webkitConnection;
 
 		const updateMetrics = () => {
 			if (connection) {
 				setMetrics({
-					rtt: connection.rtt,
-					downlink: connection.downlink,
-					effectiveType: connection.effectiveType,
-					saveData: connection.saveData,
+					rtt: connection.rtt ?? null,
+					downlink: connection.downlink ?? null,
+					effectiveType: connection.effectiveType ?? null,
+					saveData: connection.saveData ?? false,
 				});
 			}
 		};
 
 		updateMetrics();
 
-		if (connection) {
+		if (connection && connection.addEventListener) {
 			connection.addEventListener("change", updateMetrics);
 		}
 
 		return () => {
-			if (connection) {
+			if (connection && connection.removeEventListener) {
 				connection.removeEventListener("change", updateMetrics);
 			}
 		};
@@ -380,19 +381,17 @@ export function useBackgroundSync(
 	const { isOnline } = useOnlineStatus();
 	const [lastSync, setLastSync] = React.useState<Date | null>(null);
 	const [isSyncing, setIsSyncing] = React.useState(false);
-	const [error, setError] = React.useState<Error | null>(null);
 
 	const sync = React.useCallback(async () => {
 		if (onlyWhenOnline && !isOnline) return;
 
 		setIsSyncing(true);
-		setError(null);
 
 		try {
 			await syncFunction();
 			setLastSync(new Date());
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error("Sync failed"));
+		} catch (error) {
+			console.error("Background sync failed", error);
 		} finally {
 			setIsSyncing(false);
 		}
@@ -402,7 +401,7 @@ export function useBackgroundSync(
 		if (immediate) {
 			sync();
 		}
-	}, []);
+	}, [immediate, sync]);
 
 	React.useEffect(() => {
 		if (onlyWhenOnline && !isOnline && !immediate) return;
@@ -415,7 +414,6 @@ export function useBackgroundSync(
 		sync,
 		isSyncing,
 		lastSync,
-		error,
 	};
 }
 
@@ -473,3 +471,18 @@ export function useProgressiveLoad<T>(
 }
 
 type ConnectionType = "slow-2g" | "2g" | "3g" | "4g";
+
+interface NetworkInformation {
+	rtt?: number;
+	downlink?: number;
+	effectiveType?: ConnectionType;
+	saveData?: boolean;
+	addEventListener?: (type: "change", listener: () => void) => void;
+	removeEventListener?: (type: "change", listener: () => void) => void;
+}
+
+interface NavigatorWithConnection {
+	connection?: NetworkInformation;
+	mozConnection?: NetworkInformation;
+	webkitConnection?: NetworkInformation;
+}

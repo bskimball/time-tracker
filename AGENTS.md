@@ -384,3 +384,140 @@ import { Button, Input, Card, Alert } from "~/components/ds";
 - **Import from `react-aria-components`**: `import { Button, TextField, Dialog } from "react-aria-components"`
 - **Focus on composition** - Combine behavior (RAC) with styling (Tailwind)
 - **Examples**: Button, TextField, Select, Dialog, Modal, Popover, Menu, Table, etc.
+
+## Forms, Server Actions, and Optimistic UI
+
+This app uses **React actions** and **client components** for most interactive forms, with a strong preference for optimistic UI so users see updates immediately.
+
+### Form Architecture
+
+- **Server actions live on the server** (RSC-safe modules):
+  - Use `"use server"` at the top of files that export actions.
+  - Actions accept `(prevState, formData: FormData)` and return serializable state.
+  - Example: `assignTaskAction`, `createTaskTypeAction` in `src/routes/manager/tasks/actions.ts`.
+
+- **Client shells own the form state**:
+  - Client components (with `"use client"`) call `useActionState` with server actions.
+  - They pass the resulting `action` function into form components.
+  - They also own any **optimistic state** via `useOptimistic`.
+
+- **Form components are generally dumb**:
+  - They render inputs, labels, error messages, and buttons.
+  - They receive `onSubmit` callbacks (typically the `action` from `useActionState`).
+  - They may receive an optional `onOptimisticXXX` callback to trigger optimistic updates.
+
+### React Actions Pattern
+
+We prefer the React actions + `useActionState` pattern for any non-trivial form:
+
+```tsx
+// Server file (RSC-safe)
+"use server";
+
+export async function someAction(
+	prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+) {
+	// Validate and perform side effects
+	// Return serializable state (no class instances, no functions)
+	return { success: true };
+}
+
+// Client file
+("use client");
+
+import { useActionState } from "react";
+
+export function SomeFormShell() {
+	const [state, action, isPending] = useActionState(someAction, null);
+
+	return (
+		<Form onSubmit={(fd) => action(fd)}>
+			{/* fields */}
+			{state?.error && <p className="text-error">{state.error}</p>}
+			<Button disabled={isPending}>Submit</Button>
+		</Form>
+	);
+}
+```
+
+> **Note:** We often adapt this so the client form builds a `FormData` in a local `handleSubmit` and then calls the `action` function. The key is: server actions own side effects; client components own UX and local state.
+
+### Optimistic Updates with `useOptimistic`
+
+For lists that should update immediately when a form is submitted (e.g. task assignments), we use `useOptimistic` in the client shell:
+
+```tsx
+"use client";
+
+import { useActionState, useOptimistic } from "react";
+import type { TaskAssignment } from "./types";
+
+export function TaskManager(props: { activeAssignments: TaskAssignment[] }) {
+	const [assignState, assignAction, isAssignPending] = useActionState(assignTaskAction, null);
+
+	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
+		TaskAssignment[],
+		{ employeeId: string; taskTypeId: string; notes?: string }
+	>(props.activeAssignments, (current, update) => {
+		// Look up related objects from other props
+		// Build a lightweight optimistic TaskAssignment
+		const optimistic: TaskAssignment = {
+			id: `optimistic-${Date.now()}`,
+			employeeId: update.employeeId,
+			taskTypeId: update.taskTypeId,
+			notes: update.notes ?? null,
+			startTime: new Date().toISOString() as any,
+			endTime: null,
+			unitsCompleted: null,
+			Employee: /* from props/employees */ null as any,
+			TaskType: /* from props/taskTypes */ null as any,
+		};
+
+		return [optimistic, ...current];
+	});
+
+	return (
+		<>
+			{/* Render from optimisticAssignments so UI updates immediately */}
+			{optimisticAssignments.map((assignment) => (
+				<div key={assignment.id}>{assignment.TaskType.name}</div>
+			))}
+
+			{/* Pass both the action and an optimistic callback into the form */}
+			<TaskAssignmentForm
+				onSubmit={assignAction}
+				onOptimisticAssign={(data) => addOptimisticAssignment(data)}
+				state={assignState}
+				isPending={isAssignPending}
+			/>
+		</>
+	);
+}
+```
+
+### Form Component Responsibilities
+
+Example from `src/routes/manager/tasks/task-assignment-form.tsx`:
+
+- **Props**:
+  - `onSubmit(formData: FormData)` — calls the server action via `useActionState`.
+  - `onOptimisticAssign?(data)` — optional; triggers an optimistic list update.
+  - `isPending` — disables buttons and shows loading labels.
+  - `state` — server action state for errors/success.
+
+- **Behavior**:
+  - Maintains local controlled input state for form fields.
+  - On submit:
+    - Builds a `FormData` with named fields.
+    - Calls `onOptimisticAssign` with a minimal payload (IDs + metadata).
+    - Calls `onSubmit(formData)` to trigger the server action.
+  - Resets and closes when `state?.success` becomes true.
+
+### Guidelines for New Forms
+
+- **Use server actions for side effects** (DB writes, auth checks, etc.).
+- **Use client components for UX**: validation messages, modals, optimistic UI.
+- Prefer `useActionState` + a dedicated shell component for anything beyond trivial forms.
+- When the user should see changes immediately (lists, counters, dashboards), use `useOptimistic` in the shell and pass a small `onOptimisticX` callback into the form.
+- Keep form components focused on rendering and input handling; keep domain logic and data fetching in server actions or server components.

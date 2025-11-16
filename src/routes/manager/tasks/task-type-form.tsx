@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Card, CardHeader, CardTitle, CardBody, Form } from "~/components/ds";
 
 interface Station {
@@ -11,27 +11,45 @@ interface Station {
 interface TaskTypeFormProps {
 	stations: Station[];
 	onClose: () => void;
-	onSubmit: (data: any) => Promise<void>;
+	onSubmit: (formData: FormData) => void;
+	isPending?: boolean;
+	state?: { error?: string | null; success?: boolean } | null;
 }
 
-export function TaskTypeForm({ stations, onClose, onSubmit }: TaskTypeFormProps) {
+export function TaskTypeForm({ stations, onClose, onSubmit, isPending = false, state }: TaskTypeFormProps) {
 	const [formData, setFormData] = useState({
 		name: "",
 		stationId: "",
 		description: "",
 		estimatedMinutesPerUnit: "",
 	});
-	const handleSubmit = async () => {
-		try {
-			await onSubmit({
-				...formData,
-				estimatedMinutesPerUnit: formData.estimatedMinutesPerUnit
-					? parseFloat(formData.estimatedMinutesPerUnit)
-					: null,
+
+	useEffect(() => {
+		if (!state?.success) return;
+		// Defer clear + close to avoid synchronous setState inside the effect body
+		const id = window.setTimeout(() => {
+			setFormData({
+				name: "",
+				stationId: "",
+				description: "",
+				estimatedMinutesPerUnit: "",
 			});
-		} catch (error) {
-			console.error("Error creating task type:", error);
+			onClose();
+		}, 0);
+		return () => window.clearTimeout(id);
+	}, [state?.success, onClose]);
+
+	const handleSubmit = () => {
+		const fd = new FormData();
+		fd.append("name", formData.name);
+		fd.append("stationId", formData.stationId);
+		if (formData.description) {
+			fd.append("description", formData.description);
 		}
+		if (formData.estimatedMinutesPerUnit) {
+			fd.append("estimatedMinutesPerUnit", formData.estimatedMinutesPerUnit);
+		}
+		onSubmit(fd);
 	};
 
 	return (
@@ -95,12 +113,16 @@ export function TaskTypeForm({ stations, onClose, onSubmit }: TaskTypeFormProps)
 							</p>
 						</div>
 
+						{state?.error && (
+							<p className="text-sm text-error mt-2">{state.error}</p>
+						)}
+
 						<div className="flex justify-end space-x-2 pt-4 border-t">
 							<Button type="button" variant="outline" onClick={onClose}>
 								Cancel
 							</Button>
-							<Button type="submit" variant="primary">
-								Create Task Type
+							<Button type="submit" variant="primary" disabled={isPending}>
+								{isPending ? "Creating..." : "Create Task Type"}
 							</Button>
 						</div>
 					</Form>

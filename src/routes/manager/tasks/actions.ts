@@ -3,6 +3,8 @@
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 
+import type { TaskAssignment } from "./types";
+
 export async function getTaskTypes() {
 	return await db.taskType.findMany({
 		where: { isActive: true },
@@ -83,6 +85,48 @@ export async function assignTask(data: {
 	});
 
 	return assignment;
+}
+
+export async function assignTaskAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{
+	assignment?: any;
+	activeAssignments?: TaskAssignment[];
+	error?: string | null;
+	success?: boolean;
+}> {
+	try {
+		const employeeId = String(formData.get("employeeId") || "");
+		const taskTypeId = String(formData.get("taskTypeId") || "");
+		const priority = (String(formData.get("priority") || "MEDIUM") || "MEDIUM") as
+			| "LOW"
+			| "MEDIUM"
+			| "HIGH";
+		const notesValue = formData.get("notes");
+		const notes = notesValue ? String(notesValue) : undefined;
+
+		if (!employeeId || !taskTypeId) {
+			return { error: "Employee and task type are required", success: false };
+		}
+
+		const assignment = await assignTask({
+			employeeId,
+			taskTypeId,
+			priority,
+			notes,
+		});
+
+		// Re-fetch active assignments so the client can update without a full reload
+		const activeAssignments = await getActiveTaskAssignments();
+
+		return { assignment, activeAssignments, success: true };
+	} catch (error: any) {
+		return {
+			error: error?.message || "Failed to assign task",
+			success: false,
+		};
+	}
 }
 
 export async function completeTask(taskId: string, unitsCompleted?: number, notes?: string) {
@@ -201,6 +245,44 @@ export async function createTaskType(data: {
 	});
 
 	return taskType;
+}
+
+export async function createTaskTypeAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{
+	TaskType?: any;
+	error?: string | null;
+	success?: boolean;
+}> {
+	try {
+		const name = String(formData.get("name") || "").trim();
+		const stationId = String(formData.get("stationId") || "");
+		const descriptionValue = formData.get("description");
+		const estimatedMinutesValue = formData.get("estimatedMinutesPerUnit");
+		const description = descriptionValue ? String(descriptionValue).trim() : undefined;
+		const estimatedMinutesPerUnit = estimatedMinutesValue
+			? Number.parseFloat(String(estimatedMinutesValue))
+			: undefined;
+
+		if (!name || !stationId) {
+			return { error: "Name and station are required", success: false };
+		}
+
+		const TaskType = await createTaskType({
+			name,
+			stationId,
+			description,
+			estimatedMinutesPerUnit,
+		});
+
+		return { TaskType, success: true };
+	} catch (error: any) {
+		return {
+			error: error?.message || "Failed to create task type",
+			success: false,
+		};
+	}
 }
 
 export async function updateTaskType(

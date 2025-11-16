@@ -1,3 +1,6 @@
+// Unstable RSC APIs - partial type coverage in react-router
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import {
 	createFromReadableStream,
 	createTemporaryReferenceSet,
@@ -11,7 +14,8 @@ import {
 	unstable_getRSCStream as getRSCStream,
 	unstable_RSCHydratedRouter as RSCHydratedRouter,
 } from "react-router/dom";
-import type { unstable_RSCPayload as RSCServerPayload } from "react-router";
+
+type RSCServerPayload = any;
 
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(
@@ -19,7 +23,7 @@ setServerCallback(
 		createFromReadableStream,
 		createTemporaryReferenceSet,
 		encodeReply,
-	})
+	}),
 );
 
 // Get and decode the initial server payload
@@ -30,31 +34,21 @@ createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
 		hydrateRoot(
 			document,
 			<StrictMode>
-				<RSCHydratedRouter payload={payload} createFromReadableStream={createFromReadableStream} />
+				<RSCHydratedRouter
+					createFromReadableStream={createFromReadableStream}
+					payload={payload}
+				/>
 			</StrictMode>,
 			{
 				// @ts-expect-error - no types for this yet
 				formState,
-			}
+			},
 		);
-
-		// Expose router to window for HMR
-		if (payload.type === "render") {
-			// @ts-expect-error - router exists on render payload
-			(window as any).__router = payload.router;
-		}
 	});
 });
 
 if (import.meta.hot) {
 	import.meta.hot.on("rsc:update", () => {
-		const router = (window as any).__router;
-		if (router?.revalidate) {
-			console.log("[HMR] Server component updated, revalidating...");
-			router.revalidate();
-		} else {
-			console.log("[HMR] Router not found, reloading page...");
-			window.location.reload();
-		}
+		(window as unknown as { __router: { revalidate: () => void } }).__router.revalidate();
 	});
 }

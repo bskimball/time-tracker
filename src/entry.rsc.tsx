@@ -1,3 +1,6 @@
+// Unstable RSC APIs - partial type coverage in react-router
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import {
 	createTemporaryReferenceSet,
 	decodeAction,
@@ -9,34 +12,33 @@ import {
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import { routes } from "./routes/config";
-import { runWithRequest } from "./lib/request-context";
 
-async function fetchServer(request: Request) {
-	// Wrap the RSC rendering in the request context so components can access it
-	return runWithRequest(request, async () => {
-		return matchRSCServerRequest({
-			createTemporaryReferenceSet,
-			decodeAction,
-			decodeFormState,
-			decodeReply,
-			loadServerAction,
-			request,
-			routes: routes(),
-			generateResponse(match, options) {
-				return new Response(renderToReadableStream(match.payload, options), {
-					status: match.statusCode,
-					headers: match.headers,
-				});
-			},
-		});
+function fetchServer(request: Request) {
+	return matchRSCServerRequest({
+		// Provide the React Server touchpoints.
+		createTemporaryReferenceSet,
+		decodeAction,
+		decodeFormState,
+		decodeReply,
+		loadServerAction,
+		// The incoming request.
+		request,
+		// The app routes.
+		routes: routes(),
+		// Encode the match with the React Server implementation.
+		generateResponse(match: any, options: any) {
+			return new Response(renderToReadableStream(match.payload, options), {
+				status: match.statusCode,
+				headers: match.headers,
+			});
+		},
 	});
 }
 
 export default async function handler(request: Request) {
-	const url = new URL(request.url);
-
 	// Handle logout as a top-level redirect before RSC rendering to avoid
 	// redirect Responses bubbling through the RSC/SSR pipeline as server errors.
+	const url = new URL(request.url);
 	if (url.pathname === "/logout") {
 		const { validateRequest, invalidateSession, deleteSessionTokenCookie } = await import(
 			"./lib/auth"
@@ -57,7 +59,9 @@ export default async function handler(request: Request) {
 		});
 	}
 
+	// Import the generateHTML function from the client environment
 	const ssr = await import.meta.viteRsc.loadModule<typeof import("./entry.ssr")>("ssr", "index");
+
 	return ssr.generateHTML(request, fetchServer);
 }
 

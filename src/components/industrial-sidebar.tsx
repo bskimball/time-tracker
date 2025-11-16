@@ -30,24 +30,20 @@ export function IndustrialSidebar({
 
 	return (
 		<div className="flex h-screen overflow-hidden bg-background">
-			{/* Industrial Sidebar */}
+			{/* Modern Sidebar */}
 			<aside
 				className={cn(
-					"bg-metal relative flex flex-col border-r-2 border-sidebar-border transition-all duration-300",
+					"bg-sidebar relative flex flex-col border-r border-sidebar-border transition-all duration-300 shadow-sm",
 					isCollapsed ? "w-16" : "w-64",
 				)}
 			>
-				{/* Rivet decorations at top corners */}
-				<div className="absolute left-2 top-2 rivet" />
-				<div className="absolute right-2 top-2 rivet" />
-
 				{/* Header with brand */}
-				<div className="border-b-2 border-sidebar-border bg-sidebar p-4">
+				<div className="border-b border-sidebar-border bg-sidebar/50 p-4">
 					<Link to={brandHref} className="flex items-center gap-3">
 						{!isCollapsed && (
 							<>
 								<div className="led-indicator active" />
-								<span className="font-industrial text-xl font-bold uppercase tracking-wider text-sidebar-foreground">
+								<span className="text-xl font-bold tracking-tight text-sidebar-foreground">
 									{title}
 								</span>
 							</>
@@ -66,8 +62,8 @@ export function IndustrialSidebar({
 							<Link key={link.to} to={link.to}>
 								<div
 									className={cn(
-										"panel-shadow group relative mb-2 flex items-center gap-3 border border-sidebar-border bg-sidebar-accent px-3 py-3 transition-all hover:bg-primary hover:text-primary-foreground",
-										isActive && "bg-primary text-primary-foreground",
+										"group relative mb-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-3 transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-sm",
+										isActive && "bg-primary text-primary-foreground shadow-sm",
 									)}
 								>
 									{/* LED indicator */}
@@ -75,14 +71,9 @@ export function IndustrialSidebar({
 
 									{/* Label */}
 									{!isCollapsed && (
-										<span className="font-industrial text-sm font-semibold uppercase tracking-wide">
+										<span className="text-sm font-medium">
 											{link.label}
 										</span>
-									)}
-
-									{/* Decorative rivet */}
-									{!isCollapsed && (
-										<div className="rivet absolute right-2 top-1/2 -translate-y-1/2" />
 									)}
 								</div>
 							</Link>
@@ -90,14 +81,10 @@ export function IndustrialSidebar({
 					})}
 				</nav>
 
-				{/* Rivets at bottom corners */}
-				<div className="absolute bottom-16 left-2 rivet" />
-				<div className="absolute bottom-16 right-2 rivet" />
-
 				{/* User section and collapse toggle */}
-				<div className="border-t-2 border-sidebar-border bg-sidebar p-2">
+				<div className="border-t border-sidebar-border bg-sidebar/50 p-2">
 					{!isCollapsed && userSection && (
-						<div className="mb-2 border border-sidebar-border bg-sidebar-accent p-2 text-xs text-sidebar-foreground">
+						<div className="mb-2 rounded-md border border-sidebar-border bg-sidebar-accent p-2 text-xs text-sidebar-foreground">
 							{userSection}
 						</div>
 					)}
@@ -106,7 +93,7 @@ export function IndustrialSidebar({
 					<button
 						onClick={() => setIsCollapsed(!isCollapsed)}
 						className={cn(
-							"panel-shadow flex w-full items-center justify-center border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-colors hover:bg-sidebar-primary hover:text-sidebar-primary-foreground",
+							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm",
 						)}
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 					>
@@ -119,7 +106,7 @@ export function IndustrialSidebar({
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
 						</svg>
 						{!isCollapsed && (
-							<span className="font-industrial ml-2 text-xs font-semibold uppercase tracking-wide">
+							<span className="ml-2 text-xs font-medium">
 								Collapse
 							</span>
 						)}
@@ -129,12 +116,12 @@ export function IndustrialSidebar({
 
 			{/* Main content area */}
 			<main className="flex flex-1 flex-col overflow-hidden">
-				{/* Top bar with warehouse floor pattern */}
-				<div className="border-b-2 border-border bg-muted px-6 py-3">
+				{/* Top bar */}
+				<div className="border-b border-border bg-muted/30 px-6 py-3 shadow-sm">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<div className="h-3 w-3 border-2 border-primary" />
-							<div className="font-mono-industrial text-sm text-muted-foreground">
+							<div className="h-2 w-2 rounded-full bg-primary" />
+							<div className="text-sm text-muted-foreground">
 								{new Date().toLocaleString("en-US", {
 									weekday: "short",
 									year: "numeric",

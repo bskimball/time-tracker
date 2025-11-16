@@ -88,15 +88,25 @@ export async function calculateDailyperformanceMetrics(date: Date = new Date()) 
 /**
  * Calculate performance metrics for a specific employee on a given date
  */
-async function calculateEmployeeperformanceMetrics(employee: any, date: Date) {
-	const workLogs = employee.TimeLog.filter((log: any) => log.type === "WORK");
+type EmployeeWithTimeLogs = {
+	id: string;
+	TimeLog: Array<{
+		type: string;
+		startTime: Date | string;
+		endTime: Date | string | null;
+		stationId: string | null;
+		Task?: { unitsCompleted?: number | null } | null;
+	}>;
+};
+
+async function calculateEmployeeperformanceMetrics(employee: EmployeeWithTimeLogs, date: Date) {
+	const workLogs = employee.TimeLog.filter((log) => log.type === "WORK");
 
 	if (workLogs.length === 0) return;
 
 	// Calculate total hours worked
 	let totalHours = 0;
 	let overtimeHours = 0;
-	let unitsProcessed = 0;
 	const stationMetrics = new Map<string, { hours: number; units: number }>();
 
 	for (const log of workLogs) {
@@ -120,7 +130,6 @@ async function calculateEmployeeperformanceMetrics(employee: any, date: Date) {
 
 		// Count units from tasks
 		if (log.Task?.unitsCompleted) {
-			unitsProcessed += log.Task.unitsCompleted;
 			station.units += log.Task.unitsCompleted;
 		}
 	}
@@ -267,7 +276,12 @@ export async function getProductivityAnalytics(
 		taskType?: string;
 	} = {}
 ): Promise<ProductivityAnalytics[]> {
-	const whereClause: any = {
+	const whereClause: {
+		date: { gte: Date; lte: Date };
+		employeeId?: string;
+		stationId?: string;
+		taskType?: string;
+	} = {
 		date: {
 			gte: startOfDay(startDate),
 			lte: endOfDay(endDate),
