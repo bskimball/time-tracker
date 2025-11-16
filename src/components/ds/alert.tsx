@@ -14,24 +14,24 @@ interface AlertProps {
 
 const variantStyles: Record<AlertVariant, { container: string; text: string; icon: string }> = {
 	success: {
-		container: "bg-green-50 border-green-200 text-green-800",
-		text: "text-green-800",
-		icon: "text-green-600",
+		container: "bg-card border-2 border-primary text-foreground",
+		text: "text-foreground",
+		icon: "text-primary",
 	},
 	error: {
-		container: "bg-red-50 border-red-200 text-red-800",
-		text: "text-red-800",
-		icon: "text-red-600",
+		container: "bg-card border-2 border-destructive text-foreground",
+		text: "text-foreground",
+		icon: "text-destructive",
 	},
 	warning: {
-		container: "bg-amber-50 border-amber-200 text-amber-800",
-		text: "text-amber-800",
-		icon: "text-amber-600",
+		container: "bg-primary/10 border-2 border-primary text-foreground",
+		text: "text-foreground",
+		icon: "text-primary",
 	},
 	info: {
-		container: "bg-blue-50 border-blue-200 text-blue-800",
-		text: "text-blue-800",
-		icon: "text-blue-600",
+		container: "bg-card border-2 border-secondary text-foreground",
+		text: "text-foreground",
+		icon: "text-secondary",
 	},
 };
 
@@ -43,8 +43,8 @@ const defaultIcons: Record<AlertVariant, string> = {
 };
 
 /**
- * Alert component for displaying messages to the user.
- * Works in both server and client components.
+ * Alert component for displaying messages to the user - Industrial style.
+ * Sharp corners, bold borders, high contrast industrial colors.
  */
 export function Alert({
 	children,
@@ -58,10 +58,10 @@ export function Alert({
 	const displayIcon = icon ?? defaultIcons[variant];
 
 	return (
-		<div className={cn("flex gap-3 rounded-md p-4", styles.container, className)} role="alert">
+		<div className={cn("panel-shadow flex gap-3 p-4", styles.container, className)} role="alert">
 			<div className={cn("flex-shrink-0 text-lg font-bold", styles.icon)}>{displayIcon}</div>
 			<div className="flex-1">
-				{title && <h3 className={cn("font-semibold", styles.text)}>{title}</h3>}
+				{title && <h3 className={cn("font-industrial font-semibold uppercase tracking-wide", styles.text)}>{title}</h3>}
 				<div className={cn("text-sm", styles.text)}>{children}</div>
 			</div>
 			{onClose && (

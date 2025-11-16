@@ -110,12 +110,12 @@ export default async function Component({
 									<p className="text-sm mt-1">{alert.message}</p>
 								</div>
 								<span
-									className={`px-2 py-1 text-xs font-medium rounded-full ${
+									className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
 										alert.priority === "high"
-											? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+											? "bg-destructive/20 text-destructive border border-destructive"
 											: alert.priority === "medium"
-												? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-												: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+												? "bg-primary/20 text-primary border border-primary"
+												: "bg-secondary/20 text-secondary border border-secondary"
 									}`}
 								>
 									{alert.priority}
@@ -238,12 +238,12 @@ export default async function Component({
 									<div className="flex justify-between">
 										<span className="text-sm text-muted-foreground">Occupancy:</span>
 										<span
-											className={`font-medium ${
+											className={`font-mono-industrial font-bold ${
 												station.occupancyRate > 90
-													? "text-red-600"
+													? "text-destructive"
 													: station.occupancyRate > 70
-														? "text-yellow-600"
-														: "text-green-600"
+														? "text-primary"
+														: "text-secondary"
 											}`}
 										>
 											{station.occupancyRate.toFixed(0)}%

@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router";
-import { Button } from "~/components/ds";
+import { IndustrialSidebar } from "~/components/industrial-sidebar";
 import { ThemeToggle } from "~/components/theme-toggle";
-import { cn } from "~/lib/cn";
+import { Button } from "~/components/ds";
 
 interface AppNavLink {
 	label: string;
@@ -14,7 +13,6 @@ interface AppLayoutProps {
 	brandHref?: string;
 	navLinks?: AppNavLink[];
 	children: ReactNode;
-	className?: string;
 }
 
 export function AppLayout({
@@ -22,46 +20,30 @@ export function AppLayout({
 	brandHref = "/",
 	navLinks = [],
 	children,
-	className = "",
 }: AppLayoutProps) {
-	return (
-		<div className={cn("min-h-screen bg-background", className)}>
-			<nav className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-				<div className="container mx-auto px-4">
-					<div className="flex h-16 items-center justify-between">
-						<div className="flex items-center space-x-4">
-							<Link to={brandHref} className="flex items-center space-x-2">
-								<span className="text-xl font-bold">{title}</span>
-							</Link>
-							{navLinks.length > 0 ? (
-								<div className="flex flex-wrap gap-1">
-									{navLinks.map((link) => (
-										<Link key={link.to} to={link.to}>
-											<Button variant="ghost" size="sm">
-												{link.label}
-											</Button>
-										</Link>
-									))}
-								</div>
-							) : null}
-						</div>
-						<div className="flex items-center space-x-2">
-							<ThemeToggle />
-							<Link to="/">
-								<Button variant="outline" size="sm">
-									Home
-								</Button>
-							</Link>
-						<a href="/logout">
-							<Button variant="ghost" size="sm">
-								Logout
-							</Button>
-						</a>
-						</div>
-					</div>
-				</div>
-			</nav>
-			<main className="container mx-auto px-4 py-6">{children}</main>
+	// User section with theme toggle and logout
+	const userSection = (
+		<div className="flex flex-col gap-2">
+			<div className="flex items-center justify-between">
+				<span className="font-mono-industrial text-xs uppercase">Theme</span>
+				<ThemeToggle />
+			</div>
+			<a href="/logout" className="w-full">
+				<Button variant="error" size="sm" className="w-full">
+					Logout
+				</Button>
+			</a>
 		</div>
+	);
+
+	return (
+		<IndustrialSidebar
+			title={title}
+			brandHref={brandHref}
+			navLinks={navLinks}
+			userSection={userSection}
+		>
+			{children}
+		</IndustrialSidebar>
 	);
 }

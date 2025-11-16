@@ -85,7 +85,7 @@ const tabSizeStyles: Record<TabSize, string> = {
 const variantStyles: Record<TabVariant, string> = {
 	underline:
 		"rounded-t-md border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary",
-	pill: "rounded-md data-[selected=true]:bg-background data-[selected=true]:text-foreground data-[selected=true]:shadow-sm",
+	pill: "rounded-md border-2 border-transparent data-[hovered=true]:bg-background/50 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground data-[selected=true]:shadow-lg data-[selected=true]:border-primary data-[selected=true]:border-b-4 data-[selected=true]:border-b-accent",
 };
 
 export function Tab({ children, className, ...props }: TabProps) {
@@ -94,7 +94,7 @@ export function Tab({ children, className, ...props }: TabProps) {
 		<AriaTab
 			{...props}
 			className={cn(
-				"relative font-medium text-muted-foreground transition-all focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
+				"relative font-medium text-muted-foreground transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
 				tabSizeStyles[size],
 				variantStyles[variant],
 				className

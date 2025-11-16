@@ -22,14 +22,14 @@ interface CardBodyProps {
 }
 
 /**
- * Card component with semantic structure.
- * Accepts any children but typically used with CardHeader, CardTitle, and CardBody.
+ * Card component with semantic structure - Industrial style.
+ * Sharp corners, panel shadows, industrial metal aesthetic.
  */
 export function Card({ children, className = "" }: CardProps) {
 	return (
 		<div
 			className={cn(
-				"bg-card text-card-foreground border border-border rounded-md shadow-sm hover:shadow-md transition-all",
+				"panel-shadow bg-card text-card-foreground border-2 border-border transition-all",
 				className
 			)}
 		>
@@ -40,16 +40,18 @@ export function Card({ children, className = "" }: CardProps) {
 
 /**
  * Card header section - typically contains the title and actions.
+ * Industrial style with bold border.
  */
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
-	return <div className={cn("px-6 py-4 border-b border-border", className)}>{children}</div>;
+	return <div className={cn("px-6 py-4 border-b-2 border-border bg-muted/30", className)}>{children}</div>;
 }
 
 /**
  * Card title - typically used within CardHeader.
+ * Industrial style with uppercase heading font.
  */
 export function CardTitle({ children, className = "" }: CardTitleProps) {
-	return <h2 className={cn("text-lg font-semibold", className)}>{children}</h2>;
+	return <h2 className={cn("font-industrial text-lg font-semibold uppercase tracking-wide", className)}>{children}</h2>;
 }
 
 /**

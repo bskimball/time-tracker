@@ -46,7 +46,7 @@ export function Button({
 	...props
 }: ButtonProps) {
 	const buttonClass = cn(
-		"inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
+		"inline-flex items-center justify-center font-medium transition-all focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
 		variantStyles[variant],
 		sizeStyles[size],
 		className

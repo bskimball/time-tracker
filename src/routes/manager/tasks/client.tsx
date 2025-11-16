@@ -4,7 +4,6 @@ import { useState } from "react";
 import type React from "react";
 import {
 	Button,
-	Input,
 	Card,
 	CardHeader,
 	CardTitle,
@@ -14,45 +13,9 @@ import {
 	Tab,
 	TabPanel,
 } from "~/components/ds";
-
-type TaskType = {
-	id: string;
-	name: string;
-	stationId: string;
-	description: string | null;
-	estimatedMinutesPerUnit: number | null;
-	isActive: boolean;
-	Station: { id: string; name: string };
-};
-
-type TaskAssignment = {
-	id: string;
-	employeeId: string;
-	taskTypeId: string;
-	startTime: Date;
-	endTime: Date | null;
-	unitsCompleted: number | null;
-	notes: string | null;
-	Employee: {
-		id: string;
-		name: string;
-		email: string;
-		defaultStation?: { id: string; name: string } | null;
-	};
-	TaskType: TaskType;
-};
-
-type Employee = {
-	id: string;
-	name: string;
-	email: string;
-	defaultStation?: { id: string; name: string } | null;
-};
-
-type Station = {
-	id: string;
-	name: string;
-};
+import type { TaskType, TaskAssignment, Employee, Station } from "./types";
+import { TaskAssignmentForm } from "./task-assignment-form";
+import { TaskTypeForm } from "./task-type-form";
 
 interface TaskManagerProps {
 	taskTypes: TaskType[];
@@ -133,15 +96,15 @@ export function TaskManager({
 						<p className="text-2xl">
 							{activeAssignments.length > 0
 								? Math.round(
-										activeAssignments
-											.filter((a) => a.endTime)
-											.reduce((total, a) => {
-												const duration =
-													new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
-												return total + duration;
-											}, 0) /
-											(1000 * 60 * 60 * activeAssignments.filter((a) => a.endTime).length)
-									)
+									activeAssignments
+										.filter((a) => a.endTime)
+										.reduce((total, a) => {
+											const duration =
+												new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
+											return total + duration;
+										}, 0) /
+									(1000 * 60 * 60 * activeAssignments.filter((a) => a.endTime).length)
+								)
 								: 0}
 							h
 						</p>
@@ -155,9 +118,9 @@ export function TaskManager({
 						<p className="text-2xl">
 							{activeAssignments.length > 0
 								? Math.round(
-										(activeAssignments.filter((a) => a.endTime).length / activeAssignments.length) *
-											100
-									)
+									(activeAssignments.filter((a) => a.endTime).length / activeAssignments.length) *
+									100
+								)
 								: 0}
 							%
 						</p>
@@ -322,11 +285,10 @@ export function TaskManager({
 											</div>
 											<div className="flex space-x-1">
 												<span
-													className={`px-2 py-1 text-xs rounded ${
-													taskType.isActive
-															? "bg-green-100 text-green-800"
-															: "bg-accent text-muted-foreground"
-													}`}
+													className={`px-2 py-1 text-xs rounded ${taskType.isActive
+														? "bg-green-100 text-green-800"
+														: "bg-accent text-muted-foreground"
+														}`}
 												>
 													{taskType.isActive ? "Active" : "Inactive"}
 												</span>
@@ -362,10 +324,33 @@ export function TaskManager({
 				<TaskAssignmentForm
 					employees={employees}
 					taskTypes={taskTypes}
+					activeAssignments={activeAssignments}
 					onClose={() => setShowAssignForm(false)}
 					onSubmit={async (data) => {
-						console.log("Assigning task:", data);
-						setShowAssignForm(false);
+						// Submit to server action on this route
+						try {
+							const body = new FormData();
+							body.append("employeeId", data.employeeId);
+							body.append("taskTypeId", data.taskTypeId);
+							body.append("priority", data.priority);
+							if (data.notes) body.append("notes", data.notes);
+							const res = await fetch(window.location.pathname, {
+								method: "POST",
+								body,
+							});
+							if (!res.ok) {
+								const err = await res.json().catch(() => ({}));
+								console.error("Assign failed:", err);
+								alert((err && err.error) || "Failed to assign task");
+								return;
+							}
+							// Success — refresh to show new assignment
+							setShowAssignForm(false);
+							window.location.reload();
+						} catch (err) {
+							console.error("Error assigning task:", err);
+							alert("Error assigning task");
+						}
 					}}
 				/>
 			)}
@@ -384,244 +369,4 @@ export function TaskManager({
 		</div>
 	);
 }
-
-// Task Assignment Form Component
-function TaskAssignmentForm({
-	employees,
-	taskTypes,
-	onClose,
-	onSubmit,
-}: {
-	employees: Employee[];
-	taskTypes: TaskType[];
-	onClose: () => void;
-	onSubmit: (data: any) => Promise<void>;
-}) {
-	const [formData, setFormData] = useState<{
-		employeeId: string;
-		taskTypeId: string;
-		priority: "LOW" | "MEDIUM" | "HIGH";
-		notes: string;
-	}>({
-		employeeId: "",
-		taskTypeId: "",
-		priority: "MEDIUM",
-		notes: "",
-	});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setIsSubmitting(true);
-
-		try {
-			await onSubmit(formData);
-		} catch (error) {
-			console.error("Error assigning task:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
-	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-				<CardHeader>
-					<CardTitle>Assign Task</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<label className="block text-sm font-medium mb-1">Employee</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.employeeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, employeeId: e.target.value }))}
-								required
-							>
-								<option value="">Select an employee</option>
-								{employees
-									.filter(
-										(emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime)
-									)
-									.map((employee) => (
-										<option key={employee.id} value={employee.id}>
-											{employee.name}
-										</option>
-									))}
-							</select>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium mb-1">Task Type</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.taskTypeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, taskTypeId: e.target.value }))}
-								required
-							>
-								<option value="">Select a task type</option>
-								{taskTypes.map((taskType) => (
-									<option key={taskType.id} value={taskType.id}>
-										{taskType.name} - {taskType.Station.name}
-									</option>
-								))}
-							</select>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium mb-1">Priority</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.priority}
-								onChange={(e) =>
-									setFormData((prev) => ({
-										...prev,
-										priority: e.target.value as "LOW" | "MEDIUM" | "HIGH",
-									}))
-								}
-							>
-								<option value="LOW">Low</option>
-								<option value="MEDIUM">Medium</option>
-								<option value="HIGH">High</option>
-							</select>
-						</div>
-
-						<div>
-							<Input
-								label="Notes (optional)"
-								value={formData.notes}
-								onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-								placeholder="Additional instructions or context"
-							/>
-						</div>
-
-						<div className="flex justify-end space-x-2 pt-4 border-t">
-							<Button type="button" variant="outline" onClick={onClose}>
-								Cancel
-							</Button>
-							<Button type="submit" variant="primary" disabled={isSubmitting}>
-								{isSubmitting ? "Assigning..." : "Assign Task"}
-							</Button>
-						</div>
-					</form>
-				</CardBody>
-			</Card>
-		</div>
-	);
-}
-
-// Task Type Form Component
-function TaskTypeForm({
-	stations,
-	onClose,
-	onSubmit,
-}: {
-	stations: Station[];
-	onClose: () => void;
-	onSubmit: (data: any) => Promise<void>;
-}) {
-	const [formData, setFormData] = useState({
-		name: "",
-		stationId: "",
-		description: "",
-		estimatedMinutesPerUnit: "",
-	});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setIsSubmitting(true);
-
-		try {
-			await onSubmit({
-				...formData,
-				estimatedMinutesPerUnit: formData.estimatedMinutesPerUnit
-					? parseFloat(formData.estimatedMinutesPerUnit)
-					: null,
-			});
-		} catch (error) {
-			console.error("Error creating task type:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
-	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-				<CardHeader>
-					<CardTitle>Task Type</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<Input
-								label="Task Name"
-								value={formData.name}
-								onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-								placeholder="e.g., Pick Small Items"
-								required
-							/>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium mb-1">Station</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.stationId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, stationId: e.target.value }))}
-								required
-							>
-								<option value="">Select a station</option>
-								{stations.map((station) => (
-									<option key={station.id} value={station.id}>
-										{station.name}
-									</option>
-								))}
-							</select>
-						</div>
-
-						<div>
-							<Input
-								label="Description"
-								value={formData.description}
-								onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-								placeholder="Details about this task type"
-							/>
-						</div>
-
-						<div>
-							<Input
-								label="Estimated Minutes Per Unit"
-								type="number"
-								step="0.1"
-								min="0"
-								value={formData.estimatedMinutesPerUnit}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, estimatedMinutesPerUnit: e.target.value }))
-								}
-								placeholder="e.g., 2.5"
-							/>
-							<p className="text-xs text-muted-foreground mt-1">
-								For productivity calculations (optional)
-							</p>
-						</div>
-
-						<div className="flex justify-end space-x-2 pt-4 border-t">
-							<Button type="button" variant="outline" onClick={onClose}>
-								Cancel
-							</Button>
-							<Button type="submit" variant="primary" disabled={isSubmitting}>
-								{isSubmitting ? "Creating..." : "Create Task Type"}
-							</Button>
-						</div>
-					</form>
-				</CardBody>
-			</Card>
-		</div>
-	);
-}
-
-// Helper to check active assignments (in real implementation, this would be managed through state)
-const activeAssignments: TaskAssignment[] = [];
+// Note: active assignments are provided via props to the TaskManager component.

@@ -126,33 +126,33 @@ export default async function Component({
 				<div className="space-y-6">
 					{/* Productivity Overview Cards */}
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-						<Card className="border-green-200 bg-green-50">
+						<Card className="border-2 border-primary bg-primary/10">
 							<CardHeader>
-								<CardTitle className="text-green-800">Avg Units/Hour</CardTitle>
+								<CardTitle className="text-primary normal-case">Avg Units/Hour</CardTitle>
 							</CardHeader>
 							<CardBody>
-								<div className="text-2xl font-bold text-green-600">28.1</div>
-								<p className="text-sm text-green-600 mt-1">+5.2% vs last period</p>
+								<div className="font-mono-industrial text-2xl font-bold text-primary">28.1</div>
+								<p className="text-sm text-foreground mt-1">+5.2% vs last period</p>
 							</CardBody>
 						</Card>
 
-						<Card className="border-blue-200 bg-blue-50">
+						<Card className="border-2 border-secondary bg-secondary/10">
 							<CardHeader>
-								<CardTitle className="text-blue-800">Top Performer</CardTitle>
+								<CardTitle className="text-secondary normal-case">Top Performer</CardTitle>
 							</CardHeader>
 							<CardBody>
-								<div className="text-2xl font-bold text-blue-600">39.0 u/h</div>
-								<p className="text-sm text-blue-600 mt-1">David Chen - Filling</p>
+								<div className="font-mono-industrial text-2xl font-bold text-secondary">39.0 u/h</div>
+								<p className="text-sm text-foreground mt-1">David Chen - Filling</p>
 							</CardBody>
 						</Card>
 
-						<Card className="border-purple-200 bg-purple-50">
+						<Card className="border-2 border-accent bg-accent/10">
 							<CardHeader>
-								<CardTitle className="text-purple-800">Task Completion</CardTitle>
+								<CardTitle className="text-accent normal-case">Task Completion</CardTitle>
 							</CardHeader>
 							<CardBody>
-								<div className="text-2xl font-bold text-purple-600">94.7%</div>
-								<p className="text-sm text-purple-600 mt-1">On-time rate</p>
+								<div className="font-mono-industrial text-2xl font-bold text-accent">94.7%</div>
+								<p className="text-sm text-foreground mt-1">On-time rate</p>
 							</CardBody>
 						</Card>
 					</div>
@@ -182,7 +182,7 @@ export default async function Component({
 												<td className="text-right py-3 px-4">{employee.hours}</td>
 												<td className="text-right py-3 px-4 font-medium">{employee.rate}</td>
 												<td className="py-3 px-4">
-													<span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
+													<span className="px-2 py-1 text-xs font-industrial font-medium bg-secondary/20 text-secondary border border-secondary uppercase">
 														{employee.station}
 													</span>
 												</td>
@@ -212,12 +212,12 @@ export default async function Component({
 											<div className="flex justify-between items-center">
 												<span className="text-sm text-muted-foreground">Occupancy:</span>
 												<span
-													className={`font-medium ${
+													className={`font-mono-industrial font-bold ${
 														station.occupancy > 85
-															? "text-red-600"
+															? "text-destructive"
 															: station.occupancy > 70
-																? "text-yellow-600"
-																: "text-green-600"
+																? "text-primary"
+																: "text-secondary"
 													}`}
 												>
 													{station.occupancy}%
@@ -227,14 +227,14 @@ export default async function Component({
 												<span className="text-sm text-muted-foreground">Employees:</span>
 												<span className="font-medium">{station.employees}</span>
 											</div>
-											<div className="w-full bg-accent rounded-full h-2">
+											<div className="w-full bg-muted h-2">
 												<div
-													className={`h-2 rounded-full ${
+													className={`h-2 ${
 														station.efficiency > 30
-															? "bg-green-500"
+															? "bg-primary"
 															: station.efficiency > 20
-																? "bg-yellow-500"
-																: "bg-red-500"
+																? "bg-secondary"
+																: "bg-destructive"
 													}`}
 													style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
 												></div>
@@ -293,7 +293,7 @@ export default async function Component({
 						</Card>
 
 						<Card
-							className={placeholderData.costs.variance > 0 ? "border-red-200" : "border-green-200"}
+							className={placeholderData.costs.variance > 0 ? "border-2 border-destructive bg-destructive/10" : "border-2 border-primary bg-primary/10"}
 						>
 							<CardHeader>
 								<CardTitle className="text-sm font-medium text-muted-foreground">
@@ -302,7 +302,7 @@ export default async function Component({
 							</CardHeader>
 							<CardBody>
 								<div
-									className={`text-2xl font-bold ${placeholderData.costs.variance > 0 ? "text-red-600" : "text-green-600"}`}
+									className={`font-mono-industrial text-2xl font-bold ${placeholderData.costs.variance > 0 ? "text-destructive" : "text-primary"}`}
 								>
 									{placeholderData.costs.variance > 0 ? "+" : ""}
 									{placeholderData.costs.variance.toFixed(2)}
@@ -414,23 +414,23 @@ export default async function Component({
 						</CardHeader>
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-								<div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-									<h4 className="font-medium text-blue-900 mb-2">Productivity Trends</h4>
-									<p className="text-sm text-blue-800">
+								<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
+									<h4 className="font-industrial font-medium uppercase text-secondary mb-2">Productivity Trends</h4>
+									<p className="text-sm text-foreground">
 										Track hourly, daily, weekly patterns to identify peak performance periods and
 										optimize scheduling
 									</p>
 								</div>
-								<div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-									<h4 className="font-medium text-green-900 mb-2">Cost Projections</h4>
-									<p className="text-sm text-green-800">
+								<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
+									<h4 className="font-industrial font-medium uppercase text-primary mb-2">Cost Projections</h4>
+									<p className="text-sm text-foreground">
 										Budget forecasting and analysis to control labor costs and optimize resource
 										allocation
 									</p>
 								</div>
-								<div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-									<h4 className="font-medium text-purple-900 mb-2">Seasonal Analysis</h4>
-									<p className="text-sm text-purple-800">
+								<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
+									<h4 className="font-industrial font-medium uppercase text-accent mb-2">Seasonal Analysis</h4>
+									<p className="text-sm text-foreground">
 										Identify seasonal patterns and demand fluctuations for proactive workforce
 										planning
 									</p>
@@ -471,20 +471,20 @@ export default async function Component({
 									available here
 								</p>
 								<div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-									<div className="text-center p-4 bg-accent rounded-lg">
-										<h4 className="font-medium text-foreground">Station Benchmarks</h4>
+									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
+										<h4 className="font-industrial font-medium uppercase text-foreground">Station Benchmarks</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Compare performance across stations
 										</p>
 									</div>
-									<div className="text-center p-4 bg-accent rounded-lg">
-										<h4 className="font-medium text-foreground">Employee Rankings</h4>
+									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
+										<h4 className="font-industrial font-medium uppercase text-foreground">Employee Rankings</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Performance-based evaluations
 										</p>
 									</div>
-									<div className="text-center p-4 bg-accent rounded-lg">
-										<h4 className="font-medium text-foreground">Industry Standards</h4>
+									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
+										<h4 className="font-industrial font-medium uppercase text-foreground">Industry Standards</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Compare to industry metrics
 										</p>

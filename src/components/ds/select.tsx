@@ -72,7 +72,7 @@ export function Select({
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"px-3 py-2.5 bg-background text-foreground border border-input rounded-md transition-all",
+					"px-3 py-2.5 bg-background text-foreground border border-input transition-all",
 					// Focus states matching Input
 					"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
 					// Disabled states
@@ -93,7 +93,7 @@ export function Select({
 				<span className="text-muted-foreground text-xs">▼</span>
 			</Button>
 			<Popover className="max-h-60 overflow-auto">
-				<ListBox className="p-1 bg-background border border-input rounded-md w-full shadow-lg">
+				<ListBox className="p-1 bg-background border border-input w-full shadow-lg">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
@@ -144,7 +144,7 @@ export function SimpleSelect({
 					{...props}
 					className={cn(
 						// Base styles matching Input component exactly
-						"px-3 py-2.5 bg-background text-foreground border border-input rounded-md transition-all appearance-none",
+						"px-3 py-2.5 bg-background text-foreground border border-input transition-all appearance-none",
 						// Focus states matching Input
 						"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-1 ring-offset-background focus:border-primary",
 						// Disabled states
