@@ -61,7 +61,7 @@ export function routes() {
 						{
 							id: "floor-index",
 							index: true,
-							lazy: () => import("./floor/index/route.tsx"),
+							lazy: () => import("./floor/route.tsx"),
 						},
 						{
 							id: "floor-kiosk",
