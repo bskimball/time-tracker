@@ -23,8 +23,12 @@ import { useAutoRefresh, useKioskMode } from "./hooks";
 import { notify, subscribe } from "./notifications";
 import { useOfflineActionQueue } from "./offline-queue";
 import type { OfflineEndpoint } from "./offline-queue";
-import { calculateNetHours, isOvertime, getWeekBounds, DEFAULT_DAILY_LIMIT } from "~/lib/domain/time-tracking";
-
+import {
+	calculateNetHours,
+	isOvertime,
+	getWeekBounds,
+	DEFAULT_DAILY_LIMIT,
+} from "~/lib/domain/time-tracking";
 
 const createId = () =>
 	typeof crypto !== "undefined" && crypto.randomUUID
@@ -58,7 +62,10 @@ function ClockInForm({
 	const [method, setMethod] = useState<"pin" | "select">("pin");
 	const [pin, setPin] = useState("");
 
-	const [pinState, pinFormAction] = useActionState<ClockActionState, FormData>(pinToggleClock, null);
+	const [pinState, pinFormAction] = useActionState<ClockActionState, FormData>(
+		pinToggleClock,
+		null
+	);
 	const [selectState, selectFormAction] = useActionState<ClockActionState, FormData>(clockIn, null);
 
 	const handleOfflineSubmit = useCallback(

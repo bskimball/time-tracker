@@ -1,11 +1,72 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { randomUUID } from "node:crypto";
+import type { Logger } from "./logger";
+import { createLogger } from "./logger";
 
-const requestContext = new AsyncLocalStorage<Request>();
-
-export function getRequest(): Request | undefined {
-	return requestContext.getStore();
+interface RequestContext {
+	request: Request;
+	logger: Logger;
+	requestId: string;
 }
 
-export function runWithRequest<T>(request: Request, callback: () => T | Promise<T>): T | Promise<T> {
-	return requestContext.run(request, callback);
+const requestContext = new AsyncLocalStorage<RequestContext>();
+
+/**
+ * Get the current request from AsyncLocalStorage context
+ * @returns Current request or undefined if not in request context
+ */
+export function getRequest(): Request | undefined {
+	return requestContext.getStore()?.request;
+}
+
+/**
+ * Get the request-scoped logger with automatic metadata
+ * @returns Logger instance with request context
+ */
+export function getLogger(): Logger {
+	const store = requestContext.getStore();
+	if (!store) {
+		// Fallback logger if outside request context (e.g., background jobs)
+		return createLogger({ context: "no-request" });
+	}
+	return store.logger;
+}
+
+/**
+ * Get the current request ID for correlation
+ * @returns Request ID or undefined if not in request context
+ */
+export function getRequestId(): string | undefined {
+	return requestContext.getStore()?.requestId;
+}
+
+/**
+ * Run a callback within request context with automatic logging setup
+ * @param request - The incoming request
+ * @param callback - The function to execute within the request context
+ * @returns Result of the callback
+ */
+export function runWithRequest<T>(
+	request: Request,
+	callback: () => T | Promise<T>
+): T | Promise<T> {
+	// Get or generate request ID
+	const requestId = request.headers.get("x-request-id") || randomUUID();
+	const url = new URL(request.url);
+
+	// Create request-scoped logger with metadata
+	const logger = createLogger({
+		requestId,
+		method: request.method,
+		path: url.pathname,
+		userAgent: request.headers.get("user-agent"),
+	});
+
+	const context: RequestContext = {
+		request,
+		logger,
+		requestId,
+	};
+
+	return requestContext.run(context, callback);
 }

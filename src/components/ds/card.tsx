@@ -43,7 +43,11 @@ export function Card({ children, className = "" }: CardProps) {
  * Professional style with subtle border.
  */
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
-	return <div className={cn("px-6 py-4 border-b border-border bg-muted/20 rounded-t-md", className)}>{children}</div>;
+	return (
+		<div className={cn("px-6 py-4 border-b border-border bg-muted/20 rounded-t-md", className)}>
+			{children}
+		</div>
+	);
 }
 
 /**

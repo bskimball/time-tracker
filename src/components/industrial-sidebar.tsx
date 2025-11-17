@@ -34,7 +34,7 @@ export function IndustrialSidebar({
 			<aside
 				className={cn(
 					"bg-sidebar relative flex flex-col border-r border-sidebar-border transition-all duration-300 shadow-sm",
-					isCollapsed ? "w-16" : "w-64",
+					isCollapsed ? "w-16" : "w-64"
 				)}
 			>
 				{/* Header with brand */}
@@ -55,7 +55,8 @@ export function IndustrialSidebar({
 				{/* Navigation Links */}
 				<nav className="flex-1 overflow-y-auto p-2">
 					{navLinks.map((link) => {
-						const isActive = location.pathname === link.to ||
+						const isActive =
+							location.pathname === link.to ||
 							(link.to !== brandHref && location.pathname.startsWith(link.to));
 
 						return (
@@ -63,18 +64,14 @@ export function IndustrialSidebar({
 								<div
 									className={cn(
 										"group relative mb-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-3 transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-sm",
-										isActive && "bg-primary text-primary-foreground shadow-sm",
+										isActive && "bg-primary text-primary-foreground shadow-sm"
 									)}
 								>
 									{/* LED indicator */}
 									<div className={cn("led-indicator", isActive && "active")} />
 
 									{/* Label */}
-									{!isCollapsed && (
-										<span className="text-sm font-medium">
-											{link.label}
-										</span>
-									)}
+									{!isCollapsed && <span className="text-sm font-medium">{link.label}</span>}
 								</div>
 							</Link>
 						);
@@ -93,7 +90,7 @@ export function IndustrialSidebar({
 					<button
 						onClick={() => setIsCollapsed(!isCollapsed)}
 						className={cn(
-							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm",
+							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm"
 						)}
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 					>
@@ -103,13 +100,14 @@ export function IndustrialSidebar({
 							stroke="currentColor"
 							viewBox="0 0 24 24"
 						>
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M13 5l7 7-7 7M5 5l7 7-7 7"
+							/>
 						</svg>
-						{!isCollapsed && (
-							<span className="ml-2 text-xs font-medium">
-								Collapse
-							</span>
-						)}
+						{!isCollapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
 					</button>
 				</div>
 			</aside>

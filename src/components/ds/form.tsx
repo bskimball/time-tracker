@@ -16,10 +16,7 @@ export interface FormProps extends Omit<AriaFormProps, "className"> {
  */
 export function Form({ className = "", children, ...props }: React.PropsWithChildren<FormProps>) {
 	return (
-		<AriaForm
-			{...props}
-			className={cn("flex flex-col gap-4", className)}
-		>
+		<AriaForm {...props} className={cn("flex flex-col gap-4", className)}>
 			{children}
 		</AriaForm>
 	);

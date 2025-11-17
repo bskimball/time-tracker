@@ -10,7 +10,7 @@ import {
 
 export async function generateHTML(
 	request: Request,
-	fetchServer: (request: Request) => Promise<Response>,
+	fetchServer: (request: Request) => Promise<Response>
 ): Promise<Response> {
 	return await routeRSCServerRequest({
 		// The incoming request.
@@ -24,16 +24,12 @@ export async function generateHTML(
 			const payload = await getPayload();
 			const formState = payload.type === "render" ? await payload.formState : undefined;
 
-			const bootstrapScriptContent =
-				await import.meta.viteRsc.loadBootstrapScriptContent("index");
+			const bootstrapScriptContent = await import.meta.viteRsc.loadBootstrapScriptContent("index");
 
-			return await renderHTMLToReadableStream(
-				<RSCStaticRouter getPayload={getPayload} />,
-				{
-					bootstrapScriptContent,
-					formState,
-				},
-			);
+			return await renderHTMLToReadableStream(<RSCStaticRouter getPayload={getPayload} />, {
+				bootstrapScriptContent,
+				formState,
+			});
 		},
 	});
 }

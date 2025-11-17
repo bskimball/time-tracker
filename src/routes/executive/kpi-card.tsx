@@ -78,12 +78,16 @@ export function KPICard({
 	return (
 		<Card className={`border-2 ${colorClasses[color]}`}>
 			<CardHeader className="pb-2">
-				<CardTitle className="text-sm font-medium text-muted-foreground normal-case tracking-normal">{title}</CardTitle>
+				<CardTitle className="text-sm font-medium text-muted-foreground normal-case tracking-normal">
+					{title}
+				</CardTitle>
 			</CardHeader>
 			<CardBody>
 				<div className="flex items-end justify-between">
 					<div>
-						<div className={`font-mono-industrial text-2xl font-bold ${colorClasses[color].split(" ")[0]}`}>
+						<div
+							className={`font-mono-industrial text-2xl font-bold ${colorClasses[color].split(" ")[0]}`}
+						>
 							{typeof value === "number" ? value.toLocaleString() : value}
 						</div>
 						{subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}

@@ -237,13 +237,17 @@ export default async function handler(request: Request) {
 - `src/entry.ssr.tsx` - Server-side rendering entry point
 - `src/entry.browser.tsx` - Client-side hydration entry point
 - `src/components/ds/` - Design system components (Button, Input, Card, Alert)
+- `src/lib/logger.ts` - Pino logger configuration with rotation
+- `src/lib/request-context.ts` - AsyncLocalStorage for request-scoped logger
+- `src/lib/logging-helpers.ts` - Logging convenience functions
 - `dist/rsc/` - Built RSC output
 - `dist/client/` - Built client assets
+- `logs/` - Application logs (dev.log in development, app.log + error.log in production)
+- `guides/` - Comprehensive documentation and guides
 - `prisma/` - Prisma schema and migrations
 - `eslint.config.js` - ESLint configuration with RSC and design system awareness
 - `.prettierrc` - Prettier formatting configuration
 - `.editorconfig` - Cross-editor configuration
-- `LINTING_GUIDE.md` - Comprehensive linting and formatting guide
 
 ## Code Style
 
@@ -303,6 +307,90 @@ Requires **Node.js 22.6+** for native TypeScript support. The server runs TypeSc
 - Docker Compose uses profiles: `dev` for development, `prod` for production
 - The dev container automatically runs `npm install` and `npx prisma db push` on startup
 
+## Logging
+
+This project uses **Pino** for high-performance structured logging:
+
+### Features
+
+- **Request-scoped logging** - Automatic request ID correlation via AsyncLocalStorage
+- **Dual output in development** - Pretty console output + JSON file (`logs/dev.log`)
+- **Log rotation in production** - Daily rotation and 10MB size limits
+- **Database query logging** - Automatic Prisma query logging (debug level, dev only)
+- **Security** - Automatic redaction of sensitive fields (passwords, tokens, cookies)
+- **Performance helpers** - Built-in timing and performance measurement utilities
+
+### Quick Usage
+
+```typescript
+// In Server Components
+import { getLogger } from "~/lib/request-context";
+
+export default async function Component() {
+  const logger = getLogger();
+  logger.info("Processing request");
+  logger.debug({ userId: "123" }, "User data loaded");
+  return <div>...</div>;
+}
+
+// In Server Actions
+import { logPerformance, logError } from "~/lib/logging-helpers";
+
+export async function createUser(formData: FormData) {
+  try {
+    const user = await logPerformance(
+      "create-user",
+      () => db.user.create({ data: {...} })
+    );
+    return { success: true };
+  } catch (error) {
+    logError(error as Error, { operation: "create-user" });
+    return { success: false };
+  }
+}
+
+// In API Routes (Hono)
+app.get("/users", async (c) => {
+  const logger = c.var.logger; // From hono-pino middleware
+  logger.info("Fetching users");
+  return c.json({ users });
+});
+```
+
+### Log Files
+
+- **Development**: `logs/dev.log` (JSON format, no rotation)
+- **Production**: `logs/app.log` (all logs, rotated), `logs/error.log` (errors only, rotated)
+
+### Environment Variables
+
+- `LOG_LEVEL` - Logging level: `debug`, `info`, `warn`, `error` (default: `debug` in dev, `info` in prod)
+- `LOG_DB_QUERIES` - Enable database query logging: `true`/`false` (default: `true` in dev, `false` in prod)
+
+### Helper Functions
+
+- `getLogger()` - Get request-scoped logger with automatic request ID
+- `logPerformance(operation, fn)` - Measure and log operation timing
+- `logError(error, context)` - Log errors with full context and stack traces
+- `createTimer(operation)` - Create multi-step timer with checkpoints
+- `logInfo/logWarning/logDebug(message, context)` - Convenience logging functions
+
+**For complete documentation**, see `guides/LOGGING_GUIDE.md`.
+
+## Documentation & Guides
+
+All comprehensive guides are located in the `guides/` directory:
+
+- **`guides/ARCHITECTURE.md`** - Complete application architecture, tech stack, data model, and deployment
+- **`guides/LOGGING_GUIDE.md`** - Comprehensive logging patterns, best practices, and examples (35+ sections)
+- **`guides/ROUTING_GUIDE.md`** - Time clock routing, navigation, and route configuration
+- **`guides/RSC_AUTH_FIX.md`** - Authentication patterns and middleware in RSC Data mode
+- **`guides/TESTING_GUIDE.md`** - Testing strategies, patterns, and examples
+- **`guides/LINTING_GUIDE.md`** - Code quality, formatting standards, and ESLint configuration
+- **`guides/examples/`** - Code examples and usage patterns
+
+**Always refer to these guides for detailed information about specific topics.**
+
 ## Prisma
 
 - **Database ORM** - Use Prisma for all database operations
@@ -312,6 +400,7 @@ Requires **Node.js 22.6+** for native TypeScript support. The server runs TypeSc
 - Push schema changes without migrations: `npx prisma db push`
 - Open Prisma Studio: `npx prisma studio`
 - Import Prisma Client: `import { PrismaClient } from "@prisma/client"`
+- **Database queries are automatically logged** in development (see Logging section)
 
 ## Design System (TailwindCSS + React Aria Components)
 

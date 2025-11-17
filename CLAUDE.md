@@ -291,6 +291,88 @@ import { Button, Input, Card, Alert } from "~/components/ds";
 // ❌ Don't mix different styling systems
 ```
 
+## Logging
+
+This project uses **Pino** for high-performance structured logging with the following features:
+
+- **Request-scoped logging** - Automatic request ID tracking across all logs
+- **Dual output in development** - Pretty console + JSON file (`logs/dev.log`)
+- **Log rotation in production** - Daily rotation and 10MB size limits (`logs/app.log`, `logs/error.log`)
+- **Database query logging** - Automatic Prisma query logging (debug level)
+- **Security** - Automatic redaction of sensitive fields (passwords, tokens, cookies)
+
+### Usage in Server Components
+
+```typescript
+import { getLogger } from "~/lib/request-context";
+
+export default async function Dashboard() {
+  const logger = getLogger();
+
+  logger.info("Loading dashboard");
+  const users = await db.user.findMany();
+  logger.debug({ count: users.length }, "Users loaded");
+
+  return <div>...</div>;
+}
+```
+
+### Usage in Server Actions
+
+```typescript
+"use server";
+import { logPerformance, logError } from "~/lib/logging-helpers";
+
+export async function createUser(formData: FormData) {
+  try {
+    const user = await logPerformance(
+      "create-user",
+      () => db.user.create({ data: {...} })
+    );
+    return { success: true };
+  } catch (error) {
+    logError(error as Error, { operation: "create-user" });
+    return { success: false };
+  }
+}
+```
+
+### Usage in API Routes (Hono)
+
+```typescript
+app.get("/users", async (c) => {
+	const logger = c.var.logger; // From hono-pino middleware
+	logger.info("Fetching users");
+	return c.json({ users });
+});
+```
+
+### Log Files
+
+- **Development**: `logs/dev.log` (JSON, no rotation)
+- **Production**: `logs/app.log` (JSON, rotated daily/10MB), `logs/error.log` (errors only)
+
+### Environment Variables
+
+```bash
+LOG_LEVEL=debug        # debug, info, warn, error
+LOG_DB_QUERIES=true    # Enable database query logging
+```
+
+**For complete documentation**, see `guides/LOGGING_GUIDE.md`.
+
+## Documentation
+
+All comprehensive guides are located in the `guides/` directory:
+
+- **`guides/ARCHITECTURE.md`** - Complete application architecture, tech stack, and deployment
+- **`guides/LOGGING_GUIDE.md`** - Comprehensive logging patterns and best practices
+- **`guides/ROUTING_GUIDE.md`** - Time clock routing and navigation details
+- **`guides/RSC_AUTH_FIX.md`** - Authentication patterns in RSC Data mode
+- **`guides/TESTING_GUIDE.md`** - Testing strategies and examples
+- **`guides/LINTING_GUIDE.md`** - Code quality and formatting standards
+- **`guides/examples/`** - Code examples and usage patterns
+
 ## Development Guidelines
 
 1. **DO NOT use loader functions:** They cause the app to hang in this RSC setup. Always fetch data directly in async Server Components
@@ -301,10 +383,11 @@ import { Button, Input, Card, Alert } from "~/components/ds";
 6. **Use Prisma in Server Components only:** Database access should only happen on the server
 7. **Environment variables:** Access in Server Components only (never expose secrets to client)
 8. **Use design system components:** Import from `~/components/ds/` for consistent, accessible UI
-9. **File structure:**
-   - `route.tsx` - Server Component (async function Component)
-   - `client.tsx` - Client Components (with "use client")
-   - `actions.ts` - Server Actions (with "use server")
+9. **Use structured logging:** Import `getLogger()` from `~/lib/request-context` for request-scoped logging
+10. **File structure:**
+    - `route.tsx` - Server Component (async function Component)
+    - `client.tsx` - Client Components (with "use client")
+    - `actions.ts` - Server Actions (with "use server")
 
 ## Important Notes
 

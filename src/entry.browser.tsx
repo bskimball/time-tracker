@@ -23,7 +23,7 @@ setServerCallback(
 		createFromReadableStream,
 		createTemporaryReferenceSet,
 		encodeReply,
-	}),
+	})
 );
 
 // Get and decode the initial server payload
@@ -34,15 +34,12 @@ createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
 		hydrateRoot(
 			document,
 			<StrictMode>
-				<RSCHydratedRouter
-					createFromReadableStream={createFromReadableStream}
-					payload={payload}
-				/>
+				<RSCHydratedRouter createFromReadableStream={createFromReadableStream} payload={payload} />
 			</StrictMode>,
 			{
 				// @ts-expect-error - no types for this yet
 				formState,
-			},
+			}
 		);
 	});
 });

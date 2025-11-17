@@ -1,6 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
+import { pinoLogger } from "hono-pino";
 
+import { logger } from "../../lib/logger";
 import { requiredApiKey } from "./middleware";
 import healthRoutes from "./health";
 import timeClockRoutes from "./time-clock";
@@ -11,6 +13,10 @@ import userRoutes from "./users";
 import todoRoutes from "./todos";
 
 const app = new OpenAPIHono();
+
+// Add Pino logger to API routes
+// @ts-expect-error - hono-pino types may not align perfectly with OpenAPIHono
+app.use("*", pinoLogger({ logger }));
 
 // OpenAPI documentation
 app.doc("/doc", {

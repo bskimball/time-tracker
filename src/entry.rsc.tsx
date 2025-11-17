@@ -12,38 +12,39 @@ import {
 import { unstable_matchRSCServerRequest as matchRSCServerRequest } from "react-router";
 
 import { routes } from "./routes/config";
+import { runWithRequest } from "./lib/request-context";
+import { validateRequest, invalidateSession, deleteSessionTokenCookie } from "./lib/auth";
 
 function fetchServer(request: Request) {
-	return matchRSCServerRequest({
-		// Provide the React Server touchpoints.
-		createTemporaryReferenceSet,
-		decodeAction,
-		decodeFormState,
-		decodeReply,
-		loadServerAction,
-		// The incoming request.
-		request,
-		// The app routes.
-		routes: routes(),
-		// Encode the match with the React Server implementation.
-		generateResponse(match: any, options: any) {
-			return new Response(renderToReadableStream(match.payload, options), {
-				status: match.statusCode,
-				headers: match.headers,
-			});
-		},
-	});
+	// Wrap RSC rendering in request context so Server Components can access request
+	return runWithRequest(request, () =>
+		matchRSCServerRequest({
+			// Provide the React Server touchpoints.
+			createTemporaryReferenceSet,
+			decodeAction,
+			decodeFormState,
+			decodeReply,
+			loadServerAction,
+			// The incoming request.
+			request,
+			// The app routes.
+			routes: routes(),
+			// Encode the match with the React Server implementation.
+			generateResponse(match: any, options: any) {
+				return new Response(renderToReadableStream(match.payload, options), {
+					status: match.statusCode,
+					headers: match.headers,
+				});
+			},
+		})
+	);
 }
 
 export default async function handler(request: Request) {
-	// Handle logout as a top-level redirect before RSC rendering to avoid
-	// redirect Responses bubbling through the RSC/SSR pipeline as server errors.
 	const url = new URL(request.url);
-	if (url.pathname === "/logout") {
-		const { validateRequest, invalidateSession, deleteSessionTokenCookie } = await import(
-			"./lib/auth"
-		);
 
+	// Handle logout as a top-level redirect before RSC rendering
+	if (url.pathname === "/logout") {
 		const { session } = await validateRequest(request);
 
 		if (session) {
@@ -57,6 +58,89 @@ export default async function handler(request: Request) {
 				"Set-Cookie": deleteSessionTokenCookie(),
 			},
 		});
+	}
+
+	// Handle auth redirects BEFORE RSC rendering to avoid redirect Responses
+	// bubbling through the RSC/SSR pipeline as server errors.
+	const { user } = await validateRequest(request);
+
+	// Handle home page and dashboard redirects based on user role
+	if (url.pathname === "/" || url.pathname === "/dashboard") {
+		const destination = user
+			? user.role === "ADMIN"
+				? "/executive"
+				: user.role === "MANAGER"
+					? "/manager"
+					: "/floor"
+			: "/login";
+
+		return new Response(null, {
+			status: 302,
+			headers: { Location: destination },
+		});
+	}
+
+	// Protect /manager/* routes - require MANAGER or ADMIN role
+	if (url.pathname.startsWith("/manager")) {
+		if (!user) {
+			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
+			return new Response(null, {
+				status: 302,
+				headers: { Location: `/login${redirectParam}` },
+			});
+		}
+
+		if (user.role !== "MANAGER" && user.role !== "ADMIN") {
+			const defaultRoute = user.role === "ADMIN" ? "/executive" : "/floor";
+			return new Response(null, {
+				status: 302,
+				headers: { Location: defaultRoute },
+			});
+		}
+	}
+
+	// Protect /executive/* routes - require ADMIN role
+	if (url.pathname.startsWith("/executive")) {
+		if (!user) {
+			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
+			return new Response(null, {
+				status: 302,
+				headers: { Location: `/login${redirectParam}` },
+			});
+		}
+
+		if (user.role !== "ADMIN") {
+			const defaultRoute = user.role === "MANAGER" ? "/manager" : "/floor";
+			return new Response(null, {
+				status: 302,
+				headers: { Location: defaultRoute },
+			});
+		}
+	}
+
+	// Protect /settings and /todo routes - require any authenticated user
+	if (url.pathname.startsWith("/settings") || url.pathname.startsWith("/todo")) {
+		if (!user) {
+			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
+			return new Response(null, {
+				status: 302,
+				headers: { Location: `/login${redirectParam}` },
+			});
+		}
+	}
+
+	// Handle mobile redirect for /floor route
+	if (url.pathname === "/floor") {
+		const userAgent = request.headers.get("user-agent") || "";
+		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+			userAgent
+		);
+		if (isMobile) {
+			return new Response(null, {
+				status: 302,
+				headers: { Location: "/floor/time-clock/mobile" },
+			});
+		}
 	}
 
 	// Import the generateHTML function from the client environment

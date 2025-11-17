@@ -1,19 +1,11 @@
-import { validateRequest } from "~/lib/auth";
-
-export default async function Component() {
-	const { user } = await validateRequest();
-
-	if (!user) {
-		throw new Response(null, {
-			status: 302,
-			headers: { Location: "/login" },
-		});
-	}
-
-	const destination = user.role === "ADMIN" ? "/executive" : user.role === "MANAGER" ? "/manager" : "/floor";
-
-	throw new Response(null, {
-		status: 302,
-		headers: { Location: destination },
-	});
+/**
+ * Dashboard redirect route ("/dashboard") - Redirects handled in entry.rsc.tsx
+ *
+ * This component should never actually render because the redirect
+ * is handled in the main handler before RSC rendering begins.
+ * See entry.rsc.tsx for the redirect logic.
+ */
+export default function Component() {
+	// This should never be reached
+	throw new Error("Dashboard redirect should be handled in entry.rsc.tsx");
 }

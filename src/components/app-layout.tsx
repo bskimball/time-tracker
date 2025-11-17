@@ -15,12 +15,7 @@ interface AppLayoutProps {
 	children: ReactNode;
 }
 
-export function AppLayout({
-	title,
-	brandHref = "/",
-	navLinks = [],
-	children,
-}: AppLayoutProps) {
+export function AppLayout({ title, brandHref = "/", navLinks = [], children }: AppLayoutProps) {
 	// User section with theme toggle and logout
 	const userSection = (
 		<div className="flex flex-col gap-2">

@@ -47,7 +47,12 @@ export async function action({ request }: { request: Request }) {
 	const notes = (formData.get("notes") as string) || undefined;
 
 	try {
-		const assignment = await assignTask({ employeeId, taskTypeId, priority: priority as any, notes });
+		const assignment = await assignTask({
+			employeeId,
+			taskTypeId,
+			priority: priority as any,
+			notes,
+		});
 		return new Response(JSON.stringify(assignment), {
 			status: 200,
 			headers: { "Content-Type": "application/json" },

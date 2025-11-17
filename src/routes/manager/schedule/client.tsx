@@ -98,15 +98,15 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								className={`rounded-lg border p-3 text-left transition-all ${
 									selectedDate === day.date
 										? "border-primary bg-primary/10"
-									: day.isToday
-										? "border-border bg-muted/30"
-										: "border-transparent bg-muted/20"
+										: day.isToday
+											? "border-border bg-muted/30"
+											: "border-transparent bg-muted/20"
 								}`}
 							>
-								<div className="text-sm text-muted-foreground">{format(parseISO(day.date), "EEE")}</div>
-								<div className="text-xl font-semibold">
-									{format(parseISO(day.date), "d")}
+								<div className="text-sm text-muted-foreground">
+									{format(parseISO(day.date), "EEE")}
 								</div>
+								<div className="text-xl font-semibold">{format(parseISO(day.date), "d")}</div>
 								<p className="text-xs text-muted-foreground mt-1">{day.count} shifts</p>
 							</button>
 						))}
@@ -119,7 +119,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
 						<Select
 							label="Station"
-							options={[{ value: "all", label: "All Stations" }, ...stations.map((s) => ({ value: s.id, label: s.name }))]}
+							options={[
+								{ value: "all", label: "All Stations" },
+								...stations.map((s) => ({ value: s.id, label: s.name })),
+							]}
 							value={selectedStation}
 							onChange={(value) => setSelectedStation(value || "all")}
 						/>
@@ -132,10 +135,18 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 						<div className="flex flex-col gap-1">
 							<label className="text-sm font-medium">View</label>
 							<div className="flex gap-2">
-								<Button variant={view === "grid" ? "primary" : "outline"} size="sm" onClick={() => setView("grid")}>
+								<Button
+									variant={view === "grid" ? "primary" : "outline"}
+									size="sm"
+									onClick={() => setView("grid")}
+								>
 									Grid
 								</Button>
-								<Button variant={view === "list" ? "primary" : "outline"} size="sm" onClick={() => setView("list")}>
+								<Button
+									variant={view === "list" ? "primary" : "outline"}
+									size="sm"
+									onClick={() => setView("list")}
+								>
 									List
 								</Button>
 							</div>
@@ -151,36 +162,51 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 						<TabPanel id="grid">
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 								{filteredEntries.map((entry) => (
-									<div key={entry.id} className={`rounded-lg border bg-card p-4 shadow-sm ${shiftColors[entry.shiftType]}`}>
+									<div
+										key={entry.id}
+										className={`rounded-lg border bg-card p-4 shadow-sm ${shiftColors[entry.shiftType]}`}
+									>
 										<div className="flex justify-between items-start">
 											<div>
 												<h3 className="font-semibold">{entry.employeeName}</h3>
 												<p className="text-xs text-muted-foreground">{entry.role}</p>
 											</div>
-											<span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-												entry.status === "CONFIRMED"
-													? "bg-green-100 text-green-800"
-												: entry.status === "PENDING"
-													? "bg-yellow-100 text-yellow-800"
-												: "bg-slate-200 text-slate-700"
-											}`}>{entry.status}</span>
+											<span
+												className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+													entry.status === "CONFIRMED"
+														? "bg-green-100 text-green-800"
+														: entry.status === "PENDING"
+															? "bg-yellow-100 text-yellow-800"
+															: "bg-slate-200 text-slate-700"
+												}`}
+											>
+												{entry.status}
+											</span>
 										</div>
 										<div className="mt-3 text-sm">
 											<p className="font-medium">{entry.stationName}</p>
 											<p className="text-muted-foreground">
 												{format(parseISO(entry.startTime), "h:mm a")} -
-												 {format(parseISO(entry.endTime), "h:mm a")}
+												{format(parseISO(entry.endTime), "h:mm a")}
 											</p>
-											{entry.notes && <p className="text-xs text-muted-foreground mt-2">{entry.notes}</p>}
+											{entry.notes && (
+												<p className="text-xs text-muted-foreground mt-2">{entry.notes}</p>
+											)}
 										</div>
 										<div className="mt-3 flex gap-2">
-											<Button variant="outline" size="sm">Swap</Button>
-											<Button variant="primary" size="sm">Notify</Button>
+											<Button variant="outline" size="sm">
+												Swap
+											</Button>
+											<Button variant="primary" size="sm">
+												Notify
+											</Button>
 										</div>
 									</div>
 								))}
 								{filteredEntries.length === 0 && (
-									<p className="text-center text-muted-foreground py-8">No shifts match your filters.</p>
+									<p className="text-center text-muted-foreground py-8">
+										No shifts match your filters.
+									</p>
 								)}
 							</div>
 						</TabPanel>
@@ -208,30 +234,42 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												<td className="p-3">{entry.stationName}</td>
 												<td className="p-3">
 													{format(parseISO(entry.startTime), "h:mm a")} -
-													 {format(parseISO(entry.endTime), "h:mm a")}
+													{format(parseISO(entry.endTime), "h:mm a")}
 												</td>
 												<td className="p-3">
-													<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-														entry.role === "LEAD"
-															? "bg-indigo-100 text-indigo-800"
-														: entry.role === "SUPPORT"
-															? "bg-rose-100 text-rose-800"
-															: "bg-slate-100 text-slate-800"
-													}`}>{entry.role}</span>
+													<span
+														className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+															entry.role === "LEAD"
+																? "bg-indigo-100 text-indigo-800"
+																: entry.role === "SUPPORT"
+																	? "bg-rose-100 text-rose-800"
+																	: "bg-slate-100 text-slate-800"
+														}`}
+													>
+														{entry.role}
+													</span>
 												</td>
 												<td className="p-3">
-													<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-														entry.status === "CONFIRMED"
-															? "bg-green-100 text-green-800"
-														: entry.status === "PENDING"
-															? "bg-yellow-100 text-yellow-800"
-															: "bg-slate-200 text-slate-700"
-													}`}>{entry.status}</span>
+													<span
+														className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+															entry.status === "CONFIRMED"
+																? "bg-green-100 text-green-800"
+																: entry.status === "PENDING"
+																	? "bg-yellow-100 text-yellow-800"
+																	: "bg-slate-200 text-slate-700"
+														}`}
+													>
+														{entry.status}
+													</span>
 												</td>
 												<td className="p-3">
 													<div className="flex gap-2">
-														<Button variant="outline" size="sm">Reassign</Button>
-														<Button variant="ghost" size="sm">Message</Button>
+														<Button variant="outline" size="sm">
+															Reassign
+														</Button>
+														<Button variant="ghost" size="sm">
+															Message
+														</Button>
 													</div>
 												</td>
 											</tr>
@@ -274,14 +312,19 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										<tr key={station.id} className="border-b">
 											<td className="p-3 font-medium">{station.name}</td>
 											{schedule.days.map((day) => {
-												const count = day.entries.filter((entry) => entry.stationId === station.id).length;
+												const count = day.entries.filter(
+													(entry) => entry.stationId === station.id
+												).length;
 												const utilization = Math.min((count / 4) * 100, 100);
 												return (
 													<td key={`${station.id}-${day.date}`} className="p-3 text-center">
 														<div className="h-10 rounded bg-muted">
 															<div
 																className="h-full rounded"
-																style={{ width: `${utilization}%`, backgroundColor: utilization > 80 ? "#f97316" : "#22c55e" }}
+																style={{
+																	width: `${utilization}%`,
+																	backgroundColor: utilization > 80 ? "#f97316" : "#22c55e",
+																}}
 															/>
 														</div>
 														<p className="text-xs text-muted-foreground mt-1">{count} shifts</p>
@@ -308,15 +351,21 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 									<div className="flex justify-between">
 										<div>
 											<p className="font-medium">{log.Employee.name}</p>
-											<p className="text-xs text-muted-foreground">{log.Station?.name || "Unassigned"}</p>
+											<p className="text-xs text-muted-foreground">
+												{log.Station?.name || "Unassigned"}
+											</p>
 										</div>
 										<p className="text-xs text-muted-foreground">
 											Started {format(new Date(log.startTime), "h:mm a")}
 										</p>
 									</div>
 									<div className="mt-3 flex gap-2">
-										<Button variant="outline" size="sm">Adjust</Button>
-										<Button variant="ghost" size="sm">Message</Button>
+										<Button variant="outline" size="sm">
+											Adjust
+										</Button>
+										<Button variant="ghost" size="sm">
+											Message
+										</Button>
 									</div>
 								</div>
 							))

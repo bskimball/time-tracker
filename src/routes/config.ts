@@ -1,6 +1,4 @@
 import { type unstable_RSCRouteConfigEntry as RSCRouteConfig } from "react-router";
-import { authMiddleware, roleMiddleware } from "../lib/middleware";
-import type { User_role } from "@prisma/client";
 
 export function routes() {
 	return [
@@ -77,7 +75,6 @@ export function routes() {
 				{
 					id: "manager",
 					path: "manager",
-					middleware: [authMiddleware, roleMiddleware(["MANAGER", "ADMIN"] as User_role[])],
 					lazy: () => import("./manager/layout.tsx"),
 					children: [
 						{
@@ -139,7 +136,6 @@ export function routes() {
 				{
 					id: "executive",
 					path: "executive",
-					middleware: [authMiddleware, roleMiddleware(["ADMIN"] as User_role[])],
 					lazy: () => import("./executive/layout.tsx"),
 					children: [
 						{
@@ -158,13 +154,11 @@ export function routes() {
 				{
 					id: "settings",
 					path: "settings",
-					middleware: [authMiddleware],
 					lazy: () => import("./settings/route.tsx"),
 				},
 				{
 					id: "todo",
 					path: "todo",
-					middleware: [authMiddleware],
 					lazy: () => import("./todo/route.tsx"),
 				},
 			],

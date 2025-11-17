@@ -141,7 +141,9 @@ export default async function Component({
 								<CardTitle className="text-secondary normal-case">Top Performer</CardTitle>
 							</CardHeader>
 							<CardBody>
-								<div className="font-mono-industrial text-2xl font-bold text-secondary">39.0 u/h</div>
+								<div className="font-mono-industrial text-2xl font-bold text-secondary">
+									39.0 u/h
+								</div>
 								<p className="text-sm text-foreground mt-1">David Chen - Filling</p>
 							</CardBody>
 						</Card>
@@ -293,7 +295,11 @@ export default async function Component({
 						</Card>
 
 						<Card
-							className={placeholderData.costs.variance > 0 ? "border-2 border-destructive bg-destructive/10" : "border-2 border-primary bg-primary/10"}
+							className={
+								placeholderData.costs.variance > 0
+									? "border-2 border-destructive bg-destructive/10"
+									: "border-2 border-primary bg-primary/10"
+							}
 						>
 							<CardHeader>
 								<CardTitle className="text-sm font-medium text-muted-foreground">
@@ -415,21 +421,27 @@ export default async function Component({
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 								<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
-									<h4 className="font-industrial font-medium uppercase text-secondary mb-2">Productivity Trends</h4>
+									<h4 className="font-industrial font-medium uppercase text-secondary mb-2">
+										Productivity Trends
+									</h4>
 									<p className="text-sm text-foreground">
 										Track hourly, daily, weekly patterns to identify peak performance periods and
 										optimize scheduling
 									</p>
 								</div>
 								<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-									<h4 className="font-industrial font-medium uppercase text-primary mb-2">Cost Projections</h4>
+									<h4 className="font-industrial font-medium uppercase text-primary mb-2">
+										Cost Projections
+									</h4>
 									<p className="text-sm text-foreground">
 										Budget forecasting and analysis to control labor costs and optimize resource
 										allocation
 									</p>
 								</div>
 								<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-									<h4 className="font-industrial font-medium uppercase text-accent mb-2">Seasonal Analysis</h4>
+									<h4 className="font-industrial font-medium uppercase text-accent mb-2">
+										Seasonal Analysis
+									</h4>
 									<p className="text-sm text-foreground">
 										Identify seasonal patterns and demand fluctuations for proactive workforce
 										planning
@@ -472,19 +484,25 @@ export default async function Component({
 								</p>
 								<div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
 									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
-										<h4 className="font-industrial font-medium uppercase text-foreground">Station Benchmarks</h4>
+										<h4 className="font-industrial font-medium uppercase text-foreground">
+											Station Benchmarks
+										</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Compare performance across stations
 										</p>
 									</div>
 									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
-										<h4 className="font-industrial font-medium uppercase text-foreground">Employee Rankings</h4>
+										<h4 className="font-industrial font-medium uppercase text-foreground">
+											Employee Rankings
+										</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Performance-based evaluations
 										</p>
 									</div>
 									<div className="panel-shadow text-center border-2 border-border bg-muted p-4">
-										<h4 className="font-industrial font-medium uppercase text-foreground">Industry Standards</h4>
+										<h4 className="font-industrial font-medium uppercase text-foreground">
+											Industry Standards
+										</h4>
 										<p className="text-sm text-muted-foreground mt-2">
 											Compare to industry metrics
 										</p>

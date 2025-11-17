@@ -16,7 +16,13 @@ interface TaskTypeFormProps {
 	state?: { error?: string | null; success?: boolean } | null;
 }
 
-export function TaskTypeForm({ stations, onClose, onSubmit, isPending = false, state }: TaskTypeFormProps) {
+export function TaskTypeForm({
+	stations,
+	onClose,
+	onSubmit,
+	isPending = false,
+	state,
+}: TaskTypeFormProps) {
 	const [formData, setFormData] = useState({
 		name: "",
 		stationId: "",
@@ -113,9 +119,7 @@ export function TaskTypeForm({ stations, onClose, onSubmit, isPending = false, s
 							</p>
 						</div>
 
-						{state?.error && (
-							<p className="text-sm text-error mt-2">{state.error}</p>
-						)}
+						{state?.error && <p className="text-sm text-error mt-2">{state.error}</p>}
 
 						<div className="flex justify-end space-x-2 pt-4 border-t">
 							<Button type="button" variant="outline" onClick={onClose}>

@@ -1,7 +1,6 @@
 import { db } from "~/lib/db";
 import { TimeTracking } from "~/routes/time-clock/client";
 import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
-import { getRequest } from "~/lib/request-context";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -10,33 +9,8 @@ type TimeLogWithRelations = TimeLog & {
 	Station: Station | null;
 };
 
-function isMobileDevice(): boolean {
-	if (typeof window !== "undefined") {
-		return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-			navigator.userAgent
-		);
-	}
-
-	// Server-side detection from User-Agent header
-	try {
-		const request = getRequest();
-		const userAgent = request?.headers.get("user-agent") || "";
-		return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-	} catch {
-		return false;
-	}
-}
-
 export default async function Component() {
-	// Check if mobile device and redirect to mobile experience
-	if (isMobileDevice()) {
-		throw new Response("", {
-			status: 302,
-			headers: {
-				Location: "/floor/time-clock/mobile",
-			},
-		});
-	}
+	// Mobile redirect is now handled in entry.rsc.tsx
 
 	let employees: Employee[] = [];
 	let stations: Station[] = [];

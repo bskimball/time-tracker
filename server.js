@@ -2,6 +2,10 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
+import { pinoLogger } from "hono-pino";
+
+// Import logger
+const { logger } = await import("./dist/rsc/lib/logger.js");
 
 // Dynamically import the React Router build output and type it as a handler
 /** @typedef {function(Request): Promise<Response>} BuildFunction */
@@ -13,6 +17,9 @@ const api = (await import("./dist/api/index.js")).default;
 // Create the Hono app instance
 const app = new Hono();
 
+// Pino logging middleware - FIRST so it logs all requests
+app.use("*", pinoLogger({ logger }));
+
 // Serve static assets with compression for better performance
 app.use("/assets/*", compress());
 app.use("/*", serveStatic({ root: "./dist/client" }));
@@ -21,6 +28,7 @@ app.route("/api", api);
 
 // Special route for Chrome DevTools integration (returns 404 for this template)
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (c) => {
+	c.var.logger.debug("Chrome DevTools probe");
 	return c.text("Not Found", 404);
 });
 
@@ -33,5 +41,5 @@ app.use("*", (c) => {
 // Start the Node server
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 serve({ fetch: app.fetch, port }, (info) => {
-	console.log(`Server running on http://localhost:${info.port}`);
+	logger.info({ port: info.port }, `Server running on http://localhost:${info.port}`);
 });

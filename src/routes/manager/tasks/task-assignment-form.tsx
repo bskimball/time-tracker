@@ -91,7 +91,9 @@ export function TaskAssignmentForm({
 							>
 								<option value="">Select an employee</option>
 								{employees
-									.filter((emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime))
+									.filter(
+										(emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime)
+									)
 									.map((employee) => (
 										<option key={employee.id} value={employee.id}>
 											{employee.name}
@@ -144,9 +146,7 @@ export function TaskAssignmentForm({
 							/>
 						</div>
 
-						{state?.error && (
-							<p className="text-sm text-error mt-2">{state.error}</p>
-						)}
+						{state?.error && <p className="text-sm text-error mt-2">{state.error}</p>}
 
 						<div className="flex justify-end space-x-2 pt-4 border-t">
 							<Button type="button" variant="outline" onClick={onClose}>

@@ -75,7 +75,9 @@ function StationManagement({ stations }: { stations: Station[] }) {
 									key={station.id}
 									className="panel-shadow flex justify-between items-center border-2 border-border bg-muted p-4"
 								>
-									<span className="font-industrial text-lg uppercase tracking-wide">{station.name}</span>
+									<span className="font-industrial text-lg uppercase tracking-wide">
+										{station.name}
+									</span>
 									<form action={deleteAction} className="inline">
 										<input type="hidden" name="id" value={station.id} />
 										<Button type="submit" variant="error" size="sm">
@@ -168,7 +170,9 @@ function EmployeeManagement({ employees }: { employees: Employee[] }) {
 								<div key={employee.id} className="panel-shadow border-2 border-border bg-muted p-4">
 									<div className="flex justify-between items-center">
 										<div>
-											<p className="font-industrial text-lg font-semibold uppercase tracking-wide">{employee.name}</p>
+											<p className="font-industrial text-lg font-semibold uppercase tracking-wide">
+												{employee.name}
+											</p>
 											<p className="text-sm text-muted-foreground">{employee.email}</p>
 											<p className="font-mono-industrial text-xs text-muted-foreground mt-1">
 												{employee.pinHash ? "✓ PIN SET" : "⚠ NO PIN"}

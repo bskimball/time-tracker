@@ -45,10 +45,7 @@ export function TaskManager({
 	const [showTaskTypeForm, setShowTaskTypeForm] = useState(false);
 	const [assignState, assignAction, isAssignPending] = useActionState(assignTaskAction, null);
 	const [createTypeState, createTypeAction, isCreateTypePending] = useActionState(
-		async (
-			_prev: { error?: string | null; success?: boolean } | null,
-			formData: FormData
-		) => {
+		async (_prev: { error?: string | null; success?: boolean } | null, formData: FormData) => {
 			const { createTaskTypeAction } = await import("./actions");
 			return createTaskTypeAction(_prev, formData);
 		},
@@ -145,15 +142,15 @@ export function TaskManager({
 						<p className="text-2xl">
 							{optimisticAssignments.length > 0
 								? Math.round(
-									optimisticAssignments
-										.filter((a) => a.endTime)
-										.reduce((total, a) => {
-											const duration =
-												new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
-											return total + duration;
-										}, 0) /
-									(1000 * 60 * 60 * optimisticAssignments.filter((a) => a.endTime).length)
-								)
+										optimisticAssignments
+											.filter((a) => a.endTime)
+											.reduce((total, a) => {
+												const duration =
+													new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
+												return total + duration;
+											}, 0) /
+											(1000 * 60 * 60 * optimisticAssignments.filter((a) => a.endTime).length)
+									)
 								: 0}
 							h
 						</p>
@@ -167,9 +164,10 @@ export function TaskManager({
 						<p className="text-2xl">
 							{optimisticAssignments.length > 0
 								? Math.round(
-									(optimisticAssignments.filter((a) => a.endTime).length / optimisticAssignments.length) *
-									100
-								)
+										(optimisticAssignments.filter((a) => a.endTime).length /
+											optimisticAssignments.length) *
+											100
+									)
 								: 0}
 							%
 						</p>
@@ -334,10 +332,11 @@ export function TaskManager({
 											</div>
 											<div className="flex space-x-1">
 												<span
-													className={`px-2 py-1 text-xs rounded ${taskType.isActive
-														? "bg-green-100 text-green-800"
-														: "bg-accent text-muted-foreground"
-														}`}
+													className={`px-2 py-1 text-xs rounded ${
+														taskType.isActive
+															? "bg-green-100 text-green-800"
+															: "bg-accent text-muted-foreground"
+													}`}
 												>
 													{taskType.isActive ? "Active" : "Inactive"}
 												</span>

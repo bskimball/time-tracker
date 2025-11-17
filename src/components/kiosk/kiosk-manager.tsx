@@ -244,11 +244,11 @@ export function KioskProvider({ children }: { children: React.ReactNode }) {
 			setSession((prev) =>
 				prev
 					? {
-						...prev,
-						lastActivity: new Date(),
-						activeTime: Date.now() - prev.startTime.getTime(),
-						isIdle: false,
-					}
+							...prev,
+							lastActivity: new Date(),
+							activeTime: Date.now() - prev.startTime.getTime(),
+							isIdle: false,
+						}
 					: null
 			);
 		}
