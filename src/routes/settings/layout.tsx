@@ -5,6 +5,7 @@ import { AppLayout } from "~/components/app-layout";
 const settingsNavLinks = [
 	{ to: "/settings/stations", label: "Stations" },
 	{ to: "/settings/employees", label: "Employees" },
+	{ to: "/settings/users", label: "Users" },
 	{ to: "/settings/api-keys", label: "API Keys" },
 	{ to: "/executive", label: "Executive" },
 ];

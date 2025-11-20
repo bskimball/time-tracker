@@ -194,7 +194,7 @@ model ApiKey {
   createdAt   DateTime  @default(now())
   expiresAt   DateTime?
   lastUsedAt  DateTime?
-  
+
   User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -219,4 +219,5 @@ enum User_role {
   ADMIN
   MANAGER
   WORKER
+  EXECUTIVE
 }

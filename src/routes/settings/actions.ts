@@ -245,3 +245,43 @@ export async function deleteApiKey(
 		return { error: "Failed to delete API key" };
 	}
 }
+
+export async function updateUserRole(
+	_prevState: SettingsState,
+	formData: FormData
+): Promise<SettingsState> {
+	const { user } = await validateRequest();
+	if (!user) {
+		return { error: "Unauthorized" };
+	}
+
+	// Only admins or executives can change roles
+	if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
+		return { error: "Unauthorized: Insufficient permissions" };
+	}
+
+	const userId = formData.get("userId") as string;
+	const role = formData.get("role") as string;
+
+	if (!userId || !role) {
+		return { error: "User ID and role are required" };
+	}
+
+	try {
+		// Prevent changing own role to avoid locking oneself out
+		if (userId === user.id) {
+			return { error: "Cannot change your own role" };
+		}
+
+		await db.user.update({
+			where: { id: userId },
+			data: { role: role as "ADMIN" | "MANAGER" | "WORKER" | "EXECUTIVE" },
+		});
+
+		redirect("/settings/users");
+		return { success: true };
+	} catch (error) {
+		console.error("Error updating user role:", error);
+		return { error: "Failed to update user role" };
+	}
+}

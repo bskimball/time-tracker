@@ -79,7 +79,7 @@ const userSchema = z.object({
 	email: z.string(),
 	name: z.string().nullable(),
 	image: z.string().nullable(),
-	role: z.enum(["ADMIN", "MANAGER", "WORKER"]),
+	role: z.enum(["ADMIN", "MANAGER", "WORKER", "EXECUTIVE"]),
 	employeeId: z.string().nullable(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
