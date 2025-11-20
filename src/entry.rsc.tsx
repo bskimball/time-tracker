@@ -127,6 +127,14 @@ export default async function handler(request: Request) {
 				headers: { Location: `/login${redirectParam}` },
 			});
 		}
+
+		// Redirect /settings to /settings/stations
+		if (url.pathname === "/settings") {
+			return new Response(null, {
+				status: 302,
+				headers: { Location: "/settings/stations" },
+			});
+		}
 	}
 
 	// Handle mobile redirect for /floor route

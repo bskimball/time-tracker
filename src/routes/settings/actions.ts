@@ -3,6 +3,7 @@
 import { db } from "../../lib/db";
 import { redirect } from "react-router";
 import bcrypt from "bcryptjs";
+import { validateRequest } from "../../lib/auth";
 
 export type SettingsState = {
 	error?: string;
@@ -36,7 +37,7 @@ export async function addStation(
 			},
 		});
 
-		redirect("/settings?tab=stations");
+		redirect("/settings/stations");
 		return { success: true };
 	} catch (error) {
 		console.error("Error adding station:", error);
@@ -68,7 +69,7 @@ export async function deleteStation(
 			where: { id },
 		});
 
-		redirect("/settings?tab=stations");
+		redirect("/settings/stations");
 		return { success: true };
 	} catch (error) {
 		console.error("Error deleting station:", error);
@@ -112,7 +113,7 @@ export async function addEmployee(
 			},
 		});
 
-		redirect("/settings?tab=employees");
+		redirect("/settings/employees");
 		return { success: true };
 	} catch (error) {
 		console.error("Error adding employee:", error);
@@ -143,7 +144,7 @@ export async function updateEmployeePin(
 			data: { pinHash },
 		});
 
-		redirect("/settings?tab=employees");
+		redirect("/settings/employees");
 		return { success: true };
 	} catch (error) {
 		console.error("Error updating PIN:", error);
@@ -174,10 +175,73 @@ export async function deleteEmployee(
 			where: { id },
 		});
 
-		redirect("/settings?tab=employees");
+		redirect("/settings/employees");
 		return { success: true };
 	} catch (error) {
 		console.error("Error deleting employee:", error);
 		return { error: "Failed to delete employee" };
+	}
+}
+
+export async function addApiKey(
+	_prevState: SettingsState,
+	formData: FormData
+): Promise<SettingsState> {
+	const { user } = await validateRequest();
+	if (!user) {
+		return { error: "Unauthorized" };
+	}
+
+	const name = formData.get("name") as string;
+
+	if (!name) {
+		return { error: "Key name is required" };
+	}
+
+	// Generate a secure looking key
+	const key = `sk_${crypto.randomUUID().replace(/-/g, "")}`;
+
+	try {
+		await db.apiKey.create({
+			data: {
+				name,
+				key,
+				userId: user.id,
+			},
+		});
+
+		redirect("/settings/api-keys");
+		return { success: true };
+	} catch (error) {
+		console.error("Error adding API key:", error);
+		return { error: "Failed to add API key" };
+	}
+}
+
+export async function deleteApiKey(
+	_prevState: SettingsState,
+	formData: FormData
+): Promise<SettingsState> {
+	const { user } = await validateRequest();
+	if (!user) {
+		return { error: "Unauthorized" };
+	}
+
+	const id = formData.get("id") as string;
+
+	if (!id) {
+		return { error: "Key ID is required" };
+	}
+
+	try {
+		await db.apiKey.delete({
+			where: { id, userId: user.id },
+		});
+
+		redirect("/settings/api-keys");
+		return { success: true };
+	} catch (error) {
+		console.error("Error deleting API key:", error);
+		return { error: "Failed to delete API key" };
 	}
 }

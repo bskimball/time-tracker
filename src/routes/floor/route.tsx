@@ -97,9 +97,9 @@ export default async function Component() {
 				<TimeTracking
 					employees={employees}
 					stations={stations}
-					activeLogs={activeLogs as any}
-					activeBreaks={activeBreaks as any}
-					completedLogs={completedLogs as any}
+					activeLogs={activeLogs as TimeLogWithRelations[]}
+					activeBreaks={activeBreaks as TimeLogWithRelations[]}
+					completedLogs={completedLogs as TimeLogWithRelations[]}
 				/>
 			</main>
 		</>

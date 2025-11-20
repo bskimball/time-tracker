@@ -112,8 +112,8 @@ export function Select({
 				</span>
 				<span className="text-muted-foreground text-xs">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-md">
-				<ListBox className="p-1 bg-background border border-input rounded-md w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-md bg-background">
+				<ListBox className="p-1 bg-background border border-input rounded-md text-foreground w-full shadow-lg">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}

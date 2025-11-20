@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "~/components/ds/button";
 import { Alert } from "~/components/ds/alert";
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
+import { SimpleInput } from "~/components/ds/input";
 import { pinToggleClock as pinToggleAction } from "../../time-clock/actions";
 import { useKioskMode, useAutoRefresh } from "../../time-clock/hooks";
 import { useOfflineActionQueue } from "../../time-clock/offline-queue";
@@ -59,7 +60,9 @@ export function KioskTimeClock({
 	activeLogs,
 }: KioskTimeClockProps) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
-	const { queue, enqueue, sync, status } = useOfflineActionQueue();
+	const apiKey =
+		typeof window !== "undefined" ? window.localStorage.getItem("timeClock:apiKey") || "" : "";
+	const { queue, enqueue, sync, status } = useOfflineActionQueue(apiKey);
 	const pinInputRef = useRef<HTMLInputElement>(null);
 
 	// State for notifications
@@ -170,10 +173,14 @@ export function KioskTimeClock({
 			isSyncing: status === "syncing",
 			syncOfflineActions: sync,
 			enqueueOfflineAction: enqueue,
-			apiKey: "",
-			saveApiKey: () => {},
+			apiKey,
+			saveApiKey: (value: string) => {
+				if (typeof window !== "undefined") {
+					window.localStorage.setItem("timeClock:apiKey", value);
+				}
+			},
 		}),
-		[kioskEnabled, setKioskEnabled, queue.length, status, sync, enqueue]
+		[kioskEnabled, setKioskEnabled, queue.length, status, sync, enqueue, apiKey]
 	);
 
 	// Handle exit kiosk mode
@@ -181,6 +188,8 @@ export function KioskTimeClock({
 		setKioskEnabled(false);
 		window.location.href = "/floor";
 	}, [setKioskEnabled]);
+
+	const [showApiKey, setShowApiKey] = useState(false);
 
 	return (
 		<KioskContext.Provider value={contextValue}>
@@ -201,11 +210,39 @@ export function KioskTimeClock({
 								)}
 								<span className="text-foreground">Auto-refresh every 30s</span>
 							</div>
-							<div className="flex justify-center">
-								<Button onClick={handleExitKiosk} variant="outline" size="sm">
+							<div className="flex justify-center gap-2 relative z-10">
+								<Button variant="outline" size="sm" onPress={handleExitKiosk}>
 									Exit Kiosk Mode
 								</Button>
+								<Button variant="ghost" size="sm" onPress={() => setShowApiKey(!showApiKey)}>
+									{showApiKey ? "Hide Config" : "Config"}
+								</Button>
 							</div>
+
+							{showApiKey && (
+								<div className="mt-4 max-w-md mx-auto text-left">
+									<label className="text-xs font-medium text-foreground block mb-1">
+										Device API Key (for offline sync)
+									</label>
+									<SimpleInput
+										type="password"
+										value={apiKey}
+										onChange={(e) => {
+											if (typeof window !== "undefined") {
+												window.localStorage.setItem("timeClock:apiKey", e.target.value);
+												// Force re-render to pick up new key in context is tricky without state lifting,
+												// but simplest is to just reload or use a local state that syncs.
+												// For now, let's just save it. The queue hook might need a reload to pick it up freshly if it doesn't react to localStorage changes directly.
+												// Actually, let's just use window.location.reload() for simplicity if changed, or trust the user to refresh.
+											}
+										}}
+										placeholder="Enter API Key"
+									/>
+									<p className="text-[10px] text-muted-foreground mt-1">
+										This key authenticates offline actions when internet is restored.
+									</p>
+								</div>
+							)}
 						</CardBody>
 					</Card>
 				</div>

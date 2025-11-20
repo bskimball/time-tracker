@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { createLogger } from "./logger";
 
 const globalForPrisma = globalThis as unknown as {
-	prisma: PrismaClient | undefined;
+	prismaGlobal: PrismaClient | undefined;
 };
 
 // Create a dedicated logger for database operations
@@ -13,7 +13,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const logQuery = process.env.LOG_DB_QUERIES === "true" || isDevelopment;
 
 export const db =
-	globalForPrisma.prisma ??
+	globalForPrisma.prismaGlobal ??
 	new PrismaClient({
 		log: [
 			{ emit: "event", level: "query" },
@@ -81,7 +81,7 @@ db.$on("info", (e: any) => {
 });
 
 if (process.env.NODE_ENV !== "production") {
-	globalForPrisma.prisma = db;
+	globalForPrisma.prismaGlobal = db;
 	db.$connect()
 		.then(() => {
 			dbLogger.info("Database connected successfully");

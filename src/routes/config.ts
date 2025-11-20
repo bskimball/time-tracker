@@ -63,12 +63,12 @@ export function routes(): RSCRouteConfig {
 							index: true,
 							lazy: () => import("./floor/route.tsx"),
 						},
-						{
-							id: "floor-kiosk",
-							path: "kiosk",
-							lazy: () => import("./floor/kiosk/route.tsx"),
-						},
 					],
+				},
+				{
+					id: "floor-kiosk",
+					path: "floor/kiosk",
+					lazy: () => import("./floor/kiosk/route.tsx"),
 				},
 
 				// Manager experience (MANAGER, ADMIN roles)
@@ -154,7 +154,24 @@ export function routes(): RSCRouteConfig {
 				{
 					id: "settings",
 					path: "settings",
-					lazy: () => import("./settings/route.tsx"),
+					lazy: () => import("./settings/layout.tsx"),
+					children: [
+						{
+							id: "settings-stations",
+							path: "stations",
+							lazy: () => import("./settings/stations/route.tsx"),
+						},
+						{
+							id: "settings-employees",
+							path: "employees",
+							lazy: () => import("./settings/employees/route.tsx"),
+						},
+						{
+							id: "settings-api-keys",
+							path: "api-keys",
+							lazy: () => import("./settings/api-keys/route.tsx"),
+						},
+					],
 				},
 				{
 					id: "todo",
