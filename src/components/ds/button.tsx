@@ -18,15 +18,15 @@ interface ButtonProps extends Omit<AriaButtonProps, "className" | "isDisabled"> 
 
 const variantStyles: Record<ButtonVariant, string> = {
 	primary:
-		"bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-primary border border-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
 	secondary:
-		"bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-secondary border border-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
 	outline:
 		"border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 aria-disabled:border-muted aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
 	ghost:
-		"text-muted-foreground hover:bg-accent active:bg-accent/80 hover:text-foreground aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
+		"text-muted-foreground border border-transparent hover:bg-accent active:bg-accent/80 hover:text-foreground aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
 	error:
-		"bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-destructive border border-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

@@ -5,7 +5,9 @@
  * is handled in the main handler before RSC rendering begins.
  * See entry.rsc.tsx for the redirect logic.
  */
-export default function Component() {
+import type { JSX } from "react";
+
+export default function Component(): JSX.Element {
 	// This should never be reached
 	throw new Error("Dashboard redirect should be handled in entry.rsc.tsx");
 }

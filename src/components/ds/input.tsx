@@ -19,40 +19,50 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	errorClassName?: string;
 }
 
-export function Input({
-	label,
-	error,
-	description,
-	containerClassName = "",
-	labelClassName = "",
-	inputClassName = "",
-	errorClassName = "",
-	className = "",
-	...props
-}: InputProps) {
-	return (
-		<AriaTextField className={cn("flex flex-col gap-1", containerClassName)}>
-			{label && (
-				<AriaLabel className={cn("text-sm font-medium", labelClassName)}>{label}</AriaLabel>
-			)}
-			<AriaInput
-				{...props}
-				className={cn(
-					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
-					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
-					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
-					error && "border-destructive focus:ring-destructive",
-					inputClassName,
-					className
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+	(
+		{
+			label,
+			error,
+			description,
+			containerClassName = "",
+			labelClassName = "",
+			inputClassName = "",
+			errorClassName = "",
+			className = "",
+			...props
+		},
+		ref
+	) => {
+		return (
+			<AriaTextField className={cn("flex flex-col gap-1", containerClassName)}>
+				{label && (
+					<AriaLabel className={cn("text-sm font-medium", labelClassName)}>{label}</AriaLabel>
 				)}
-			/>
-			{description && <p className="text-xs text-muted-foreground">{description}</p>}
-			{error && (
-				<FieldError className={cn("text-xs text-destructive", errorClassName)}>{error}</FieldError>
-			)}
-		</AriaTextField>
-	);
-}
+				<AriaInput
+					{...props}
+					ref={ref}
+					className={cn(
+						"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+						"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+						"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+						error && "border-destructive focus:ring-destructive",
+						inputClassName,
+						className
+					)}
+				/>
+				{description && <p className="text-xs text-muted-foreground">{description}</p>}
+				{error && (
+					<FieldError className={cn("text-xs text-destructive", errorClassName)}>
+						{error}
+					</FieldError>
+				)}
+			</AriaTextField>
+		);
+	}
+);
+
+Input.displayName = "Input";
 
 // Simpler input component for quick usage (works in both server and client)
 export function SimpleInput(props: React.ComponentProps<"input">) {

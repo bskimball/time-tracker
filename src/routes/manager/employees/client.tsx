@@ -122,7 +122,7 @@ export function EmployeeRoster({
 						<Select
 							options={statusOptions}
 							value={status || ""}
-							onChange={(value) => setStatus(value ? (value as EmployeeStatus) : undefined)}
+							onChange={(value: string) => setStatus(value ? (value as EmployeeStatus) : undefined)}
 							placeholder="All Status"
 						/>
 

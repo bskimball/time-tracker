@@ -10,6 +10,14 @@ import {
 	startBreakForEmployee,
 	updateTimeLogEntry,
 } from "../../services/time-clock";
+import {
+	breakSchema,
+	clockInSchema,
+	clockOutSchema,
+	deleteTimeLogSchema,
+	pinToggleClockSchema,
+	updateTimeLogSchema,
+} from "./schemas";
 
 export type ClockActionState = {
 	error?: string;
@@ -21,11 +29,13 @@ export async function clockIn(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = formData.get("employeeId") as string;
-	const stationId = formData.get("stationId") as string;
+	const parse = clockInSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await clockInEmployee(employeeId, stationId);
+		await clockInEmployee(parse.data.employeeId, parse.data.stationId);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -39,10 +49,13 @@ export async function clockOut(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const logId = formData.get("logId") as string;
+	const parse = clockOutSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await clockOutLog(logId);
+		await clockOutLog(parse.data.logId);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -56,10 +69,13 @@ export async function startBreak(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = formData.get("employeeId") as string;
+	const parse = breakSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await startBreakForEmployee(employeeId);
+		await startBreakForEmployee(parse.data.employeeId);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -73,10 +89,13 @@ export async function endBreak(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = formData.get("employeeId") as string;
+	const parse = breakSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await endBreakForEmployee(employeeId);
+		await endBreakForEmployee(parse.data.employeeId);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -90,15 +109,25 @@ export async function updateTimeLog(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const logId = formData.get("logId") as string;
-	const startTime = formData.get("startTime") as string;
-	const endTime = formData.get("endTime") as string;
-	const type = formData.get("type") as "WORK" | "BREAK";
-	const stationId = formData.get("stationId") as string | null;
-	const note = formData.get("note") as string;
+	const raw = Object.fromEntries(formData);
+	// Handle nullable/optional fields properly for Zod
+	if (raw.stationId === "") raw.stationId = null as any;
+	if (raw.endTime === "") delete raw.endTime;
+
+	const parse = updateTimeLogSchema.safeParse(raw);
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await updateTimeLogEntry(logId, startTime, endTime, type, stationId, note);
+		await updateTimeLogEntry(
+			parse.data.logId,
+			parse.data.startTime,
+			parse.data.endTime || "",
+			parse.data.type,
+			parse.data.stationId || null,
+			parse.data.note || ""
+		);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -112,10 +141,13 @@ export async function deleteTimeLog(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const logId = formData.get("logId") as string;
+	const parse = deleteTimeLogSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		await deleteTimeLogEntry(logId);
+		await deleteTimeLogEntry(parse.data.logId);
 		return { success: true };
 	} catch (error) {
 		if (error instanceof ClockActionError) {
@@ -129,11 +161,16 @@ export async function pinToggleClock(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const pin = formData.get("pin") as string;
-	const stationId = formData.get("stationId") as string | null;
+	const raw = Object.fromEntries(formData);
+	if (raw.stationId === "") raw.stationId = null as any;
+
+	const parse = pinToggleClockSchema.safeParse(raw);
+	if (!parse.success) {
+		return { error: parse.error.issues[0].message };
+	}
 
 	try {
-		const result = await pinToggleClockAction(pin, stationId);
+		const result = await pinToggleClockAction(parse.data.pin, parse.data.stationId || null);
 		return { success: true, message: result.message };
 	} catch (error) {
 		if (error instanceof ClockActionError) {

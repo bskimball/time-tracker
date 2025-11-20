@@ -124,7 +124,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								...stations.map((s) => ({ value: s.id, label: s.name })),
 							]}
 							value={selectedStation}
-							onChange={(value) => setSelectedStation(value || "all")}
+							onChange={(value: string) => setSelectedStation(value || "all")}
 						/>
 						<Input
 							label="Search"

@@ -214,19 +214,26 @@ export function UserTable({ users }) {
 }
 ```
 
-### Pattern 2: Server Actions for mutations
+### Pattern 2: Server Actions for mutations (Validated)
 
-Server Actions work correctly and should be placed in separate `actions.ts` files:
+Server Actions work correctly and should be placed in separate `actions.ts` files, utilizing Zod for validation:
 
 ```typescript
 // src/routes/users/actions.ts
 "use server";
 
+import { z } from "zod";
 import { db } from "../../lib/db";
 
-export async function createUser(formData: FormData) {
-	const name = formData.get("name") as string;
-	await db.user.create({ data: { name } });
+const createUserSchema = z.object({
+	name: z.string().min(1, "Name is required"),
+});
+
+export async function createUser(prevState: any, formData: FormData) {
+	const parse = createUserSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) return { error: parse.error.issues[0].message };
+
+	await db.user.create({ data: { name: parse.data.name } });
 	return { success: true };
 }
 ```
@@ -235,15 +242,36 @@ export async function createUser(formData: FormData) {
 // src/routes/users/client.tsx
 "use client";
 
+import { useActionState } from "react";
 import { createUser } from "./actions";
 
 export function NewUserForm() {
+  const [state, action, isPending] = useActionState(createUser, null);
+
   return (
-    <form action={createUser}>
+    <form action={action}>
       <input name="name" />
-      <button type="submit">Create</button>
+      <button type="submit" disabled={isPending}>Create</button>
+      {state?.error && <p>{state.error}</p>}
     </form>
   );
+}
+```
+
+### Pattern 3: Optimistic UI
+
+Use `useOptimistic` to update UI immediately while server action processes:
+
+```typescript
+import { useOptimistic } from "react";
+
+export function UserList({ users }) {
+	const [optimisticUsers, addOptimisticUser] = useOptimistic(users, (state, newUser) => [
+		...state,
+		newUser,
+	]);
+
+	// ... pass addOptimisticUser to form component
 }
 ```
 

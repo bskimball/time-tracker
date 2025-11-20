@@ -84,6 +84,26 @@ export default async function Component() {
 }
 ```
 
+**Server Action Pattern (with Zod):**
+
+```typescript
+// In actions.ts
+import { z } from "zod";
+import { db } from "~/lib/db";
+
+const createSchema = z.object({
+	name: z.string().min(1),
+});
+
+export async function createAction(prevState: any, formData: FormData) {
+	const parse = createSchema.safeParse(Object.fromEntries(formData));
+	if (!parse.success) return { error: parse.error.message };
+
+	await db.table.create({ data: parse.data });
+	return { success: true };
+}
+```
+
 **Request Access Pattern:**
 
 In RSC Data Mode, components do NOT receive a `request` prop automatically. Instead, we use AsyncLocalStorage:
@@ -130,6 +150,34 @@ export default async function Component() {
 export default async function Component() {
 	const user = await requireAuth(); // Throws redirect during RSC rendering
 	// This causes "Missing body in server response" errors
+}
+```
+
+**Optimistic UI Pattern:**
+
+Use `useOptimistic` in client components for instant feedback:
+
+```typescript
+// In client.tsx
+import { useOptimistic } from "react";
+
+export function List({ items }) {
+  const [optimisticItems, addOptimisticItem] = useOptimistic(
+    items,
+    (state, newItem) => [newItem, ...state]
+  );
+
+  return (
+    <>
+      {optimisticItems.map(item => <Item key={item.id} item={item} />)}
+      <Form
+        action={async (formData) => {
+          addOptimisticItem({ id: 'temp', ... }); // Instant update
+          await serverAction(formData); // Background sync
+        }}
+      />
+    </>
+  );
 }
 ```
 

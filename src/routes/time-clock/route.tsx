@@ -1,8 +1,14 @@
 // Legacy public route kept for compatibility and tests – render the same
 // experience as the floor time-clock so unit tests can verify data calls
 // without following redirects.
+import { Prisma } from "@prisma/client";
 import { TimeTracking } from "~/routes/time-clock/client";
 import { db } from "~/lib/db";
+
+// Define explicit type using Prisma's generated types
+export type TimeLogWithRelations = Prisma.TimeLogGetPayload<{
+	include: { Employee: true; Station: true };
+}>;
 
 export default async function Component() {
 	const [employees, stations, activeLogs, activeBreaks, completedLogs] = await Promise.all([
@@ -26,13 +32,14 @@ export default async function Component() {
 		}),
 	]);
 
+	// No more 'as any' casts - type safety is preserved
 	return (
 		<TimeTracking
-			employees={employees as any}
-			stations={stations as any}
-			activeLogs={activeLogs as any}
-			activeBreaks={activeBreaks as any}
-			completedLogs={completedLogs as any}
+			employees={employees}
+			stations={stations}
+			activeLogs={activeLogs as TimeLogWithRelations[]}
+			activeBreaks={activeBreaks as TimeLogWithRelations[]}
+			completedLogs={completedLogs as TimeLogWithRelations[]}
 		/>
 	);
 }

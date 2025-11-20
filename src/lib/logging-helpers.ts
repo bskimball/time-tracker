@@ -1,6 +1,8 @@
 import { getLogger } from "./request-context";
 import type { Logger } from "./logger";
 
+/* eslint-env node */
+
 /**
  * Measure and log the performance of an async operation
  * @param operation - Name of the operation being performed
@@ -20,17 +22,17 @@ export async function logPerformance<T>(
 	logger?: Logger
 ): Promise<T> {
 	const log = logger || getLogger();
-	const start = performance.now();
+	const start = globalThis.performance.now();
 
 	log.debug({ operation }, "Starting operation");
 
 	try {
 		const result = await fn();
-		const duration = performance.now() - start;
+		const duration = globalThis.performance.now() - start;
 		log.info({ operation, duration: `${duration.toFixed(2)}ms` }, "Operation completed");
 		return result;
 	} catch (error) {
-		const duration = performance.now() - start;
+		const duration = globalThis.performance.now() - start;
 		log.error({ operation, duration: `${duration.toFixed(2)}ms`, err: error }, "Operation failed");
 		throw error;
 	}
@@ -86,7 +88,7 @@ export function logError(error: Error, context?: Record<string, any>, logger?: L
  */
 export function createTimer(operation: string, logger?: Logger) {
 	const log = logger || getLogger();
-	const startTime = performance.now();
+	const startTime = globalThis.performance.now();
 
 	log.debug({ operation }, "Starting timed operation");
 
@@ -95,7 +97,7 @@ export function createTimer(operation: string, logger?: Logger) {
 		 * Log a checkpoint with elapsed time since start
 		 */
 		checkpoint(message: string, metadata?: Record<string, any>) {
-			const elapsed = performance.now() - startTime;
+			const elapsed = globalThis.performance.now() - startTime;
 			log.debug(
 				{
 					operation,
@@ -111,7 +113,7 @@ export function createTimer(operation: string, logger?: Logger) {
 		 * Log the final result with total elapsed time
 		 */
 		finish(message: string, metadata?: Record<string, any>) {
-			const elapsed = performance.now() - startTime;
+			const elapsed = globalThis.performance.now() - startTime;
 			log.info(
 				{
 					operation,
@@ -126,7 +128,7 @@ export function createTimer(operation: string, logger?: Logger) {
 		 * Log an error with elapsed time
 		 */
 		error(error: Error, metadata?: Record<string, any>) {
-			const elapsed = performance.now() - startTime;
+			const elapsed = globalThis.performance.now() - startTime;
 			log.error(
 				{
 					operation,

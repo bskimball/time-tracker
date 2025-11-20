@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	useActionState,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useOptimistic,
+} from "react";
 import { useFormStatus } from "react-dom";
 import { Dialog, DialogTrigger, Modal, ModalOverlay } from "react-aria-components";
-import type { Employee, Station, TimeLog } from "@prisma/client";
+import type { Employee, Station } from "@prisma/client";
 import {
 	clockIn,
 	clockOut,
@@ -17,7 +25,9 @@ import type { ClockActionState } from "~/routes/floor/time-clock/actions";
 import { Button } from "~/components/ds/button";
 import { Alert } from "~/components/ds/alert";
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
-import { SimpleInput } from "~/components/ds/input";
+import { SimpleInput, Input } from "~/components/ds/input";
+import { Select } from "~/components/ds/select";
+import { Form } from "~/components/ds/form";
 import { KioskContext, useKioskContext, type KioskContextValue } from "./context";
 import { useAutoRefresh, useKioskMode } from "./hooks";
 import { notify, subscribe } from "./notifications";
@@ -29,25 +39,24 @@ import {
 	getWeekBounds,
 	DEFAULT_DAILY_LIMIT,
 } from "~/lib/domain/time-tracking";
+import type { TimeLogWithRelations } from "~/routes/time-clock/route";
+import { intervalToDuration, formatDuration as formatDurationFn } from "date-fns";
 
 const createId = () =>
 	typeof crypto !== "undefined" && crypto.randomUUID
 		? crypto.randomUUID()
 		: Math.random().toString(36).slice(2);
 
-type TimeLogWithRelations = TimeLog & {
-	employee: Employee;
-	station: Station | null;
-};
-
 function ClockInForm({
 	employees,
 	stations,
 	pinInputRef,
+	onOptimisticClockIn,
 }: {
 	employees: Employee[];
 	stations: Station[];
 	pinInputRef: React.RefObject<HTMLInputElement | null>;
+	onOptimisticClockIn: (log: TimeLogWithRelations) => void;
 }) {
 	const {
 		kioskEnabled,
@@ -61,6 +70,8 @@ function ClockInForm({
 	} = useKioskContext();
 	const [method, setMethod] = useState<"pin" | "select">("pin");
 	const [pin, setPin] = useState("");
+	const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+	const [selectedStationId, setSelectedStationId] = useState("");
 
 	const [pinState, pinFormAction] = useActionState<ClockActionState, FormData>(
 		pinToggleClock,
@@ -88,6 +99,8 @@ function ClockInForm({
 
 	const handlePinSubmit = useCallback(
 		(event: React.FormEvent<HTMLFormElement>) => {
+			// We can't easily do optimistic UI for PIN because we don't know WHO the employee is
+			// without a server roundtrip. So we just let the action run.
 			const formData = new FormData(event.currentTarget);
 			const pinValue = (formData.get("pin") as string | null)?.trim();
 			const stationValue = (formData.get("stationId") as string | null) || "";
@@ -116,9 +129,35 @@ function ClockInForm({
 			const formData = new FormData(event.currentTarget);
 			const employeeId = (formData.get("employeeId") as string | null)?.trim();
 			const stationId = (formData.get("stationId") as string | null)?.trim();
+
 			if (!employeeId || !stationId) {
 				return;
 			}
+
+			// OPTIMISTIC UPDATE
+			const employee = employees.find((e) => e.id === employeeId);
+			const station = stations.find((s) => s.id === stationId);
+
+			if (employee && station) {
+				onOptimisticClockIn({
+					id: createId(),
+					employeeId,
+					stationId,
+					type: "WORK",
+					startTime: new Date(),
+					endTime: null,
+					note: null,
+					deletedAt: null,
+					correctedBy: null,
+					taskId: null,
+					clockMethod: "MANUAL",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					Employee: employee,
+					Station: station,
+				});
+			}
+
 			const queued = handleOfflineSubmit(
 				event,
 				"clockIn",
@@ -129,7 +168,7 @@ function ClockInForm({
 				event.currentTarget.reset();
 			}
 		},
-		[handleOfflineSubmit]
+		[handleOfflineSubmit, employees, stations, onOptimisticClockIn]
 	);
 
 	useEffect(() => {
@@ -228,14 +267,14 @@ function ClockInForm({
 				</div>
 
 				{method === "pin" ? (
-					<form action={pinFormAction} onSubmit={handlePinSubmit}>
+					<Form action={pinFormAction} onSubmit={handlePinSubmit}>
 						<div className="flex flex-col gap-1">
 							<label className="flex items-center justify-between">
 								<span className="text-sm font-medium text-foreground w-24 inline-block">
 									Enter PIN
 								</span>
 							</label>
-							<input
+							<Input
 								type="password"
 								name="pin"
 								value={pin}
@@ -262,17 +301,13 @@ function ClockInForm({
 									Station
 								</span>
 							</label>
-							<select
+							<Select
 								name="stationId"
-								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
-							>
-								<option value="">Use last station</option>
-								{stations.map((st) => (
-									<option key={st.id} value={st.id}>
-										{st.name}
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: "", label: "Use last station" },
+									...stations.map((st) => ({ value: st.id, label: st.name })),
+								]}
+							/>
 						</div>
 
 						<div className="flex justify-end mt-4">
@@ -289,27 +324,25 @@ function ClockInForm({
 								{pinState.message}
 							</Alert>
 						)}
-					</form>
+					</Form>
 				) : (
-					<form action={selectFormAction} onSubmit={handleSelectSubmit}>
+					<Form action={selectFormAction} onSubmit={handleSelectSubmit}>
 						<div className="flex flex-col gap-1">
 							<label className="flex items-center justify-between">
 								<span className="text-sm font-medium text-foreground w-24 inline-block">
 									Employee
 								</span>
 							</label>
-							<select
+							<Select
 								name="employeeId"
-								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
-								required
-							>
-								<option value="">Select employee</option>
-								{employees.map((emp) => (
-									<option key={emp.id} value={emp.id}>
-										{emp.name}
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: "", label: "Select employee" },
+									...employees.map((emp) => ({ value: emp.id, label: emp.name })),
+								]}
+								value={selectedEmployeeId}
+								onChange={setSelectedEmployeeId}
+								isDisabled={employees.length === 0}
+							/>
 						</div>
 
 						<div className="flex flex-col gap-1 mt-3">
@@ -318,18 +351,16 @@ function ClockInForm({
 									Station
 								</span>
 							</label>
-							<select
+							<Select
 								name="stationId"
-								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
-								required
-							>
-								<option value="">Select station</option>
-								{stations.map((st) => (
-									<option key={st.id} value={st.id}>
-										{st.name}
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: "", label: "Select station" },
+									...stations.map((st) => ({ value: st.id, label: st.name })),
+								]}
+								value={selectedStationId}
+								onChange={setSelectedStationId}
+								isDisabled={stations.length === 0}
+							/>
 						</div>
 
 						<div className="flex justify-end mt-4">
@@ -346,7 +377,7 @@ function ClockInForm({
 								Clocked in successfully!
 							</Alert>
 						)}
-					</form>
+					</Form>
 				)}
 			</CardBody>
 		</Card>
@@ -376,13 +407,13 @@ function ElapsedTime({ startTime }: { startTime: Date }) {
 
 	useEffect(() => {
 		const updateElapsed = () => {
-			const start = new Date(startTime).getTime();
-			const now = Date.now();
-			const diff = now - start;
+			const start = new Date(startTime);
+			const now = new Date();
+			const duration = intervalToDuration({ start, end: now });
 
-			const hours = Math.floor(diff / (1000 * 60 * 60));
-			const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-			const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+			const hours = duration.hours || 0;
+			const minutes = duration.minutes || 0;
+			const seconds = duration.seconds || 0;
 
 			setElapsed(`${hours}h ${minutes}m ${seconds}s`);
 		};
@@ -490,7 +521,7 @@ function ActiveSessions({
 								>
 									<div className="flex-1">
 										<div className="flex items-center gap-2">
-											<p className="font-semibold">{log.employee.name}</p>
+											<p className="font-semibold">{log.Employee.name}</p>
 											{employeeOnBreak && (
 												<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
 													On Break
@@ -498,7 +529,7 @@ function ActiveSessions({
 											)}
 										</div>
 										<p className="text-sm text-muted-foreground">
-											{log.station?.name || "No station"}
+											{log.Station?.name || "No station"}
 										</p>
 										<p className="text-xs">
 											Started: {new Date(log.startTime).toLocaleTimeString()}
@@ -784,7 +815,7 @@ function TimeHistory({
 			if (selectedStationId !== "none" && log.stationId !== selectedStationId) return false;
 		}
 
-		if (searchQuery && !log.employee.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+		if (searchQuery && !log.Employee.name.toLowerCase().includes(searchQuery.toLowerCase())) {
 			return false;
 		}
 
@@ -793,10 +824,8 @@ function TimeHistory({
 
 	const calculateDuration = (start: Date, end: Date | null) => {
 		if (!end) return "N/A";
-		const diff = new Date(end).getTime() - new Date(start).getTime();
-		const hours = Math.floor(diff / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-		return `${hours}h ${minutes}m`;
+		const duration = intervalToDuration({ start: new Date(start), end: new Date(end) });
+		return formatDurationFn(duration, { format: ["hours", "minutes"] }) || "0m";
 	};
 
 	const employeeOvertimeStatus = useMemo(() => {
@@ -880,11 +909,11 @@ function TimeHistory({
 						<label className="flex items-center justify-between">
 							<span className="text-sm font-medium text-foreground">Start Date</span>
 						</label>
-						<input
+						<Input
 							type="date"
 							value={startDate}
 							onChange={(e) => setStartDate(e.target.value)}
-							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+							className="text-sm"
 						/>
 					</div>
 
@@ -892,11 +921,11 @@ function TimeHistory({
 						<label className="flex items-center justify-between">
 							<span className="text-sm font-medium text-foreground">End Date</span>
 						</label>
-						<input
+						<Input
 							type="date"
 							value={endDate}
 							onChange={(e) => setEndDate(e.target.value)}
-							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+							className="text-sm"
 						/>
 					</div>
 
@@ -904,49 +933,41 @@ function TimeHistory({
 						<label className="flex items-center justify-between">
 							<span className="text-sm font-medium text-foreground">Employee</span>
 						</label>
-						<select
+						<Select
+							options={[
+								{ value: "", label: "All Employees" },
+								...employees.map((emp) => ({ value: emp.id, label: emp.name })),
+							]}
 							value={selectedEmployeeId}
-							onChange={(e) => setSelectedEmployeeId(e.target.value)}
-							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent select-sm"
-						>
-							<option value="">All Employees</option>
-							{employees.map((emp) => (
-								<option key={emp.id} value={emp.id}>
-									{emp.name}
-								</option>
-							))}
-						</select>
+							onChange={setSelectedEmployeeId}
+						/>
 					</div>
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
 							<span className="text-sm font-medium text-foreground">Station</span>
 						</label>
-						<select
+						<Select
+							options={[
+								{ value: "", label: "All Stations" },
+								{ value: "none", label: "No Station" },
+								...stations.map((st) => ({ value: st.id, label: st.name })),
+							]}
 							value={selectedStationId}
-							onChange={(e) => setSelectedStationId(e.target.value)}
-							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent select-sm"
-						>
-							<option value="">All Stations</option>
-							<option value="none">No Station</option>
-							{stations.map((st) => (
-								<option key={st.id} value={st.id}>
-									{st.name}
-								</option>
-							))}
-						</select>
+							onChange={setSelectedStationId}
+						/>
 					</div>
 
 					<div className="flex flex-col gap-1">
 						<label className="flex items-center justify-between">
 							<span className="text-sm font-medium text-foreground">Search</span>
 						</label>
-						<input
+						<Input
 							type="text"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							placeholder="Employee name..."
-							className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+							className="text-sm"
 						/>
 					</div>
 				</div>
@@ -982,7 +1003,7 @@ function TimeHistory({
 											<tr key={log.id}>
 												<td>
 													<div className="flex items-center gap-2">
-														<span>{log.employee.name}</span>
+														<span>{log.Employee.name}</span>
 														{showDailyOT && (
 															<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
 																Daily OT
@@ -1002,7 +1023,7 @@ function TimeHistory({
 														{log.type}
 													</span>
 												</td>
-												<td>{log.station?.name || "N/A"}</td>
+												<td>{log.Station?.name || "N/A"}</td>
 												<td>{new Date(log.startTime).toLocaleTimeString()}</td>
 												<td>{log.endTime ? new Date(log.endTime).toLocaleTimeString() : "-"}</td>
 												<td className="font-mono text-sm">
@@ -1071,6 +1092,13 @@ export function TimeTracking({
 }) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
+
+	// Optimistic state for active logs
+	const [optimisticLogs, addOptimisticLog] = useOptimistic(
+		activeLogs,
+		(state, newLog: TimeLogWithRelations) => [newLog, ...state]
+	);
+
 	const [notifications, setNotifications] = useState(
 		[] as Array<{
 			id: string;
@@ -1135,8 +1163,13 @@ export function TimeTracking({
 				</Button>
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-				<ClockInForm employees={employees} stations={stations} pinInputRef={pinInputRef} />
-				<ActiveSessions activeLogs={activeLogs} activeBreaks={activeBreaks} />
+				<ClockInForm
+					employees={employees}
+					stations={stations}
+					pinInputRef={pinInputRef}
+					onOptimisticClockIn={addOptimisticLog}
+				/>
+				<ActiveSessions activeLogs={optimisticLogs} activeBreaks={activeBreaks} />
 			</div>
 			<TimeHistory completedLogs={completedLogs} stations={stations} employees={employees} />
 			{notifications.length > 0 && (

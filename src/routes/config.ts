@@ -1,7 +1,7 @@
-import { type unstable_RSCRouteConfigEntry as RSCRouteConfig } from "react-router";
+import { type unstable_RSCRouteConfig as RSCRouteConfig } from "react-router";
 
-export function routes() {
-	return [
+export function routes(): RSCRouteConfig {
+	const config = [
 		{
 			id: "root",
 			path: "",
@@ -163,5 +163,7 @@ export function routes() {
 				},
 			],
 		},
-	] as RSCRouteConfig;
+	] satisfies RSCRouteConfig;
+
+	return config;
 }

@@ -189,6 +189,7 @@ describe("Server Actions", () => {
 			const formData = new FormData();
 			formData.append("logId", "log-1");
 			formData.append("startTime", "2024-01-01T09:00:00.000Z");
+			formData.append("type", "WORK");
 
 			vi.mocked(updateTimeLogEntry).mockRejectedValue(new ClockActionError("Overlapping session"));
 

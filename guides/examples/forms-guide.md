@@ -114,6 +114,7 @@ Server Actions handle all mutations and return serializable state.
 // src/routes/manager/tasks/actions.ts
 "use server";
 
+import { z } from "zod";
 import { db } from "~/lib/db";
 import { getLogger, logError, logPerformance } from "~/lib/logging-helpers";
 import type { TaskAssignment } from "./types";
@@ -124,16 +125,34 @@ interface AssignTaskState {
 	activeAssignments?: TaskAssignment[];
 }
 
+// Zod schema for validation
+const assignTaskSchema = z.object({
+	employeeId: z.string().min(1, "Employee is required"),
+	taskTypeId: z.string().min(1, "Task type is required"),
+	priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
+	notes: z.string().optional().nullable(),
+});
+
 export async function assignTaskAction(
 	prevState: AssignTaskState | null,
 	formData: FormData
 ): Promise<AssignTaskState> {
 	const logger = getLogger();
 
-	const employeeId = formData.get("employeeId") as string;
-	const taskTypeId = formData.get("taskTypeId") as string;
-	const priority = formData.get("priority") as "LOW" | "MEDIUM" | "HIGH";
-	const notes = formData.get("notes") as string | null;
+	// Parse and validate with Zod
+	const parse = assignTaskSchema.safeParse({
+		employeeId: formData.get("employeeId"),
+		taskTypeId: formData.get("taskTypeId"),
+		priority: formData.get("priority"),
+		notes: formData.get("notes"),
+	});
+
+	if (!parse.success) {
+		logger.warn("Validation failed", { errors: parse.error.format() });
+		return { error: parse.error.issues[0].message };
+	}
+
+	const { employeeId, taskTypeId, priority, notes } = parse.data;
 
 	logger.info(
 		{
@@ -145,12 +164,70 @@ export async function assignTaskAction(
 	);
 
 	try {
-		// Validate inputs
-		if (!employeeId || !taskTypeId) {
-			logger.warn("Missing required fields");
-			return { error: "Employee and task type are required" };
+		// Check for existing active assignment
+		const existingAssignment = await db.taskAssignment.findFirst({
+			where: {
+				employeeId,
+				endTime: null,
+			},
+		});
+
+		if (existingAssignment) {
+			logger.warn({ employeeId }, "Employee already has active assignment");
+			return { error: "Employee already has an active task assignment" };
 		}
 
+		// Create the assignment with performance logging
+		const assignment = await logPerformance("create-task-assignment", () =>
+			db.taskAssignment.create({
+				data: {
+					employeeId,
+					taskTypeId,
+					priority,
+					notes,
+					startTime: new Date(),
+				},
+				include: {
+					Employee: true,
+					TaskType: { include: { Station: true } },
+				},
+			})
+		);
+
+
+	try {
+		// Check for existing active assignment
+		const existingAssignment = await db.taskAssignment.findFirst({
+			where: {
+				employeeId,
+				endTime: null,
+			},
+		});
+
+		if (existingAssignment) {
+			logger.warn({ employeeId }, "Employee already has active assignment");
+			return { error: "Employee already has an active task assignment" };
+		}
+
+		// Create the assignment with performance logging
+		const assignment = await logPerformance("create-task-assignment", () =>
+			db.taskAssignment.create({
+				data: {
+					employeeId,
+					taskTypeId,
+					priority,
+					notes,
+					startTime: new Date(),
+				},
+				include: {
+					Employee: true,
+					TaskType: { include: { Station: true } },
+				},
+			})
+		);
+
+
+	try {
 		// Check for existing active assignment
 		const existingAssignment = await db.taskAssignment.findFirst({
 			where: {

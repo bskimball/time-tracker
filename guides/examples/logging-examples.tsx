@@ -70,8 +70,8 @@ export async function fetchAnalytics() {
 	const analytics = await logPerformance("fetch-analytics", async () => {
 		const employees = await db.employee.findMany({
 			include: {
-				timeLogs: true,
-				performanceMetrics: true,
+				TimeLog: true,
+				PerformanceMetric: true,
 			},
 		});
 
@@ -117,7 +117,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 const app = new OpenAPIHono();
 
 app.get("/employees/:id", async (c) => {
-	const logger = c.var.logger; // From hono-pino middleware
+	const logger = (c.var as typeof c.var & { logger: ReturnType<typeof createLogger> }).logger; // From hono-pino middleware
 	const id = c.req.param("id");
 
 	logger.info({ employeeId: id }, "Fetching employee");
@@ -157,7 +157,7 @@ export async function cleanupOldLogs() {
 	try {
 		const deleted = await db.timeLog.deleteMany({
 			where: {
-				clockIn: {
+				startTime: {
 					lt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
 				},
 			},
@@ -208,7 +208,6 @@ export async function clockInEmployee(employeeId: string, stationId: string) {
 
 	const employee = await db.employee.findUnique({
 		where: { id: employeeId },
-		include: { station: true },
 	});
 
 	if (!employee) {
@@ -221,8 +220,9 @@ export async function clockInEmployee(employeeId: string, stationId: string) {
 			data: {
 				employeeId,
 				stationId,
-				clockIn: new Date(),
+				startTime: new Date(),
 				clockMethod: "PIN",
+				updatedAt: new Date(),
 			},
 		})
 	);
@@ -258,6 +258,6 @@ function calculatePayroll(timeLogs: any[]) {
 	return { total: 10000, logs: timeLogs };
 }
 
-async function savePayroll(payroll: any) {
+async function savePayroll(_payroll: any) {
 	// Save logic
 }

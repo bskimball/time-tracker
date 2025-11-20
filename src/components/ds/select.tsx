@@ -18,7 +18,13 @@ interface SelectOption {
 	isDisabled?: boolean;
 }
 
-interface SelectProps {
+type BaseAriaSelectProps = Omit<
+	React.ComponentProps<typeof AriaSelect>,
+	// We control these via our own API
+	"children" | "defaultSelectedKey" | "selectedKey" | "onSelectionChange" | "onChange"
+>;
+
+interface SelectProps extends BaseAriaSelectProps {
 	options: SelectOption[];
 	label?: string;
 	error?: string;
@@ -26,13 +32,14 @@ interface SelectProps {
 	placeholder?: string;
 	defaultValue?: string;
 	value?: string;
-	onChange?: (value: string | null) => void;
+	onChange?: React.Dispatch<React.SetStateAction<string>> | ((value: string) => void);
 	isDisabled?: boolean;
 	containerClassName?: string;
 	labelClassName?: string;
 	selectClassName?: string;
 	errorClassName?: string;
 	className?: string;
+	// no need to add `name` explicitly; it comes from BaseAriaSelectProps
 }
 
 export function Select({
@@ -50,21 +57,28 @@ export function Select({
 	selectClassName = "",
 	errorClassName = "",
 	className = "",
+	// NOTE: don't destructure and drop name; keep it in ...props
 	...props
 }: SelectProps) {
-	const selectedValue = value || defaultValue;
+	// Prefer controlled value when provided; used for label lookup only
+	const selectedValue = value ?? defaultValue ?? null;
 
-	const handleSelectionChange = (key: React.Key | null) => {
-		onChange?.(key?.toString() || null);
+	// React Aria Select now uses value/defaultValue/onChange instead of selectedKey/onSelectionChange
+	const handleSelectionChange = (key: React.Key | React.Key[] | null) => {
+		// Normalize possible array of keys to a single string value for our simpler API
+		const normalizedKey = Array.isArray(key) ? (key[0] ?? null) : key;
+		const sanitizedValue = normalizedKey != null ? normalizedKey.toString() : "";
+		onChange?.(sanitizedValue);
 	};
 
 	return (
 		<AriaSelect
-			defaultValue={selectedValue || ""}
+			{...props} // `name` and other AriaSelect props flow through
+			value={value}
+			defaultValue={value === undefined ? defaultValue : undefined}
 			onChange={handleSelectionChange}
 			isDisabled={isDisabled}
 			className={cn("flex flex-col gap-1", containerClassName)}
-			{...props}
 		>
 			{label && (
 				<AriaLabel className={cn("text-sm font-medium", labelClassName)}>{label}</AriaLabel>
@@ -92,7 +106,7 @@ export function Select({
 				)}
 			>
 				<span>
-					{selectedValue === "" || !selectedValue
+					{selectedValue == null || selectedValue === ""
 						? placeholder
 						: options.find((opt) => opt.value === selectedValue)?.label}
 				</span>
@@ -125,8 +139,8 @@ export function Select({
 	);
 }
 
-// Simpler select component for quick usage (works in both server and client)
-// This uses native HTML select but with consistent styling
+// Simpler select component built with React Aria Components
+// Smaller API surface but same visual styling as Select
 export function SimpleSelect({
 	options,
 	label,
@@ -134,51 +148,84 @@ export function SimpleSelect({
 	description,
 	placeholder = "Select an option",
 	className = "",
+	value,
+	defaultValue,
+	onChange,
 	...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & {
+}: {
 	options: SelectOption[];
 	label?: string;
 	error?: string;
 	description?: string;
 	placeholder?: string;
-}) {
+	className?: string;
+	value?: string;
+	defaultValue?: string;
+	onChange?: (value: string | null) => void;
+} & Omit<
+	React.ComponentProps<typeof AriaSelect>,
+	"children" | "selectedKey" | "defaultSelectedKey" | "onSelectionChange"
+>) {
+	const isControlled = value !== undefined;
+	const selectedKey = isControlled ? value : undefined;
+
+	const handleSelectionChange = (key: React.Key | null) => {
+		onChange?.(key?.toString() ?? null);
+	};
+
+	const selectedLabel =
+		selectedKey != null
+			? (options.find((opt) => opt.value === selectedKey)?.label ?? placeholder)
+			: placeholder;
+
 	return (
-		<div className="flex flex-col gap-1">
-			{label && <label className="text-sm font-medium">{label}</label>}
-			<div className="relative">
-				<select
-					{...props}
-					className={cn(
-						// Base styles matching Input component exactly
-						"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all appearance-none",
-						// Focus states matching Input
-						"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
-						// Disabled states
-						"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
-						// Error states
-						error && "border-destructive focus:ring-destructive",
-						// Custom select arrow
-						"pr-8",
-						className
-					)}
-				>
-					{placeholder && (
-						<option value="" disabled>
-							{placeholder}
-						</option>
-					)}
+		<AriaSelect
+			{...props}
+			selectedKey={isControlled ? selectedKey : undefined}
+			defaultSelectedKey={!isControlled ? defaultValue : undefined}
+			onSelectionChange={handleSelectionChange}
+			className="flex flex-col gap-1"
+		>
+			{label && <AriaLabel className="text-sm font-medium">{label}</AriaLabel>}
+			<Button
+				className={cn(
+					// Base styles matching Input component exactly
+					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+					// Focus states matching Input
+					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+					// Disabled states
+					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+					// Error states
+					error && "border-destructive focus:ring-destructive",
+					// Select button specific styling
+					"flex items-center justify-between text-left w-full appearance-none pr-8",
+					className
+				)}
+			>
+				<span>{selectedLabel}</span>
+				<span className="text-muted-foreground text-xs">▼</span>
+			</Button>
+			<Popover className="max-h-60 overflow-auto rounded-md">
+				<ListBox className="p-1 bg-background border border-input rounded-md w-full shadow-lg">
 					{options.map((option) => (
-						<option key={option.value} value={option.value} disabled={option.isDisabled}>
+						<ListBoxItem
+							key={option.value}
+							id={option.value}
+							isDisabled={option.isDisabled}
+							className={cn(
+								"px-3 py-2 rounded-sm cursor-default transition-colors",
+								"hover:bg-muted focus:bg-muted",
+								"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background",
+								option.isDisabled && "opacity-50 cursor-not-allowed"
+							)}
+						>
 							{option.label}
-						</option>
+						</ListBoxItem>
 					))}
-				</select>
-				<div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-					<span className="text-muted-foreground text-xs">▼</span>
-				</div>
-			</div>
+				</ListBox>
+			</Popover>
 			{description && <p className="text-xs text-muted-foreground">{description}</p>}
 			{error && <p className="text-xs text-destructive">{error}</p>}
-		</div>
+		</AriaSelect>
 	);
 }
