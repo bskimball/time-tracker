@@ -18,6 +18,8 @@ This guide provides a comprehensive overview of the Time Tracker application arc
 
 Time Tracker is a **fulfillment warehouse time tracking and management system** built with React Server Components (RSC) in Data mode. It provides role-based dashboards for different user types:
 
+**Upstream Starting Point:** [https://github.com/bskimball/react-router-rsc-hono/tree/master/src](https://github.com/bskimball/react-router-rsc-hono/tree/master/src)
+
 - **Workers** - Time clock interface for clocking in/out
 - **Managers** - Employee monitoring, reports, and task management
 - **Admins/Executives** - Analytics, capacity planning, and system settings

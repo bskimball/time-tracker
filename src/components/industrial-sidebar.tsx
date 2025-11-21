@@ -32,8 +32,9 @@ export function IndustrialSidebar({
 		<div className="flex h-screen overflow-hidden bg-background">
 			{/* Modern Sidebar */}
 			<aside
+				data-collapsed={isCollapsed}
 				className={cn(
-					"bg-sidebar relative flex flex-col border-r border-sidebar-border transition-all duration-300 shadow-sm",
+					"bg-sidebar relative flex flex-col border-r border-sidebar-border transition-all duration-300 shadow-sm z-20 flex-shrink-0 overflow-hidden",
 					isCollapsed ? "w-16" : "w-64"
 				)}
 			>
@@ -53,7 +54,7 @@ export function IndustrialSidebar({
 				</div>
 
 				{/* Navigation Links */}
-				<nav className="flex-1 overflow-y-auto p-2">
+				<nav className="flex-1 overflow-y-auto p-2" data-collapsed={isCollapsed}>
 					{navLinks.map((link) => {
 						const isActive =
 							location.pathname === link.to ||
@@ -63,14 +64,15 @@ export function IndustrialSidebar({
 							<Link key={link.to} to={link.to}>
 								<div
 									className={cn(
-										"group relative mb-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-3 transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-sm",
+										"group relative mb-2 flex w-full items-center rounded-md border border-sidebar-border bg-sidebar-accent py-3 transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-sm",
+										isCollapsed ? "justify-center px-2" : "gap-3 px-3",
 										isActive && "bg-primary text-primary-foreground shadow-sm"
 									)}
 								>
-									{/* LED indicator */}
-									<div className={cn("led-indicator", isActive && "active")} />
+									<div
+										className={cn("led-indicator", isActive && "active", isCollapsed && "mx-auto")}
+									/>
 
-									{/* Label */}
 									{!isCollapsed && <span className="text-sm font-medium">{link.label}</span>}
 								</div>
 							</Link>
@@ -88,14 +90,19 @@ export function IndustrialSidebar({
 
 					{/* Collapse toggle button */}
 					<button
-						onClick={() => setIsCollapsed(!isCollapsed)}
+						type="button"
+						onClick={() => setIsCollapsed((prev) => !prev)}
 						className={cn(
-							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm"
+							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm cursor-pointer relative z-50"
 						)}
+						aria-expanded={!isCollapsed}
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 					>
 						<svg
-							className={cn("h-5 w-5 transition-transform", !isCollapsed && "rotate-180")}
+							className={cn(
+								"h-5 w-5 transition-transform pointer-events-none",
+								!isCollapsed && "rotate-180"
+							)}
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"

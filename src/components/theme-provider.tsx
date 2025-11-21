@@ -22,9 +22,13 @@ export function ThemeProvider({
 	storageKey = "ui-theme",
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(() => {
+	const [theme, setThemeState] = useState<Theme>(() => {
 		if (typeof window === "undefined") return defaultTheme;
-		return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+		try {
+			return (localStorage.getItem(storageKey) as Theme | null) || defaultTheme;
+		} catch {
+			return defaultTheme;
+		}
 	});
 
 	useEffect(() => {
@@ -33,21 +37,26 @@ export function ThemeProvider({
 		let effectiveTheme: "light" | "dark";
 
 		if (theme === "system") {
-			effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+			effectiveTheme = prefersDark ? "dark" : "light";
 		} else {
 			effectiveTheme = theme;
 		}
 
 		root.classList.remove("light", "dark");
 		root.classList.add(effectiveTheme);
+		root.setAttribute("data-theme", effectiveTheme);
+		root.style.colorScheme = effectiveTheme;
 	}, [theme]);
 
 	const value = useMemo(
 		() => ({
 			theme,
-			setTheme: (theme: Theme) => {
-				localStorage.setItem(storageKey, theme);
-				setTheme(theme);
+			setTheme: (nextTheme: Theme) => {
+				try {
+					localStorage.setItem(storageKey, nextTheme);
+				} catch {}
+				setThemeState(nextTheme);
 			},
 		}),
 		[theme, storageKey]

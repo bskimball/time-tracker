@@ -6,6 +6,8 @@ This file helps AI coding assistants understand this project.
 
 React Router RSC template using React Server Components (experimental) in **Data mode**, powered by Vite and served with Hono on Node.js.
 
+**Upstream Starting Point:** [https://github.com/bskimball/react-router-rsc-hono/tree/master/src](https://github.com/bskimball/react-router-rsc-hono/tree/master/src)
+
 ## React Server Components Architecture
 
 This project uses **React Router 7** with React Server Components in **Data mode** as documented at https://reactrouter.com/how-to/react-server-components#rsc-data-mode
