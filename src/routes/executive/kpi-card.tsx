@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
+import { Card, CardBody } from "~/components/ds/card";
 
 interface KPICardProps {
 	title: string;
@@ -15,41 +15,58 @@ interface KPICardProps {
 	loading?: boolean;
 }
 
-// Industrial color classes using CSS variables
-const colorClasses = {
-	green: "text-primary bg-primary/10 border-primary",
-	yellow: "text-primary bg-primary/10 border-primary",
-	red: "text-destructive bg-destructive/10 border-destructive",
-	blue: "text-secondary bg-secondary/10 border-secondary",
-	purple: "text-accent bg-accent/10 border-accent",
+const colorStyles = {
+	green: {
+		bg: "bg-emerald-500/10",
+		text: "text-emerald-600 dark:text-emerald-400",
+		border: "border-emerald-200 dark:border-emerald-800",
+		icon: "text-emerald-500",
+		gradient: "from-emerald-500/20 to-transparent",
+	},
+	yellow: {
+		bg: "bg-amber-500/10",
+		text: "text-amber-600 dark:text-amber-400",
+		border: "border-amber-200 dark:border-amber-800",
+		icon: "text-amber-500",
+		gradient: "from-amber-500/20 to-transparent",
+	},
+	red: {
+		bg: "bg-rose-500/10",
+		text: "text-rose-600 dark:text-rose-400",
+		border: "border-rose-200 dark:border-rose-800",
+		icon: "text-rose-500",
+		gradient: "from-rose-500/20 to-transparent",
+	},
+	blue: {
+		bg: "bg-blue-500/10",
+		text: "text-blue-600 dark:text-blue-400",
+		border: "border-blue-200 dark:border-blue-800",
+		icon: "text-blue-500",
+		gradient: "from-blue-500/20 to-transparent",
+	},
+	purple: {
+		bg: "bg-violet-500/10",
+		text: "text-violet-600 dark:text-violet-400",
+		border: "border-violet-200 dark:border-violet-800",
+		icon: "text-violet-500",
+		gradient: "from-violet-500/20 to-transparent",
+	},
 };
 
 const trendIcons = {
 	up: (
-		<svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
-			<path
-				fillRule="evenodd"
-				d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
-				clipRule="evenodd"
-			/>
+		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
 		</svg>
 	),
 	down: (
-		<svg className="w-4 h-4 text-destructive" fill="currentColor" viewBox="0 0 20 20">
-			<path
-				fillRule="evenodd"
-				d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"
-				clipRule="evenodd"
-			/>
+		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
 		</svg>
 	),
 	neutral: (
-		<svg className="w-4 h-4 text-secondary" fill="currentColor" viewBox="0 0 20 20">
-			<path
-				fillRule="evenodd"
-				d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-				clipRule="evenodd"
-			/>
+		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
 		</svg>
 	),
 };
@@ -62,43 +79,58 @@ export function KPICard({
 	color = "blue",
 	loading = false,
 }: KPICardProps) {
+	const styles = colorStyles[color];
+
 	if (loading) {
 		return (
-			<Card className="border-2">
-				<CardHeader>
-					<div className="animate-pulse">
-						<div className="h-4 bg-muted w-3/4 mb-2"></div>
-						<div className="h-8 bg-muted w-1/2"></div>
+			<Card className="overflow-hidden border-0 shadow-sm bg-card/50">
+				<CardBody className="p-6">
+					<div className="animate-pulse space-y-4">
+						<div className="h-4 bg-muted/50 rounded w-1/2"></div>
+						<div className="h-8 bg-muted/50 rounded w-3/4"></div>
+						<div className="h-4 bg-muted/50 rounded w-1/3"></div>
 					</div>
-				</CardHeader>
+				</CardBody>
 			</Card>
 		);
 	}
 
 	return (
-		<Card className={`border-2 ${colorClasses[color]}`}>
-			<CardHeader className="pb-2">
-				<CardTitle className="text-sm font-medium text-muted-foreground normal-case tracking-normal">
-					{title}
-				</CardTitle>
-			</CardHeader>
-			<CardBody>
-				<div className="flex items-end justify-between">
+		<Card className="relative overflow-hidden group bg-card">
+			<div className={`absolute top-0 right-0 w-32 h-32 bg-linear-to-br ${styles.gradient} opacity-20 rounded-bl-full -mr-8 -mt-8 transition-opacity group-hover:opacity-30`} />
+
+			<CardBody className="p-6 relative z-10">
+				<div className="flex flex-col h-full justify-between gap-4">
 					<div>
-						<div
-							className={`font-mono-industrial text-2xl font-bold ${colorClasses[color].split(" ")[0]}`}
-						>
-							{typeof value === "number" ? value.toLocaleString() : value}
+						<h3 className="text-sm font-medium text-muted-foreground tracking-wide uppercase opacity-80">
+							{title}
+						</h3>
+						<div className="mt-2 flex items-baseline gap-2">
+							<span className="text-3xl font-bold tracking-tight text-foreground">
+								{typeof value === "number" ? value.toLocaleString() : value}
+							</span>
 						</div>
-						{subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
 					</div>
-					{trend && (
-						<div className="flex items-center space-x-1 text-sm">
-							{trendIcons[trend.direction]}
-							<span className="font-mono-industrial font-medium">({trend.value})</span>
-							{trend.label && <span className="text-xs text-muted-foreground">{trend.label}</span>}
-						</div>
-					)}
+
+					<div className="flex items-center justify-between">
+						{subtitle && (
+							<p className="text-xs text-muted-foreground font-medium">
+								{subtitle}
+							</p>
+						)}
+
+						{trend && (
+							<div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${trend.direction === 'up' && color === 'green' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+									trend.direction === 'down' && color === 'red' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
+										trend.direction === 'up' && color === 'red' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : // Bad up
+											trend.direction === 'down' && color === 'green' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : // Good down
+												'bg-secondary text-secondary-foreground'
+								}`}>
+								{trendIcons[trend.direction]}
+								<span>{trend.value}</span>
+							</div>
+						)}
+					</div>
 				</div>
 			</CardBody>
 		</Card>

@@ -1,6 +1,11 @@
 import { db } from "../../../lib/db";
 import { KioskTimeClock } from "./client";
 import bcrypt from "bcryptjs";
+import {
+	IndustrialHeader,
+	IndustrialPanel,
+	SafetyStripes,
+} from "~/components/ds/industrial";
 
 export default async function Component() {
 	// Initialize data if needed (same logic as main route)
@@ -139,9 +144,9 @@ export default async function Component() {
 		},
 		station: log.Station
 			? {
-					...log.Station,
-					createdAt: log.Station.createdAt.toISOString(),
-				}
+				...log.Station,
+				createdAt: log.Station.createdAt.toISOString(),
+			}
 			: null,
 	}));
 
@@ -149,8 +154,25 @@ export default async function Component() {
 		<>
 			<title>Kiosk Time Clock</title>
 			<meta name="description" content="Employee kiosk time tracking" />
-			<div className="min-h-screen bg-base-200">
-				<KioskTimeClock employees={employees} stations={stations} activeLogs={activeLogs} />
+			<div className="min-h-screen bg-grid-pattern p-4 lg:p-8">
+				<div className="container mx-auto max-w-5xl">
+					<SafetyStripes position="top" />
+					<IndustrialPanel>
+						<IndustrialHeader
+							title="KIOSK TIME CLOCK"
+							subtitle="Employee Terminal"
+							className="mb-0"
+						/>
+						<div className="p-8">
+							<KioskTimeClock
+								employees={employees}
+								stations={stations}
+								activeLogs={activeLogs}
+							/>
+						</div>
+					</IndustrialPanel>
+					<SafetyStripes position="bottom" className="mt-8" />
+				</div>
 			</div>
 		</>
 	);

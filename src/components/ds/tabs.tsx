@@ -63,7 +63,7 @@ export function TabList({ children, className, ...props }: TabListProps) {
 			{...props}
 			className={cn(
 				"flex flex-wrap gap-1",
-				variant === "underline" ? "border-b border-border" : "bg-muted/40 rounded-lg p-1",
+				variant === "underline" ? "border-b border-border" : "bg-muted/40 rounded p-1",
 				className
 			)}
 		>

@@ -131,3 +131,50 @@ All changes maintain WCAG AA contrast ratios:
 - Primary color has 4.5:1 contrast against white in light mode
 - Primary color has 4.5:1 contrast against dark background in dark mode
 - Focus rings have sufficient visibility with 50% opacity
+
+## Industrial Theme
+
+The application features a specialized "Industrial" theme for system status, errors, and warehouse-related interfaces.
+
+### Components
+
+Import these from `~/components/ds/industrial`:
+
+#### SafetyStripes
+Decorative hazard stripes used at the top/bottom of panels.
+```tsx
+<SafetyStripes position="top" />
+```
+
+#### LedIndicator
+Status light with active/inactive states.
+```tsx
+<LedIndicator active={true} />
+```
+
+#### IndustrialPanel
+Main container with heavy borders and shadows.
+```tsx
+<IndustrialPanel variant="destructive">
+  {/* content */}
+</IndustrialPanel>
+```
+
+#### IndustrialHeader
+Header with diagonal grid background and LED indicator.
+```tsx
+<IndustrialHeader
+  title="404"
+  subtitle="System Malfunction"
+  badge="Error"
+  active={true}
+/>
+```
+
+### Utility Classes
+
+- `bg-grid-pattern`: Standard grid background
+- `bg-grid-pattern-diagonal`: Diagonal lines for headers
+- `safety-stripes`: The hazard stripe gradient
+- `font-industrial`: Rajdhani font for headings
+- `font-mono-industrial`: IBM Plex Mono for technical data

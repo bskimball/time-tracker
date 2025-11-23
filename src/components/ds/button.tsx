@@ -46,8 +46,9 @@ export function Button({
 	...props
 }: ButtonProps) {
 	const buttonClass = cn(
-		"inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
+		"inline-flex items-center justify-center font-medium rounded transition-all duration-200 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
 		"hover:scale-[1.01] active:scale-[0.99]",
+		variant === "primary" ? "shadow-sm" : "",
 		variantStyles[variant],
 		sizeStyles[size],
 		className

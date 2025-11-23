@@ -3,6 +3,7 @@
 import { Link } from "react-router";
 import { Card, CardHeader, CardTitle, CardBody, Alert } from "~/components/ds";
 import { Button } from "~/components/ds/button";
+import { IndustrialPanel, LedIndicator } from "~/components/ds/industrial";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 
 type TimeLogWithEmployee = TimeLog & {
@@ -60,31 +61,31 @@ export function ManagerDashboard({
 			{/* Critical Alerts */}
 			{alerts.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH").length >
 				0 && (
-				<div className="space-y-3">
-					{alerts
-						.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH")
-						.map((alert) => (
-							<Alert key={alert.id} variant={alert.severity === "CRITICAL" ? "error" : "warning"}>
-								<div className="flex justify-between items-start">
-									<div>
-										<h4 className="font-medium">{alert.title}</h4>
-										<p className="text-sm mt-1">{alert.description}</p>
-										{alert.actionUrl && (
-											<Link to={alert.actionUrl}>
-												<Button size="sm" variant="outline" className="mt-2">
-													View Details
-												</Button>
-											</Link>
-										)}
+					<div className="space-y-3">
+						{alerts
+							.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH")
+							.map((alert) => (
+								<Alert key={alert.id} variant={alert.severity === "CRITICAL" ? "error" : "warning"}>
+									<div className="flex justify-between items-start">
+										<div>
+											<h4 className="font-medium">{alert.title}</h4>
+											<p className="text-sm mt-1">{alert.description}</p>
+											{alert.actionUrl && (
+												<Link to={alert.actionUrl}>
+													<Button size="sm" variant="outline" className="mt-2">
+														View Details
+													</Button>
+												</Link>
+											)}
+										</div>
+										<span className="text-xs text-muted-foreground">
+											{new Date(alert.createdAt).toLocaleTimeString()}
+										</span>
 									</div>
-									<span className="text-xs text-muted-foreground">
-										{new Date(alert.createdAt).toLocaleTimeString()}
-									</span>
-								</div>
-							</Alert>
-						))}
-				</div>
-			)}
+								</Alert>
+							))}
+					</div>
+				)}
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -125,28 +126,37 @@ export function ManagerDashboard({
 			{/* Dashboard Grid */}
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				{/* Active Sessions */}
-				<Card className="lg:col-span-2">
-					<CardHeader>
-						<CardTitle>Active Sessions</CardTitle>
-					</CardHeader>
-					<CardBody>
+				<IndustrialPanel className="lg:col-span-2">
+					<div className="p-6 border-b border-border">
+						<h3 className="font-industrial text-xl font-bold uppercase tracking-wide">
+							Active Sessions
+						</h3>
+					</div>
+					<div className="p-6">
 						{activeTimeLogs.length === 0 ? (
-							<p className="text-center text-muted-foreground py-8">No active sessions</p>
+							<p className="text-center text-muted-foreground py-8">
+								No active sessions
+							</p>
 						) : (
 							<div className="space-y-3">
 								{activeTimeLogs.slice(0, 5).map((log) => (
 									<div
 										key={log.id}
-										className="flex justify-between items-center p-3 bg-muted/30 rounded"
+										className="flex justify-between items-center p-3 bg-muted/30 rounded border border-border"
 									>
-										<div>
-											<div className="font-medium">{log.employee.name}</div>
-											<div className="text-sm text-muted-foreground">
-												{log.station?.name || "No station"}
+										<div className="flex items-center gap-3">
+											<LedIndicator active={true} className="w-4 h-4" />
+											<div>
+												<div className="font-medium">{log.employee.name}</div>
+												<div className="text-sm text-muted-foreground">
+													{log.station?.name || "No station"}
+												</div>
 											</div>
 										</div>
 										<div className="text-right">
-											<div className="font-medium">{formatDuration(log.startTime)}</div>
+											<div className="font-mono-industrial font-medium">
+												{formatDuration(log.startTime)}
+											</div>
 											<div className="text-xs text-muted-foreground">
 												Started: {new Date(log.startTime).toLocaleTimeString()}
 											</div>
@@ -164,8 +174,8 @@ export function ManagerDashboard({
 								)}
 							</div>
 						)}
-					</CardBody>
-				</Card>
+					</div>
+				</IndustrialPanel>
 
 				{/* Recent Alerts */}
 				<Card>

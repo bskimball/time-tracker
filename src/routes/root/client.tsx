@@ -10,6 +10,12 @@ import {
 } from "react-router";
 import { ThemeProvider } from "~/components/theme-provider";
 import { ThemeBlockingScript } from "~/components/theme-blocking-script";
+import {
+	IndustrialHeader,
+	IndustrialPanel,
+	IndustrialSection,
+	SafetyStripes,
+} from "~/components/ds/industrial";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
@@ -66,47 +72,31 @@ export function ErrorBoundary() {
 			<main className="min-h-screen bg-grid-pattern flex items-center justify-center p-4">
 				<div className="w-full max-w-4xl animate-slide-up">
 					{/* Industrial Warning Header */}
-					<div className="safety-stripes h-3 mb-8 rounded-t-lg" />
+					<SafetyStripes position="top" />
 
-					<div className="bg-card border-4 border-destructive rounded-lg panel-shadow overflow-hidden">
-						{/* Error Header - Industrial Style */}
-						<div className="bg-destructive text-destructive-foreground p-8 relative overflow-hidden">
-							<div className="absolute inset-0 bg-grid-pattern-diagonal opacity-20" />
-							<div className="relative flex items-start gap-6">
-								{/* LED Indicator */}
-								<div className="flex flex-col items-center gap-2 pt-1">
-									<div className="led-indicator active bg-destructive-foreground w-6 h-6" />
-									<div className="w-px h-full bg-destructive-foreground/30" />
-								</div>
-
-								<div className="flex-1">
-									<div className="font-industrial text-sm uppercase tracking-widest opacity-90 mb-2">
-										System Malfunction
-									</div>
-									<h1 className="font-industrial text-7xl font-bold mb-4 tracking-tight">
-										{status}
-									</h1>
-									<div className="font-mono-industrial text-lg opacity-95 bg-destructive-foreground/10 px-4 py-2 rounded border border-destructive-foreground/20">
-										{errorName}
-									</div>
-								</div>
-							</div>
-						</div>
+					<IndustrialPanel variant="destructive">
+						<IndustrialHeader
+							title={status}
+							subtitle="System Malfunction"
+							badge={errorName}
+							active={true}
+						/>
 
 						{/* Error Message */}
-						<div className="p-8 border-b border-border">
-							<div className="font-industrial text-sm uppercase tracking-widest text-muted-foreground mb-3">
-								Error Message
-							</div>
-							<p className="text-xl text-foreground font-medium leading-relaxed">{message}</p>
-						</div>
+						<IndustrialSection title="Error Message">
+							<p className="text-xl text-foreground font-medium leading-relaxed">
+								{message}
+							</p>
+						</IndustrialSection>
 
 						{/* Error Details - Development Only */}
 						{isDev && errorStack && (
-							<div className="p-8 border-b border-border bg-muted/30">
+							<IndustrialSection className="bg-muted/30">
 								<details className="group">
 									<summary className="cursor-pointer font-industrial text-sm uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2">
-										<span className="transform group-open:rotate-90 transition-transform">▶</span>
+										<span className="transform group-open:rotate-90 transition-transform">
+											▶
+										</span>
 										Stack Trace
 									</summary>
 									<div className="bg-card border border-border rounded-lg p-6 overflow-x-auto">
@@ -115,7 +105,7 @@ export function ErrorBoundary() {
 										</pre>
 									</div>
 								</details>
-							</div>
+							</IndustrialSection>
 						)}
 
 						{/* Additional Error Details - Development Only */}
@@ -123,7 +113,9 @@ export function ErrorBoundary() {
 							<div className="p-8 bg-muted/30">
 								<details className="group">
 									<summary className="cursor-pointer font-industrial text-sm uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2">
-										<span className="transform group-open:rotate-90 transition-transform">▶</span>
+										<span className="transform group-open:rotate-90 transition-transform">
+											▶
+										</span>
 										Additional Details
 									</summary>
 									<div className="bg-card border border-border rounded-lg p-6 overflow-x-auto">
@@ -140,7 +132,9 @@ export function ErrorBoundary() {
 							<div className="flex items-center gap-3">
 								<div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
 								<span className="font-mono-industrial text-sm text-muted-foreground">
-									{isDev ? "Development Mode - Full Error Details" : "Production Mode"}
+									{isDev
+										? "Development Mode - Full Error Details"
+										: "Production Mode"}
 								</span>
 							</div>
 							<a
@@ -150,9 +144,9 @@ export function ErrorBoundary() {
 								Return Home
 							</a>
 						</div>
-					</div>
+					</IndustrialPanel>
 
-					<div className="safety-stripes h-3 mt-8 rounded-b-lg" />
+					<SafetyStripes position="bottom" className="mt-8" />
 				</div>
 			</main>
 		</Layout>

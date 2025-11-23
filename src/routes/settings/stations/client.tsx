@@ -7,6 +7,7 @@ import type { Station } from "@prisma/client";
 import { Button } from "~/components/ds/button";
 import { SimpleInput } from "~/components/ds/input";
 import { Alert } from "~/components/ds/alert";
+import { Form } from "~/components/ds";
 import { Card, CardBody, CardHeader, CardTitle } from "~/components/ds/card";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
@@ -64,17 +65,17 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 							{stations.map((station) => (
 								<div
 									key={station.id}
-									className="panel-shadow flex justify-between items-center border-2 border-border bg-muted p-4"
+									className="panel-shadow flex justify-between items-center border-2 border-border bg-muted p-4 rounded"
 								>
 									<span className="font-industrial text-lg uppercase tracking-wide">
 										{station.name}
 									</span>
-									<form action={deleteAction} className="inline">
+									<Form action={deleteAction} className="inline">
 										<input type="hidden" name="id" value={station.id} />
 										<Button type="submit" variant="error" size="sm">
 											Delete
 										</Button>
-									</form>
+									</Form>
 								</div>
 							))}
 						</div>

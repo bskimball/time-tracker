@@ -4,6 +4,7 @@ import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
 	Station: Station | null;

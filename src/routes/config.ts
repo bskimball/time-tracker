@@ -144,6 +144,11 @@ export function routes(): RSCRouteConfig {
 							lazy: () => import("./executive/dashboard/route.tsx"),
 						},
 						{
+							id: "executive-dashboard-explicit",
+							path: "dashboard",
+							lazy: () => import("./executive/dashboard/route.tsx"),
+						},
+						{
 							id: "executive-analytics",
 							path: "analytics",
 							lazy: () => import("./executive/analytics/route.tsx"),
@@ -156,6 +161,11 @@ export function routes(): RSCRouteConfig {
 					path: "settings",
 					lazy: () => import("./settings/layout.tsx"),
 					children: [
+						{
+							id: "settings-index",
+							index: true,
+							lazy: () => import("./settings/route.tsx"),
+						},
 						{
 							id: "settings-stations",
 							path: "stations",

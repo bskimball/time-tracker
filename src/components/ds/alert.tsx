@@ -43,7 +43,7 @@ const defaultIcons: Record<AlertVariant, string> = {
 };
 
 /**
- * Alert component for displaying messages to the user - Modern style.
+ * Alert component for displaying messages to the user - Premium style.
  * Rounded corners, subtle borders, clean aesthetic.
  */
 export function Alert({
@@ -59,19 +59,19 @@ export function Alert({
 
 	return (
 		<div
-			className={cn("rounded-md flex gap-3 p-4 animate-fade-in", styles.container, className)}
+			className={cn("rounded flex gap-3 p-4 animate-fade-in", styles.container, className)}
 			role="alert"
 		>
-			<div className={cn("flex-shrink-0 text-lg font-bold", styles.icon)}>{displayIcon}</div>
+			<div className={cn("shrink-0 text-lg font-bold", styles.icon)}>{displayIcon}</div>
 			<div className="flex-1">
 				{title && <h3 className={cn("font-semibold tracking-tight mb-1", styles.text)}>{title}</h3>}
-				<div className={cn("text-sm", styles.text)}>{children}</div>
+				<div className={cn("text-sm opacity-90", styles.text)}>{children}</div>
 			</div>
 			{onClose && (
 				<button
 					onClick={onClose}
 					className={cn(
-						"flex-shrink-0 text-lg font-bold hover:opacity-70 transition-opacity rounded-md",
+						"shrink-0 text-lg font-bold hover:opacity-70 transition-opacity rounded-md",
 						styles.text
 					)}
 					aria-label="Close alert"
