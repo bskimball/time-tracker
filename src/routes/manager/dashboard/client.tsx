@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { Card, CardHeader, CardTitle, CardBody, Alert } from "~/components/ds";
 import { Button } from "~/components/ds/button";
 import { IndustrialPanel, LedIndicator } from "~/components/ds/industrial";
+import { PageHeader } from "~/components/page-header";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 
 type TimeLogWithEmployee = TimeLog & {
@@ -48,15 +49,15 @@ export function ManagerDashboard({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-3xl font-bold">Manager Dashboard</h1>
-					<p className="text-muted-foreground">Welcome back, {user.name || user.email}</p>
-				</div>
-				<Link to="/manager/monitor">
-					<Button variant="primary">View Floor Monitor</Button>
-				</Link>
-			</div>
+			<PageHeader
+				title="Manager Dashboard"
+				subtitle={`Welcome back, ${user.name || user.email}`}
+				actions={
+					<Link to="/manager/monitor">
+						<Button variant="primary">Floor Monitor</Button>
+					</Link>
+				}
+			/>
 
 			{/* Critical Alerts */}
 			{alerts.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH").length >
@@ -91,22 +92,22 @@ export function ManagerDashboard({
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<Card>
 					<CardBody>
-						<div className="text-sm font-medium text-muted-foreground">Active Employees</div>
-						<div className="text-2xl font-bold">{activeTimeLogs.length}</div>
+						<div className="text-sm font-medium text-muted-foreground font-heading">Active Employees</div>
+						<div className="text-2xl font-bold font-data">{activeTimeLogs.length}</div>
 						<div className="text-xs text-muted-foreground mt-1">Currently working</div>
 					</CardBody>
 				</Card>
 				<Card>
 					<CardBody>
-						<div className="text-sm font-medium text-muted-foreground">Total Employees</div>
-						<div className="text-2xl font-bold">{totalEmployees}</div>
+						<div className="text-sm font-medium text-muted-foreground font-heading">Total Employees</div>
+						<div className="text-2xl font-bold font-data">{totalEmployees}</div>
 						<div className="text-xs text-muted-foreground mt-1">In system</div>
 					</CardBody>
 				</Card>
 				<Card>
 					<CardBody>
-						<div className="text-sm font-medium text-muted-foreground">Active Alerts</div>
-						<div className="text-2xl font-bold text-orange-600">
+						<div className="text-sm font-medium text-muted-foreground font-heading">Active Alerts</div>
+						<div className="text-2xl font-bold text-orange-600 font-data">
 							{alerts.filter((a) => a.severity !== "LOW").length}
 						</div>
 						<div className="text-xs text-muted-foreground mt-1">Require attention</div>
@@ -114,8 +115,8 @@ export function ManagerDashboard({
 				</Card>
 				<Card>
 					<CardBody>
-						<div className="text-sm font-medium text-muted-foreground">Longest Shift</div>
-						<div className="text-2xl font-bold">
+						<div className="text-sm font-medium text-muted-foreground font-heading">Longest Shift</div>
+						<div className="text-2xl font-bold font-data">
 							{activeTimeLogs.length > 0 ? formatDuration(activeTimeLogs[0].startTime) : "0h 0m"}
 						</div>
 						<div className="text-xs text-muted-foreground mt-1">Longest current shift</div>
@@ -128,7 +129,7 @@ export function ManagerDashboard({
 				{/* Active Sessions */}
 				<IndustrialPanel className="lg:col-span-2">
 					<div className="p-6 border-b border-border">
-						<h3 className="font-industrial text-xl font-bold uppercase tracking-wide">
+						<h3 className="font-heading text-lg font-bold uppercase tracking-wide">
 							Active Sessions
 						</h3>
 					</div>
@@ -142,19 +143,19 @@ export function ManagerDashboard({
 								{activeTimeLogs.slice(0, 5).map((log) => (
 									<div
 										key={log.id}
-										className="flex justify-between items-center p-3 bg-muted/30 rounded border border-border"
+										className="flex justify-between items-center p-3 bg-muted/30 rounded-sm border border-border"
 									>
 										<div className="flex items-center gap-3">
 											<LedIndicator active={true} className="w-4 h-4" />
 											<div>
-												<div className="font-medium">{log.employee.name}</div>
+												<div className="font-medium font-heading">{log.employee.name}</div>
 												<div className="text-sm text-muted-foreground">
 													{log.station?.name || "No station"}
 												</div>
 											</div>
 										</div>
 										<div className="text-right">
-											<div className="font-mono-industrial font-medium">
+											<div className="font-data font-medium">
 												{formatDuration(log.startTime)}
 											</div>
 											<div className="text-xs text-muted-foreground">
@@ -167,7 +168,7 @@ export function ManagerDashboard({
 									<div className="text-center pt-3">
 										<Link to="/manager/monitor">
 											<Button variant="outline" size="sm">
-												View All Active Sessions
+												View All
 											</Button>
 										</Link>
 									</div>
@@ -220,39 +221,39 @@ export function ManagerDashboard({
 			{/* Quick Actions */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Quick Actions</CardTitle>
+					<CardTitle className="uppercase tracking-wide">Quick Actions</CardTitle>
 				</CardHeader>
 				<CardBody>
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 						<Link to="/manager/employees/new">
-							<div className="text-center p-4 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
 								<div className="text-2xl mb-2">👤</div>
-								<h4 className="font-medium">Add Employee</h4>
-								<p className="text-xs text-muted-foreground mt-1">Create new employee record</p>
+								<h4 className="font-medium font-heading">Add Employee</h4>
+								<p className="text-xs text-muted-foreground mt-1">Create new record</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/timesheets">
-							<div className="text-center p-4 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
 								<div className="text-2xl mb-2">🕐</div>
-								<h4 className="font-medium">Time Correction</h4>
-								<p className="text-xs text-muted-foreground mt-1">Edit time entries</p>
+								<h4 className="font-medium font-heading">Time Correction</h4>
+								<p className="text-xs text-muted-foreground mt-1">Edit entries</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/tasks">
-							<div className="text-center p-4 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
 								<div className="text-2xl mb-2">📋</div>
-								<h4 className="font-medium">Assign Tasks</h4>
+								<h4 className="font-medium font-heading">Assign Tasks</h4>
 								<p className="text-xs text-muted-foreground mt-1">Manage tasks</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/reports">
-							<div className="text-center p-4 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
 								<div className="text-2xl mb-2">📊</div>
-								<h4 className="font-medium">View Reports</h4>
-								<p className="text-xs text-muted-foreground mt-1">Analytics & insights</p>
+								<h4 className="font-medium font-heading">View Reports</h4>
+								<p className="text-xs text-muted-foreground mt-1">Analytics</p>
 							</div>
 						</Link>
 					</div>

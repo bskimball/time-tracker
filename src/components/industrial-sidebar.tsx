@@ -3,11 +3,38 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "~/lib/cn";
+import {
+	LiaTachometerAltSolid,
+	LiaDesktopSolid,
+	LiaUsersSolid,
+	LiaClipboardListSolid,
+	LiaChartBarSolid,
+	LiaCalendarAltSolid,
+	LiaTasksSolid,
+	LiaCrownSolid,
+	LiaChartLineSolid,
+	LiaCogSolid,
+	LiaClipboardCheckSolid,
+} from "react-icons/lia";
+
+const iconMap = {
+	dashboard: LiaTachometerAltSolid,
+	monitor: LiaDesktopSolid,
+	users: LiaUsersSolid,
+	timesheets: LiaClipboardListSolid,
+	reports: LiaChartBarSolid,
+	schedule: LiaCalendarAltSolid,
+	tasks: LiaTasksSolid,
+	crown: LiaCrownSolid,
+	analytics: LiaChartLineSolid,
+	settings: LiaCogSolid,
+	clipboard: LiaClipboardCheckSolid,
+};
 
 interface NavLink {
 	to: string;
 	label: string;
-	icon?: ReactNode;
+	icon?: keyof typeof iconMap;
 }
 
 interface IndustrialSidebarProps {
@@ -60,6 +87,8 @@ export function IndustrialSidebar({
 							location.pathname === link.to ||
 							(link.to !== brandHref && location.pathname.startsWith(link.to));
 
+						const Icon = link.icon ? iconMap[link.icon] : null;
+
 						return (
 							<Link key={link.to} to={link.to}>
 								<div
@@ -69,9 +98,13 @@ export function IndustrialSidebar({
 										isActive && "bg-primary text-primary-foreground shadow-sm"
 									)}
 								>
-									<div
-										className={cn("led-indicator", isActive && "active", isCollapsed && "mx-auto")}
-									/>
+									{Icon ? (
+										<Icon className={cn("h-5 w-5 flex-shrink-0", isCollapsed && "mx-auto")} />
+									) : (
+										<div
+											className={cn("led-indicator", isActive && "active", isCollapsed && "mx-auto")}
+										/>
+									)}
 
 									{!isCollapsed && <span className="text-sm font-medium">{link.label}</span>}
 								</div>

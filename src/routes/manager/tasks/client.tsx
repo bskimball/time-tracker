@@ -13,6 +13,7 @@ import {
 	Tab,
 	TabPanel,
 } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
 import { TaskAssignmentForm } from "./task-assignment-form";
 import { TaskTypeForm } from "./task-type-form";
@@ -102,21 +103,20 @@ export function TaskManager({
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-2xl font-bold">Task Management</h1>
-					<p className="text-muted-foreground">Assign and track employee tasks</p>
-				</div>
-				<div className="flex space-x-2">
-					<Button onClick={() => setShowAssignForm(true)} variant="primary">
-						Assign Task
-					</Button>
-					<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
-						Create Task Type
-					</Button>
-				</div>
-			</div>
+			<PageHeader
+				title="Task Management"
+				subtitle="Assign and track employee tasks"
+				actions={
+					<div className="flex space-x-2">
+						<Button onClick={() => setShowAssignForm(true)} variant="primary">
+							Assign Task
+						</Button>
+						<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
+							Create Task Type
+						</Button>
+					</div>
+				}
+			/>
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">

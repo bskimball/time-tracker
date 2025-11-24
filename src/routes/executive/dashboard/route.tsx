@@ -1,7 +1,9 @@
 import { Card, CardHeader, CardTitle, CardBody } from "~/components/ds/card";
 import { Alert } from "~/components/ds/alert";
 import { Button } from "~/components/ds/button";
+import { PageHeader } from "~/components/page-header";
 import { KPICard } from "~/routes/executive/kpi-card";
+import { IndustrialPanel, IndustrialHeader } from "~/components/ds/industrial";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
 import {
@@ -12,6 +14,7 @@ import {
 } from "./actions";
 import { getDateRange } from "~/lib/date-utils";
 import { format } from "date-fns";
+import { RefreshButton } from "./refresh-button";
 
 type TimeRange = "today" | "week" | "month";
 
@@ -65,41 +68,26 @@ export default async function Component({
 
 	return (
 		<div className="space-y-8 pb-8">
-			{/* Header Section */}
-			<div className="relative overflow-hidden rounded bg-white p-8 border border-border shadow">
-				<div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-					<div>
-						<h1 className="text-4xl font-bold tracking-tight text-foreground">Executive Dashboard</h1>
-						<p className="text-muted-foreground mt-2 text-lg max-w-2xl">
-							Overview of key performance indicators, workforce analytics, and strategic insights.
-						</p>
-					</div>
-					<div className="flex flex-col sm:flex-row items-center gap-3">
-						<div className="bg-background/50 backdrop-blur-sm p-1 rounded-lg border border-border shadow-sm">
-							{(["today", "week", "month"] as TimeRange[]).map((range) => (
-								<Link key={range} to={`/executive/dashboard?range=${range}`}>
-									<Button
-										variant={timeRange === range ? "primary" : "ghost"}
-										size="sm"
-										className={timeRange === range ? "shadow-sm" : ""}
-									>
-										{range.charAt(0).toUpperCase() + range.slice(1)}
-									</Button>
-								</Link>
-							))}
-						</div>
-						<form action={refreshDashboardCache}>
-							<Button variant="outline" size="sm" type="submit" className="h-9">
-								<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-								</svg>
-								Refresh
+			<PageHeader
+				title="Executive Dashboard"
+				subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
+				actions={<RefreshButton action={refreshDashboardCache} />}
+			/>
+
+			{/* Time Range Selector */}
+			<div className="flex justify-center">
+				<div className="bg-background/50 backdrop-blur-sm p-1 rounded-sm border border-border shadow-sm inline-flex">
+					{(["today", "week", "month"] as TimeRange[]).map((range) => (
+						<Link key={range} to={`/executive/dashboard?range=${range}`}>
+							<Button
+								variant={timeRange === range ? "primary" : "ghost"}
+								size="sm"
+							>
+								{range.charAt(0).toUpperCase() + range.slice(1)}
 							</Button>
-						</form>
-					</div>
+						</Link>
+					))}
 				</div>
-				<div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
-				<div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-secondary/5 rounded-full blur-3xl"></div>
 			</div>
 
 			<div className="flex items-center justify-between px-1">
@@ -144,12 +132,13 @@ export default async function Component({
 			)}
 
 			{/* Main KPI Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
 				<KPICard
 					title="Active Employees"
 					value={kpis.totalActiveEmployees}
 					subtitle="Current workforce"
 					color="blue"
+					icon="users"
 					trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
 				/>
 
@@ -158,6 +147,7 @@ export default async function Component({
 					value={`${kpis.productivityRate} u/hr`}
 					subtitle={`${format(new Date(), "EEEE")}'s average`}
 					color={productivityConfig.color}
+					icon="chart"
 					trend={{
 						direction: productivityConfig.direction,
 						value:
@@ -175,6 +165,7 @@ export default async function Component({
 					value={`${kpis.overtimePercentage}%`}
 					subtitle="Of total hours"
 					color={overtimeConfig.color}
+					icon="clock"
 					trend={{
 						direction: overtimeConfig.direction,
 						value:
@@ -192,6 +183,7 @@ export default async function Component({
 					value={`${kpis.occupancyLevel.toFixed(1)}%`}
 					subtitle="Station utilization"
 					color={occupancyConfig.color}
+					icon="industry"
 					trend={{
 						direction: occupancyConfig.direction,
 						value:
@@ -214,6 +206,7 @@ export default async function Component({
 						value={`$${kpis.laborCostPerUnit}`}
 						subtitle="Average cost analysis"
 						color={laborCost.variancePercentage > 0 ? "red" : "green"}
+						icon="dollar"
 					/>
 
 					<KPICard
@@ -221,6 +214,7 @@ export default async function Component({
 						value={`${laborCost.variancePercentage > 0 ? "+" : ""}${laborCost.variancePercentage}%`}
 						subtitle={`${laborCost.variance > 0 ? "Over" : "Under"} budget`}
 						color={varianceConfig.color}
+						icon="percent"
 						trend={{
 							direction: varianceConfig.direction,
 							value: `$${Math.abs(laborCost.variance).toFixed(0)}`,
@@ -233,41 +227,42 @@ export default async function Component({
 						value={`${(kpis.efficiencyRatio * 100).toFixed(0)}%`}
 						subtitle="Performance score"
 						color="purple"
+						icon="award"
 						trend={{ direction: "up", value: "+2%", label: "vs target" }}
 					/>
 				</div>
 			</div>
 
 			{/* Station Performance Overview */}
-			<div>
-				<div className="flex items-center justify-between mb-4">
-					<h2 className="text-xl font-bold text-foreground">Station Performance</h2>
-					<Link to="/executive/analytics" className="text-sm text-primary hover:underline">
-						View All Stations &rarr;
-					</Link>
+			<IndustrialPanel>
+				<div className="p-6 border-b border-border">
+					<div className="flex items-center justify-between">
+						<h2 className="text-lg font-bold text-foreground uppercase tracking-wide font-heading">Station Performance</h2>
+						<Link to="/executive/analytics" className="text-sm text-primary hover:underline">
+							View All &rarr;
+						</Link>
+					</div>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{stationData.slice(0, 6).map((station) => (
-						<Card key={station.stationId} className="group hover:shadow-md transition-all duration-200 border border-border">
-							<CardHeader className="pb-2 border-b border-border">
-								<div className="flex justify-between items-center">
-									<CardTitle className="text-base font-semibold">{station.stationName}</CardTitle>
-									<div className={`w-2 h-2 rounded-full ${station.occupancyRate > 90 ? 'bg-red-500' : station.occupancyRate > 70 ? 'bg-green-500' : 'bg-yellow-500'}`} />
+				<div className="p-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						{stationData.slice(0, 6).map((station) => (
+							<div key={station.stationId} className="border border-border rounded-sm p-4 bg-muted/20">
+								<div className="flex justify-between items-center mb-3">
+									<h3 className="font-semibold font-heading">{station.stationName}</h3>
+									<div className={`w-2 h-2 rounded-full ${station.occupancyRate > 90 ? 'bg-red-500 animate-pulse-glow' : station.occupancyRate > 70 ? 'bg-green-500' : 'bg-yellow-500'}`} />
 								</div>
-							</CardHeader>
-							<CardBody className="pt-4">
 								<div className="grid grid-cols-3 gap-2 text-center">
-									<div className="bg-muted/30 rounded-lg p-2">
-										<div className="text-xs text-muted-foreground uppercase tracking-wider">Staff</div>
-										<div className="font-bold text-lg">{station.totalEmployees}</div>
+									<div className="bg-muted/30 rounded-sm p-2">
+										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">Staff</div>
+										<div className="font-bold text-lg font-data">{station.totalEmployees}</div>
 									</div>
-									<div className="bg-muted/30 rounded-lg p-2">
-										<div className="text-xs text-muted-foreground uppercase tracking-wider">U/Hr</div>
-										<div className="font-bold text-lg">{station.avgUnitsPerHour.toFixed(1)}</div>
+									<div className="bg-muted/30 rounded-sm p-2">
+										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">U/Hr</div>
+										<div className="font-bold text-lg font-data">{station.avgUnitsPerHour.toFixed(1)}</div>
 									</div>
-									<div className="bg-muted/30 rounded-lg p-2">
-										<div className="text-xs text-muted-foreground uppercase tracking-wider">Occ</div>
-										<div className={`font-bold text-lg ${station.occupancyRate > 90
+									<div className="bg-muted/30 rounded-sm p-2">
+										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">Occ</div>
+										<div className={`font-bold text-lg font-data ${station.occupancyRate > 90
 											? "text-destructive"
 											: station.occupancyRate > 70
 												? "text-emerald-600 dark:text-emerald-400"
@@ -277,15 +272,15 @@ export default async function Component({
 										</div>
 									</div>
 								</div>
-							</CardBody>
-						</Card>
-					))}
+							</div>
+						))}
+					</div>
 				</div>
-			</div>
+			</IndustrialPanel>
 
 			{/* Quick Actions */}
 			<div>
-				<h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
+				<h2 className="text-xl font-bold text-foreground mb-4 uppercase tracking-wide font-heading">Quick Actions</h2>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					{[
 						{ title: "Productivity Report", desc: "Detailed efficiency metrics", href: "/executive/analytics?section=productivity", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
@@ -293,16 +288,16 @@ export default async function Component({
 						{ title: "Trend Analysis", desc: "Historical performance", href: "/executive/analytics?section=trends", icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" },
 						{ title: "Capacity Planning", desc: "Future resource allocation", href: "/executive/analytics?section=capacity", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
 					].map((action) => (
-						<Link key={action.title} to={action.href} className="group">
-							<Card className="h-full hover:border-primary/50 hover:shadow-md transition-all duration-200 border border-border">
+						<Link key={action.title} to={action.href}>
+							<Card className="h-full">
 								<CardBody className="p-6 flex flex-col items-center text-center gap-3">
-									<div className="p-3 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
+									<div className="p-3 rounded-full bg-primary/10 text-primary">
 										<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={action.icon} />
 										</svg>
 									</div>
 									<div>
-										<h3 className="font-semibold text-foreground">{action.title}</h3>
+										<h3 className="font-semibold text-foreground font-heading">{action.title}</h3>
 										<p className="text-sm text-muted-foreground mt-1">{action.desc}</p>
 									</div>
 								</CardBody>

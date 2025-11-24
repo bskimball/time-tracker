@@ -1,14 +1,14 @@
 import { Outlet } from "react-router";
 import { AppLayout } from "~/components/app-layout";
-import { validateRequest } from "~/lib/auth";
-import { executiveNavLinks } from "./nav";
+import { requireUser } from "~/lib/auth";
+import { getExecutiveNavLinks } from "./nav";
 
 export default async function Component() {
-	await validateRequest();
+	const user = await requireUser();
 	// Middleware ensures ADMIN role
 
 	return (
-		<AppLayout title="Executive Portal" brandHref="/executive" navLinks={executiveNavLinks}>
+		<AppLayout title="Executive Portal" brandHref="/executive" navLinks={getExecutiveNavLinks(user)}>
 			<Outlet />
 		</AppLayout>
 	);

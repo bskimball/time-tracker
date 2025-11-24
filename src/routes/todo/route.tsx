@@ -2,6 +2,7 @@ import { db } from "../../lib/db";
 import { TodoForm, TodoItem } from "./client";
 import { Header } from "../../components/header";
 import { Footer } from "../../components/footer";
+import { PageHeader } from "../../components/page-header";
 import { validateRequest } from "../../lib/auth";
 
 // Fetch data directly in Server Component instead of using loader
@@ -25,7 +26,7 @@ export default async function Component() {
 			<Header userName={headerName} userRole={headerRole} />
 			<main className="container mx-auto py-8 lg:py-12">
 				<div className="mx-auto">
-					<h1 className="text-4xl font-bold mb-8">Todo List</h1>
+					<PageHeader title="Todo List" subtitle="Manage your tasks and reminders" />
 
 					<TodoForm />
 

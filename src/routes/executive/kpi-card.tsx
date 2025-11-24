@@ -1,6 +1,28 @@
 "use client";
 
 import { Card, CardBody } from "~/components/ds/card";
+import {
+	LiaArrowUpSolid,
+	LiaArrowDownSolid,
+	LiaMinusSolid,
+	LiaUsersSolid,
+	LiaChartLineSolid,
+	LiaClockSolid,
+	LiaIndustrySolid,
+	LiaDollarSignSolid,
+	LiaPercentSolid,
+	LiaAwardSolid,
+} from "react-icons/lia";
+
+const iconMap = {
+	users: LiaUsersSolid,
+	chart: LiaChartLineSolid,
+	clock: LiaClockSolid,
+	industry: LiaIndustrySolid,
+	dollar: LiaDollarSignSolid,
+	percent: LiaPercentSolid,
+	award: LiaAwardSolid,
+};
 
 interface KPICardProps {
 	title: string;
@@ -13,6 +35,7 @@ interface KPICardProps {
 	};
 	color?: "green" | "yellow" | "red" | "blue" | "purple";
 	loading?: boolean;
+	icon?: keyof typeof iconMap;
 }
 
 const colorStyles = {
@@ -54,21 +77,9 @@ const colorStyles = {
 };
 
 const trendIcons = {
-	up: (
-		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-		</svg>
-	),
-	down: (
-		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-		</svg>
-	),
-	neutral: (
-		<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-		</svg>
-	),
+	up: <LiaArrowUpSolid className="w-4 h-4" />,
+	down: <LiaArrowDownSolid className="w-4 h-4" />,
+	neutral: <LiaMinusSolid className="w-4 h-4" />,
 };
 
 export function KPICard({
@@ -78,8 +89,10 @@ export function KPICard({
 	trend,
 	color = "blue",
 	loading = false,
+	icon,
 }: KPICardProps) {
 	const styles = colorStyles[color];
+	const Icon = icon ? iconMap[icon] : null;
 
 	if (loading) {
 		return (
@@ -102,9 +115,16 @@ export function KPICard({
 			<CardBody className="p-6 relative z-10">
 				<div className="flex flex-col h-full justify-between gap-4">
 					<div>
-						<h3 className="text-sm font-medium text-muted-foreground tracking-wide uppercase opacity-80">
-							{title}
-						</h3>
+						<div className="flex items-center justify-between">
+							<h3 className="text-sm font-medium text-muted-foreground tracking-wide uppercase opacity-80">
+								{title}
+							</h3>
+							{Icon && (
+								<div className={`p-2 rounded-md ${styles.bg}`}>
+									<Icon className={`h-5 w-5 ${styles.icon}`} />
+								</div>
+							)}
+						</div>
 						<div className="mt-2 flex items-baseline gap-2">
 							<span className="text-3xl font-bold tracking-tight text-foreground">
 								{typeof value === "number" ? value.toLocaleString() : value}

@@ -14,6 +14,7 @@ import {
 	Tab,
 	TabPanel,
 } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 import type { Employee } from "@prisma/client";
 
 type TimeLogWithDetails = {
@@ -70,13 +71,15 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex justify-between items-center">
-				<h1 className="text-2xl font-bold">Time Sheet Management</h1>
-				<Button onClick={() => setShowCorrectionForm(true)} variant="primary">
-					Add Time Entry
-				</Button>
-			</div>
+			<PageHeader
+				title="Time Sheet Management"
+				subtitle="View and manage employee time entries and corrections"
+				actions={
+					<Button onClick={() => setShowCorrectionForm(true)} variant="primary">
+						Add Time Entry
+					</Button>
+				}
+			/>
 
 			<Tabs
 				selectedKey={activeTab}

@@ -11,6 +11,9 @@ import stationRoutes from "./stations";
 import timeLogRoutes from "./time-logs";
 import userRoutes from "./users";
 import todoRoutes from "./todos";
+import taskTypeRoutes from "./task-types";
+import taskAssignmentRoutes from "./task-assignments";
+import performanceMetricRoutes from "./performance-metrics";
 
 const app = new OpenAPIHono();
 
@@ -24,7 +27,7 @@ app.doc("/doc", {
 	info: {
 		title: "Time Clock API",
 		version: "1.0.0",
-		description: "Operational endpoints for warehouse time tracking",
+		description: "Operational endpoints for warehouse time tracking and performance analytics",
 	},
 });
 
@@ -44,5 +47,8 @@ app.route("/stations", stationRoutes);
 app.route("/time-logs", timeLogRoutes);
 app.route("/users", userRoutes);
 app.route("/todos", todoRoutes);
+app.route("/task-types", taskTypeRoutes);
+app.route("/task-assignments", taskAssignmentRoutes);
+app.route("/performance-metrics", performanceMetricRoutes);
 
 export default app;

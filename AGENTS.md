@@ -6,7 +6,7 @@ This file helps AI coding assistants understand this project.
 
 React Router RSC template using React Server Components (experimental) in **Data mode**, powered by Vite and served with Hono on Node.js.
 
-**Upstream Starting Point:** [https://github.com/bskimball/react-router-rsc-hono/tree/master/src](https://github.com/bskimball/react-router-rsc-hono/tree/master/src)
+**Upstream Starting Point:** [https://github.com/bskimball/react-router-rsc-hono](https://github.com/bskimball/react-router-rsc-hono)
 
 ## React Server Components Architecture
 
@@ -566,15 +566,16 @@ export async function someAction(
 ("use client");
 
 import { useActionState } from "react";
+import { Form, Input, Button, Alert } from "~/components/ds";
 
 export function SomeFormShell() {
 	const [state, action, isPending] = useActionState(someAction, null);
 
 	return (
-		<Form onSubmit={(fd) => action(fd)}>
-			{/* fields */}
-			{state?.error && <p className="text-error">{state.error}</p>}
-			<Button disabled={isPending}>Submit</Button>
+		<Form action={action}>
+			<Input name="name" label="Name" />
+			{state?.error && <Alert variant="error">{state.error}</Alert>}
+			<Button type="submit" disabled={isPending}>Submit</Button>
 		</Form>
 	);
 }
@@ -660,3 +661,14 @@ Example from `src/routes/manager/tasks/task-assignment-form.tsx`:
 - Prefer `useActionState` + a dedicated shell component for anything beyond trivial forms.
 - When the user should see changes immediately (lists, counters, dashboards), use `useOptimistic` in the shell and pass a small `onOptimisticX` callback into the form.
 - Keep form components focused on rendering and input handling; keep domain logic and data fetching in server actions or server components.
+
+## Claude Skills
+
+This project utilizes specialized Claude skills to assist with various aspects of development. These skills include:
+
+- **Data Analyst**: Analyzes data structures, database content, and usage patterns to provide insights and optimization recommendations.
+- **Product Management**: Helps define features, user stories, and requirements, ensuring alignment with project goals and user needs.
+- **Database Engineer**: Specializes in schema design, Prisma migrations, and query optimization for efficient data management.
+- **API Developer**: Focuses on designing and implementing robust, type-safe APIs using Hono and Zod.
+- **Frontend Developer**: Implements UI components and logic using React Server Components and the project's design system.
+- **Frontend Design**: Ensures a consistent and polished aesthetic, applying the "industrial" design theme with TailwindCSS and React Aria Components.

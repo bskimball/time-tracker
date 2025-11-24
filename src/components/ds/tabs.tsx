@@ -63,7 +63,7 @@ export function TabList({ children, className, ...props }: TabListProps) {
 			{...props}
 			className={cn(
 				"flex flex-wrap gap-1",
-				variant === "underline" ? "border-b border-border" : "bg-muted/40 rounded p-1",
+				variant === "underline" ? "border-b border-border" : "bg-muted/40 rounded-sm p-1",
 				className
 			)}
 		>
@@ -84,8 +84,8 @@ const tabSizeStyles: Record<TabSize, string> = {
 
 const variantStyles: Record<TabVariant, string> = {
 	underline:
-		"rounded-t-md border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary transition-all",
-	pill: "rounded-md data-[hovered=true]:bg-background/80 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground data-[selected=true]:shadow-sm transition-all",
+		"rounded-t-sm border-b-2 border-transparent data-[hovered=true]:text-foreground data-[selected=true]:text-primary data-[selected=true]:border-primary transition-all duration-150",
+	pill: "rounded-sm data-[hovered=true]:bg-background/80 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground data-[selected=true]:shadow-sm transition-all duration-150",
 };
 
 export function Tab({ children, className, ...props }: TabProps) {
@@ -94,7 +94,7 @@ export function Tab({ children, className, ...props }: TabProps) {
 		<AriaTab
 			{...props}
 			className={cn(
-				"relative font-medium text-muted-foreground transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
+				"relative font-heading text-muted-foreground transition-all duration-150 ease-in-out focus:outline-none focus-visible:ring-2 ring-ring ring-offset-2 ring-offset-background data-[disabled=true]:opacity-60 data-[disabled=true]:cursor-not-allowed",
 				tabSizeStyles[size],
 				variantStyles[variant],
 				className

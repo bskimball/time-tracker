@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 
 interface ReportDataType {
 	productivityData: any[];
@@ -347,40 +348,38 @@ export function ReportsManager({ initialData }: ReportsProps) {
 
 	return (
 		<div className="space-y-6">
-			{/* Header and Controls */}
-			<div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-				<div>
-					<h1 className="text-2xl font-bold">Reports & Analytics</h1>
-					<p className="text-muted-foreground">Comprehensive workforce and productivity insights</p>
+			<PageHeader
+				title="Reports & Analytics"
+				subtitle="Comprehensive workforce and productivity insights"
+			/>
+
+			{/* Filters and Controls */}
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+				<div className="flex space-x-2">
+					<Input
+						type="date"
+						value={dateRange.startDate}
+						onChange={(e) => setDateRange((prev) => ({ ...prev, startDate: e.target.value }))}
+						className="max-w-[150px]"
+					/>
+					<Input
+						type="date"
+						value={dateRange.endDate}
+						onChange={(e) => setDateRange((prev) => ({ ...prev, endDate: e.target.value }))}
+						className="max-w-[150px]"
+					/>
 				</div>
 
-				<div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-					<div className="flex space-x-2">
-						<Input
-							type="date"
-							value={dateRange.startDate}
-							onChange={(e) => setDateRange((prev) => ({ ...prev, startDate: e.target.value }))}
-							className="max-w-[150px]"
-						/>
-						<Input
-							type="date"
-							value={dateRange.endDate}
-							onChange={(e) => setDateRange((prev) => ({ ...prev, endDate: e.target.value }))}
-							className="max-w-[150px]"
-						/>
-					</div>
-
-					<div className="flex space-x-2">
-						<Button onClick={handleRefresh} variant="outline" disabled={loading}>
-							Refresh
-						</Button>
-						<Button onClick={() => handleExport("csv")} variant="outline" disabled={loading}>
-							Export CSV
-						</Button>
-						<Button onClick={() => handleExport("excel")} variant="outline" disabled={loading}>
-							Export Excel
-						</Button>
-					</div>
+				<div className="flex space-x-2">
+					<Button onClick={handleRefresh} variant="outline" disabled={loading}>
+						Refresh
+					</Button>
+					<Button onClick={() => handleExport("csv")} variant="outline" disabled={loading}>
+						Export CSV
+					</Button>
+					<Button onClick={() => handleExport("excel")} variant="outline" disabled={loading}>
+						Export Excel
+					</Button>
 				</div>
 			</div>
 

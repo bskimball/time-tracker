@@ -35,17 +35,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 		ref
 	) => {
 		return (
-			<AriaTextField className={cn("flex flex-col gap-1", containerClassName)}>
+			<AriaTextField className={cn("flex flex-col gap-1.5", containerClassName)}>
 				{label && (
-					<AriaLabel className={cn("text-sm font-medium", labelClassName)}>{label}</AriaLabel>
+					<AriaLabel className={cn("text-sm font-heading", labelClassName)}>{label}</AriaLabel>
 				)}
 				<AriaInput
 					{...props}
 					ref={ref}
 					className={cn(
-						"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+						"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
 						"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
 						"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+						"placeholder:text-muted-foreground/60",
 						error && "border-destructive focus:ring-destructive",
 						inputClassName,
 						className
@@ -53,7 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 				/>
 				{description && <p className="text-xs text-muted-foreground">{description}</p>}
 				{error && (
-					<FieldError className={cn("text-xs text-destructive", errorClassName)}>
+					<FieldError className={cn("text-xs text-destructive font-medium", errorClassName)}>
 						{error}
 					</FieldError>
 				)}
@@ -70,9 +71,10 @@ export function SimpleInput(props: React.ComponentProps<"input">) {
 		<input
 			{...props}
 			className={cn(
-				"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+				"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
 				"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
 				"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+				"placeholder:text-muted-foreground/60",
 				props.className
 			)}
 		/>

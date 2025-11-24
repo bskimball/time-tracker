@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { IndustrialSidebar } from "~/components/industrial-sidebar";
 import { ThemeToggle } from "~/components/theme-toggle";
-import { Button } from "~/components/ds";
+import { LogoutButton } from "~/components/logout-button";
 
 interface AppNavLink {
 	label: string;
 	to: string;
+	icon?: "dashboard" | "monitor" | "users" | "timesheets" | "reports" | "schedule" | "tasks" | "crown" | "analytics" | "settings" | "clipboard";
 }
 
 interface AppLayoutProps {
@@ -23,11 +24,7 @@ export function AppLayout({ title, brandHref = "/", navLinks = [], children }: A
 				<span className="font-mono-industrial text-xs uppercase">Theme</span>
 				<ThemeToggle />
 			</div>
-			<a href="/logout" className="w-full">
-				<Button variant="error" size="sm" className="w-full">
-					Logout
-				</Button>
-			</a>
+			<LogoutButton />
 		</div>
 	);
 

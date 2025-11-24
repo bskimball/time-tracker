@@ -66,7 +66,7 @@ model Session {
 
 model Station {
   id          String       @id @default(cuid())
-  name        Station_name @unique
+  name        String       @unique
   description String?                      // NEW: Station details
   capacity    Int?                         // NEW: Max employees
   isActive    Boolean      @default(true)  // NEW: Station availability

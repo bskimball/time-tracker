@@ -1,5 +1,6 @@
 import { Outlet } from "react-router";
 import { AppLayout } from "~/components/app-layout";
+import { PageHeader } from "~/components/page-header";
 
 // Settings navigation links
 const settingsNavLinks = [
@@ -17,12 +18,10 @@ export default function Component() {
 			<meta name="description" content="Manage warehouse settings and users" />
 
 			<AppLayout title="System Settings" brandHref="/settings" navLinks={settingsNavLinks}>
-				<div className="mb-6">
-					<h1 className="text-3xl font-bold">System Settings</h1>
-					<p className="text-muted-foreground mt-1">
-						Manage stations, employees, API keys, and system configuration
-					</p>
-				</div>
+				<PageHeader
+					title="System Settings"
+					subtitle="Manage stations, employees, API keys, and system configuration"
+				/>
 				<Outlet />
 			</AppLayout>
 		</>

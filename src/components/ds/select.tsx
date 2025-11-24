@@ -81,14 +81,14 @@ export function Select({
 			className={cn("flex flex-col gap-1", containerClassName)}
 		>
 			{label && (
-				<AriaLabel className={cn("text-sm font-medium", labelClassName)}>{label}</AriaLabel>
+				<AriaLabel className={cn("text-sm font-heading", labelClassName)}>{label}</AriaLabel>
 			)}
 			<Button
 				className={cn(
 					// Reset button defaults to match input
 					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
 					// Focus states matching Input
 					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
 					// Hover state - keep same as default
@@ -101,6 +101,7 @@ export function Select({
 					error && "border-destructive focus:ring-destructive",
 					// Select button specific styling
 					"flex items-center justify-between text-left w-full",
+					"placeholder:text-muted-foreground/60",
 					selectClassName,
 					className
 				)}
@@ -110,16 +111,16 @@ export function Select({
 						? placeholder
 						: options.find((opt) => opt.value === selectedValue)?.label}
 				</span>
-				<span className="text-muted-foreground text-xs">▼</span>
+				<span className="text-muted-foreground text-xs font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-md bg-background">
-				<ListBox className="p-1 bg-background border border-input rounded-md text-foreground w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-sm bg-background">
+				<ListBox className="p-1 bg-background border border-input rounded-sm text-foreground w-full shadow-lg">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
 							id={option.value}
 							className={cn(
-								"px-3 py-2 rounded-sm cursor-default transition-colors",
+								"px-3 py-2 rounded-sm cursor-default transition-colors duration-150",
 								"hover:bg-muted focus:bg-muted",
 								"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background",
 								option.isDisabled && "opacity-50 cursor-not-allowed"
@@ -184,13 +185,13 @@ export function SimpleSelect({
 			selectedKey={isControlled ? selectedKey : undefined}
 			defaultSelectedKey={!isControlled ? defaultValue : undefined}
 			onSelectionChange={handleSelectionChange}
-			className="flex flex-col gap-1"
+			className="flex flex-col gap-1.5"
 		>
-			{label && <AriaLabel className="text-sm font-medium">{label}</AriaLabel>}
+			{label && <AriaLabel className="text-sm font-heading">{label}</AriaLabel>}
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-md transition-all",
+					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
 					// Focus states matching Input
 					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
 					// Disabled states
@@ -199,21 +200,22 @@ export function SimpleSelect({
 					error && "border-destructive focus:ring-destructive",
 					// Select button specific styling
 					"flex items-center justify-between text-left w-full appearance-none pr-8",
+					"placeholder:text-muted-foreground/60",
 					className
 				)}
 			>
 				<span>{selectedLabel}</span>
-				<span className="text-muted-foreground text-xs">▼</span>
+				<span className="text-muted-foreground text-xs font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-md">
-				<ListBox className="p-1 bg-background border border-input rounded-md w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-sm">
+				<ListBox className="p-1 bg-background border border-input rounded-sm w-full shadow-lg">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
 							id={option.value}
 							isDisabled={option.isDisabled}
 							className={cn(
-								"px-3 py-2 rounded-sm cursor-default transition-colors",
+								"px-3 py-2 rounded-sm cursor-default transition-colors duration-150",
 								"hover:bg-muted focus:bg-muted",
 								"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background",
 								option.isDisabled && "opacity-50 cursor-not-allowed"

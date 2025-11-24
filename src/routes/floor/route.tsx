@@ -1,6 +1,7 @@
 import { db } from "~/lib/db";
 import { TimeTracking } from "~/routes/time-clock/client";
 import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
+import { PageHeader } from "~/components/page-header";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -94,7 +95,10 @@ export default async function Component() {
 			<KioskRedirect />
 
 			<main className="container mx-auto py-8 lg:py-12">
-				<h1 className="text-4xl font-bold mb-8">Floor Time Clock</h1>
+				<PageHeader
+					title="Floor Time Clock"
+					subtitle="Employee floor time tracking system"
+				/>
 				<TimeTracking
 					employees={employees}
 					stations={stations}

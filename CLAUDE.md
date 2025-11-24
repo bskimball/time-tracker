@@ -6,6 +6,8 @@ This file provides context for Claude Code when working with this React Server C
 
 This project uses **React Router 7.9.4** with **React Server Components in Data mode**. This is an experimental architecture documented at: https://reactrouter.com/how-to/react-server-components#rsc-data-mode
 
+**Starter Template:** [https://github.com/bskimball/react-router-rsc-hono](https://github.com/bskimball/react-router-rsc-hono)
+
 ### What is RSC Data Mode?
 
 In Data mode, React Router acts as the **client** to the React Server:
@@ -244,16 +246,17 @@ export async function createUser(prevState: any, formData: FormData) {
 
 import { useActionState } from "react";
 import { createUser } from "./actions";
+import { Form, Input, Button, Alert } from "~/components/ds";
 
 export function NewUserForm() {
   const [state, action, isPending] = useActionState(createUser, null);
 
   return (
-    <form action={action}>
-      <input name="name" />
-      <button type="submit" disabled={isPending}>Create</button>
-      {state?.error && <p>{state.error}</p>}
-    </form>
+    <Form action={action}>
+      <Input name="name" label="Name" />
+      <Button type="submit" isDisabled={isPending}>Create</Button>
+      {state?.error && <Alert variant="error">{state.error}</Alert>}
+    </Form>
   );
 }
 ```
@@ -491,3 +494,14 @@ For detailed configuration information, see `LINTING_GUIDE.md`.
 
 - These APIs are experimental and may have type issues
 - Use `@ts-expect-error` or `@ts-ignore` only when necessary and document why
+
+## Claude Skills
+
+This project includes specialized skills for Claude located in `/.claude/skills/*`. These skills provide context-aware capabilities for different development roles:
+
+- **api-developer**: Hono API development with Zod validation
+- **data-analyst**: Database analysis and insights
+- **database-engineer**: Prisma schema management and migrations
+- **frontend-design**: Design system implementation and styling
+- **frontend-developer**: React Server Components and client interactivity
+- **product-management**: Feature planning and requirements gathering

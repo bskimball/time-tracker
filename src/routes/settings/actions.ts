@@ -1,13 +1,16 @@
 "use server";
 
 import { db } from "../../lib/db";
-import { redirect } from "react-router";
 import bcrypt from "bcryptjs";
 import { validateRequest } from "../../lib/auth";
+
+import type { Station } from "@prisma/client";
+import { redirect } from "react-router";
 
 export type SettingsState = {
 	error?: string;
 	success?: boolean;
+	stations?: Station[];
 } | null;
 
 export async function addStation(
@@ -23,7 +26,7 @@ export async function addStation(
 	try {
 		// Check if station already exists
 		const existing = await db.station.findUnique({
-			where: { name: name as "PICKING" | "PACKING" | "FILLING" },
+			where: { name },
 		});
 
 		if (existing) {
@@ -33,12 +36,13 @@ export async function addStation(
 		await db.station.create({
 			data: {
 				id: crypto.randomUUID(),
-				name: name as "PICKING" | "PACKING" | "FILLING",
+				name,
 			},
 		});
 
-		redirect("/settings/stations");
-		return { success: true };
+		// Return updated stations list
+		const stations = await db.station.findMany({ orderBy: { name: "asc" } });
+		return { success: true, stations };
 	} catch (error) {
 		console.error("Error adding station:", error);
 		return { error: "Failed to add station" };
@@ -69,8 +73,9 @@ export async function deleteStation(
 			where: { id },
 		});
 
-		redirect("/settings/stations");
-		return { success: true };
+		// Return updated stations list
+		const stations = await db.station.findMany({ orderBy: { name: "asc" } });
+		return { success: true, stations };
 	} catch (error) {
 		console.error("Error deleting station:", error);
 		return { error: "Failed to delete station" };

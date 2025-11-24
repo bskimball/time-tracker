@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useOptimistic, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { addStation, deleteStation } from "../actions";
 import type { Station } from "@prisma/client";
 import { Button } from "~/components/ds/button";
 import { SimpleInput } from "~/components/ds/input";
 import { Alert } from "~/components/ds/alert";
-import { Form } from "~/components/ds";
+import { Form } from "~/components/ds/form";
 import { Card, CardBody, CardHeader, CardTitle } from "~/components/ds/card";
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
@@ -19,9 +19,38 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export function StationManagement({ stations }: { stations: Station[] }) {
+export function StationManagement({ stations: initialStations }: { stations: Station[] }) {
 	const [addState, addAction] = useActionState(addStation, null);
 	const [deleteState, deleteAction] = useActionState(deleteStation, null);
+
+	// Track the current stations list in state
+	const [stations, setStations] = useState<Station[]>(initialStations);
+
+	// Update stations when either action completes with new data
+	useEffect(() => {
+		if (addState?.stations) {
+			setStations(addState.stations);
+		}
+	}, [addState]);
+
+	useEffect(() => {
+		if (deleteState?.stations) {
+			setStations(deleteState.stations);
+		}
+	}, [deleteState]);
+
+	// Optimistic state for deleting stations
+	const [optimisticStations, deleteOptimistically] = useOptimistic(
+		stations,
+		(state, stationId: string) => state.filter((station) => station.id !== stationId)
+	);
+
+	// Wrap delete action to include optimistic update
+	async function handleDelete(formData: FormData) {
+		const stationId = formData.get("id") as string;
+		deleteOptimistically(stationId);
+		deleteAction(formData);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -30,7 +59,7 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 					<CardTitle>Add New Station</CardTitle>
 				</CardHeader>
 				<CardBody>
-					<form action={addAction} className="flex gap-2">
+					<Form action={addAction} className="flex flex-row gap-2">
 						<SimpleInput
 							name="name"
 							placeholder="Station name (e.g., PACKING)"
@@ -39,7 +68,7 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 							required
 						/>
 						<SubmitButton>Add Station</SubmitButton>
-					</form>
+					</Form>
 					{addState?.error && (
 						<Alert variant="error" className="mt-4">
 							{addState.error}
@@ -58,11 +87,11 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 					<CardTitle>Current Stations</CardTitle>
 				</CardHeader>
 				<CardBody>
-					{stations.length === 0 ? (
+					{optimisticStations.length === 0 ? (
 						<p>No stations found</p>
 					) : (
 						<div className="space-y-2">
-							{stations.map((station) => (
+							{optimisticStations.map((station) => (
 								<div
 									key={station.id}
 									className="panel-shadow flex justify-between items-center border-2 border-border bg-muted p-4 rounded"
@@ -70,7 +99,7 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 									<span className="font-industrial text-lg uppercase tracking-wide">
 										{station.name}
 									</span>
-									<Form action={deleteAction} className="inline">
+									<Form action={handleDelete} className="inline">
 										<input type="hidden" name="id" value={station.id} />
 										<Button type="submit" variant="error" size="sm">
 											Delete
@@ -92,6 +121,6 @@ export function StationManagement({ stations }: { stations: Station[] }) {
 					)}
 				</CardBody>
 			</Card>
-		</div>
+		</div >
 	);
 }

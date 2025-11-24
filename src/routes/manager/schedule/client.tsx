@@ -15,6 +15,7 @@ import {
 	Select,
 	Input,
 } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 import type { ScheduleData } from "./actions";
 
 type Station = {
@@ -74,16 +75,16 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-				<div>
-					<h1 className="text-3xl font-bold">Weekly Schedule</h1>
-					<p className="text-muted-foreground">{weekRangeLabel}</p>
-				</div>
-				<div className="flex flex-wrap gap-2">
-					<Button variant="outline">Share Schedule</Button>
-					<Button variant="primary">Publish Changes</Button>
-				</div>
-			</div>
+			<PageHeader
+				title="Weekly Schedule"
+				subtitle={weekRangeLabel}
+				actions={
+					<div className="flex flex-wrap gap-2">
+						<Button variant="outline">Share Schedule</Button>
+						<Button variant="primary">Publish Changes</Button>
+					</div>
+				}
+			/>
 
 			<Card>
 				<CardHeader>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button, Card, CardHeader, CardTitle, CardBody } from "~/components/ds";
+import { Button, Card, CardHeader, CardTitle, CardBody, Checkbox, Select } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 
 type ActiveTimeLog = {
 	id: string;
@@ -99,40 +100,31 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-2xl font-bold">Floor Monitor</h1>
-					<p className="text-muted-foreground">Real-time view of warehouse floor activity</p>
+			<PageHeader
+				title="Floor Monitor"
+				subtitle="Real-time view of warehouse floor activity"
+			/>
+
+			{/* Monitor Controls */}
+			<div className="flex justify-end items-center gap-4">
+				<div className="text-right">
+					<p className="text-sm text-muted-foreground">Current Time</p>
+					<p className="text-lg font-medium">{currentTime.toLocaleTimeString()}</p>
 				</div>
-				<div className="flex items-center space-x-4">
-					<div className="text-right">
-						<p className="text-sm text-muted-foreground">Current Time</p>
-						<p className="text-lg font-medium">{currentTime.toLocaleTimeString()}</p>
-					</div>
-					<div className="flex items-center space-x-2">
-						<input
-							type="checkbox"
-							id="auto-refresh"
-							checked={autoRefresh}
-							onChange={(e) => setAutoRefresh(e.target.checked)}
-							className="rounded"
-						/>
-						<label htmlFor="auto-refresh" className="text-sm">
-							Auto-refresh
-						</label>
-						<select
-							value={refreshInterval}
-							onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
-							disabled={!autoRefresh}
-							className="text-sm px-2 py-1 border rounded"
-						>
-							<option value={10}>10s</option>
-							<option value={30}>30s</option>
-							<option value={60}>1m</option>
-							<option value={300}>5m</option>
-						</select>
-					</div>
+				<div className="flex items-center gap-4">
+					<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} label="Auto-refresh" />
+					<Select
+						options={[
+							{ value: "10", label: "10s" },
+							{ value: "30", label: "30s" },
+							{ value: "60", label: "1m" },
+							{ value: "300", label: "5m" },
+						]}
+						value={refreshInterval.toString()}
+						onChange={(value: string) => setRefreshInterval(parseInt(value))}
+						isDisabled={!autoRefresh}
+						className="w-24"
+					/>
 				</div>
 			</div>
 

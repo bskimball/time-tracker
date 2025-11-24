@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Button, Input, Card, CardHeader, CardTitle, CardBody, Select } from "~/components/ds";
+import { PageHeader } from "~/components/page-header";
 
 type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TERMINATED";
 
@@ -99,6 +100,16 @@ export function EmployeeRoster({
 
 	return (
 		<div className="space-y-6">
+			<PageHeader
+				title="Employee Management"
+				subtitle={`${total} employees in the system`}
+				actions={
+					<Link to="/manager/employees/new">
+						<Button variant="primary">Add Employee</Button>
+					</Link>
+				}
+			/>
+
 			{/* Search and Filters */}
 			<Card>
 				<CardHeader>
@@ -134,13 +145,10 @@ export function EmployeeRoster({
 			</Card>
 
 			{/* Results Summary */}
-			<div className="flex justify-between items-center">
+			<div className="flex justify-end items-center">
 				<p className="text-sm text-muted-foreground">
 					Showing {employees.length} of {total} employees
 				</p>
-				<Link to="/manager/employees/new">
-					<Button variant="primary">Add Employee</Button>
-				</Link>
 			</div>
 
 			{/* Employee List */}

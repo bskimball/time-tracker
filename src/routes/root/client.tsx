@@ -19,7 +19,7 @@ import {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				<ThemeBlockingScript />
 				<meta charSet="utf-8" />
@@ -70,21 +70,21 @@ export function ErrorBoundary() {
 	return (
 		<Layout>
 			<main className="min-h-screen bg-grid-pattern flex items-center justify-center p-4">
-				<div className="w-full max-w-4xl animate-slide-up">
+				<div className="w-full max-w-4xl animate-scale-in">
 					{/* Industrial Warning Header */}
 					<SafetyStripes position="top" />
 
 					<IndustrialPanel variant="destructive">
 						<IndustrialHeader
 							title={status}
-							subtitle="System Malfunction"
+							subtitle="System Alert"
 							badge={errorName}
 							active={true}
 						/>
 
 						{/* Error Message */}
 						<IndustrialSection title="Error Message">
-							<p className="text-xl text-foreground font-medium leading-relaxed">
+							<p className="text-xl text-foreground font-medium leading-relaxed animate-slide-up">
 								{message}
 							</p>
 						</IndustrialSection>
@@ -93,14 +93,14 @@ export function ErrorBoundary() {
 						{isDev && errorStack && (
 							<IndustrialSection className="bg-muted/30">
 								<details className="group">
-									<summary className="cursor-pointer font-industrial text-sm uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2">
-										<span className="transform group-open:rotate-90 transition-transform">
+									<summary className="cursor-pointer font-heading text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all duration-200 mb-4 flex items-center gap-2 hover:gap-3">
+										<span className="transform group-open:rotate-90 transition-transform duration-200">
 											▶
 										</span>
 										Stack Trace
 									</summary>
-									<div className="bg-card border border-border rounded-lg p-6 overflow-x-auto">
-										<pre className="font-mono-industrial text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+									<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto animate-slide-down">
+										<pre className="font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap">
 											{errorStack}
 										</pre>
 									</div>
@@ -112,14 +112,14 @@ export function ErrorBoundary() {
 						{isDev && Object.keys(errorDetails).length > 0 && (
 							<div className="p-8 bg-muted/30">
 								<details className="group">
-									<summary className="cursor-pointer font-industrial text-sm uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2">
-										<span className="transform group-open:rotate-90 transition-transform">
+									<summary className="cursor-pointer font-heading text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all duration-200 mb-4 flex items-center gap-2 hover:gap-3">
+										<span className="transform group-open:rotate-90 transition-transform duration-200">
 											▶
 										</span>
 										Additional Details
 									</summary>
-									<div className="bg-card border border-border rounded-lg p-6 overflow-x-auto">
-										<pre className="font-mono-industrial text-sm text-foreground leading-relaxed">
+									<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto animate-slide-down">
+										<pre className="font-mono text-xs text-foreground leading-relaxed">
 											{JSON.stringify(errorDetails, null, 2)}
 										</pre>
 									</div>
@@ -128,25 +128,25 @@ export function ErrorBoundary() {
 						)}
 
 						{/* Action Footer */}
-						<div className="p-8 bg-accent/50 flex items-center justify-between gap-4">
+						<div className="p-8 bg-accent/50 flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-up">
 							<div className="flex items-center gap-3">
-								<div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-								<span className="font-mono-industrial text-sm text-muted-foreground">
+								<div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
+								<span className="font-data text-xs text-muted-foreground">
 									{isDev
-										? "Development Mode - Full Error Details"
+										? "Development Mode"
 										: "Production Mode"}
 								</span>
 							</div>
 							<a
 								href="/"
-								className="bg-primary text-primary-foreground font-industrial font-semibold px-6 py-3 rounded-lg hover:bg-primary-hover active:bg-primary-active transition-smooth uppercase tracking-wider text-sm"
+								className="bg-primary text-primary-foreground font-heading font-semibold px-6 py-3 rounded-sm hover:bg-primary-hover active:bg-primary-active transition-all duration-150 hover:scale-[1.02] hover:-translate-y-px active:scale-[0.98] active:translate-y-0 uppercase tracking-wide text-sm shadow-sm hover:shadow-md"
 							>
 								Return Home
 							</a>
 						</div>
 					</IndustrialPanel>
 
-					<SafetyStripes position="bottom" className="mt-8" />
+					<SafetyStripes position="bottom" />
 				</div>
 			</main>
 		</Layout>

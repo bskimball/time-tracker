@@ -16,9 +16,13 @@ function resolveSystemPreference(): ResolvedTheme {
 
 export function ThemeToggle() {
 	const { theme, setTheme } = useTheme();
-	const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-		theme === "system" ? resolveSystemPreference() : theme === "dark" ? "dark" : "light"
-	);
+	const [mounted, setMounted] = useState(false);
+	const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+
+	// Set mounted state after hydration
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	useEffect(() => {
 		if (theme === "system") {
@@ -56,7 +60,9 @@ export function ThemeToggle() {
 		setResolvedTheme(next);
 	};
 
-	const showSun = resolvedTheme === "dark";
+	// During SSR and initial hydration, always render light mode to match server
+	const showSun = mounted && resolvedTheme === "dark";
+	const isDark = mounted && resolvedTheme === "dark";
 
 	return (
 		<Button
@@ -64,7 +70,7 @@ export function ThemeToggle() {
 			size="sm"
 			onPress={toggleTheme}
 			className="w-9 px-0 relative z-50 text-muted-foreground hover:text-foreground border border-transparent"
-			aria-pressed={resolvedTheme === "dark"}
+			aria-pressed={isDark}
 			aria-label="Toggle theme"
 		>
 			{showSun ? (

@@ -69,10 +69,10 @@ export default async function Component({
 	return (
 		<div className="space-y-6">
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
 				<div>
-					<h1 className="text-3xl font-bold text-foreground">Analytics & Reporting</h1>
-					<p className="text-muted-foreground mt-1">
+					<h1 className="text-4xl font-bold uppercase tracking-tight font-heading text-foreground">Analytics & Reporting</h1>
+					<p className="text-muted-foreground mt-2">
 						Comprehensive workforce productivity and cost analysis
 					</p>
 				</div>
@@ -128,7 +128,7 @@ export default async function Component({
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<Card className="border-2 border-primary bg-primary/10">
 							<CardHeader>
-								<CardTitle className="text-primary normal-case">Avg Units/Hour</CardTitle>
+								<CardTitle className="text-primary">Avg Units/Hour</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="font-mono-industrial text-2xl font-bold text-primary">28.1</div>
@@ -138,7 +138,7 @@ export default async function Component({
 
 						<Card className="border-2 border-secondary bg-secondary/10">
 							<CardHeader>
-								<CardTitle className="text-secondary normal-case">Top Performer</CardTitle>
+								<CardTitle className="text-secondary">Top Performer</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="font-mono-industrial text-2xl font-bold text-secondary">
@@ -150,7 +150,7 @@ export default async function Component({
 
 						<Card className="border-2 border-accent bg-accent/10">
 							<CardHeader>
-								<CardTitle className="text-accent normal-case">Task Completion</CardTitle>
+								<CardTitle className="text-accent">Task Completion</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="font-mono-industrial text-2xl font-bold text-accent">94.7%</div>
