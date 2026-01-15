@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AboutHero from "../components/AboutHero.tsx";
+import AboutCompany from "../components/AboutCompany.tsx";
+import AboutCTA from "../components/AboutCTA.tsx";
+
+const title = "About Us - ShiftPulse";
+---
+
+<Layout title={title}>
+	<AboutHero client:load />
+	<AboutCompany client:load />
+	<AboutCTA client:load />
+</Layout>

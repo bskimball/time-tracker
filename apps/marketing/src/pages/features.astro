@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FeaturesHero from "../components/FeaturesHero.tsx";
+import FeatureDetails from "../components/FeatureDetails.tsx";
+import FeaturesCTA from "../components/FeaturesCTA.tsx";
+
+const title = "Features - ShiftPulse";
+---
+
+<Layout title={title}>
+	<FeaturesHero client:load />
+	<FeatureDetails client:load />
+	<FeaturesCTA client:load />
+</Layout>

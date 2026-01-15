@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PricingHero from "../components/PricingHero.tsx";
+import PricingCards from "../components/PricingCards.tsx";
+import PricingFAQ from "../components/PricingFAQ.tsx";
+
+const title = "Pricing - ShiftPulse";
+---
+
+<Layout title={title}>
+	<PricingHero client:load />
+	<PricingCards client:load />
+	<PricingFAQ client:load />
+</Layout>

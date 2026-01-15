@@ -1,0 +1,131 @@
+/* Design System CSS Variables */
+
+/* Light Mode (Default) */
+:root {
+	/* Primary Colors */
+	--primary: oklch(0.62 0.18 45); /* Safety Orange #E07426 */
+	--primary-foreground: oklch(0.98 0.002 264); /* White */
+	--primary-hover: oklch(0.58 0.18 45); /* Darker Orange */
+	--primary-active: oklch(0.54 0.18 45); /* Darkest Orange */
+
+	/* Secondary Colors */
+	--secondary: oklch(0.52 0.12 245); /* Steel Blue #3F6B9E */
+	--secondary-foreground: oklch(0.98 0.002 264); /* White */
+
+	/* Destructive/Error */
+	--destructive: oklch(0.55 0.22 30); /* Warning Red #D85050 */
+	--destructive-foreground: oklch(0.98 0.002 264); /* White */
+
+	/* Neutral Colors */
+	--background: oklch(0.97 0.003 264); /* Light Gray #F7F7F8 */
+	--foreground: oklch(0.22 0.01 264); /* Dark Gray #383839 */
+	--card: oklch(0.99 0.002 264); /* Near White #FCFCFD */
+	--card-foreground: oklch(0.22 0.01 264); /* Dark Gray */
+	--muted: oklch(0.93 0.005 264); /* Muted Gray #EDEDED */
+	--muted-foreground: oklch(0.48 0.01 264); /* Medium Gray #7A7A7B */
+	--accent: oklch(0.9 0.008 264); /* Light Gray #E6E6E7 */
+	--accent-foreground: oklch(0.25 0.01 264); /* Dark */
+
+	/* Borders & Inputs */
+	--border: oklch(0.85 0.005 264); /* Light Border #D9D9DA */
+	--input: oklch(0.87 0.005 264); /* Input Border #DEDEDE */
+	--ring: oklch(0.62 0.18 45); /* Focus Ring (Primary) */
+
+	/* Chart Colors */
+	--chart-1: oklch(0.62 0.18 45); /* Orange */
+	--chart-2: oklch(0.52 0.12 245); /* Blue */
+	--chart-3: oklch(0.58 0.15 150); /* Green */
+	--chart-4: oklch(0.55 0.18 300); /* Purple */
+	--chart-5: oklch(0.48 0.12 264); /* Navy */
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+	/* Primary Colors */
+	--primary: oklch(0.68 0.18 45); /* Brighter Orange */
+	--primary-hover: oklch(0.72 0.18 45);
+	--primary-active: oklch(0.64 0.18 45);
+
+	/* Secondary Colors */
+	--secondary: oklch(0.6 0.12 245); /* Brighter Blue */
+
+	/* Destructive/Error */
+	--destructive: oklch(0.62 0.22 30); /* Brighter Red */
+
+	/* Neutral Colors */
+	--background: oklch(0.16 0.01 264); /* Dark #282829 */
+	--foreground: oklch(0.94 0.005 264); /* Light #F0F0F1 */
+	--card: oklch(0.19 0.01 264); /* Card Dark #303031 */
+	--muted: oklch(0.26 0.01 264); /* Muted Dark #424243 */
+	--muted-foreground: oklch(0.63 0.005 264); /* Muted Light #A0A0A1 */
+	--accent: oklch(0.28 0.01 264); /* Accent Dark #474748 */
+	--border: oklch(0.32 0.01 264); /* Border Dark #515152 */
+	--input: oklch(0.3 0.01 264); /* Input Border Dark */
+	--ring: oklch(0.68 0.18 45); /* Focus Ring */
+}
+
+/* Typography */
+.font-heading {
+	font-family: "Space Grotesk", sans-serif;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+
+.font-display {
+	font-family: "Space Grotesk", sans-serif;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+}
+
+.font-body {
+	font-family:
+		"IBM Plex Sans",
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		"Segoe UI",
+		Roboto,
+		sans-serif;
+	font-weight: 400;
+	letter-spacing: -0.011em;
+}
+
+.font-mono {
+	font-family: "JetBrains Mono", monospace;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+}
+
+.font-data {
+	font-family: "JetBrains Mono", monospace;
+	font-weight: 400;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0;
+}
+
+.font-industrial {
+	font-family: "Space Grotesk", sans-serif;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	text-transform: uppercase;
+}
+
+.font-mono-industrial {
+	font-family: "JetBrains Mono", monospace;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Base styles */
+* {
+	box-sizing: border-box;
+}
+
+html {
+	font-family: var(--font-body);
+}
+
+body {
+	background-color: var(--background);
+	color: var(--foreground);
+}

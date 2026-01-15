@@ -1,0 +1,24 @@
+{
+	"name": "monorepo",
+	"version": "1.0.0",
+	"description": "Monorepo for React Router app and Astro marketing site",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"build": "npm run build --workspaces",
+		"dev": "concurrently \"cd apps/web && npm run dev\" \"cd apps/marketing && npm run dev\"",
+		"dev:web": "cd apps/web && npm run dev",
+		"dev:marketing": "cd apps/marketing && npm run dev",
+		"lint": "npm run lint --workspaces",
+		"typecheck": "npm run typecheck --workspaces"
+	},
+	"devDependencies": {
+		"concurrently": "^8.2.2"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}

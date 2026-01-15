@@ -1,0 +1,18 @@
+---
+import Layout from "../layouts/Layout.astro";
+import HeroSection from "../components/HeroSection.tsx";
+import FeaturesSection from "../components/FeaturesSection.tsx";
+import StatsSection from "../components/StatsSection.tsx";
+import TestimonialsSection from "../components/TestimonialsSection.tsx";
+import CTASection from "../components/CTASection.tsx";
+
+const title = "ShiftPulse - Workforce Management Made Simple";
+---
+
+<Layout title={title}>
+	<HeroSection client:load />
+	<FeaturesSection client:load />
+	<StatsSection client:load />
+	<TestimonialsSection client:load />
+	<CTASection client:load />
+</Layout>
