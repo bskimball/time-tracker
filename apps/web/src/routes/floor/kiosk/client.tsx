@@ -242,7 +242,7 @@ export function KioskTimeClock({
 													setPin(value);
 												}
 											}}
-											placeholder="Enter your 4-6 digit PIN"
+											placeholder="Enter your 4-6 digit PIN…"
 											autoComplete="off"
 											spellCheck={false}
 											maxLength={6}
@@ -261,7 +261,7 @@ export function KioskTimeClock({
 											name="stationId"
 											value={stationId}
 											onChange={(value) => setStationId((value as string) || "")}
-											placeholder="Select station"
+											placeholder="Select station…"
 											options={stations.map((station) => ({
 												value: station.id,
 												label: station.name,
@@ -280,7 +280,7 @@ export function KioskTimeClock({
 										{isPinPending ? (
 											<>
 												<span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-												Processing...
+												Processing…
 											</>
 										) : (
 											"Clock In / Out"
@@ -311,10 +311,10 @@ export function KioskTimeClock({
 										<CardBody className="p-4">
 											<div className="flex justify-between items-start">
 												<div>
-													<div className="text-base font-semibold text-foreground font-display">
+													<div className="text-base font-semibold text-foreground font-display truncate max-w-[150px]">
 														{log.employee.name}
 													</div>
-													<div className="text-muted-foreground font-mono text-xs mt-1">
+													<div className="text-muted-foreground font-mono text-xs mt-1 truncate">
 														{log.station?.name || "No station"}
 													</div>
 												</div>
@@ -347,7 +347,7 @@ export function KioskTimeClock({
 							/>
 							<span className="font-data text-xs">
 								{status === "syncing"
-									? "Syncing..."
+									? "Syncing…"
 									: queue.length > 0
 										? `${queue.length} Offline Actions`
 										: "Online"}

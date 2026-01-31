@@ -94,5 +94,12 @@ src/
 - **Frontend Developer**: Astro components, React integration
 - **Frontend Design**: TailwindCSS styling, responsive design
 - **Content Creator**: Marketing copy, page layouts
-- **DevOps**: Docker configuration, build optimization</content>
-<parameter name="filePath">/home/bskimball/apps/time-tracker/apps/marketing/AGENTS.md
+- **DevOps**: Docker configuration, build optimization
+
+## How to work
+
+- Use the skills above intentionally: pick the smallest set that fits the task.
+- Prefer repo conventions over inventing new patterns; check `guides/agent/*` and existing pages/components first.
+- If you discover a missing/unclear rule or recurring pitfall, update an existing guide or add a new one, then link it from `guides/agent/README.md`.
+
+See: [../../guides/agent/agent-skills-and-docs.md](../../guides/agent/agent-skills-and-docs.md)

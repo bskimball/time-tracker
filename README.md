@@ -24,19 +24,25 @@ This monorepo contains:
 ### Prerequisites
 
 - Node.js 22.6+
+- npm (recommended) or pnpm
 - Docker and Docker Compose
 - PostgreSQL (via Docker)
 
 ### Setup
 
 1. Clone the repository
-2. Set environment variables (see Environment Variables section)
-3. Start development environment: `docker compose --profile dev up`
-4. The web app will be available at `http://localhost:5173`
-5. The marketing site will be available at `http://localhost:4321`
+2. Install dependencies: `npm install` (recommended) or `pnpm install`
+3. Set environment variables (see Environment Variables section)
+4. Start development environment: `docker compose --profile dev up`
+5. The web app will be available at `http://localhost:5173`
+6. The marketing site will be available at `http://localhost:4321`
 
 ### Development Commands
 
+- `npm run dev` - Run web + marketing dev servers
+- `npm run build` - Build all workspaces
+- `npm run lint` - Lint all workspaces
+- `npm run typecheck` - Typecheck all workspaces
 - `docker compose --profile dev up` - Start all dev services
 - `docker compose --profile dev up postgres` - Start only database
 - `docker compose down` - Stop all services
@@ -118,5 +124,7 @@ export POSTGRES_DB=time_tracker
 
 ## Documentation
 
-- `apps/web/guides/` - Web app specific guides
-- `guides/` - Monorepo-level documentation
+- [AGENTS.md](AGENTS.md) - Quick agent entrypoint
+- [guides/agent/](guides/agent/) - Progressive-disclosure monorepo + agent docs
+- [apps/web/guides/](apps/web/guides/) - Web app specific guides
+- Key agent guides: [RSC data mode](guides/agent/web-rsc-data-mode.md), [Auth/request context](guides/agent/auth.md), [Testing](guides/agent/testing.md)

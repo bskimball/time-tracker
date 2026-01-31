@@ -19,15 +19,22 @@ import {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang="en" suppressHydrationWarning className="[color-scheme:light] dark:[color-scheme:dark]">
 			<head>
 				<ThemeBlockingScript />
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<meta name="theme-color" content="var(--background)" />
 				<Meta />
 				<Links />
 			</head>
 			<body className="bg-grid-pattern">
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-sm"
+				>
+					Skip to main content
+				</a>
 				<ThemeProvider defaultTheme="system">{children}</ThemeProvider>
 				<ScrollRestoration />
 			</body>

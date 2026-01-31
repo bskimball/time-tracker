@@ -283,7 +283,7 @@ All under `/executive` path, require ADMIN role:
 | Device Detection | Yes                    | No                  |
 | Use Case         | General access         | Dedicated terminals |
 
-See `guides/ROUTING_GUIDE.md` for detailed time clock routing information.
+See `apps/web/guides/ROUTING_GUIDE.md` for detailed time clock routing information.
 
 ## Data Model
 
@@ -448,7 +448,7 @@ Tests use Vitest with React Testing Library:
 - Database mocking via `vi.mock`
 - Request helper utilities
 
-See `guides/TESTING_GUIDE.md` for detailed testing patterns.
+See `apps/web/guides/TESTING_GUIDE.md` for detailed testing patterns.
 
 ## Deployment
 
@@ -535,10 +535,10 @@ Runs `server.js` with:
 ## Related Documentation
 
 - **`CLAUDE.md`** - RSC architecture and development guidelines
-- **`guides/ROUTING_GUIDE.md`** - Detailed time clock routing
-- **`guides/AUTHENTICATION_GUIDE.md`** - Authentication patterns in RSC
-- **`guides/TESTING_GUIDE.md`** - Testing strategies and examples
-- **`guides/LINTING_GUIDE.md`** - Code quality and formatting
+- **`apps/web/guides/ROUTING_GUIDE.md`** - Detailed time clock routing
+- **`apps/web/guides/AUTHENTICATION_GUIDE.md`** - Authentication patterns in RSC
+- **`apps/web/guides/TESTING_GUIDE.md`** - Testing strategies and examples
+- **`apps/web/guides/LINTING_GUIDE.md`** - Code quality and formatting
 
 ## Future Enhancements
 

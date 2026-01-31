@@ -120,8 +120,9 @@ export function TouchButton({
           ${touchSizes[size]}
           ${isPressed ? "scale-95" : ""}
           ${ripple ? "overflow-hidden" : ""}
-          transition-all duration-150 touch-none
+          transition-all duration-150 touch-manipulation
           shadow-lg
+          [-webkit-tap-highlight-color:transparent]
           ${className}
         `}
 				onPress={onPress}

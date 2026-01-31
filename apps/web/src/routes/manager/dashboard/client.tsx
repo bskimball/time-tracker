@@ -53,8 +53,11 @@ export function ManagerDashboard({
 				title="Manager Dashboard"
 				subtitle={`Welcome back, ${user.name || user.email}`}
 				actions={
-					<Link to="/manager/monitor">
-						<Button variant="primary">Floor Monitor</Button>
+					<Link
+						to="/manager/monitor"
+						className="inline-flex items-center justify-center font-medium rounded-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background active:scale-[0.98] font-heading tracking-tight shadow-sm bg-primary border border-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active aria-disabled:bg-muted aria-disabled:cursor-not-allowed h-10 px-4 text-base"
+					>
+						Floor Monitor
 					</Link>
 				}
 			/>
@@ -66,7 +69,12 @@ export function ManagerDashboard({
 					{alerts
 						.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH")
 						.map((alert) => (
-							<Alert key={alert.id} variant={alert.severity === "CRITICAL" ? "error" : "warning"} className="relative">
+							<Alert
+								key={alert.id}
+								variant={alert.severity === "CRITICAL" ? "error" : "warning"}
+								className="relative"
+								aria-live="polite"
+							>
 								<div className={`corner-card-tl corner-accent-sm ${alert.severity === "CRITICAL" ? "corner-destructive" : "corner-warning"}`} />
 								<div className={`corner-card-tr corner-accent-sm ${alert.severity === "CRITICAL" ? "corner-destructive" : "corner-warning"}`} />
 								<div className="flex justify-between items-start">
@@ -74,10 +82,11 @@ export function ManagerDashboard({
 										<h4 className="font-medium">{alert.title}</h4>
 										<p className="text-sm mt-1">{alert.description}</p>
 										{alert.actionUrl && (
-											<Link to={alert.actionUrl}>
-												<Button size="sm" variant="outline" className="mt-2">
-													View Details
-												</Button>
+											<Link
+												to={alert.actionUrl}
+												className="inline-flex items-center justify-center font-medium rounded-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background active:scale-[0.98] font-heading tracking-tight border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 aria-disabled:border-muted aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed h-9 px-3 text-sm mt-2"
+											>
+												View Details
 											</Link>
 										)}
 									</div>

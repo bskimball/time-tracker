@@ -323,11 +323,11 @@ export default function Component() {
 
 ### Documentation
 
-- **Design System Guide**: `/guides/DESIGN_SYSTEM.md`
-- **Design Tokens**: `/guides/DESIGN_TOKENS.md`
-- **Accessibility**: `/guides/ACCESSIBILITY.md`
-- **Architecture**: `/guides/ARCHITECTURE.md`
-- **Logging**: `/guides/LOGGING_GUIDE.md`
+- **Design System Guide**: `apps/web/guides/DESIGN_SYSTEM.md`
+- **Design Tokens**: `apps/web/guides/DESIGN_TOKENS.md`
+- **Accessibility**: `apps/web/guides/ACCESSIBILITY.md`
+- **Architecture**: `apps/web/guides/ARCHITECTURE.md`
+- **Logging**: `apps/web/guides/LOGGING_GUIDE.md`
 
 ### Component Library
 

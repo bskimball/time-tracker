@@ -16,9 +16,22 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const logQuery = process.env.LOG_DB_QUERIES === "true" || isDevelopment;
 
 // Create connection pool for the adapter
-const connectionString = process.env.DATABASE_URL;
+// Use DATABASE_URL if provided, otherwise construct from individual POSTGRES_* variables
+let connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
-	throw new Error("DATABASE_URL environment variable is not set");
+	const user = process.env.POSTGRES_USER;
+	const password = process.env.POSTGRES_PASSWORD;
+	const db = process.env.POSTGRES_DB;
+	const host = process.env.POSTGRES_HOST || "localhost";
+	const port = process.env.POSTGRES_PORT || "5432";
+
+	if (!user || !password || !db) {
+		throw new Error(
+			"Database configuration incomplete. Either set DATABASE_URL or provide POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB"
+		);
+	}
+
+	connectionString = `postgresql://${user}:${password}@${host}:${port}/${db}`;
 }
 const pool = new Pool({ connectionString });
 

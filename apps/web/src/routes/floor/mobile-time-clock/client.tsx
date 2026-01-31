@@ -199,7 +199,7 @@ export function MobileTimeClock({
 					action={
 						!isOnline && queue > 0 ? (
 							<TouchButton onPress={sync} disabled={isSyncing} variant="outline" size="sm">
-								{isSyncing ? "Syncing..." : `Sync ${queue}`}
+								{isSyncing ? "Syncing…" : `Sync ${queue}`}
 							</TouchButton>
 						) : null
 					}
@@ -232,14 +232,19 @@ export function MobileTimeClock({
 								type="password"
 								value={pin}
 								onChange={setPin}
-								placeholder="4-6 digit PIN"
+								placeholder="4-6 digit PIN…"
 								maxLength={6}
 								pattern="\d{4,6}"
 								keyboardType="numeric"
 								autoComplete="off"
-								autoFocus
 								icon={
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg
+										className="w-6 h-6"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
 										<path
 											strokeLinecap="round"
 											strokeLinejoin="round"
@@ -262,7 +267,13 @@ export function MobileTimeClock({
 									})),
 								]}
 								icon={
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg
+										className="w-6 h-6"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
 										<path
 											strokeLinecap="round"
 											strokeLinejoin="round"
@@ -354,13 +365,14 @@ export function MobileTimeClock({
 											</div>
 
 											{isOnBreak && (
-												<Alert variant="warning">
+												<Alert variant="warning" aria-live="polite">
 													<div className="flex items-center gap-2">
 														<svg
 															className="w-5 h-5"
 															fill="none"
 															stroke="currentColor"
 															viewBox="0 0 24 24"
+															aria-hidden="true"
 														>
 															<path
 																strokeLinecap="round"
@@ -412,6 +424,7 @@ export function MobileTimeClock({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"

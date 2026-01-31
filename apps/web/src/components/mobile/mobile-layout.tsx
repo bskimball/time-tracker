@@ -236,8 +236,15 @@ export function MobileHeader({
 						<button
 							onClick={onBack}
 							className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+							aria-label="Go back"
 						>
-							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg
+								className="w-6 h-6"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
@@ -260,7 +267,7 @@ export function MobileHeader({
 
 // Icons for navigation
 const clockIcon = (
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"
@@ -271,7 +278,7 @@ const clockIcon = (
 );
 
 const taskIcon = (
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"
@@ -282,7 +289,7 @@ const taskIcon = (
 );
 
 const stationIcon = (
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"
@@ -293,7 +300,7 @@ const stationIcon = (
 );
 
 const reportIcon = (
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"

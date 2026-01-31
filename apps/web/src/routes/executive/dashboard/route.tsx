@@ -331,7 +331,13 @@ export default async function Component({
 							<Card className="h-full">
 								<CardBody className="p-6 flex flex-col items-center text-center gap-3">
 									<div className="p-3 rounded-full bg-primary/10 text-primary">
-										<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg
+											className="w-6 h-6"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+										>
 											<path
 												strokeLinecap="round"
 												strokeLinejoin="round"

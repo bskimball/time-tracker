@@ -47,11 +47,13 @@ This document provides a quick reference to all documentation in this project.
 
 ## Comprehensive Guides
 
-All detailed guides are located in the `guides/` directory:
+Web-app guides live in `apps/web/guides/`.
+
+Monorepo-wide progressive-disclosure agent docs live in `guides/agent/`.
 
 ### Architecture & Technical
 
-#### guides/ARCHITECTURE.md
+#### apps/web/guides/ARCHITECTURE.md
 
 **Complete application architecture reference**
 
@@ -109,7 +111,7 @@ All detailed guides are located in the `guides/` directory:
 
 ### Routing
 
-#### guides/ROUTING_GUIDE.md
+#### apps/web/guides/ROUTING_GUIDE.md
 
 **Time clock routing and navigation**
 
@@ -132,7 +134,7 @@ All detailed guides are located in the `guides/` directory:
 
 ### Testing
 
-#### guides/TESTING_GUIDE.md
+#### apps/web/guides/TESTING_GUIDE.md
 
 **Testing strategies and examples**
 
@@ -143,7 +145,7 @@ All detailed guides are located in the `guides/` directory:
 
 ### Code Quality
 
-#### guides/LINTING_GUIDE.md
+#### apps/web/guides/LINTING_GUIDE.md
 
 **Code quality and formatting standards**
 
@@ -219,7 +221,7 @@ time-tracker/
 │   ├── design-system/         # Shared UI components
 │   └── config/                # Shared configurations (planned)
 ├── guides/                    # Monorepo documentation
-│   └── MONOREPO_DEVELOPMENT_GUIDE.md  # Monorepo workflows
+│   └── agent/README.md           # Progressive-disclosure agent docs
 ├── CLAUDE.md                  # AI assistant context
 ├── AGENTS.md                  # AI agent context
 └── package.json               # Root workspace configuration
@@ -230,21 +232,22 @@ time-tracker/
 ### For AI Assistants
 
 - Start with: `CLAUDE.md` or `AGENTS.md`
-- Architecture: `guides/ARCHITECTURE.md`
+- Monorepo agent docs: `guides/agent/README.md`
+- Web architecture: `apps/web/guides/ARCHITECTURE.md`
 - Logging: `guides/LOGGING_GUIDE.md`
 
 ### For Developers
 
-- Getting started: `guides/ARCHITECTURE.md`
+- Getting started: `guides/agent/README.md`
 - Logging patterns: `guides/LOGGING_GUIDE.md`
-- Testing: `guides/TESTING_GUIDE.md`
-- Code style: `guides/LINTING_GUIDE.md`
+- Testing: `apps/web/guides/TESTING_GUIDE.md`
+- Code style: `apps/web/guides/LINTING_GUIDE.md`
 
 ### For Operations
 
-- Architecture: `guides/ARCHITECTURE.md` (Deployment section)
+- Deployment: `guides/agent/deployment.md`
 - Logging: `guides/LOGGING_GUIDE.md` (Log rotation, aggregation)
-- Troubleshooting: `guides/ARCHITECTURE.md` (Troubleshooting section)
+- Troubleshooting: `guides/agent/troubleshooting.md`
 
 ## Environment Variables Reference
 
@@ -268,8 +271,8 @@ DATABASE_URL=...             # Database connection string
 ### View Documentation
 
 ```bash
-# Architecture overview
-cat guides/ARCHITECTURE.md
+# Monorepo agent docs
+cat guides/agent/README.md
 
 # Logging guide
 cat guides/LOGGING_GUIDE.md

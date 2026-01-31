@@ -13,6 +13,7 @@ import {
 	TabList,
 	Tab,
 	TabPanel,
+	SimpleSelect,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import type { Employee } from "@prisma/client";
@@ -317,8 +318,8 @@ function TimeCorrectionForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain">
+			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overscroll-contain">
 				<div className="corner-card-tl corner-accent-md corner-primary" />
 				<div className="corner-card-tr corner-accent-md corner-secondary" />
 				<CardHeader>
@@ -326,36 +327,44 @@ function TimeCorrectionForm({
 				</CardHeader>
 				<CardBody>
 					<form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<label className="block text-sm font-medium mb-1">Employee</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.employeeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, employeeId: e.target.value }))}
-								required
-							>
-								<option value="">Select an employee</option>
-								{employees.map((employee) => (
-									<option key={employee.id} value={employee.id}>
-										{employee.name}
-									</option>
-								))}
-							</select>
-						</div>
+						<SimpleSelect
+							label="Employee"
+							options={employees.map((employee) => ({
+								value: employee.id,
+								label: employee.name,
+							}))}
+							value={formData.employeeId}
+							onChange={(val) =>
+								setFormData((prev) => ({ ...prev, employeeId: val ?? "" }))
+							}
+							placeholder="Select an employee…"
+							isRequired
+						/>
 
-						<div>
-							<label className="block text-sm font-medium mb-1">Type</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.type}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, type: e.target.value as "WORK" | "BREAK" }))
-								}
-							>
-								<option value="WORK">Work</option>
-								<option value="BREAK">Break</option>
-							</select>
-						</div>
+						<SimpleSelect
+							label="Type"
+							options={[
+								{ value: "WORK", label: "Work" },
+								{ value: "BREAK", label: "Break" },
+							]}
+							value={formData.type}
+							onChange={(val) =>
+								setFormData((prev) => ({ ...prev, type: (val as "WORK" | "BREAK") ?? "WORK" }))
+							}
+						/>
+
+						<SimpleSelect
+							label="Station (optional)"
+							options={stations.map((station) => ({
+								value: station.id,
+								label: station.name,
+							}))}
+							value={formData.stationId}
+							onChange={(val) =>
+								setFormData((prev) => ({ ...prev, stationId: val ?? "" }))
+							}
+							placeholder="Select a station…"
+						/>
 
 						<div>
 							<Input
@@ -377,20 +386,45 @@ function TimeCorrectionForm({
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium mb-1">Station (optional)</label>
-							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.stationId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, stationId: e.target.value }))}
-							>
-								<option value="">Select a station</option>
-								{stations.map((station) => (
-									<option key={station.id} value={station.id}>
-										{station.name}
-									</option>
-								))}
-							</select>
+							<Input
+								label="Reason for correction"
+								value={formData.reason}
+								onChange={(e) => setFormData((prev) => ({ ...prev, reason: e.target.value }))}
+								placeholder="Explain why this correction is needed…"
+								required
+							/>
 						</div>
+
+						<div>
+							<Input
+								label="Notes (optional)"
+								value={formData.note}
+								onChange={(e) => setFormData((prev) => ({ ...prev, note: e.target.value }))}
+								placeholder="Additional context or details…"
+							/>
+						</div>
+
+						<div>
+							<Input
+								label="End Time (optional)"
+								type="datetime-local"
+								value={formData.endTime}
+								onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
+							/>
+						</div>
+
+						<SimpleSelect
+							label="Station (optional)"
+							options={stations.map((station) => ({
+								value: station.id,
+								label: station.name,
+							}))}
+							value={formData.stationId}
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, stationId: value || "" }))
+							}
+							placeholder="Select a station"
+						/>
 
 						<div>
 							<Input
@@ -416,7 +450,7 @@ function TimeCorrectionForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isSubmitting}>
-								{isSubmitting ? "Adding..." : "Add Entry"}
+								{isSubmitting ? "Adding…" : "Add Entry"}
 							</Button>
 						</div>
 					</form>

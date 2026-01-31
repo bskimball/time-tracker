@@ -429,15 +429,19 @@ app.get("/users", async (c) => {
 
 ## Documentation & Guides
 
-All comprehensive guides are located in the `guides/` directory:
+Web-app-specific guides live in `apps/web/guides/`.
 
-- **`guides/ARCHITECTURE.md`** - Complete application architecture, tech stack, data model, and deployment
-- **`guides/LOGGING_GUIDE.md`** - Comprehensive logging patterns, best practices, and examples (35+ sections)
-- **`guides/ROUTING_GUIDE.md`** - Time clock routing, navigation, and route configuration
-- **`guides/AUTHENTICATION_GUIDE.md`** - Authentication patterns and middleware in RSC Data mode
-- **`guides/TESTING_GUIDE.md`** - Testing strategies, patterns, and examples
-- **`guides/LINTING_GUIDE.md`** - Code quality, formatting standards, and ESLint configuration
-- **`guides/examples/`** - Code examples and usage patterns
+Monorepo-wide progressive-disclosure agent docs live in `guides/agent/`.
+
+- **`apps/web/guides/ARCHITECTURE.md`** - Complete application architecture, tech stack, data model, and deployment
+- **`apps/web/guides/LOGGING_GUIDE.md`** - Comprehensive logging patterns, best practices, and examples
+- **`apps/web/guides/ROUTING_GUIDE.md`** - Time clock routing, navigation, and route configuration
+- **`apps/web/guides/AUTHENTICATION_GUIDE.md`** - Authentication patterns and middleware in RSC Data mode
+- **`apps/web/guides/TESTING_GUIDE.md`** - Testing strategies, patterns, and examples
+- **`apps/web/guides/LINTING_GUIDE.md`** - Code quality, formatting standards, and ESLint configuration
+- **`apps/web/guides/examples/`** - Code examples and usage patterns
+
+Agent entry point: `guides/agent/README.md`
 
 **Always refer to these guides for detailed information about specific topics.**
 
@@ -664,9 +668,11 @@ Example from `src/routes/manager/tasks/task-assignment-form.tsx`:
 - When the user should see changes immediately (lists, counters, dashboards), use `useOptimistic` in the shell and pass a small `onOptimisticX` callback into the form.
 - Keep form components focused on rendering and input handling; keep domain logic and data fetching in server actions or server components.
 
-## Claude Skills
+## Agent Skills
 
-This project utilizes specialized Claude skills to assist with various aspects of development. These skills include:
+Use these skills intentionally: pick the 1–2 that best match the task (and avoid overbuilding). If you discover a new gotcha while working, update the relevant guide in `guides/agent/*` and link it from `guides/agent/README.md`.
+
+See: [../../guides/agent/agent-skills-and-docs.md](../../guides/agent/agent-skills-and-docs.md)
 
 - **Data Analyst**: Analyzes data structures, database content, and usage patterns to provide insights and optimization recommendations.
 - **Product Management**: Helps define features, user stories, and requirements, ensuring alignment with project goals and user needs.

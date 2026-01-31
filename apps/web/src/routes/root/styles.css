@@ -125,6 +125,15 @@
 		letter-spacing: -0.011em;
 	}
 
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		scroll-margin-top: 2rem;
+	}
+
 	/* Typography System - Rugged Technical */
 	.font-heading {
 		font-family: "Space Grotesk", sans-serif;
@@ -419,7 +428,9 @@
 		border-radius: 50%;
 		background-color: var(--led-off);
 		box-shadow: 0 0 0 2px var(--background);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition:
+			background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.led-indicator.active {
@@ -606,6 +617,20 @@
 		animation: bounce-subtle 1s ease-in-out infinite;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::before,
+		::after {
+			animation-delay: -1ms !important;
+			animation-duration: 1ms !important;
+			animation-iteration-count: 1 !important;
+			background-attachment: initial !important;
+			scroll-behavior: auto !important;
+			transition-duration: 0s !important;
+			transition-delay: 0s !important;
+		}
+	}
+
 	/* Stagger animations for lists */
 	.stagger-children > * {
 		opacity: 0;
@@ -642,11 +667,17 @@
 
 	/* Smooth transitions for interactive elements */
 	.transition-smooth {
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition-property: color, background-color, border-color, text-decoration-color, fill, stroke,
+			opacity, box-shadow, transform, filter, backdrop-filter;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: 0.3s;
 	}
 
 	.transition-fast {
-		transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+		transition-property: color, background-color, border-color, text-decoration-color, fill, stroke,
+			opacity, box-shadow, transform, filter, backdrop-filter;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: 0.15s;
 	}
 
 	/* ===================================================================== */

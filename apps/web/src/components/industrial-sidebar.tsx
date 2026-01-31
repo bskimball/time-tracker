@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "~/lib/cn";
 import { Button } from "@monorepo/design-system";
@@ -57,6 +57,11 @@ export function IndustrialSidebar({
 }: IndustrialSidebarProps) {
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const location = useLocation();
+	const [isMounted, setIsMounted] = useState(false);
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	return (
 		<div className="flex h-screen overflow-hidden bg-background">
@@ -147,6 +152,7 @@ export function IndustrialSidebar({
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -168,21 +174,25 @@ export function IndustrialSidebar({
 						<div className="flex items-center gap-2">
 							<div className="h-2 w-2 rounded-full bg-primary" />
 							<div className="text-sm text-muted-foreground">
-								{new Date().toLocaleString("en-US", {
-									weekday: "short",
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-									hour: "2-digit",
-									minute: "2-digit",
-								})}
+								{isMounted
+									? new Date().toLocaleString("en-US", {
+											weekday: "short",
+											year: "numeric",
+											month: "short",
+											day: "numeric",
+											hour: "2-digit",
+											minute: "2-digit",
+										})
+									: "Loading…"}
 							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Content */}
-				<div className="flex-1 overflow-y-auto p-6">{children}</div>
+				<div id="main-content" className="flex-1 overflow-y-auto p-6" tabIndex={-1}>
+					{children}
+				</div>
 			</main>
 		</div>
 	);

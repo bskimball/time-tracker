@@ -183,7 +183,7 @@ export default function Component() {
 
 			{loading || !data ? (
 				<div className="flex items-center justify-center py-12">
-					<div className="text-muted-foreground">Loading...</div>
+					<div className="text-muted-foreground">Loading…</div>
 				</div>
 			) : (
 				<>
@@ -197,7 +197,7 @@ export default function Component() {
 										<CardTitle className="text-primary">Avg Units/Hour</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-primary">
+										<div className="font-mono-industrial text-2xl font-bold text-primary font-data">
 											{benchmarkData.productivity.current}
 										</div>
 										<p className="text-sm text-foreground mt-1">
@@ -212,7 +212,7 @@ export default function Component() {
 										<CardTitle className="text-secondary">Top Performer</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-secondary">
+										<div className="font-mono-industrial text-2xl font-bold text-secondary font-data">
 											{benchmarkData.productivity.top10Percent} u/h
 										</div>
 										<p className="text-sm text-foreground mt-1">Industry top 10%</p>
@@ -224,7 +224,7 @@ export default function Component() {
 										<CardTitle className="text-accent">Task Completion</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-accent">
+										<div className="font-mono-industrial text-2xl font-bold text-accent font-data">
 											{benchmarkData.quality.current}%
 										</div>
 										<p className="text-sm text-foreground mt-1">On-time rate</p>
@@ -236,10 +236,10 @@ export default function Component() {
 										<CardTitle className="text-destructive">Bottleneck Alert</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-destructive">
+										<div className="font-mono-industrial text-2xl font-bold text-destructive font-data">
 											RECEIVING
 										</div>
-										<p className="text-sm text-foreground mt-1">45% utilization</p>
+										<p className="text-sm text-foreground mt-1 font-data">45% utilization</p>
 									</CardBody>
 								</Card>
 							</div>
@@ -280,9 +280,9 @@ export default function Component() {
 												{employeeProductivity.map((employee, index) => (
 													<tr key={index} className="border-b">
 														<td className="py-3 px-4 font-medium">{employee.employee}</td>
-														<td className="text-right py-3 px-4">-</td>
-														<td className="text-right py-3 px-4">-</td>
-														<td className="text-right py-3 px-4 font-medium">{employee.value}</td>
+														<td className="text-right py-3 px-4 font-data">-</td>
+														<td className="text-right py-3 px-4 font-data">-</td>
+														<td className="text-right py-3 px-4 font-medium font-data">{employee.value}</td>
 														<td className="py-3 px-4">
 															<span className="px-2 py-1 text-xs font-industrial font-medium bg-secondary/20 text-secondary border border-secondary uppercase">
 																{employee.station}

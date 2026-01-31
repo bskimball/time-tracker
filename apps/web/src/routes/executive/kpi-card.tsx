@@ -77,9 +77,9 @@ const colorStyles = {
 };
 
 const trendIcons = {
-	up: <LiaArrowUpSolid className="w-4 h-4" />,
-	down: <LiaArrowDownSolid className="w-4 h-4" />,
-	neutral: <LiaMinusSolid className="w-4 h-4" />,
+	up: <LiaArrowUpSolid className="w-4 h-4" aria-hidden="true" />,
+	down: <LiaArrowDownSolid className="w-4 h-4" aria-hidden="true" />,
+	neutral: <LiaMinusSolid className="w-4 h-4" aria-hidden="true" />,
 };
 
 export function KPICard({
@@ -147,12 +147,12 @@ export function KPICard({
 							</h3>
 							{Icon && (
 								<div className={`p-2 rounded-md ${styles.bg}`}>
-									<Icon className={`h-5 w-5 ${styles.icon}`} />
+									<Icon className={`h-5 w-5 ${styles.icon}`} aria-hidden="true" />
 								</div>
 							)}
 						</div>
 						<div className="mt-2 flex items-baseline gap-2">
-							<span className="text-3xl font-bold tracking-tight text-foreground">
+							<span className="text-3xl font-bold tracking-tight text-foreground font-data">
 								{typeof value === "number" ? value.toLocaleString() : value}
 							</span>
 						</div>
