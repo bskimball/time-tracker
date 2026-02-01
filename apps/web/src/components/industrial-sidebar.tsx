@@ -3,7 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "~/lib/cn";
-import { Button, LedIndicator } from "@monorepo/design-system";
+import { Button, LedIndicator, SafetyStripes, Badge } from "@monorepo/design-system";
 import {
 	LiaTachometerAltSolid,
 	LiaDesktopSolid,
@@ -60,37 +60,43 @@ export function IndustrialSidebar({
 	const [isMounted, setIsMounted] = useState(false);
 
 	useEffect(() => {
-		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setIsMounted(true);
 	}, []);
 
 	return (
 		<div className="flex h-screen overflow-hidden bg-background">
-			{/* Modern Sidebar */}
+			{/* Precision Sidebar */}
 			<aside
 				data-collapsed={isCollapsed}
 				className={cn(
-					"bg-sidebar relative flex flex-col border-r border-sidebar-border transition-all duration-300 shadow-sm z-20 shrink-0 overflow-hidden",
-					isCollapsed ? "w-16" : "w-64"
+					"bg-card relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden",
+					isCollapsed ? "w-16" : "w-72"
 				)}
 			>
-				{/* Header with brand */}
-				<div className="border-b border-sidebar-border bg-sidebar/50 p-4">
-					<Link to={brandHref} className="flex items-center gap-3">
+				{/* Machined Header */}
+				<div className="relative border-b border-border bg-muted/10 p-5 overflow-hidden group">
+					<div className="absolute inset-0 bg-noise opacity-50 pointer-events-none" />
+					<Link to={brandHref} className="relative flex items-center gap-4 z-10 hover:opacity-80 transition-opacity">
+						<div className="relative">
+							<div className="absolute inset-0 bg-primary/20 blur-md rounded-full animate-pulse" />
+							<LedIndicator active className="relative z-10" />
+						</div>
+						
 						{!isCollapsed && (
-							<>
-								<LedIndicator active />
-								<span className="text-lg font-industrial font-bold tracking-widest text-sidebar-foreground uppercase">
+							<div className="flex flex-col">
+								<span className="text-lg font-display font-bold tracking-tight text-foreground leading-none uppercase">
 									{title}
 								</span>
-							</>
+								<span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase mt-1">
+									Sys.Ver 2.0.4
+								</span>
+							</div>
 						)}
-						{isCollapsed && <LedIndicator active className="mx-auto" />}
 					</Link>
 				</div>
 
-				{/* Navigation Links */}
-				<nav className="flex-1 overflow-y-auto p-2" data-collapsed={isCollapsed}>
+				{/* Navigation Grid */}
+				<nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1" data-collapsed={isCollapsed}>
 					{navLinks.map((link) => {
 						const isActive =
 							location.pathname === link.to ||
@@ -99,54 +105,80 @@ export function IndustrialSidebar({
 						const Icon = link.icon ? iconMap[link.icon] : null;
 
 						return (
-							<Link key={link.to} to={link.to}>
+							<Link key={link.to} to={link.to} className="block group">
 								<div
 									className={cn(
-										"group relative mb-2 flex w-full items-center rounded-[2px] border transition-all duration-200",
-										isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2",
+										"relative flex items-center transition-all duration-200 rounded-[2px] overflow-hidden",
+										isCollapsed ? "justify-center h-10 w-10 mx-auto" : "h-10 px-3",
 										isActive
-											? "bg-primary text-primary-foreground border-primary shadow-industrial"
-											: "bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:border-primary/50 hover:bg-muted/50"
+											? "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+											: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
 									)}
 								>
-									{Icon ? (
-										<Icon className={cn("h-5 w-5 shrink-0", isCollapsed && "mx-auto")} />
-									) : (
-										<LedIndicator
-											active={isActive}
-											className={cn(isCollapsed && "mx-auto")}
-										/>
+									{/* Active State Marker (Left Strip) */}
+									{isActive && (
+										<div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/20" />
 									)}
 
-									{!isCollapsed && <span className="text-xs font-industrial font-bold uppercase tracking-wide">{link.label}</span>}
+									{Icon ? (
+										<Icon 
+											className={cn(
+												"h-4 w-4 shrink-0 transition-transform duration-200", 
+												isActive ? "scale-110" : "group-hover:scale-110",
+												!isCollapsed && "mr-3"
+											)} 
+										/>
+									) : (
+										<div className={cn("h-1.5 w-1.5 rounded-full bg-current opacity-50", !isCollapsed && "mr-3")} />
+									)}
+
+									{!isCollapsed && (
+										<span className={cn(
+											"text-xs font-industrial uppercase tracking-wider font-medium truncate",
+											isActive ? "opacity-100" : "opacity-80 group-hover:opacity-100"
+										)}>
+											{link.label}
+										</span>
+									)}
+									
+									{/* Hover Tech Detail */}
+									{!isCollapsed && !isActive && (
+										<span className="ml-auto opacity-0 group-hover:opacity-30 text-[8px] font-mono transition-opacity">
+											→
+										</span>
+									)}
 								</div>
 							</Link>
 						);
 					})}
 				</nav>
 
-				{/* User section and collapse toggle */}
-				<div className="border-t border-sidebar-border bg-sidebar/50 p-2">
-					{!isCollapsed && userSection && (
-						<div className="mb-2 rounded-md border border-sidebar-border bg-sidebar-accent p-2 text-xs text-sidebar-foreground">
-							{userSection}
+				{/* Footer Control Panel */}
+				<div className="border-t border-border bg-muted/5 p-3 space-y-3">
+					{!isCollapsed && (
+						<div className="px-1">
+							<SafetyStripes position="top" className="mb-3 opacity-30" />
+							{userSection && (
+								<div className="mb-3 rounded-[2px] border border-border/50 bg-background p-3 shadow-sm">
+									{userSection}
+								</div>
+							)}
 						</div>
 					)}
 
-					{/* Collapse toggle button */}
 					<Button
-						variant="ghost"
+						variant="outline"
 						size="sm"
 						onPress={() => setIsCollapsed((prev) => !prev)}
 						className={cn(
-							"flex w-full items-center justify-center rounded-[2px] border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:border-primary/50 hover:bg-muted/50 cursor-pointer relative z-50",
-							isCollapsed ? "justify-center" : "justify-start"
+							"w-full flex items-center justify-center border-dashed text-muted-foreground hover:text-foreground hover:border-solid hover:border-primary/50 transition-all",
+							isCollapsed ? "h-10 w-10 p-0 mx-auto" : "h-9"
 						)}
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 					>
 						<svg
 							className={cn(
-								"h-5 w-5 transition-transform pointer-events-none",
+								"h-4 w-4 transition-transform duration-300",
 								!isCollapsed && "rotate-180"
 							)}
 							fill="none"
@@ -155,45 +187,58 @@ export function IndustrialSidebar({
 							aria-hidden="true"
 						>
 							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
+								strokeLinecap="square"
+								strokeLinejoin="miter"
+								strokeWidth={1.5}
 								d="M13 5l7 7-7 7M5 5l7 7-7 7"
 							/>
 						</svg>
-						{!isCollapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
+						{!isCollapsed && <span className="ml-2 text-[10px] font-mono uppercase tracking-widest">Collapse_Menu</span>}
 					</Button>
 				</div>
 			</aside>
 
-			{/* Main content area */}
-			<main className="flex flex-1 flex-col overflow-hidden">
-				{/* Top bar */}
-				<div className="border-b border-border bg-muted/30 px-6 py-3 shadow-sm">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<div className="h-2 w-2 rounded-full bg-primary" />
-							<div className="text-sm text-muted-foreground">
-								{isMounted
-									? new Date().toLocaleString("en-US", {
-											weekday: "short",
-											year: "numeric",
-											month: "short",
-											day: "numeric",
-											hour: "2-digit",
-											minute: "2-digit",
-										})
-									: "Loading…"}
-							</div>
+			{/* Main Content Area */}
+			<main className="flex flex-1 flex-col overflow-hidden relative bg-background">
+				<div className="absolute inset-0 bg-tactical-grid opacity-[0.03] pointer-events-none" />
+				
+				{/* Top Status Bar */}
+				<div className="border-b border-border bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between">
+					<div className="flex items-center gap-4">
+						<Badge variant="outline" className="rounded-[1px] border-primary/20 text-primary bg-primary/5 text-[10px] py-0 h-5">
+							<span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse mr-2" />
+							SYSTEM_ONLINE
+						</Badge>
+						<div className="h-4 w-px bg-border/50" />
+						<div className="text-xs font-mono text-muted-foreground flex items-center gap-2">
+							<span className="opacity-50">LOC:</span>
+							<span className="text-foreground">HQ_SERVER_01</span>
+						</div>
+					</div>
+
+					<div className="flex items-center gap-3">
+						<div className="font-mono text-xs text-muted-foreground tabular-nums tracking-wide">
+							{isMounted
+								? new Date().toLocaleString("en-US", {
+										hour: "2-digit",
+										minute: "2-digit",
+										second: "2-digit",
+										hour12: false,
+									})
+								: "--:--:--"}
+						</div>
+						<div className="font-mono text-xs text-muted-foreground border-l border-border/50 pl-3">
+							{isMounted ? new Date().toLocaleDateString("en-US", { month: 'short', day: '2-digit' }).toUpperCase() : "-- ---"}
 						</div>
 					</div>
 				</div>
 
-				{/* Content */}
-				<div id="main-content" className="flex-1 overflow-y-auto p-6" tabIndex={-1}>
+				{/* Viewport */}
+				<div id="main-content" className="flex-1 overflow-y-auto p-8 relative z-0" tabIndex={-1}>
 					{children}
 				</div>
 			</main>
 		</div>
 	);
 }
+
