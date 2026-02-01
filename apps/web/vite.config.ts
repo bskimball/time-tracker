@@ -48,7 +48,16 @@ export default defineConfig(({ mode }) => {
 			}),
 			devtoolsJson(),
 		],
+		optimizeDeps: {
+			exclude: ["@prisma/client", ".prisma/client"],
+		},
+		ssr: {
+			noExternal: ["@monorepo/design-system"],
+			external: ["@prisma/client", ".prisma/client"],
+		},
 		define: {
+
+
 			"import.meta.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
 		},
 	};

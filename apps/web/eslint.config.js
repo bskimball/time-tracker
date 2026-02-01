@@ -153,6 +153,7 @@ export default [
 			".cache",
 			"coverage",
 			"src/generated",
+			"src/lib/generated",
 			"prisma/generated/**/*",
 			".factory/**/*",
 		],

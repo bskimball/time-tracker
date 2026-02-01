@@ -12,13 +12,7 @@ export default function AboutCTA() {
 			<div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 			<div className="absolute bottom-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-secondary/30 to-transparent" />
 
-			<div className="container mx-auto px-4 relative">
-				{/* Corner Accents - System: LG size, Section spacing */}
-				<div className="corner-section-tl corner-accent-lg corner-primary" />
-				<div className="corner-section-tr corner-accent-lg corner-secondary" />
-				<div className="corner-section-bl corner-accent-lg corner-primary" />
-				<div className="corner-section-br corner-accent-lg corner-secondary" />
-
+			<div className="container mx-auto px-6 md:px-8 relative">
 				<IndustrialPanel variant="destructive" className="max-w-4xl mx-auto p-12 text-center animate-scale-in shadow-xl">
 					<h2 className="text-4xl font-display font-bold text-foreground mb-6 animate-fade-in-up animate-delay-100">
 						Join Hundreds of Industrial Operations

@@ -46,24 +46,31 @@ export async function action({ request }: { request: Request }) {
 	const formData = await request.formData();
 	const employeeId = formData.get("employeeId") as string;
 	const taskTypeId = formData.get("taskTypeId") as string;
-	const priority = (formData.get("priority") as string) || "MEDIUM";
+	const priorityValue = (formData.get("priority") as string) || "MEDIUM";
+	const priority =
+		priorityValue === "LOW" || priorityValue === "MEDIUM" || priorityValue === "HIGH"
+			? priorityValue
+			: "MEDIUM";
 	const notes = (formData.get("notes") as string) || undefined;
 
 	try {
 		const assignment = await assignTask({
 			employeeId,
 			taskTypeId,
-			priority: priority as any,
+			priority,
 			notes,
 		});
 		return new Response(JSON.stringify(assignment), {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (err: any) {
-		return new Response(JSON.stringify({ error: err?.message || String(err) }), {
+	} catch (err: unknown) {
+		return new Response(
+			JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
+			{
 			status: 400,
 			headers: { "Content-Type": "application/json" },
-		});
+			}
+		);
 	}
 }

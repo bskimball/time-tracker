@@ -22,23 +22,29 @@ interface CardBodyProps {
 }
 
 /**
- * Card component - Industrial Professional style.
- * Tight corners, subtle depth, premium feel with subtle interactions.
+ * Card component - Industrial Professional style (Braun/Rams).
+ * Clean lines, subtle machined details, matte finish.
  */
 export function Card({ children, className = "" }: CardProps) {
 	return (
 		<div
 			className={cn(
-				"rounded-sm bg-card text-card-foreground border border-border shadow-sm",
-				"transition-colors duration-200 ease-out",
-				"hover:border-primary/20",
+				"rounded-[2px] bg-card text-card-foreground border border-border shadow-sm relative group overflow-hidden",
+				"transition-all duration-300 ease-out",
+				"hover:border-border hover:shadow-industrial",
 				className
 			)}
 		>
-			{children}
+			{/* Subtle machined corner accent - only visible on hover/active context */}
+			<div 
+				className="corner-machined corner-machined-tl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
+				aria-hidden="true" 
+			/>
+			<div className="relative z-10">{children}</div>
 		</div>
 	);
 }
+
 
 /**
  * Card header section - typically contains the title and actions.
@@ -47,7 +53,7 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
 	return (
 		<div
 			className={cn(
-				"px-6 py-4 border-b border-border bg-muted/10 rounded-t-sm",
+				"px-6 py-5 border-b border-border/50 bg-muted/10",
 				"transition-colors duration-150",
 				className
 			)}
@@ -62,7 +68,7 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
  */
 export function CardTitle({ children, className = "" }: CardTitleProps) {
 	return (
-		<h2 className={cn("text-lg font-heading transition-colors duration-150", className)}>
+		<h2 className={cn("text-lg font-heading font-semibold tracking-tight text-foreground", className)}>
 			{children}
 		</h2>
 	);
@@ -72,5 +78,6 @@ export function CardTitle({ children, className = "" }: CardTitleProps) {
  * Card body section - main content area.
  */
 export function CardBody({ children, className = "" }: CardBodyProps) {
-	return <div className={cn("px-6 py-4", className)}>{children}</div>;
+	return <div className={cn("px-6 py-5", className)}>{children}</div>;
 }
+

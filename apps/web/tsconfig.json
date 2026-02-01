@@ -17,5 +17,6 @@
 			"~/*": ["./src/*"],
 			"@monorepo/design-system": ["../../packages/design-system/src"]
 		}
+
 	}
 }

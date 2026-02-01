@@ -55,7 +55,7 @@ export default async function Component() {
 											{plainUsers.map((user) => (
 												<div
 													key={user.id}
-													className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border"
+													className="flex items-center justify-between p-3 bg-muted/30 rounded-[2px] border border-border/50 transition-colors hover:border-primary/50"
 												>
 													<div>
 														<p className="font-medium">{user.name || user.email}</p>

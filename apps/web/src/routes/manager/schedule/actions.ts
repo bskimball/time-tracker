@@ -1,6 +1,8 @@
 "use server";
 
 import { addDays, startOfWeek } from "date-fns";
+import { db } from "~/lib/db";
+import { validateRequest } from "~/lib/auth";
 
 type ShiftType = "MORNING" | "SWING" | "NIGHT";
 
@@ -101,4 +103,48 @@ export async function getScheduleData(): Promise<ScheduleData> {
 	}
 
 	return cachedSchedule;
+}
+
+export async function bulkReassignShiftAssignments(params: {
+	assignmentIds: string[];
+	newStationId?: string;
+	newEmployeeId?: string;
+}) {
+	const { user } = await validateRequest();
+	if (!user) {
+		throw new Error("Unauthorized");
+	}
+
+	if (!params.assignmentIds?.length) {
+		throw new Error("No shift assignments selected");
+	}
+
+	if (!params.newStationId && !params.newEmployeeId) {
+		throw new Error("New station or employee is required");
+	}
+
+	type ShiftAssignmentUpdater = {
+		shiftAssignment: {
+			update: (args: {
+				where: { id: string };
+				data: { employeeId?: string; stationId?: string };
+			}) => Promise<unknown>;
+		};
+	};
+
+	const updates = await db.$transaction((tx) =>
+		Promise.all(
+			params.assignmentIds.map((assignmentId) =>
+				(tx as unknown as ShiftAssignmentUpdater).shiftAssignment.update({
+					where: { id: assignmentId },
+					data: {
+						...(params.newEmployeeId ? { employeeId: params.newEmployeeId } : {}),
+						...(params.newStationId ? { stationId: params.newStationId } : {}),
+					},
+				})
+			)
+		)
+	);
+
+	return updates;
 }

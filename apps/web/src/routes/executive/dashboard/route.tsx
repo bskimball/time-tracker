@@ -1,8 +1,14 @@
-import { Card, CardBody } from "@monorepo/design-system";
-import { Alert } from "@monorepo/design-system";
+import {
+	Card,
+	CardBody,
+	CardHeader,
+	CardTitle,
+	Badge,
+	Alert,
+	Metric,
+} from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { KPICard } from "~/routes/executive/kpi-card";
-import { IndustrialPanel } from "@monorepo/design-system";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
 import {
@@ -15,6 +21,12 @@ import { getDateRange } from "~/lib/date-utils";
 import { format } from "date-fns";
 import { RefreshButton } from "./refresh-button";
 import { TimeRangeTabs } from "./time-range-tabs";
+import {
+	LiaChartBarSolid,
+	LiaDollarSignSolid,
+	LiaChartLineSolid,
+	LiaCalendarAltSolid,
+} from "react-icons/lia";
 
 type TimeRange = "today" | "week" | "month";
 
@@ -37,27 +49,27 @@ export default async function Component({
 
 	const dateRange = getDateRange(timeRange);
 
-	// Helper to determine KPI colors and trends
+	// Helper to determine KPI trends
 	const getKPIConfig = (value: number, type: string) => {
 		switch (type) {
 			case "productivity":
-				if (value > 20) return { color: "green" as const, direction: "up" as const };
-				if (value > 15) return { color: "yellow" as const, direction: "neutral" as const };
-				return { color: "red" as const, direction: "down" as const };
+				if (value > 20) return { direction: "up" as const };
+				if (value > 15) return { direction: "neutral" as const };
+				return { direction: "down" as const };
 			case "overtime":
-				if (value > 15) return { color: "red" as const, direction: "up" as const };
-				if (value > 10) return { color: "yellow" as const, direction: "neutral" as const };
-				return { color: "green" as const, direction: "down" as const };
+				if (value > 15) return { direction: "up" as const };
+				if (value > 10) return { direction: "neutral" as const };
+				return { direction: "down" as const };
 			case "occupancy":
-				if (value > 85) return { color: "red" as const, direction: "up" as const };
-				if (value > 70) return { color: "yellow" as const, direction: "neutral" as const };
-				return { color: "green" as const, direction: "down" as const };
+				if (value > 85) return { direction: "up" as const };
+				if (value > 70) return { direction: "neutral" as const };
+				return { direction: "down" as const };
 			case "variance":
-				if (Math.abs(value) > 10) return { color: "red" as const, direction: "up" as const };
-				if (Math.abs(value) > 5) return { color: "yellow" as const, direction: "neutral" as const };
-				return { color: "green" as const, direction: "down" as const };
+				if (Math.abs(value) > 10) return { direction: "up" as const };
+				if (Math.abs(value) > 5) return { direction: "neutral" as const };
+				return { direction: "down" as const };
 			default:
-				return { color: "blue" as const, direction: "neutral" as const };
+				return { direction: "neutral" as const };
 		}
 	};
 
@@ -80,18 +92,18 @@ export default async function Component({
 			</div>
 
 			<div className="flex items-center justify-between px-1">
-				<p className="text-sm font-medium text-muted-foreground">
-					Showing data for: <span className="text-foreground">{dateRange.display}</span>
+				<p className="text-sm font-medium text-muted-foreground font-mono">
+					DATA_RANGE: <span className="text-foreground">{dateRange.display}</span>
 				</p>
 			</div>
 
 			{/* Critical Alerts */}
 			{alerts.length > 0 && (
-				<div className="space-y-3">
-					<h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-						<span className="relative flex h-3 w-3">
+				<div className="space-y-4">
+					<h2 className="text-sm font-industrial font-bold text-foreground flex items-center gap-2 tracking-widest uppercase">
+						<span className="relative flex h-2 w-2">
 							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-							<span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+							<span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
 						</span>
 						Critical Attention Needed
 					</h2>
@@ -100,26 +112,23 @@ export default async function Component({
 							<Alert
 								key={alert.id}
 								variant={alert.type}
-								className="relative shadow-sm border border-destructive/20 bg-destructive/5"
 							>
-								<div className="corner-card-tl corner-accent-sm corner-destructive" />
-								<div className="corner-card-tr corner-accent-sm corner-destructive" />
 								<div className="flex justify-between items-start">
 									<div>
-										<h3 className="font-semibold text-base">{alert.title}</h3>
-										<p className="text-sm mt-1 opacity-90">{alert.message}</p>
+										<h3 className="font-bold text-base font-heading tracking-tight">{alert.title}</h3>
+										<p className="text-sm mt-1 opacity-90 font-mono text-xs">{alert.message}</p>
 									</div>
-									<span
-										className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${
+									<Badge
+										variant={
 											alert.priority === "high"
-												? "bg-destructive text-destructive-foreground"
+												? "destructive"
 												: alert.priority === "medium"
-													? "bg-amber-500 text-white"
-													: "bg-blue-500 text-white"
-										}`}
+													? "primary"
+													: "secondary"
+										}
 									>
 										{alert.priority}
-									</span>
+									</Badge>
 								</div>
 							</Alert>
 						))}
@@ -133,7 +142,6 @@ export default async function Component({
 					title="Active Employees"
 					value={kpis.totalActiveEmployees}
 					subtitle="Current workforce"
-					color="blue"
 					icon="users"
 					trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
 				/>
@@ -142,7 +150,6 @@ export default async function Component({
 					title="Productivity Rate"
 					value={`${kpis.productivityRate} u/hr`}
 					subtitle={`${format(new Date(), "EEEE")}'s average`}
-					color={productivityConfig.color}
 					icon="chart"
 					trend={{
 						direction: productivityConfig.direction,
@@ -160,7 +167,6 @@ export default async function Component({
 					title="Overtime %"
 					value={`${kpis.overtimePercentage}%`}
 					subtitle="Of total hours"
-					color={overtimeConfig.color}
 					icon="clock"
 					trend={{
 						direction: overtimeConfig.direction,
@@ -178,7 +184,6 @@ export default async function Component({
 					title="Occupancy Level"
 					value={`${kpis.occupancyLevel.toFixed(1)}%`}
 					subtitle="Station utilization"
-					color={occupancyConfig.color}
 					icon="industry"
 					trend={{
 						direction: occupancyConfig.direction,
@@ -195,14 +200,14 @@ export default async function Component({
 
 			{/* Financial Overview */}
 			<div className="relative">
-				<div className="corner-panel-tl corner-accent-sm corner-muted" />
-				<h2 className="text-xl font-bold text-foreground mb-4">Financial Overview</h2>
+				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
+					Financial Overview
+				</h2>
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 					<KPICard
 						title="Labor Cost Per Unit"
 						value={`$${kpis.laborCostPerUnit}`}
 						subtitle="Average cost analysis"
-						color={laborCost.variancePercentage > 0 ? "red" : "green"}
 						icon="dollar"
 					/>
 
@@ -210,7 +215,6 @@ export default async function Component({
 						title="Cost Variance"
 						value={`${laborCost.variancePercentage > 0 ? "+" : ""}${laborCost.variancePercentage}%`}
 						subtitle={`${laborCost.variance > 0 ? "Over" : "Under"} budget`}
-						color={varianceConfig.color}
 						icon="percent"
 						trend={{
 							direction: varianceConfig.direction,
@@ -223,7 +227,6 @@ export default async function Component({
 						title="Efficiency Ratio"
 						value={`${(kpis.efficiencyRatio * 100).toFixed(0)}%`}
 						subtitle="Performance score"
-						color="purple"
 						icon="award"
 						trend={{ direction: "up", value: "+2%", label: "vs target" }}
 					/>
@@ -231,73 +234,71 @@ export default async function Component({
 			</div>
 
 			{/* Station Performance Overview */}
-			<IndustrialPanel className="relative">
-				<div className="corner-panel-tl corner-accent-sm corner-muted" />
-				<div className="p-6 border-b border-border">
-					<div className="flex items-center justify-between">
-						<h2 className="text-lg font-bold text-foreground uppercase tracking-wide font-heading">
-							Station Performance
-						</h2>
-						<Link to="/executive/analytics" className="text-sm text-primary hover:underline">
-							View All &rarr;
-						</Link>
-					</div>
-				</div>
-				<div className="p-6">
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{stationData.slice(0, 6).map((station) => (
-							<div
-								key={station.stationId}
-								className="border border-border rounded-sm p-4 bg-muted/20"
-							>
-								<div className="flex justify-between items-center mb-3">
-									<h3 className="font-semibold font-heading">{station.stationName}</h3>
-									<div
-										className={`w-2 h-2 rounded-full ${station.occupancyRate > 90 ? "bg-red-500 animate-pulse-glow" : station.occupancyRate > 70 ? "bg-green-500" : "bg-yellow-500"}`}
-									/>
-								</div>
-								<div className="grid grid-cols-3 gap-2 text-center">
-									<div className="bg-muted/30 rounded-sm p-2">
-										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">
-											Staff
-										</div>
-										<div className="font-bold text-lg font-data">{station.totalEmployees}</div>
-									</div>
-									<div className="bg-muted/30 rounded-sm p-2">
-										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">
-											U/Hr
-										</div>
-										<div className="font-bold text-lg font-data">
-											{station.avgUnitsPerHour.toFixed(1)}
-										</div>
-									</div>
-									<div className="bg-muted/30 rounded-sm p-2">
-										<div className="text-[10px] text-muted-foreground uppercase tracking-wider font-heading">
-											Occ
-										</div>
+			<div className="relative">
+				<Card className="overflow-visible border-border/60">
+					<CardHeader className="bg-muted/30 border-b border-border/50">
+						<div className="flex items-center justify-between">
+							<CardTitle className="uppercase tracking-widest font-industrial text-sm">
+								Station Performance
+							</CardTitle>
+							<Link to="/executive/analytics" className="text-xs font-mono text-primary hover:underline">
+								VIEW_ALL &rarr;
+							</Link>
+						</div>
+					</CardHeader>
+					<CardBody className="p-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{stationData.slice(0, 6).map((station) => (
+								<div
+									key={station.stationId}
+									className="group border border-border/50 rounded-[2px] p-4 bg-card hover:border-primary/50 transition-all duration-200"
+								>
+									<div className="flex justify-between items-center mb-4">
+										<h3 className="font-bold font-heading text-sm">{station.stationName}</h3>
 										<div
-											className={`font-bold text-lg font-data ${
+											className={`w-1.5 h-1.5 rounded-full ${
 												station.occupancyRate > 90
-													? "text-destructive"
+													? "bg-destructive animate-pulse"
 													: station.occupancyRate > 70
-														? "text-emerald-600 dark:text-emerald-400"
-														: "text-amber-600 dark:text-amber-400"
+														? "bg-chart-3"
+														: "bg-chart-1"
 											}`}
-										>
-											{station.occupancyRate.toFixed(0)}%
-										</div>
+										/>
+									</div>
+									<div className="grid grid-cols-3 gap-4 text-center">
+										<Metric
+											label="Staff"
+											value={station.totalEmployees}
+											className="items-center text-center"
+										/>
+										<Metric
+											label="U/Hr"
+											value={station.avgUnitsPerHour.toFixed(1)}
+											className="items-center text-center"
+										/>
+										<Metric
+											label="Occ"
+											value={`${station.occupancyRate.toFixed(0)}%`}
+											className="items-center text-center"
+											trendDirection={
+												station.occupancyRate > 90
+													? "down"
+													: station.occupancyRate > 70
+														? "up"
+														: "neutral"
+											}
+										/>
 									</div>
 								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</IndustrialPanel>
+							))}
+						</div>
+					</CardBody>
+				</Card>
+			</div>
 
 			{/* Quick Actions */}
 			<div className="relative">
-				<div className="corner-panel-tl corner-accent-sm corner-muted" />
-				<h2 className="text-xl font-bold text-foreground mb-4 uppercase tracking-wide font-heading">
+				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
 					Quick Actions
 				</h2>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -306,49 +307,40 @@ export default async function Component({
 							title: "Productivity Report",
 							desc: "Detailed efficiency metrics",
 							href: "/executive/analytics?section=productivity",
-							icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+							icon: LiaChartBarSolid,
 						},
 						{
 							title: "Cost Analysis",
 							desc: "Labor & operational costs",
 							href: "/executive/analytics?section=labor-cost",
-							icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+							icon: LiaDollarSignSolid,
 						},
 						{
 							title: "Trend Analysis",
 							desc: "Historical performance",
 							href: "/executive/analytics?section=trends",
-							icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+							icon: LiaChartLineSolid,
 						},
 						{
 							title: "Capacity Planning",
 							desc: "Future resource allocation",
 							href: "/executive/analytics?section=capacity",
-							icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+							icon: LiaCalendarAltSolid,
 						},
 					].map((action) => (
 						<Link key={action.title} to={action.href}>
-							<Card className="h-full">
-								<CardBody className="p-6 flex flex-col items-center text-center gap-3">
-									<div className="p-3 rounded-full bg-primary/10 text-primary">
-										<svg
-											className="w-6 h-6"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-											aria-hidden="true"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d={action.icon}
-											/>
-										</svg>
+							<Card className="h-full hover:border-primary/50 transition-colors duration-200">
+								<CardBody className="p-6 flex flex-col items-center text-center gap-3 group">
+									<div className="p-3 rounded-[2px] bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-200">
+										<action.icon className="w-5 h-5" aria-hidden="true" />
 									</div>
 									<div>
-										<h3 className="font-semibold text-foreground font-heading">{action.title}</h3>
-										<p className="text-sm text-muted-foreground mt-1">{action.desc}</p>
+										<h3 className="font-bold text-foreground font-heading uppercase tracking-tight text-sm">
+											{action.title}
+										</h3>
+										<p className="text-xs text-muted-foreground mt-1 font-mono tracking-tight">
+											{action.desc}
+										</p>
 									</div>
 								</CardBody>
 							</Card>
@@ -359,3 +351,4 @@ export default async function Component({
 		</div>
 	);
 }
+

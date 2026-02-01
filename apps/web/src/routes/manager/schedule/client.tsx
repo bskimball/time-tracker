@@ -14,6 +14,7 @@ import {
 	TabPanel,
 	Select,
 	Input,
+	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import type { ScheduleData } from "./actions";
@@ -96,12 +97,12 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							<button
 								key={day.date}
 								onClick={() => setSelectedDate(day.date)}
-								className={`rounded-lg border p-3 text-left transition-all ${
+								className={`rounded-[2px] border p-3 text-left transition-all ${
 									selectedDate === day.date
 										? "border-primary bg-primary/10"
 										: day.isToday
-											? "border-border bg-muted/30"
-											: "border-transparent bg-muted/20"
+											? "border-border/50 bg-muted/30"
+											: "border-border/30 bg-muted/10"
 								}`}
 							>
 								<div className="text-sm text-muted-foreground">
@@ -165,24 +166,24 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								{filteredEntries.map((entry) => (
 									<div
 										key={entry.id}
-										className={`rounded-lg border bg-card p-4 shadow-sm ${shiftColors[entry.shiftType]}`}
+										className={`rounded-[2px] border bg-card p-4 shadow-sm ${shiftColors[entry.shiftType]}`}
 									>
 										<div className="flex justify-between items-start">
 											<div>
-												<h3 className="font-semibold">{entry.employeeName}</h3>
-												<p className="text-xs text-muted-foreground">{entry.role}</p>
+												<h3 className="font-bold font-heading text-sm uppercase tracking-tight">{entry.employeeName}</h3>
+												<p className="text-xs text-muted-foreground font-mono">{entry.role}</p>
 											</div>
-											<span
-												className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+											<Badge
+												variant={
 													entry.status === "CONFIRMED"
-														? "bg-green-100 text-green-800"
+														? "success"
 														: entry.status === "PENDING"
-															? "bg-yellow-100 text-yellow-800"
-															: "bg-slate-200 text-slate-700"
-												}`}
+															? "primary"
+															: "secondary"
+												}
 											>
 												{entry.status}
-											</span>
+											</Badge>
 										</div>
 										<div className="mt-3 text-sm">
 											<p className="font-medium">{entry.stationName}</p>
@@ -238,30 +239,30 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 													{format(parseISO(entry.endTime), "h:mm a")}
 												</td>
 												<td className="p-3">
-													<span
-														className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+													<Badge
+														variant={
 															entry.role === "LEAD"
-																? "bg-indigo-100 text-indigo-800"
+																? "primary"
 																: entry.role === "SUPPORT"
-																	? "bg-rose-100 text-rose-800"
-																	: "bg-slate-100 text-slate-800"
-														}`}
+																	? "destructive"
+																	: "secondary"
+														}
 													>
 														{entry.role}
-													</span>
+													</Badge>
 												</td>
 												<td className="p-3">
-													<span
-														className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+													<Badge
+														variant={
 															entry.status === "CONFIRMED"
-																? "bg-green-100 text-green-800"
+																? "success"
 																: entry.status === "PENDING"
-																	? "bg-yellow-100 text-yellow-800"
-																	: "bg-slate-200 text-slate-700"
-														}`}
+																	? "primary"
+																	: "secondary"
+														}
 													>
 														{entry.status}
-													</span>
+													</Badge>
 												</td>
 												<td className="p-3">
 													<div className="flex gap-2">
@@ -319,16 +320,16 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												const utilization = Math.min((count / 4) * 100, 100);
 												return (
 													<td key={`${station.id}-${day.date}`} className="p-3 text-center">
-														<div className="h-10 rounded bg-muted">
+														<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">
 															<div
-																className="h-full rounded"
+																className="h-full transition-all duration-500"
 																style={{
 																	width: `${utilization}%`,
-																	backgroundColor: utilization > 80 ? "#f97316" : "#22c55e",
+																	backgroundColor: utilization > 80 ? "var(--color-primary)" : "var(--color-chart-3)",
 																}}
 															/>
 														</div>
-														<p className="text-xs text-muted-foreground mt-1">{count} shifts</p>
+														<p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">{count} SHIFTS</p>
 													</td>
 												);
 											})}

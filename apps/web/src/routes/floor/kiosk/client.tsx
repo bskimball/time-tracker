@@ -2,11 +2,18 @@
 
 import React, { useCallback, useRef, useEffect, useState, useMemo } from "react";
 import { useActionState } from "react";
-import { Button } from "@monorepo/design-system";
-import { Alert } from "@monorepo/design-system";
-import { Card, CardHeader, CardTitle, CardBody } from "@monorepo/design-system";
-import { SimpleInput } from "@monorepo/design-system";
-import { SimpleSelect } from "@monorepo/design-system";
+import {
+	Button,
+	Alert,
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+	SimpleInput,
+	SimpleSelect,
+	Badge,
+	LedIndicator,
+} from "@monorepo/design-system";
 import { pinToggleClock as pinToggleAction } from "../../time-clock/actions";
 import { useKioskMode, useAutoRefresh } from "../../time-clock/hooks";
 import { useOfflineActionQueue } from "../../time-clock/offline-queue";
@@ -192,44 +199,59 @@ export function KioskTimeClock({
 
 	return (
 		<KioskContext.Provider value={contextValue}>
-			<div className="flex flex-col gap-8">
-				<div className="grid lg:grid-cols-12 gap-8 items-start">
+			<div className="flex flex-col gap-8 bg-noise relative">
+				{/* Tactical grid overlay for the whole kiosk */}
+				<div className="absolute -inset-10 bg-tactical-grid opacity-5 pointer-events-none" aria-hidden="true" />
+
+				<div className="grid lg:grid-cols-12 gap-8 items-start relative z-10">
 					{/* Main Column: Clock In Form */}
 					<div
 						className={`transition-all duration-500 ${activeLogs.length > 0 ? "lg:col-span-7" : "lg:col-span-12"}`}
 					>
-						<Card className="bg-card border-border shadow-md">
-							<CardHeader>
-								<div className="flex justify-between items-center">
-									<CardTitle className="text-2xl font-display">Clock In</CardTitle>
+						<Card className="bg-card/80 backdrop-blur-sm border-border shadow-2xl relative group overflow-hidden">
+							{/* Machined corners for the main kiosk card */}
+							<div className="corner-machined corner-machined-tl opacity-20 group-hover:opacity-100 transition-opacity scale-75" aria-hidden="true" />
+							<div className="corner-machined corner-machined-br bottom-0 right-0 opacity-20 group-hover:opacity-100 transition-opacity scale-75" aria-hidden="true" />
+
+							{/* Scanner effect on hover */}
+							<div className="absolute inset-0 z-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity">
+								<div className="animate-scanner" />
+							</div>
+
+							<CardHeader className="border-b border-border/50 bg-muted/30">
+								<div className="flex justify-between items-center relative z-10">
+									<div className="flex flex-col">
+										<span className="font-mono text-[10px] text-primary/50 tracking-widest uppercase mb-1">
+											Terminal_01 // Auth_Req
+										</span>
+										<CardTitle className="text-3xl font-display font-bold tracking-tight">Clock In</CardTitle>
+									</div>
 									{/* Status Indicator inside Card Header */}
-									<div className="flex items-center gap-2">
-										<div
-											className={`h-2.5 w-2.5 rounded-full ${queue.length > 0 ? "bg-yellow-500 animate-pulse" : "bg-green-500"}`}
-										/>
-										<span className="text-xs font-data text-muted-foreground uppercase">
-											{queue.length > 0 ? "Syncing" : "Ready"}
+									<div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-[2px] border border-border/50 shadow-inner">
+										<LedIndicator active={queue.length === 0} className={queue.length > 0 ? "animate-pulse" : ""} />
+										<span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">
+											{queue.length > 0 ? "Sync_Active" : "System_Ready"}
 										</span>
 									</div>
 								</div>
 							</CardHeader>
-							<CardBody>
+							<CardBody className="p-8 md:p-12 relative z-10">
 								{pinState?.error && (
-									<Alert variant="error" className="mb-6">
+									<Alert variant="error" className="mb-8 animate-shake">
 										{pinState.error}
 									</Alert>
 								)}
 
 								{pinState?.success && (
-									<Alert variant="success" className="mb-6">
+									<Alert variant="success" className="mb-8 animate-fade-in">
 										{pinState.message}
 									</Alert>
 								)}
 
-								<form action={pinFormAction} onSubmit={handlePinSubmit} className="space-y-6">
-									<div className="flex flex-col gap-2">
-										<label className="text-sm font-medium text-foreground font-heading">
-											Enter Your PIN
+								<form action={pinFormAction} onSubmit={handlePinSubmit} className="space-y-8">
+									<div className="flex flex-col gap-3">
+										<label className="text-xs font-bold text-muted-foreground font-mono uppercase tracking-[0.2em] px-1">
+											Input_Identity_PIN
 										</label>
 										<SimpleInput
 											type="password"
@@ -242,31 +264,31 @@ export function KioskTimeClock({
 													setPin(value);
 												}
 											}}
-											placeholder="Enter your 4-6 digit PIN…"
+											placeholder="••••••"
 											autoComplete="off"
 											spellCheck={false}
 											maxLength={6}
 											pattern="[0-9]{4,6}"
 											inputMode="numeric"
 											required
-											className="text-lg text-center font-mono h-14 text-2xl tracking-widest"
+											className="text-4xl text-center font-mono h-24 tracking-[0.5em] bg-background/50 border-2 focus-visible:border-primary/50 transition-all shadow-inner"
 										/>
 									</div>
 
-									<div className="flex flex-col gap-2">
-										<label className="text-sm font-medium text-foreground font-heading">
-											Work Station
+									<div className="flex flex-col gap-3">
+										<label className="text-xs font-bold text-muted-foreground font-mono uppercase tracking-[0.2em] px-1">
+											Assigned_Station
 										</label>
 										<SimpleSelect
 											name="stationId"
 											value={stationId}
 											onChange={(value) => setStationId((value as string) || "")}
-											placeholder="Select station…"
+											placeholder="SELECT_STATION…"
 											options={stations.map((station) => ({
 												value: station.id,
 												label: station.name,
 											}))}
-											className="h-14 text-lg"
+											className="h-16 text-xl font-heading font-bold bg-background/50 border-2"
 										/>
 									</div>
 
@@ -274,16 +296,16 @@ export function KioskTimeClock({
 										type="submit"
 										variant="primary"
 										size="lg"
-										className="w-full py-6 text-xl font-heading uppercase tracking-wide"
+										className="w-full py-8 text-2xl font-display font-black uppercase tracking-widest shadow-industrial hover:shadow-industrial-hover active:scale-[0.98] transition-all"
 										disabled={isPinPending || !pin.trim() || !stationId}
 									>
 										{isPinPending ? (
-											<>
-												<span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-												Processing…
-											</>
+											<div className="flex items-center gap-4">
+												<span className="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full"></span>
+												<span>Processing…</span>
+											</div>
 										) : (
-											"Clock In / Out"
+											"Execute Toggle"
 										)}
 									</Button>
 								</form>
@@ -293,40 +315,51 @@ export function KioskTimeClock({
 
 					{/* Side Column: Active Sessions */}
 					{activeLogs.length > 0 && (
-						<div className="lg:col-span-5 space-y-4 animate-slide-in-right">
-							<div className="flex items-center justify-between mb-2">
-								<h3 className="font-heading text-lg text-muted-foreground uppercase tracking-wider">
-									Active Shifts
-								</h3>
-								<span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-data font-bold">
-									{activeLogs.length}
-								</span>
+						<div className="lg:col-span-5 space-y-6 animate-slide-in-right">
+							<div className="flex items-center justify-between px-2">
+								<div className="flex flex-col">
+									<span className="font-mono text-[10px] text-secondary/50 tracking-widest uppercase mb-1">
+										Live_Telemetry
+									</span>
+									<h3 className="font-display text-2xl font-bold text-foreground tracking-tight">
+										Active Personnel
+									</h3>
+								</div>
+								<Badge variant="primary" className="font-mono text-sm font-bold shadow-sm px-3 py-1">
+									{activeLogs.length.toString().padStart(2, '0')}
+								</Badge>
 							</div>
-							<div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+							<div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
 								{activeLogs.map((log) => (
 									<Card
 										key={log.id}
-										className="bg-muted/30 border-dashed border-border hover:border-primary/50 transition-colors"
+										className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
 									>
-										<CardBody className="p-4">
+										{/* Subtle secondary accents for telemetry cards */}
+										<div className="corner-machined corner-machined-tl scale-50 opacity-10 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+
+										<CardBody className="p-5">
 											<div className="flex justify-between items-start">
-												<div>
-													<div className="text-base font-semibold text-foreground font-display truncate max-w-[150px]">
+												<div className="flex-1 min-w-0">
+													<div className="text-lg font-bold text-foreground font-heading truncate group-hover:text-primary transition-colors">
 														{log.employee.name}
 													</div>
-													<div className="text-muted-foreground font-mono text-xs mt-1 truncate">
-														{log.station?.name || "No station"}
+													<div className="flex items-center gap-2 mt-1">
+														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">Station:</span>
+														<Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+															{log.station?.name || "Unassigned"}
+														</Badge>
 													</div>
 												</div>
-												<div className="text-right">
-													<div className="text-sm font-data font-medium text-primary">
+												<div className="text-right flex flex-col items-end">
+													<div className="text-lg font-data font-bold text-primary tabular-nums">
 														{new Date(log.startTime).toLocaleTimeString([], {
 															hour: "2-digit",
 															minute: "2-digit",
 														})}
 													</div>
-													<div className="text-[10px] text-muted-foreground uppercase mt-1">
-														Started
+													<div className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-widest mt-1">
+														Shift_Start
 													</div>
 												</div>
 											</div>
@@ -339,18 +372,16 @@ export function KioskTimeClock({
 				</div>
 
 				{/* Utility Footer Bar */}
-				<div className="pt-8 border-t border-border border-dashed flex flex-wrap justify-between items-center gap-4 text-sm text-muted-foreground">
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2">
-							<div
-								className={`h-2 w-2 rounded-full ${status === "syncing" ? "bg-blue-500 animate-pulse" : queue.length > 0 ? "bg-yellow-500" : "bg-green-500"}`}
-							/>
-							<span className="font-data text-xs">
+				<div className="pt-8 border-t border-border border-dashed flex flex-wrap justify-between items-center gap-6 text-sm text-muted-foreground relative z-10">
+					<div className="flex items-center gap-6">
+						<div className="flex items-center gap-3 bg-muted/20 px-4 py-2 rounded-[2px] border border-border/30 backdrop-blur-sm">
+							<LedIndicator active={status !== "syncing"} className={status === "syncing" ? "animate-pulse" : ""} />
+							<span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em]">
 								{status === "syncing"
-									? "Syncing…"
+									? "Network_Sync_v2"
 									: queue.length > 0
-										? `${queue.length} Offline Actions`
-										: "Online"}
+										? `${queue.length} PENDING_OPERATIONS`
+										: "Link_Stable_100ms"}
 							</span>
 						</div>
 						{showApiKey && (
@@ -363,36 +394,36 @@ export function KioskTimeClock({
 											window.localStorage.setItem("timeClock:apiKey", e.target.value);
 										}
 									}}
-									placeholder="API Key"
-									className="h-8 w-32 text-xs"
+									placeholder="SYS_KEY"
+									className="h-10 w-48 text-xs font-mono bg-background/50"
 								/>
 							</div>
 						)}
 					</div>
 
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-3">
 						<Button
 							variant="ghost"
 							size="sm"
 							onPress={() => setShowApiKey(!showApiKey)}
-							className="text-xs h-8"
+							className="text-[10px] font-mono tracking-widest uppercase h-10 px-4 border border-border/30 hover:bg-accent"
 						>
-							{showApiKey ? "Hide Config" : "Config"}
+							{showApiKey ? "Hide_Config" : "Sys_Config"}
 						</Button>
 						<Button
 							variant="ghost"
 							size="sm"
 							onPress={handleExitKiosk}
-							className="text-xs h-8 text-destructive hover:bg-destructive/10"
+							className="text-[10px] font-mono tracking-widest uppercase h-10 px-4 text-destructive border border-destructive/20 hover:bg-destructive/10"
 						>
-							Exit Kiosk
+							Terminate_Kiosk
 						</Button>
 					</div>
 				</div>
 
 				{/* Notifications */}
 				{notifications.map((notification) => (
-					<div key={notification.id} className={`fixed bottom-4 right-4 z-50 animate-slide-up`}>
+					<div key={notification.id} className={`fixed bottom-8 right-8 z-50 animate-slide-up`}>
 						<Alert
 							variant={
 								notification.type === "success"
@@ -402,7 +433,10 @@ export function KioskTimeClock({
 										: "warning"
 							}
 						>
-							{notification.message}
+							<div className="flex items-center gap-3">
+								<span className="font-mono text-[10px] opacity-50 uppercase tracking-widest">Msg_{notification.id.slice(-4)}</span>
+								<span className="font-bold font-heading uppercase tracking-tight">{notification.message}</span>
+							</div>
 						</Alert>
 					</div>
 				))}
@@ -410,3 +444,4 @@ export function KioskTimeClock({
 		</KioskContext.Provider>
 	);
 }
+

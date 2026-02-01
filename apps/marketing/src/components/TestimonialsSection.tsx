@@ -36,20 +36,7 @@ export default function TestimonialsSection() {
 			<div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
 			<div className="absolute bottom-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-secondary/15 to-transparent" />
 
-			<div className="container mx-auto px-4 relative">
-				{/* Corner Accents - System: LG size, Section spacing */}
-				<div className="corner-section-tl corner-accent-lg corner-primary animate-fade-in" />
-				<div className="corner-section-tr corner-accent-lg corner-secondary animate-fade-in" />
-				<div className="corner-section-bl corner-accent-lg corner-primary animate-fade-in animate-delay-100" />
-				<div className="corner-section-br corner-accent-lg corner-secondary animate-fade-in animate-delay-100" />
-
-				{/* Technical Labels */}
-				<div className="absolute top-2 left-[88px] font-mono text-[10px] text-primary/40 tracking-wider animate-fade-in animate-delay-200">
-					[TESTIMONIALS]
-				</div>
-				<div className="absolute bottom-2 right-[88px] font-mono text-[10px] text-secondary/35 tracking-wider animate-fade-in animate-delay-200">
-					3_REVIEWS
-				</div>
+			<div className="container mx-auto px-6 md:px-8 relative">
 				<div className="text-center mb-16">
 					<h2 className="text-4xl font-display font-bold text-foreground mb-4 animate-fade-in-up">
 						What Industry Leaders Say
@@ -62,53 +49,38 @@ export default function TestimonialsSection() {
 
 				<div className="grid lg:grid-cols-3 gap-8">
 					{testimonials.map((testimonial, index) => (
-						<Card
+						<div
 							key={index}
-							className="p-6 hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in-up relative group"
+							className="animate-fade-in-up"
 							style={{ animationDelay: `${index * 150 + 200}ms` }}
 						>
-							{/* Card corner accents - System: MD size, Card spacing */}
-							<div className="corner-card-tl corner-accent-md corner-primary" />
-							<div className="corner-card-tr corner-accent-md corner-secondary" />
-							<div className="corner-card-bl corner-accent-sm corner-primary" />
-							<div className="corner-card-br corner-accent-sm corner-secondary" />
-
-							<CardBody>
-								{/* Review ID & Verification */}
-								<div className="flex items-center justify-between mb-4">
-									<span className="font-mono text-[9px] text-muted-foreground/30 tracking-wider">
-										REV_{String(index + 1).padStart(3, '0')}
-									</span>
-									<div className="flex items-center gap-1">
-										<div className="w-1 h-1 rounded-full bg-primary/60" />
-										<span className="font-mono text-[8px] text-primary/50">VERIFIED</span>
+							<Card className="p-6 hover:shadow-lg transition-all hover:-translate-y-1 relative group h-full">
+								<CardBody>
+									<div className="mb-6">
+										<div className="flex text-primary mb-4 animate-scale-in" style={{ animationDelay: `${index * 150 + 400}ms` }}>
+											{"★".repeat(5)}
+										</div>
+										<blockquote className="text-muted-foreground italic leading-relaxed">
+											"{testimonial.quote}"
+										</blockquote>
 									</div>
-								</div>
 
-								<div className="mb-6">
-									<div className="flex text-primary mb-4 animate-scale-in" style={{ animationDelay: `${index * 150 + 400}ms` }}>
-										{"★".repeat(5)}
-									</div>
-									<blockquote className="text-muted-foreground italic leading-relaxed">
-										"{testimonial.quote}"
-									</blockquote>
-								</div>
+									{/* Divider */}
+									<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-4" />
 
-								{/* Divider */}
-								<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-4" />
-
-								<div className="flex items-center gap-4">
-									<div className="text-3xl text-primary animate-scale-in" style={{ animationDelay: `${index * 150 + 500}ms` }}>
-										<testimonial.avatar />
+									<div className="flex items-center gap-4">
+										<div className="text-3xl text-primary animate-scale-in" style={{ animationDelay: `${index * 150 + 500}ms` }}>
+											<testimonial.avatar />
+										</div>
+										<div>
+											<div className="font-heading font-semibold">{testimonial.author}</div>
+											<div className="text-sm text-muted-foreground">{testimonial.title}</div>
+											<div className="text-sm text-primary font-medium">{testimonial.company}</div>
+										</div>
 									</div>
-									<div>
-										<div className="font-heading font-semibold">{testimonial.author}</div>
-										<div className="text-sm text-muted-foreground">{testimonial.title}</div>
-										<div className="text-sm text-primary font-medium">{testimonial.company}</div>
-									</div>
-								</div>
-							</CardBody>
-						</Card>
+								</CardBody>
+							</Card>
+						</div>
 					))}
 				</div>
 

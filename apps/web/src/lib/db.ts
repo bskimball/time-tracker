@@ -1,8 +1,21 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
 import { Pool } from "pg";
 import { createLogger } from "./logger";
+
+type PrismaQueryEvent = {
+	query: string;
+	params: string;
+	duration: number;
+	target?: string;
+};
+
+type PrismaLogEvent = {
+	message: string;
+	target?: string;
+};
 
 const globalForPrisma = globalThis as unknown as {
 	prismaGlobal: PrismaClient | undefined;
@@ -53,7 +66,7 @@ export const db =
 // Log database queries (only in development or when explicitly enabled)
 if (logQuery) {
 	// @ts-expect-error - Prisma event types are not fully exposed
-	db.$on("query", (e: any) => {
+	db.$on("query", (e: PrismaQueryEvent) => {
 		dbLogger.debug(
 			{
 				query: e.query,
@@ -68,7 +81,7 @@ if (logQuery) {
 
 // Always log database errors
 // @ts-expect-error - Prisma event types are not fully exposed
-db.$on("error", (e: any) => {
+db.$on("error", (e: PrismaLogEvent) => {
 	dbLogger.error(
 		{
 			message: e.message,
@@ -80,7 +93,7 @@ db.$on("error", (e: any) => {
 
 // Log database warnings
 // @ts-expect-error - Prisma event types are not fully exposed
-db.$on("warn", (e: any) => {
+db.$on("warn", (e: PrismaLogEvent) => {
 	dbLogger.warn(
 		{
 			message: e.message,
@@ -92,7 +105,7 @@ db.$on("warn", (e: any) => {
 
 // Log database info events
 // @ts-expect-error - Prisma event types are not fully exposed
-db.$on("info", (e: any) => {
+db.$on("info", (e: PrismaLogEvent) => {
 	dbLogger.info(
 		{
 			message: e.message,

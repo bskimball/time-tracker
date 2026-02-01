@@ -1,9 +1,11 @@
 ---
 import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle";
 
 export interface Props {
 	title: string;
 }
+
 
 const { title } = Astro.props;
 ---
@@ -17,16 +19,32 @@ const { title } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title || "ShiftPulse"}</title>
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+			if (theme === 'dark') {
+				document.documentElement.classList.add('dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+			}
+		</script>
 	</head>
-	<body class="bg-background text-foreground">
+	<body class="bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground">
 		<!-- Header -->
-		<header class="border-b border-border bg-card sticky top-0 z-50 shadow-sm">
-			<div class="safety-stripes"></div>
+		<header class="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm transition-colors duration-200">
+			<div class="safety-stripes" aria-hidden="true"></div>
 			<nav class="container mx-auto px-4 py-4">
 				<div class="flex items-center justify-between">
 					<!-- Logo -->
-					<a href="/" class="flex items-center gap-3 group transition-transform duration-200 hover:scale-105">
-						<div class="w-10 h-10 bg-primary flex items-center justify-center font-display font-bold text-primary-foreground rounded-sm">
+					<a href="/" class="flex items-center gap-3 group transition-transform duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none">
+						<div class="w-10 h-10 bg-primary flex items-center justify-center font-display font-bold text-primary-foreground rounded-sm shadow-sm group-hover:shadow-primary/20 transition-shadow">
 							SP
 						</div>
 						<div>
@@ -41,27 +59,29 @@ const { title } = Astro.props;
 
 					<!-- Desktop Navigation -->
 					<div class="hidden md:flex items-center gap-8">
-						<a href="/features" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm">
+						<a href="/features" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
 							Features
 						</a>
-						<a href="/pricing" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm">
+						<a href="/pricing" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
 							Pricing
 						</a>
-						<a href="/about" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm">
+						<a href="/about" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
 							About
 						</a>
 						<a
 							href="/pricing"
-							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-colors px-6 py-2 font-heading font-semibold text-sm rounded-sm shadow-sm"
+							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-colors px-6 py-2 font-heading font-semibold text-sm rounded-sm shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
 						>
 							Get Started
 						</a>
+						<ThemeToggle client:load />
 					</div>
 
 					<!-- Mobile Menu Button -->
-					<div class="md:hidden">
-						<button class="text-muted-foreground hover:text-primary transition-colors">
-							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div class="md:hidden flex items-center gap-4">
+						<ThemeToggle client:load />
+						<button class="text-muted-foreground hover:text-primary transition-colors p-2 focus-visible:ring-2 focus-visible:ring-primary rounded-sm outline-none" aria-label="Toggle mobile menu">
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
 							</svg>
 						</button>
@@ -71,15 +91,16 @@ const { title } = Astro.props;
 		</header>
 
 		<!-- Main Content -->
-		<main>
+		<main id="main-content" class="min-h-screen">
 			<slot />
 		</main>
 
 		<!-- Footer -->
-		<footer class="bg-muted border-t border-border mt-20">
-			<div class="safety-stripes"></div>
+		<footer class="bg-muted border-t border-border mt-20 relative overflow-hidden">
+			<div class="absolute inset-0 bg-noise opacity-20 pointer-events-none" aria-hidden="true"></div>
+			<div class="safety-stripes" aria-hidden="true"></div>
 
-			<div class="container mx-auto px-4 py-16">
+			<div class="container mx-auto px-4 py-16 relative z-10">
 				<!-- Footer Grid -->
 				<div class="grid md:grid-cols-5 gap-12 mb-12">
 					<!-- Brand Column -->
@@ -97,7 +118,7 @@ const { title } = Astro.props;
 							Built for industrial excellence with precision time tracking and advanced analytics.
 						</p>
 						<div class="flex items-center gap-3 mb-4">
-							<span class="led-indicator active"></span>
+							<span class="led-indicator active" aria-hidden="true"></span>
 							<span class="font-data text-xs text-muted-foreground uppercase tracking-wider">
 								System Operational
 							</span>
@@ -106,6 +127,7 @@ const { title } = Astro.props;
 							Trusted by <span class="text-primary font-display font-bold">500+</span> facilities worldwide
 						</div>
 					</div>
+
 
 					<!-- Product Column -->
 					<div>
@@ -196,7 +218,7 @@ const { title } = Astro.props;
 				</div>
 
 				<!-- Footer Bottom -->
-				<div class="border-t border-border pt-8">
+				<div class="border-t border-border pt-8 relative z-10">
 					<div class="flex flex-col md:flex-row justify-between items-center gap-6">
 						<div class="text-sm text-muted-foreground">
 							&copy; 2025 ShiftPulse. All rights reserved.
@@ -205,19 +227,19 @@ const { title } = Astro.props;
 						<!-- Compliance Badges -->
 						<div class="flex items-center gap-6 flex-wrap justify-center">
 							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full"></div>
+								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
 								SOC 2 Type II
 							</div>
 							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full"></div>
+								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
 								99.9% Uptime SLA
 							</div>
 							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full"></div>
+								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
 								Enterprise Security
 							</div>
 							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full"></div>
+								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
 								GDPR Compliant
 							</div>
 						</div>
@@ -225,7 +247,7 @@ const { title } = Astro.props;
 				</div>
 			</div>
 
-			<div class="safety-stripes"></div>
+			<div class="safety-stripes" aria-hidden="true"></div>
 		</footer>
 	</body>
 </html>

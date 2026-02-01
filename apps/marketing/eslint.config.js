@@ -21,6 +21,17 @@ export default [
 				ecmaVersion: "latest",
 				sourceType: "module",
 			},
+			globals: {
+				window: "readonly",
+				document: "readonly",
+				localStorage: "readonly",
+				setTimeout: "readonly",
+				setInterval: "readonly",
+				clearInterval: "readonly",
+				IntersectionObserver: "readonly",
+				HTMLDivElement: "readonly",
+				requestAnimationFrame: "readonly",
+			},
 		},
 		rules: {
 			...tseslint.configs.recommended.rules,

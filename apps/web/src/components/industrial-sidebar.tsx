@@ -3,7 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "~/lib/cn";
-import { Button } from "@monorepo/design-system";
+import { Button, LedIndicator } from "@monorepo/design-system";
 import {
 	LiaTachometerAltSolid,
 	LiaDesktopSolid,
@@ -60,6 +60,7 @@ export function IndustrialSidebar({
 	const [isMounted, setIsMounted] = useState(false);
 
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setIsMounted(true);
 	}, []);
 
@@ -78,13 +79,13 @@ export function IndustrialSidebar({
 					<Link to={brandHref} className="flex items-center gap-3">
 						{!isCollapsed && (
 							<>
-								<div className="led-indicator active" />
-								<span className="text-xl font-bold tracking-tight text-sidebar-foreground">
+								<LedIndicator active />
+								<span className="text-lg font-industrial font-bold tracking-widest text-sidebar-foreground uppercase">
 									{title}
 								</span>
 							</>
 						)}
-						{isCollapsed && <div className="led-indicator active mx-auto" />}
+						{isCollapsed && <LedIndicator active className="mx-auto" />}
 					</Link>
 				</div>
 
@@ -101,24 +102,23 @@ export function IndustrialSidebar({
 							<Link key={link.to} to={link.to}>
 								<div
 									className={cn(
-										"group relative mb-2 flex w-full items-center rounded-md border border-sidebar-border bg-sidebar-accent py-3 transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-sm",
-										isCollapsed ? "justify-center px-2" : "gap-3 px-3",
-										isActive && "bg-primary text-primary-foreground shadow-sm"
+										"group relative mb-2 flex w-full items-center rounded-[2px] border transition-all duration-200",
+										isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2",
+										isActive
+											? "bg-primary text-primary-foreground border-primary shadow-industrial"
+											: "bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:border-primary/50 hover:bg-muted/50"
 									)}
 								>
 									{Icon ? (
 										<Icon className={cn("h-5 w-5 shrink-0", isCollapsed && "mx-auto")} />
 									) : (
-										<div
-											className={cn(
-												"led-indicator",
-												isActive && "active",
-												isCollapsed && "mx-auto"
-											)}
+										<LedIndicator
+											active={isActive}
+											className={cn(isCollapsed && "mx-auto")}
 										/>
 									)}
 
-									{!isCollapsed && <span className="text-sm font-medium">{link.label}</span>}
+									{!isCollapsed && <span className="text-xs font-industrial font-bold uppercase tracking-wide">{link.label}</span>}
 								</div>
 							</Link>
 						);
@@ -139,7 +139,7 @@ export function IndustrialSidebar({
 						size="sm"
 						onPress={() => setIsCollapsed((prev) => !prev)}
 						className={cn(
-							"flex w-full items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-sm cursor-pointer relative z-50",
+							"flex w-full items-center justify-center rounded-[2px] border border-sidebar-border bg-sidebar-accent px-3 py-2 text-sidebar-foreground transition-all hover:border-primary/50 hover:bg-muted/50 cursor-pointer relative z-50",
 							isCollapsed ? "justify-center" : "justify-start"
 						)}
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}

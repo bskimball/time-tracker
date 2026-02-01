@@ -131,7 +131,7 @@ if (isTest) {
  * @param context - Additional metadata to include in all logs from this logger
  * @returns Child logger instance
  */
-export function createLogger(context: Record<string, any>): Logger {
+export function createLogger(context: Record<string, unknown>): Logger {
 	return logger.child(context);
 }
 

@@ -1,10 +1,12 @@
 {
 	"name": "@monorepo/design-system",
 	"version": "1.0.0",
+	"type": "module",
 	"description": "Shared design system for React Router app and Astro marketing site",
-	"main": "dist/index.mjs",
-	"module": "dist/index.mjs",
-	"types": "dist/index.d.mts",
+
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -12,12 +14,15 @@
 		},
 		"./styles": "./dist/styles/index.css"
 	},
+
+
 	"files": [
 		"dist"
 	],
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
+		"lint": "eslint src tsup.config.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

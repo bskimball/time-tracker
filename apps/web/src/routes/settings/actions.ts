@@ -4,6 +4,7 @@ import { db } from "../../lib/db";
 import bcrypt from "bcryptjs";
 import { validateRequest } from "../../lib/auth";
 
+import { Station_name } from "@prisma/client";
 import type { Station } from "@prisma/client";
 import { redirect } from "react-router";
 
@@ -17,10 +18,15 @@ export async function addStation(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const name = formData.get("name") as string;
+	const nameValue = String(formData.get("name") || "");
+	const name = nameValue.toUpperCase() as Station_name;
 
-	if (!name) {
+	if (!nameValue) {
 		return { error: "Station name is required" };
+	}
+
+	if (!Object.values<string>(Station_name).includes(name)) {
+		return { error: "Invalid station name" };
 	}
 
 	try {

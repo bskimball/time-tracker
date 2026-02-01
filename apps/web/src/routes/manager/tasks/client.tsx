@@ -12,6 +12,7 @@ import {
 	TabList,
 	Tab,
 	TabPanel,
+	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
@@ -28,7 +29,7 @@ interface TaskManagerProps {
 		prevState: { error?: string | null; success?: boolean } | null,
 		formData: FormData
 	) => Promise<{
-		assignment?: any;
+		assignment?: TaskAssignment;
 		activeAssignments?: TaskAssignment[];
 		error?: string | null;
 		success?: boolean;
@@ -73,7 +74,7 @@ export function TaskManager({
 			employeeId: employee.id,
 			taskTypeId: taskType.id,
 			notes: update.notes ?? null,
-			startTime: new Date().toISOString() as any,
+			startTime: new Date(),
 			endTime: null,
 			unitsCompleted: null,
 			Employee: employee,
@@ -197,16 +198,14 @@ export function TaskManager({
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 								{optimisticAssignments.map((assignment: TaskAssignment) => (
-									<div key={assignment.id} className="border rounded-lg p-4">
+									<div key={assignment.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
 										<div className="flex justify-between items-start mb-3">
 											<div>
-												<h4 className="font-medium">{assignment.TaskType.name}</h4>
-												<p className="text-sm text-muted-foreground">{assignment.Employee.name}</p>
+												<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{assignment.TaskType.name}</h4>
+												<p className="text-xs text-muted-foreground font-mono">{assignment.Employee.name}</p>
 											</div>
 											{!assignment.endTime && (
-												<span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-													Active
-												</span>
+												<Badge variant="success">Active</Badge>
 											)}
 										</div>
 
@@ -328,22 +327,16 @@ export function TaskManager({
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 								{taskTypes.map((taskType) => (
-									<div key={taskType.id} className="border rounded-lg p-4">
+									<div key={taskType.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
 										<div className="flex justify-between items-start">
 											<div>
-												<h4 className="font-medium">{taskType.name}</h4>
-												<p className="text-sm text-muted-foreground">{taskType.Station.name}</p>
+												<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{taskType.name}</h4>
+												<p className="text-xs text-muted-foreground font-mono">{taskType.Station.name}</p>
 											</div>
 											<div className="flex space-x-1">
-												<span
-													className={`px-2 py-1 text-xs rounded ${
-														taskType.isActive
-															? "bg-green-100 text-green-800"
-															: "bg-accent text-muted-foreground"
-													}`}
-												>
+												<Badge variant={taskType.isActive ? "success" : "secondary"}>
 													{taskType.isActive ? "Active" : "Inactive"}
-												</span>
+												</Badge>
 											</div>
 										</div>
 

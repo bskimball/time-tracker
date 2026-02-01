@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import type { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
 import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
 
@@ -80,7 +81,7 @@ app.openapi(
 		try {
 			const { employeeId, stationId, startDate, endDate, limit } = c.req.query();
 
-			const where: any = {};
+			const where: Prisma.PerformanceMetricWhereInput = {};
 			if (employeeId) where.employeeId = employeeId;
 			if (stationId) where.stationId = stationId;
 			if (startDate || endDate) {
@@ -232,7 +233,7 @@ app.openapi(
 			const { employeeId } = c.req.param();
 			const { startDate, endDate } = c.req.query();
 
-			const where: any = { employeeId };
+			const where: Prisma.PerformanceMetricWhereInput = { employeeId };
 			if (startDate || endDate) {
 				where.date = {};
 				if (startDate) where.date.gte = new Date(startDate);

@@ -12,25 +12,21 @@ interface AlertProps {
 	onClose?: () => void;
 }
 
-const variantStyles: Record<AlertVariant, { container: string; text: string; icon: string }> = {
+const variantStyles: Record<AlertVariant, { container: string; icon: string }> = {
 	success: {
-		container: "bg-card border border-primary/30 text-foreground shadow-sm",
-		text: "text-foreground",
-		icon: "text-primary",
+		container: "border-l-chart-3",
+		icon: "text-chart-3",
 	},
 	error: {
-		container: "bg-card border border-destructive/30 text-foreground shadow-sm",
-		text: "text-foreground",
+		container: "border-l-destructive",
 		icon: "text-destructive",
 	},
 	warning: {
-		container: "bg-primary/5 border border-primary/30 text-foreground shadow-sm",
-		text: "text-foreground",
-		icon: "text-primary",
+		container: "border-l-chart-1", // Using Orange/Amber for warning
+		icon: "text-chart-1",
 	},
 	info: {
-		container: "bg-card border border-secondary/30 text-foreground shadow-sm",
-		text: "text-foreground",
+		container: "border-l-secondary",
 		icon: "text-secondary",
 	},
 };
@@ -44,7 +40,7 @@ const defaultIcons: Record<AlertVariant, string> = {
 
 /**
  * Alert component for displaying messages to the user - Industrial technical style.
- * Tight corners, subtle borders, rugged aesthetic.
+ * "Status Card" aesthetic: Left border strip, neutral background, hard edges.
  */
 export function Alert({
 	children,
@@ -59,21 +55,30 @@ export function Alert({
 
 	return (
 		<div
-			className={cn("rounded-sm flex gap-3 p-4 animate-fade-in", styles.container, className)}
+			className={cn(
+				"relative flex gap-3 p-4 animate-fade-in",
+				"bg-card text-foreground shadow-sm",
+				"rounded-[2px] border border-border border-l-4",
+				styles.container,
+				className
+			)}
 			role="alert"
 		>
-			<div className={cn("shrink-0 text-lg font-bold font-mono", styles.icon)}>{displayIcon}</div>
-			<div className="flex-1">
-				{title && <h3 className={cn("font-heading mb-1", styles.text)}>{title}</h3>}
-				<div className={cn("text-sm", styles.text)}>{children}</div>
+			<div className={cn("shrink-0 text-sm font-bold font-mono mt-0.5", styles.icon)}>
+				{displayIcon}
+			</div>
+			<div className="flex-1 min-w-0">
+				{title && (
+					<h3 className="font-industrial font-bold uppercase tracking-wide text-xs mb-1 text-foreground">
+						{title}
+					</h3>
+				)}
+				<div className="text-sm font-mono text-muted-foreground break-words">{children}</div>
 			</div>
 			{onClose && (
 				<button
 					onClick={onClose}
-					className={cn(
-						"shrink-0 text-lg font-bold hover:opacity-70 transition-opacity duration-150 rounded-sm",
-						styles.text
-					)}
+					className="shrink-0 text-lg font-bold text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-[1px] focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					aria-label="Close alert"
 				>
 					✕
@@ -82,3 +87,4 @@ export function Alert({
 		</div>
 	);
 }
+

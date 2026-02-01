@@ -39,7 +39,6 @@ interface SelectProps extends BaseAriaSelectProps {
 	selectClassName?: string;
 	errorClassName?: string;
 	className?: string;
-	// no need to add `name` explicitly; it comes from BaseAriaSelectProps
 }
 
 export function Select({
@@ -57,7 +56,6 @@ export function Select({
 	selectClassName = "",
 	errorClassName = "",
 	className = "",
-	// NOTE: don't destructure and drop name; keep it in ...props
 	...props
 }: SelectProps) {
 	// Prefer controlled value when provided; used for label lookup only
@@ -78,30 +76,37 @@ export function Select({
 			defaultValue={value === undefined ? defaultValue : undefined}
 			onChange={handleSelectionChange}
 			isDisabled={isDisabled}
-			className={cn("flex flex-col gap-1", containerClassName)}
+			className={cn("flex flex-col gap-1.5", containerClassName)}
 		>
 			{label && (
-				<AriaLabel className={cn("text-sm font-heading", labelClassName)}>{label}</AriaLabel>
+				<AriaLabel
+					className={cn(
+						"text-xs font-industrial uppercase tracking-wider text-muted-foreground",
+						labelClassName
+					)}
+				>
+					{label}
+				</AriaLabel>
 			)}
 			<Button
 				className={cn(
 					// Reset button defaults to match input
 					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
+					"h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
-					// Hover state - keep same as default
-					"hover:bg-background",
-					// Pressed state - keep same as default
-					"pressed:bg-background",
+					"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
+					// Hover state - slight darkening or border change could go here
+					"hover:border-input/80",
+					// Pressed state
+					"pressed:bg-background pressed:border-primary",
 					// Disabled states
-					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:border-transparent",
 					// Error states
-					error && "border-destructive focus:ring-destructive",
+					error && "border-destructive focus:border-destructive focus:ring-destructive",
 					// Select button specific styling
-					"flex items-center justify-between text-left w-full",
-					"placeholder:text-muted-foreground/60",
+					"flex items-center justify-between text-left w-full font-mono text-sm",
+					"placeholder:text-muted-foreground/50",
 					selectClassName,
 					className
 				)}
@@ -111,18 +116,18 @@ export function Select({
 						? placeholder
 						: options.find((opt) => opt.value === selectedValue)?.label}
 				</span>
-				<span className="text-muted-foreground text-xs font-mono">▼</span>
+				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-sm bg-background">
-				<ListBox className="p-1 bg-background border border-input rounded-sm text-foreground w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-background border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-background text-foreground w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
 							id={option.value}
 							className={cn(
-								"px-3 py-2 rounded-sm cursor-default transition-colors duration-150",
-								"hover:bg-muted focus:bg-muted",
-								"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background",
+								"px-3 py-2 rounded-[1px] cursor-default transition-colors duration-75 outline-none font-mono text-sm",
+								"hover:bg-muted focus:bg-muted focus:text-foreground",
+								"selected:bg-primary/10 selected:text-primary selected:font-medium",
 								option.isDisabled && "opacity-50 cursor-not-allowed"
 							)}
 							isDisabled={option.isDisabled}
@@ -132,9 +137,11 @@ export function Select({
 					))}
 				</ListBox>
 			</Popover>
-			{description && <p className="text-xs text-muted-foreground">{description}</p>}
+			{description && <p className="text-xs text-muted-foreground font-mono">{description}</p>}
 			{error && (
-				<FieldError className={cn("text-xs text-destructive", errorClassName)}>{error}</FieldError>
+				<FieldError className={cn("text-xs text-destructive font-mono font-medium", errorClassName)}>
+					{error}
+				</FieldError>
 			)}
 		</AriaSelect>
 	);
@@ -165,13 +172,13 @@ export function SimpleSelect({
 	onChange?: (value: string | null) => void;
 } & Omit<
 	React.ComponentProps<typeof AriaSelect>,
-	"children" | "selectedKey" | "defaultSelectedKey" | "onSelectionChange"
+	"children" | "selectedKey" | "defaultSelectedKey" | "onSelectionChange" | "onChange"
 >) {
 	const isControlled = value !== undefined;
 	const selectedKey = isControlled ? value : undefined;
 
 	const handleSelectionChange = (key: React.Key | null) => {
-		onChange?.(key?.toString() ?? null);
+		onChange?.(key != null ? key.toString() : null);
 	};
 
 	const selectedLabel =
@@ -187,37 +194,41 @@ export function SimpleSelect({
 			onSelectionChange={handleSelectionChange}
 			className="flex flex-col gap-1.5"
 		>
-			{label && <AriaLabel className="text-sm font-heading">{label}</AriaLabel>}
+			{label && (
+				<AriaLabel className="text-xs font-industrial uppercase tracking-wider text-muted-foreground">
+					{label}
+				</AriaLabel>
+			)}
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-background text-foreground border border-input rounded-sm transition-all duration-150",
+					"h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+					"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
 					// Disabled states
-					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:border-transparent",
 					// Error states
-					error && "border-destructive focus:ring-destructive",
+					error && "border-destructive focus:border-destructive focus:ring-destructive",
 					// Select button specific styling
-					"flex items-center justify-between text-left w-full appearance-none pr-8",
-					"placeholder:text-muted-foreground/60",
+					"flex items-center justify-between text-left w-full appearance-none pr-8 font-mono text-sm",
+					"placeholder:text-muted-foreground/50",
 					className
 				)}
 			>
 				<span>{selectedLabel}</span>
-				<span className="text-muted-foreground text-xs font-mono">▼</span>
+				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-sm">
-				<ListBox className="p-1 bg-background border border-input rounded-sm w-full shadow-lg">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-background border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-background text-foreground w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
 							id={option.value}
 							isDisabled={option.isDisabled}
 							className={cn(
-								"px-3 py-2 rounded-sm cursor-default transition-colors duration-150",
-								"hover:bg-muted focus:bg-muted",
-								"focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background",
+								"px-3 py-2 rounded-[1px] cursor-default transition-colors duration-75 outline-none font-mono text-sm",
+								"hover:bg-muted focus:bg-muted focus:text-foreground",
+								"selected:bg-primary/10 selected:text-primary selected:font-medium",
 								option.isDisabled && "opacity-50 cursor-not-allowed"
 							)}
 						>
@@ -226,8 +237,8 @@ export function SimpleSelect({
 					))}
 				</ListBox>
 			</Popover>
-			{description && <p className="text-xs text-muted-foreground">{description}</p>}
-			{error && <p className="text-xs text-destructive">{error}</p>}
+			{description && <p className="text-xs text-muted-foreground font-mono">{description}</p>}
+			{error && <p className="text-xs text-destructive font-mono font-medium">{error}</p>}
 		</AriaSelect>
 	);
 }

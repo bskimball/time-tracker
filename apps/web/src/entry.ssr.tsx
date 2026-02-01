@@ -8,19 +8,26 @@ import {
 	unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
 
+type RSCStreamPayload = {
+	type: "render" | string;
+	formState?: Promise<unknown> | unknown;
+};
+
 export async function generateHTML(
 	request: Request,
 	fetchServer: (request: Request) => Promise<Response>
 ): Promise<Response> {
+	const serverResponse = await fetchServer(request);
+
 	return await routeRSCServerRequest({
 		// The incoming request.
 		request,
-		// How to call the React Server.
-		fetchServer,
+		// The server response
+		serverResponse,
 		// Provide the React Server touchpoints.
 		createFromReadableStream,
 		// Render the router to HTML.
-		async renderHTML(getPayload: () => Promise<any>) {
+		async renderHTML(getPayload: () => Promise<RSCStreamPayload>) {
 			const payload = await getPayload();
 			const formState = payload.type === "render" ? await payload.formState : undefined;
 

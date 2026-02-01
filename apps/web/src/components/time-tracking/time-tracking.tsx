@@ -629,7 +629,6 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 					<Dialog className="outline-none relative">
 						<div className="corner-card-tl corner-accent-md corner-primary" />
 						<div className="corner-card-tr corner-accent-md corner-secondary" />
-						{({ close }) => (
 							<form action={formAction} className="p-6">
 								<input type="hidden" name="logId" value={log.id} />
 								<h3 className="text-lg font-bold mb-4">Edit Time Log</h3>
@@ -713,13 +712,12 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 								)}
 
 								<div className="flex justify-end gap-2">
-									<Button type="button" variant="ghost" onPress={close}>
+									<Button type="button" variant="ghost" onPress={() => setIsOpen(false)}>
 										Cancel
 									</Button>
 									<EditSubmitButton />
 								</div>
 							</form>
-						)}
 					</Dialog>
 				</Modal>
 			</ModalOverlay>

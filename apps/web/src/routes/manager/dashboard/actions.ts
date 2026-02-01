@@ -2,11 +2,11 @@
 
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
-import type { Employee } from "@prisma/client";
+import type { Employee, TimeLog } from "@prisma/client";
 
 export interface Alert {
 	id: string;
-	type: "OVERTIME" | "MISSING_PUNCH" | "PERFORMANCE" | "SYSTEM";
+	type: "OVERTIME" | "MISSING_PUNCH" | "PERFORMANCE" | "SYSTEM" | "COMPLIANCE";
 	severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 	title: string;
 	description: string;
@@ -18,17 +18,32 @@ export interface Alert {
 	actionUrl?: string;
 }
 
+type EmployeeWithBreakPolicy = Employee & {
+	breakPolicy?: {
+		id: string;
+		maxHoursWithoutBreak?: number | null;
+	};
+};
+
+type EmployeeWithBreakData = EmployeeWithBreakPolicy & {
+	TimeLog: TimeLog[];
+	defaultStation?: { id: string; name: string } | null;
+};
+
 export async function getActiveAlerts(): Promise<Alert[]> {
-	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Unauthorized");
-	}
+		const { user } = await validateRequest();
+		if (!user) {
+			throw new Error("Unauthorized");
+		}
 
-	const alerts: Alert[] = [];
+		const alerts: Alert[] = [];
 
-	// 1. Overtime warnings - employees approaching or exceeding limits
-	const today = new Date();
-	const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+		// 1. Overtime warnings - employees approaching or exceeding limits
+		const now = new Date();
+		const todayStart = new Date(now);
+		todayStart.setHours(0, 0, 0, 0);
+		const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+		const dailyHours = new Map<string, number>();
 
 	// Get recent time logs for overtime calculations
 	const recentTimeLogs = await db.timeLog.findMany({
@@ -51,6 +66,11 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 			? (new Date(log.endTime).getTime() - new Date(log.startTime).getTime()) / (1000 * 60 * 60)
 			: 0;
 
+		const logStart = new Date(log.startTime);
+		if (logStart >= todayStart) {
+			dailyHours.set(log.employeeId, (dailyHours.get(log.employeeId) || 0) + duration);
+		}
+
 		const existing = employeeHours.get(log.employeeId);
 		if (existing) {
 			existing.hours += duration;
@@ -61,32 +81,66 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 
 	// Generate overtime alerts
 	employeeHours.forEach((data, employeeId) => {
-		const hoursWorked = data.hours;
+		const hoursWorkedWeek = data.hours;
 		const weeklyLimit = data.employee.weeklyHoursLimit || 40;
+		const weeklyThreshold = weeklyLimit === 40 ? 32 : Math.max(weeklyLimit * 0.8, weeklyLimit - 8, 0);
+		const hoursWorkedDay = dailyHours.get(employeeId) || 0;
+		const dailyLimit = data.employee.dailyHoursLimit || 8;
+		const dailyThreshold = dailyLimit === 8 ? 7 : Math.max(dailyLimit - 1, 0);
+		const alertTimestamp = new Date();
 
-		if (hoursWorked > weeklyLimit) {
+		if (hoursWorkedWeek >= weeklyLimit) {
 			alerts.push({
 				id: `overtime-${employeeId}`,
 				type: "OVERTIME",
 				severity: "HIGH",
 				title: "Overtime Limit Exceeded",
-				description: `${data.employee.name} has worked ${hoursWorked.toFixed(1)} hours this week (exceeding ${weeklyLimit} hour limit)`,
+				description: `${data.employee.name} has worked ${hoursWorkedWeek.toFixed(1)} hours this week (exceeding ${weeklyLimit} hour limit)`,
 				employeeId,
 				employeeName: data.employee.name,
-				createdAt: new Date(),
+				createdAt: alertTimestamp,
 				requiresAction: true,
 				actionUrl: `/manager/employees/${employeeId}`,
 			});
-		} else if (hoursWorked > weeklyLimit * 0.9) {
+		} else if (hoursWorkedWeek >= weeklyThreshold) {
+			const hoursLeft = Math.max(weeklyLimit - hoursWorkedWeek, 0);
 			alerts.push({
-				id: `overtime-warning-${employeeId}`,
+				id: `overtime-approaching-week-${employeeId}`,
 				type: "OVERTIME",
 				severity: "MEDIUM",
-				title: "Approaching Overtime Limit",
-				description: `${data.employee.name} has worked ${hoursWorked.toFixed(1)} hours this week (${((hoursWorked / weeklyLimit) * 100).toFixed(1)}% of limit)`,
+				title: "Approaching Weekly Overtime",
+				description: `${data.employee.name} has ${hoursWorkedWeek.toFixed(1)} hours this week and is ${hoursLeft.toFixed(1)}h from the ${weeklyLimit}h limit`,
 				employeeId,
 				employeeName: data.employee.name,
-				createdAt: new Date(),
+				createdAt: alertTimestamp,
+				requiresAction: false,
+				actionUrl: `/manager/employees/${employeeId}`,
+			});
+		}
+
+		if (hoursWorkedDay >= dailyLimit) {
+			alerts.push({
+				id: `daily-limit-${employeeId}`,
+				type: "OVERTIME",
+				severity: "HIGH",
+				title: "Daily Limit Exceeded",
+				description: `${data.employee.name} has already worked ${hoursWorkedDay.toFixed(1)} hours today (daily limit ${dailyLimit}h)`,
+				employeeId,
+				employeeName: data.employee.name,
+				createdAt: alertTimestamp,
+				requiresAction: true,
+				actionUrl: `/manager/employees/${employeeId}`,
+			});
+		} else if (hoursWorkedDay >= dailyThreshold) {
+			alerts.push({
+				id: `daily-warning-${employeeId}`,
+				type: "OVERTIME",
+				severity: "MEDIUM",
+				title: "Approaching Daily Limit",
+				description: `${data.employee.name} has worked ${hoursWorkedDay.toFixed(1)} hours today (${((hoursWorkedDay / dailyLimit) * 100).toFixed(1)}% of the daily limit)`,
+				employeeId,
+				employeeName: data.employee.name,
+				createdAt: alertTimestamp,
 				requiresAction: false,
 				actionUrl: `/manager/employees/${employeeId}`,
 			});
@@ -94,10 +148,8 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 	});
 
 	// 2. Missing punch alerts - employees with unusual shift patterns
-	const todayStart = new Date();
-	todayStart.setHours(0, 0, 0, 0);
 
-	const expectedActive = await db.employee.findMany({
+	const expectedActive = (await db.employee.findMany({
 		where: {
 			status: "ACTIVE",
 		},
@@ -112,7 +164,7 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 				take: 1,
 			},
 		},
-	});
+	})) as EmployeeWithBreakData[];
 
 	expectedActive.forEach((employee) => {
 		const hasTodayActivity = employee.TimeLog.length > 0;
@@ -137,7 +189,76 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 		}
 	});
 
-	// 3. Performance alerts - employees with low efficiency
+	// 3. Break compliance alerts
+	const activeEmployeeIds = expectedActive.map((employee) => employee.id);
+	const breakLogs = await db.timeLog.findMany({
+		where: {
+			employeeId: { in: activeEmployeeIds },
+			type: "BREAK",
+			deletedAt: null,
+		},
+		orderBy: { startTime: "desc" },
+	});
+
+	const lastBreakMap = new Map<string, typeof breakLogs[number]>();
+	breakLogs.forEach((log) => {
+		if (!lastBreakMap.has(log.employeeId)) {
+			lastBreakMap.set(log.employeeId, log);
+		}
+	});
+
+	const breakWarningBufferHours = 0.5;
+	expectedActive.forEach((employee) => {
+		const policy = employee.breakPolicy;
+		if (!policy?.maxHoursWithoutBreak) {
+			return;
+		}
+
+		const lastBreak = lastBreakMap.get(employee.id);
+		if (!lastBreak) {
+			return;
+		}
+
+		const breakEnd = lastBreak.endTime ? new Date(lastBreak.endTime) : new Date(lastBreak.startTime);
+		const hoursSinceLastBreak = Math.max(0, (now.getTime() - breakEnd.getTime()) / (1000 * 60 * 60));
+		const violationThreshold = policy.maxHoursWithoutBreak;
+		if (violationThreshold <= 0) {
+			return;
+		}
+		const warningThreshold = Math.max(violationThreshold - breakWarningBufferHours, 0);
+
+		if (hoursSinceLastBreak >= violationThreshold) {
+			alerts.push({
+				id: `break-violation-${employee.id}`,
+				type: "COMPLIANCE",
+				severity: "HIGH",
+				title: "Break Violation",
+				description: `${employee.name} has not taken a break in ${hoursSinceLastBreak.toFixed(1)}h (policy allows ${violationThreshold}h without a break).`,
+				employeeId: employee.id,
+				employeeName: employee.name,
+				stationName: employee.defaultStation?.name,
+				createdAt: now,
+				requiresAction: true,
+				actionUrl: `/manager/employees/${employee.id}`,
+			});
+		} else if (hoursSinceLastBreak >= warningThreshold) {
+			alerts.push({
+				id: `break-due-${employee.id}`,
+				type: "COMPLIANCE",
+				severity: "MEDIUM",
+				title: "Break Due Soon",
+				description: `${employee.name} has gone ${hoursSinceLastBreak.toFixed(1)}h without a break (policy allows ${violationThreshold}h).`,
+				employeeId: employee.id,
+				employeeName: employee.name,
+				stationName: employee.defaultStation?.name,
+				createdAt: now,
+				requiresAction: true,
+				actionUrl: `/manager/employees/${employee.id}`,
+			});
+		}
+	});
+
+	// 4. Performance alerts - employees with low efficiency
 	const recentTaskAssignments = await db.taskAssignment.findMany({
 		where: {
 			startTime: { gte: weekAgo },

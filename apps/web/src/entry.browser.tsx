@@ -16,6 +16,12 @@ import {
 	type unstable_RSCPayload as RSCServerPayload,
 } from "react-router/dom";
 
+declare global {
+	interface Window {
+		__router?: { revalidate?: () => void };
+	}
+}
+
 // Create and set the callServer function to support post-hydration server actions.
 setServerCallback(
 	createCallServer({
@@ -42,14 +48,14 @@ createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
 		);
 
 		if (payload.type === "render") {
-			(window as any).__router = payload.router;
+			window.__router = payload.router;
 		}
 	});
 });
 
 if (import.meta.hot) {
 	import.meta.hot.on("rsc:update", () => {
-		const router = (window as any).__router;
+		const router = window.__router;
 		if (router?.revalidate) {
 			console.log("[HMR] Server component updated, revalidating...");
 			router.revalidate();

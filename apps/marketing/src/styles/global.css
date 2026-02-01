@@ -1,55 +1,122 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
+@layer base {
+	:root {
+		/* Color System - Match Web App */
+		--radius: 0.375rem;
+
+		/* Light mode - Professional warehouse palette */
+		--color-background: oklch(0.97 0.003 264);
+		--color-foreground: oklch(0.22 0.01 264);
+		--color-card: oklch(0.99 0.002 264);
+		--color-card-foreground: oklch(0.22 0.01 264);
+		--color-popover: oklch(0.99 0.002 264);
+		--color-popover-foreground: oklch(0.22 0.01 264);
+
+		/* Safety Orange - Industrial primary for actions */
+		--color-primary: oklch(0.62 0.18 45);
+		--color-primary-foreground: oklch(0.98 0.002 264);
+		--color-primary-hover: oklch(0.58 0.18 45);
+		--color-primary-active: oklch(0.54 0.18 45);
+
+		/* Steel Blue - Professional secondary */
+		--color-secondary: oklch(0.52 0.12 245);
+		--color-secondary-foreground: oklch(0.98 0.002 264);
+
+		/* Industrial grays - Warehouse surfaces */
+		--color-muted: oklch(0.93 0.005 264);
+		--color-muted-foreground: oklch(0.48 0.01 264);
+		--color-accent: oklch(0.9 0.008 264);
+		--color-accent-foreground: oklch(0.25 0.01 264);
+
+		/* Warning red for destructive */
+		--color-destructive: oklch(0.55 0.22 30);
+		--color-destructive-foreground: oklch(0.98 0.002 264);
+
+		/* Professional borders */
+		--color-border: oklch(0.85 0.005 264);
+		--color-input: oklch(0.87 0.005 264);
+
+		/* Focus ring - safety orange */
+		--color-ring: oklch(0.62 0.18 45);
+
+		/* Industrial surface texture */
+		--color-metal-dark: oklch(0.9 0.005 264);
+		--color-metal-light: oklch(0.95 0.005 264);
+		--color-led-on: oklch(0.62 0.18 45);
+		--color-led-off: oklch(0.7 0.05 264);
+	}
+
+	.dark {
+		/* Dark mode - Industrial Night */
+		--color-background: oklch(0.12 0.01 264);
+		--color-foreground: oklch(0.98 0.002 264);
+		--color-card: oklch(0.15 0.01 264);
+		--color-card-foreground: oklch(0.98 0.002 264);
+		--color-popover: oklch(0.15 0.01 264);
+		--color-popover-foreground: oklch(0.98 0.002 264);
+
+		--color-primary: oklch(0.62 0.18 45);
+		--color-primary-foreground: oklch(0.98 0.002 264);
+		--color-primary-hover: oklch(0.58 0.18 45);
+		--color-primary-active: oklch(0.54 0.18 45);
+
+		--color-secondary: oklch(0.52 0.12 245);
+		--color-secondary-foreground: oklch(0.98 0.002 264);
+
+		--color-muted: oklch(0.2 0.01 264);
+		--color-muted-foreground: oklch(0.7 0.01 264);
+		--color-accent: oklch(0.2 0.01 264);
+		--color-accent-foreground: oklch(0.98 0.002 264);
+
+		--color-destructive: oklch(0.55 0.22 30);
+		--color-destructive-foreground: oklch(0.98 0.002 264);
+
+		--color-border: oklch(0.25 0.01 264);
+		--color-input: oklch(0.25 0.01 264);
+		--color-ring: oklch(0.62 0.18 45);
+
+		--color-metal-dark: oklch(0.15 0.01 264);
+		--color-metal-light: oklch(0.2 0.01 264);
+		--color-led-off: oklch(0.3 0.05 264);
+	}
+}
+
 @theme {
-	/* Color System - Match Web App */
-	--radius: 0.375rem;
-
-	/* Light mode - Professional warehouse palette */
-	--background: oklch(0.97 0.003 264);
-	--foreground: oklch(0.22 0.01 264);
-	--card: oklch(0.99 0.002 264);
-	--card-foreground: oklch(0.22 0.01 264);
-	--popover: oklch(0.99 0.002 264);
-	--popover-foreground: oklch(0.22 0.01 264);
-
-	/* Safety Orange - Industrial primary for actions */
-	--primary: oklch(0.62 0.18 45);
-	--primary-foreground: oklch(0.98 0.002 264);
-	--primary-hover: oklch(0.58 0.18 45);
-	--primary-active: oklch(0.54 0.18 45);
-
-	/* Steel Blue - Professional secondary */
-	--secondary: oklch(0.52 0.12 245);
-	--secondary-foreground: oklch(0.98 0.002 264);
-
-	/* Industrial grays - Warehouse surfaces */
-	--muted: oklch(0.93 0.005 264);
-	--muted-foreground: oklch(0.48 0.01 264);
-	--accent: oklch(0.9 0.008 264);
-	--accent-foreground: oklch(0.25 0.01 264);
-
-	/* Warning red for destructive */
-	--destructive: oklch(0.55 0.22 30);
-	--destructive-foreground: oklch(0.98 0.002 264);
-
-	/* Professional borders */
-	--border: oklch(0.85 0.005 264);
-	--input: oklch(0.87 0.005 264);
-
-	/* Focus ring - safety orange */
-	--ring: oklch(0.62 0.18 45);
-
-	/* Industrial surface texture */
-	--metal-dark: oklch(0.9 0.005 264);
-	--metal-light: oklch(0.95 0.005 264);
-	--led-on: oklch(0.62 0.18 45);
-	--led-off: oklch(0.7 0.05 264);
+	--color-background: var(--color-background);
+	--color-foreground: var(--color-foreground);
+	--color-card: var(--color-card);
+	--color-card-foreground: var(--color-card-foreground);
+	--color-popover: var(--color-popover);
+	--color-popover-foreground: var(--color-popover-foreground);
+	--color-primary: var(--color-primary);
+	--color-primary-foreground: var(--color-primary-foreground);
+	--color-primary-hover: var(--color-primary-hover);
+	--color-primary-active: var(--color-primary-active);
+	--color-secondary: var(--color-secondary);
+	--color-secondary-foreground: var(--color-secondary-foreground);
+	--color-muted: var(--color-muted);
+	--color-muted-foreground: var(--color-muted-foreground);
+	--color-accent: var(--color-accent);
+	--color-accent-foreground: var(--color-accent-foreground);
+	--color-destructive: var(--color-destructive);
+	--color-destructive-foreground: var(--color-destructive-foreground);
+	--color-border: var(--color-border);
+	--color-input: var(--color-input);
+	--color-ring: var(--color-ring);
+	
+	--color-metal-dark: var(--color-metal-dark);
+	--color-metal-light: var(--color-metal-light);
+	--color-led-on: var(--color-led-on);
+	--color-led-off: var(--color-led-off);
+	
+	--radius: var(--radius);
 }
 
 body {
-	background-color: var(--background);
-	color: var(--foreground);
+	background-color: var(--color-background);
+	color: var(--color-foreground);
 	font-family:
 		"IBM Plex Sans",
 		system-ui,
@@ -101,7 +168,7 @@ body {
 
 /* Grid Patterns - Match Web App */
 .bg-grid-pattern {
-	background-color: var(--background);
+	background-color: var(--color-background);
 	background-image:
 		linear-gradient(to right, rgb(0 0 0 / 0.1) 1px, transparent 1px),
 		linear-gradient(to bottom, rgb(0 0 0 / 0.1) 1px, transparent 1px);
@@ -109,13 +176,13 @@ body {
 }
 
 .bg-grid-pattern-subtle {
-	background-color: var(--background);
+	background-color: var(--color-background);
 	background-image: radial-gradient(circle, rgb(0 0 0 / 0.05) 0.5px, transparent 0.5px);
 	background-size: 24px 24px;
 }
 
 .bg-grid-pattern-diagonal {
-	background-color: var(--background);
+	background-color: var(--color-background);
 	background-image: linear-gradient(45deg, rgb(0 0 0 / 0.05) 25%, transparent 25%);
 	background-size: 32px 32px;
 }
@@ -124,10 +191,10 @@ body {
 .safety-stripes {
 	background: repeating-linear-gradient(
 		45deg,
-		var(--primary),
-		var(--primary) 10px,
-		var(--foreground) 10px,
-		var(--foreground) 20px
+		var(--color-primary),
+		var(--color-primary) 10px,
+		var(--color-foreground) 10px,
+		var(--color-foreground) 20px
 	);
 	height: 8px;
 }
@@ -137,37 +204,48 @@ body {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background-color: var(--led-off);
-	box-shadow: 0 0 0 2px var(--background);
+	background-color: var(--color-led-off);
+	box-shadow: 0 0 0 2px var(--color-background);
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .led-indicator.active {
-	background-color: var(--led-on);
+	background-color: var(--color-led-on);
 	box-shadow:
-		0 0 0 2px var(--background),
-		0 0 12px var(--led-on);
+		0 0 0 2px var(--color-background),
+		0 0 12px var(--color-led-on);
 }
 
 /* Industrial Panel Effects - Match Web App */
 .industrial-panel {
-	background: var(--card);
-	border: 1px solid var(--border);
+	background: var(--color-card);
+	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
 	box-shadow:
 		0 1px 3px rgba(0, 0, 0, 0.08),
 		0 1px 2px rgba(0, 0, 0, 0.06);
 	position: relative;
 	overflow: hidden;
-	transition: all 0.2s ease-out;
+	transition:
+		border-color 0.2s ease-out,
+		transform 0.2s ease-out,
+		box-shadow 0.2s ease-out;
 }
 
 .industrial-panel:hover {
-	border-color: var(--primary);
+	border-color: var(--color-primary);
 	transform: translateY(-2px);
 	box-shadow:
 		0 4px 6px rgba(0, 0, 0, 0.1),
 		0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.industrial-panel,
+	.industrial-panel:hover {
+		transform: none;
+		transition: none;
+	}
 }
 
 /* Animations - Match Web App */
@@ -266,10 +344,10 @@ body {
 @keyframes pulse-glow {
 	0%,
 	100% {
-		box-shadow: 0 0 8px var(--primary);
+		box-shadow: 0 0 8px var(--color-primary);
 	}
 	50% {
-		box-shadow: 0 0 16px var(--primary);
+		box-shadow: 0 0 16px var(--color-primary);
 	}
 }
 
@@ -283,6 +361,23 @@ body {
 	}
 	90% {
 		opacity: 0.5;
+	}
+	100% {
+		transform: translateY(100%);
+		opacity: 0;
+	}
+}
+
+@keyframes scanner-sweep {
+	0% {
+		transform: translateY(-100%);
+		opacity: 0;
+	}
+	10% {
+		opacity: 1;
+	}
+	90% {
+		opacity: 1;
 	}
 	100% {
 		transform: translateY(100%);
@@ -305,6 +400,61 @@ body {
 		transform: translateX(100%);
 		opacity: 0;
 	}
+}
+
+@keyframes data-stream-v {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-50%);
+	}
+}
+
+/* NEW: Mechanical Animations */
+
+@keyframes shutter-v {
+	0% {
+		transform: scaleY(0);
+		opacity: 0;
+	}
+	100% {
+		transform: scaleY(1);
+		opacity: 1;
+	}
+}
+
+@keyframes blink {
+	0%, 100% { opacity: 1; }
+	10% { opacity: 0.4; }
+	20% { opacity: 1; }
+	30% { opacity: 1; }
+	40% { opacity: 0.2; }
+	50% { opacity: 1; }
+	60% { opacity: 1; }
+	70% { opacity: 0.8; }
+	80% { opacity: 1; }
+}
+
+@keyframes grid-pan {
+	0% { background-position: 0 0; }
+	100% { background-position: 40px 40px; }
+}
+
+@keyframes glitch {
+	0% { transform: translate(0); }
+	20% { transform: translate(-2px, 2px); }
+	40% { transform: translate(-2px, -2px); }
+	60% { transform: translate(2px, 2px); }
+	80% { transform: translate(2px, -2px); }
+	100% { transform: translate(0); }
+}
+
+@keyframes power-cycle {
+	0% { opacity: 1; filter: brightness(1); }
+	50% { opacity: 0.5; filter: brightness(0.5); }
+	55% { opacity: 0.8; filter: brightness(1.2); }
+	100% { opacity: 1; filter: brightness(1); }
 }
 
 /* Animation classes */
@@ -346,6 +496,102 @@ body {
 	animation: pulse-glow 2s ease-in-out infinite;
 }
 
+.animate-scanner {
+	animation: scanner-sweep 3s ease-in-out infinite;
+	background: linear-gradient(to bottom, transparent, var(--color-primary) 50%, transparent);
+	box-shadow: 0 0 15px var(--color-primary);
+	height: 2px;
+	width: 100%;
+}
+
+.animate-data-stream-v {
+	animation: data-stream-v 20s linear infinite;
+}
+
+/* NEW: Mechanical Animation Utilities */
+.animate-shutter-v {
+	animation: shutter-v 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+	transform-origin: top;
+}
+
+.animate-blink {
+	animation: blink 4s steps(1) infinite;
+}
+
+.animate-grid-pan {
+	animation: grid-pan 20s linear infinite;
+}
+
+.animate-glitch {
+	animation: glitch 0.3s steps(2) forwards;
+}
+
+.animate-power-cycle {
+	animation: power-cycle 0.4s ease-out forwards;
+}
+
+/* Mechanical Hover States */
+.hover-mechanical-card {
+	transition: all 0.15s steps(4);
+}
+
+.hover-mechanical-card:hover {
+	border-color: var(--color-primary);
+	box-shadow: 4px 4px 0px var(--color-primary);
+	transform: translate(-2px, -2px);
+}
+
+.btn-mechanical {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	z-index: 1;
+}
+
+.btn-mechanical::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--color-primary);
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.3s cubic-bezier(0.75, 0, 0.25, 1);
+	z-index: -1;
+}
+
+.btn-mechanical:hover::before {
+	transform: scaleX(1);
+}
+
+.btn-mechanical:hover {
+	color: var(--color-primary-foreground) !important;
+	border-color: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-scale-in,
+	.animate-slide-up,
+	.animate-slide-down,
+	.animate-slide-in-left,
+	.animate-slide-in-right,
+	.animate-fade-in,
+	.animate-fade-in-up,
+	.animate-bounce-in,
+	.animate-pulse-glow,
+	.animate-scanner,
+	.animate-data-stream-v,
+	.animate-shutter-v,
+	.animate-blink,
+	.animate-grid-pan,
+	.animate-glitch,
+	.animate-power-cycle {
+		animation: none !important;
+		opacity: 1 !important;
+		transform: none !important;
+		transition: none !important;
+	}
+}
+
 /* Animation delay utilities */
 .animate-delay-100 {
 	animation-delay: 100ms;
@@ -384,11 +630,76 @@ body {
 	opacity: 0.4;
 }
 
+/* 1. SUBTLE GRAIN / NOISE TEXTURE */
+.bg-noise {
+	position: relative;
+	isolation: isolate;
+}
+.bg-noise::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 50;
+	pointer-events: none;
+	opacity: 0.4;
+	mix-blend-mode: overlay;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+}
+
+/* 2. TACTICAL GRID */
+.bg-tactical-grid {
+	background-size:
+		40px 40px,
+		40px 40px,
+		10px 10px,
+		10px 10px;
+	background-image: linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--color-border) 1px, transparent 1px),
+		linear-gradient(to right, color-mix(in oklch, var(--color-border), transparent 80%) 1px, transparent 1px),
+		linear-gradient(to bottom, color-mix(in oklch, var(--color-border), transparent 80%) 1px, transparent 1px);
+	mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
 /* Corner Accent Design System */
 /* Consistent border width throughout: 1.5px */
 /* Clear sizing hierarchy with proper spacing */
 
+/* 3. MACHINED CORNER ACCENTS */
+.corner-machined {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border-color: var(--color-primary);
+	transition: border-color 0.3s ease;
+}
+/* Top Left with "Bolt" hole */
+.corner-machined-tl {
+	top: -1px;
+	left: -1px;
+	border-left: 2px solid;
+	border-top: 2px solid;
+}
+.corner-machined-tl::before {
+	content: "";
+	position: absolute;
+	top: -3px;
+	left: -3px;
+	width: 6px;
+	height: 6px;
+	background: var(--color-background);
+	border: 1px solid var(--color-primary);
+	box-shadow: 0 0 4px var(--color-primary);
+}
+/* Bottom Right */
+.corner-machined-br {
+	bottom: -1px;
+	right: -1px;
+	border-right: 2px solid;
+	border-bottom: 2px solid;
+}
+
 /* Size Scale */
+
 .corner-accent-sm {
 	width: 16px;
 	height: 16px;
@@ -529,43 +840,43 @@ body {
 
 /* Utility Classes */
 .bg-background {
-	background-color: var(--background);
+	background-color: var(--color-background);
 }
 
 .bg-card {
-	background-color: var(--card);
+	background-color: var(--color-card);
 }
 
 .bg-primary {
-	background-color: var(--primary);
+	background-color: var(--color-primary);
 }
 
 .bg-primary-hover {
-	background-color: var(--primary-hover);
+	background-color: var(--color-primary-hover);
 }
 
 .bg-muted {
-	background-color: var(--muted);
+	background-color: var(--color-muted);
 }
 
 .text-foreground {
-	color: var(--foreground);
+	color: var(--color-foreground);
 }
 
 .text-primary {
-	color: var(--primary);
+	color: var(--color-primary);
 }
 
 .text-muted-foreground {
-	color: var(--muted-foreground);
+	color: var(--color-muted-foreground);
 }
 
 .border-border {
-	border-color: var(--border);
+	border-color: var(--color-border);
 }
 
 .border-primary {
-	border-color: var(--primary);
+	border-color: var(--color-primary);
 }
 
 /* Smooth transitions for interactive elements */

@@ -10,6 +10,7 @@ import {
 	CardTitle,
 	CardBody,
 	Select,
+	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 
@@ -88,18 +89,14 @@ export function EmployeeRoster({
 	};
 
 	const getStatusBadge = (status: EmployeeStatus) => {
-		const styles = {
-			ACTIVE: "bg-green-100 text-green-800",
-			INACTIVE: "bg-accent text-muted-foreground",
-			ON_LEAVE: "bg-yellow-100 text-yellow-800",
-			TERMINATED: "bg-red-100 text-red-800",
+		const variants: Record<EmployeeStatus, "success" | "secondary" | "primary" | "destructive"> = {
+			ACTIVE: "success",
+			INACTIVE: "secondary",
+			ON_LEAVE: "primary",
+			TERMINATED: "destructive",
 		};
 
-		return (
-			<span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status]}`}>
-				{status.replace("_", " ")}
-			</span>
-		);
+		return <Badge variant={variants[status]}>{status.replace("_", " ")}</Badge>;
 	};
 
 	const getStationName = (stationId: string | null) => {

@@ -180,7 +180,7 @@ apps/web/src/routes/[route-name]/
 ```
 rsc-hono-app/
 ├── prisma/
-│   └── schema.prisma           # Database schema
+│   └── ../../prisma/schema.prisma           # Database schema (repo root)
 ├── src/
 │   ├── components/
 │   │   ├── ds/                 # Design system components

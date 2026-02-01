@@ -40,14 +40,10 @@ export default async function Component() {
 	// Filter for active employees
 	const activeTimeLogs = allTimeLogs.filter((log) => log.endTime === null && log.type === "WORK");
 
-	// Get recent logs for dashboard
-	const recentLogs = allTimeLogs.slice(0, 10);
-
 	return (
 		<ManagerDashboard
 			activeTimeLogs={activeTimeLogs}
 			totalEmployees={totalEmployees}
-			recentLogs={recentLogs}
 			alerts={activeAlerts.slice(0, 5)} // Show top 5 alerts
 			user={user}
 		/>

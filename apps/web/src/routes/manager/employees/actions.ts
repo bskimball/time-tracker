@@ -4,10 +4,11 @@ import { db } from "~/lib/db";
 import bcrypt from "bcryptjs";
 import { validateRequest } from "~/lib/auth";
 import { EmployeeStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export async function getEmployees(search?: string, status?: EmployeeStatus, page = 1, limit = 25) {
 	const skip = (page - 1) * limit;
-	const where: any = {};
+	const where: Prisma.EmployeeWhereInput = {};
 
 	if (search) {
 		where.OR = [
@@ -170,14 +171,14 @@ export async function updateEmployee(
 		throw new Error("Unauthorized");
 	}
 
-	const updateData: any = { ...data };
-	delete updateData.pin;
+	const { pin, ...rest } = data;
+	const updateData: Prisma.EmployeeUpdateInput = { ...rest };
 
 	// Handle PIN update separately
-	if (data.pin !== undefined) {
-		if (data.pin.length >= 4) {
-			updateData.pinHash = await bcrypt.hash(data.pin, 12);
-		} else if (data.pin === "") {
+	if (pin !== undefined) {
+		if (pin.length >= 4) {
+			updateData.pinHash = await bcrypt.hash(pin, 12);
+		} else if (pin === "") {
 			updateData.pinHash = null; // Remove PIN
 		}
 	}

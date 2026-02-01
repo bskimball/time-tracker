@@ -68,22 +68,22 @@ export function MobileNavigation({ currentRoute, className = "" }: MobileNavigat
 	];
 
 	return (
-		<nav className={`grid grid-cols-4 gap-1 p-2 ${className}`}>
+		<nav className={`grid grid-cols-4 gap-1 p-2 bg-card border-t border-border/50 ${className}`}>
 			{navItems.map((item) => (
 				<button
 					key={item.route}
 					className={`
-            flex flex-col items-center justify-center py-3 px-2 rounded-lg
-            text-xs font-medium transition-all duration-200
+            flex flex-col items-center justify-center py-3 px-2 rounded-[2px]
+            text-[10px] font-industrial uppercase tracking-widest transition-all duration-200
             ${
 							currentRoute === item.route
-								? "text-blue-600 bg-blue-50"
-								: "text-gray-600 hover:bg-gray-50 active:bg-gray-100"
+								? "text-primary bg-primary/10 border border-primary/20"
+								: "text-muted-foreground hover:bg-muted/50 active:bg-muted"
 						}
           `}
 				>
-					<span className="w-6 h-6 mb-1">{item.icon}</span>
-					<span className="text-center">{item.label}</span>
+					<span className="w-5 h-5 mb-1.5">{item.icon}</span>
+					<span className="text-center font-bold">{item.label}</span>
 				</button>
 			))}
 		</nav>
@@ -121,20 +121,21 @@ export function MobileCard({
 	};
 
 	const variantClasses = {
-		default: "bg-white",
-		warning: "bg-yellow-50 border border-yellow-200",
-		error: "bg-red-50 border border-red-200",
-		success: "bg-green-50 border border-green-200",
+		default: "bg-card border-border/50",
+		warning: "bg-background border-amber-500/50",
+		error: "bg-background border-destructive/50",
+		success: "bg-background border-chart-3/50",
 	};
 
 	return (
 		<div
 			className={`
         ${paddingClasses[padding]}
-        ${rounded ? "rounded-xl" : ""}
-        ${shadow ? "shadow-lg" : ""}
-        ${onClick ? "cursor-pointer active:scale-95" : ""}
-        ${onClick ? "hover:shadow-xl" : ""}
+        border
+        ${rounded ? "rounded-[2px]" : ""}
+        ${shadow ? "shadow-industrial" : ""}
+        ${onClick ? "cursor-pointer active:translate-y-[1px] active:shadow-none" : ""}
+        ${onClick ? "hover:border-primary/50" : ""}
         ${variantClasses[variant]} transition-all duration-200
         ${className}
       `}
@@ -142,8 +143,8 @@ export function MobileCard({
 		>
 			{(title || subtitle) && (
 				<div className="mb-4">
-					{title && <h3 className="text-lg font-bold text-gray-900">{title}</h3>}
-					{subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+					{title && <h3 className="text-sm font-industrial font-bold uppercase tracking-widest text-foreground">{title}</h3>}
+					{subtitle && <p className="text-xs text-muted-foreground mt-1 font-mono">{subtitle}</p>}
 				</div>
 			)}
 

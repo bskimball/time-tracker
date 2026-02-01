@@ -49,35 +49,22 @@ export default function FeaturesSection() {
 	];
 
 	return (
-		<section className="py-20 relative overflow-hidden">
+		<section className="py-20 relative overflow-hidden bg-noise">
 			{/* Textured Background */}
-			<div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-muted/30 to-primary/8" />
-			<div className="absolute inset-0 bg-grid-pattern opacity-20" />
+			<div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-muted/30 to-primary/8 pointer-events-none" />
+			<div className="absolute inset-0 bg-tactical-grid opacity-10 pointer-events-none" aria-hidden="true" />
 
 			{/* Decorative Elements */}
-			<div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" />
-			<div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" />
+			<div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" aria-hidden="true" />
+			<div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" aria-hidden="true" />
 
-			<div className="container mx-auto px-4 relative">
-				{/* Corner Accents - System: XL size, Section spacing */}
-				<div className="corner-section-tl corner-accent-xl corner-secondary animate-fade-in" />
-				<div className="corner-section-tr corner-accent-xl corner-primary animate-fade-in" />
-				<div className="corner-section-bl corner-accent-lg corner-secondary animate-fade-in animate-delay-100" />
-				<div className="corner-section-br corner-accent-lg corner-primary animate-fade-in animate-delay-100" />
-
-				{/* Technical Labels */}
-				<div className="absolute top-2 left-[104px] font-mono text-[10px] text-secondary/45 tracking-wider animate-fade-in animate-delay-200">
-					[FEATURES_MODULE]
-				</div>
-				<div className="absolute top-2 right-[104px] font-mono text-[10px] text-primary/40 tracking-wider animate-fade-in animate-delay-200">
-					6_COMPONENTS
-				</div>
+			<div className="container mx-auto px-6 md:px-8 relative">
 				{/* Section Header */}
-				<div className="text-center mb-16">
-					<h2 className="text-4xl font-display font-bold text-foreground mb-4 animate-fade-in-up">
+				<div className="text-center mb-16 px-4">
+					<h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-4 animate-fade-in-up text-pretty">
 						Enterprise-Grade Workforce Management
 					</h2>
-					<p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up animate-delay-100">
+					<p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up animate-delay-100 text-pretty">
 						Built specifically for fulfillment warehouses, manufacturing facilities, and industrial operations
 						where precision, reliability, and scalability matter most.
 					</p>
@@ -89,42 +76,25 @@ export default function FeaturesSection() {
 						<IndustrialPanel
 							key={index}
 							variant="default"
-							className="p-8 animate-fade-in-up relative group"
+							className="p-8 animate-fade-in-up relative group bg-noise hover:border-primary/50 transition-colors"
 							style={{ animationDelay: `${index * 100 + 200}ms` }}
 						>
-							{/* Feature corner accents - System: MD size, Card spacing */}
-							<div className="corner-card-tl corner-accent-md corner-primary" />
-							<div className="corner-card-tr corner-accent-md corner-secondary" />
-							<div className="corner-card-bl corner-accent-sm corner-primary" />
-							<div className="corner-card-br corner-accent-sm corner-secondary" />
-
-							{/* Feature ID */}
-							<div className="flex items-center justify-between mb-4">
-								<span className="font-mono text-[9px] text-muted-foreground/30 tracking-wider">
-									FEAT_{String(index + 1).padStart(2, '0')}
-								</span>
-								<div className="flex items-center gap-1">
-									<div className="w-1 h-1 rounded-full bg-primary/50" />
-									<span className="font-mono text-[8px] text-primary/40">ACTIVE</span>
-								</div>
-							</div>
-
-							<div className="text-center mb-6">
-								<div className="text-5xl mb-4 text-primary flex justify-center animate-scale-in" style={{ animationDelay: `${index * 100 + 400}ms` }}>
+							<div className="text-center mb-8">
+								<div className="text-6xl mb-6 text-primary flex justify-center animate-scale-in group-hover:scale-110 transition-transform" style={{ animationDelay: `${index * 100 + 400}ms` }} aria-hidden="true">
 									<feature.icon />
 								</div>
-								<h3 className="text-2xl font-heading font-semibold mb-3">{feature.title}</h3>
-								<p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+								<h3 className="text-2xl font-heading font-bold mb-4 tracking-tight">{feature.title}</h3>
+								<p className="text-muted-foreground leading-relaxed text-sm">{feature.description}</p>
 							</div>
 
 							{/* Divider line */}
-							<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-4" />
+							<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" aria-hidden="true" />
 
-							<ul className="space-y-3">
+							<ul className="space-y-4">
 								{feature.benefits.map((benefit, i) => (
-									<li key={i} className="flex items-center gap-3">
-										<span className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></span>
-										<span className="text-sm text-foreground">{benefit}</span>
+									<li key={i} className="flex items-center gap-3 group/item">
+										<span className="w-1.5 h-1.5 bg-primary/40 group-hover/item:bg-primary rounded-full flex-shrink-0 transition-colors"></span>
+										<span className="text-sm text-foreground/80 group-hover/item:text-foreground transition-colors">{benefit}</span>
 									</li>
 								))}
 							</ul>
@@ -135,12 +105,13 @@ export default function FeaturesSection() {
 				{/* CTA */}
 				<div className="text-center animate-fade-in-up animate-delay-500">
 					<a href="/features">
-						<Button size="lg" className="hover:scale-105 transition-transform">
+						<Button size="lg" className="hover:scale-105 transition-transform shadow-lg shadow-primary/10">
 							Explore All Features
 						</Button>
 					</a>
 				</div>
 			</div>
 		</section>
+
 	);
 }

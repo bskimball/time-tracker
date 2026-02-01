@@ -7,6 +7,8 @@ export { Card, CardHeader, CardTitle, CardBody } from "./components/card";
 export { Alert } from "./components/alert";
 export { Tabs, TabList, Tab, TabPanel } from "./components/tabs";
 export { Form } from "./components/form";
+export { Badge } from "./components/badge";
+export { Metric } from "./components/metric";
 export {
 	SafetyStripes,
 	LedIndicator,

@@ -14,6 +14,7 @@ import {
 	Tab,
 	TabPanel,
 	SimpleSelect,
+	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import type { Employee } from "@prisma/client";
@@ -32,6 +33,16 @@ type TimeLogWithDetails = {
 	updatedAt: Date;
 	Employee: Employee;
 	Station: { id: string; name: string } | null;
+};
+
+type TimeCorrectionPayload = {
+	employeeId: string;
+	startTime: Date;
+	endTime?: Date;
+	stationId?: string;
+	type: "WORK" | "BREAK";
+	note?: string;
+	reason: string;
 };
 
 interface TimesheetProps {
@@ -54,20 +65,14 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 	};
 
 	const getMethodBadge = (method: string) => {
-		const styles = {
-			PIN: "bg-accent text-foreground",
-			CARD: "bg-green-100 text-green-800",
-			BIOMETRIC: "bg-purple-100 text-purple-800",
-			MANUAL: "bg-orange-100 text-orange-800",
+		const variants: Record<string, "secondary" | "success" | "primary" | "outline"> = {
+			PIN: "secondary",
+			CARD: "success",
+			BIOMETRIC: "primary",
+			MANUAL: "outline",
 		};
 
-		return (
-			<span
-				className={`px-2 py-1 text-xs font-medium rounded-full ${styles[method as keyof typeof styles]}`}
-			>
-				{method}
-			</span>
-		);
+		return <Badge variant={variants[method] || "outline"}>{method}</Badge>;
 	};
 
 	return (
@@ -122,15 +127,9 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 													</div>
 												</td>
 												<td className="p-4">
-													<span
-														className={`px-2 py-1 text-xs rounded ${
-															log.type === "WORK"
-																? "bg-green-100 text-green-800"
-																: "bg-accent text-muted-foreground"
-														}`}
-													>
+													<Badge variant={log.type === "WORK" ? "success" : "secondary"}>
 														{log.type}
-													</span>
+													</Badge>
 												</td>
 												<td className="p-4">{log.Station?.name || "None"}</td>
 												<td className="p-4">
@@ -286,7 +285,7 @@ function TimeCorrectionForm({
 	employees: Employee[];
 	stations: { id: string; name: string }[];
 	onClose: () => void;
-	onSubmit: (data: any) => Promise<void>;
+	onSubmit: (data: TimeCorrectionPayload) => Promise<void>;
 }) {
 	const [formData, setFormData] = useState({
 		employeeId: "",
@@ -404,48 +403,7 @@ function TimeCorrectionForm({
 							/>
 						</div>
 
-						<div>
-							<Input
-								label="End Time (optional)"
-								type="datetime-local"
-								value={formData.endTime}
-								onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-							/>
-						</div>
-
-						<SimpleSelect
-							label="Station (optional)"
-							options={stations.map((station) => ({
-								value: station.id,
-								label: station.name,
-							}))}
-							value={formData.stationId}
-							onChange={(value) =>
-								setFormData((prev) => ({ ...prev, stationId: value || "" }))
-							}
-							placeholder="Select a station"
-						/>
-
-						<div>
-							<Input
-								label="Reason for correction"
-								value={formData.reason}
-								onChange={(e) => setFormData((prev) => ({ ...prev, reason: e.target.value }))}
-								placeholder="Explain why this correction is needed"
-								required
-							/>
-						</div>
-
-						<div>
-							<Input
-								label="Notes (optional)"
-								value={formData.note}
-								onChange={(e) => setFormData((prev) => ({ ...prev, note: e.target.value }))}
-								placeholder="Additional context or details"
-							/>
-						</div>
-
-						<div className="flex justify-end space-x-2 pt-4 border-t">
+						<div className="flex justify-end space-x-2 pt-4 border-t border-border/50">
 							<Button type="button" variant="outline" onClick={onClose}>
 								Cancel
 							</Button>

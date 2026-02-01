@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
+import "dotenv/config";
 
 // Create connection pool for the adapter
 const connectionString = process.env.DATABASE_URL;
@@ -335,7 +336,6 @@ async function main() {
 				name: "Pick Orders",
 				stationId: stations[0].id, // PICKING
 				description: "Pick items from shelves for orders",
-				estimatedMinutesPerUnit: 2.5,
 				isActive: true,
 			},
 		}),
@@ -344,7 +344,6 @@ async function main() {
 				name: "Pack Orders",
 				stationId: stations[1].id, // PACKING
 				description: "Pack picked items into shipping boxes",
-				estimatedMinutesPerUnit: 3.0,
 				isActive: true,
 			},
 		}),
@@ -353,7 +352,6 @@ async function main() {
 				name: "Fill Containers",
 				stationId: stations[2].id, // FILLING
 				description: "Fill product containers and bottles",
-				estimatedMinutesPerUnit: 1.5,
 				isActive: true,
 			},
 		}),
@@ -362,7 +360,6 @@ async function main() {
 				name: "Receive Shipment",
 				stationId: stations[3].id, // RECEIVING
 				description: "Process incoming shipments",
-				estimatedMinutesPerUnit: 10.0,
 				isActive: true,
 			},
 		}),
@@ -371,7 +368,6 @@ async function main() {
 				name: "Load Truck",
 				stationId: stations[4].id, // SHIPPING
 				description: "Load packages onto delivery trucks",
-				estimatedMinutesPerUnit: 5.0,
 				isActive: true,
 			},
 		}),
@@ -380,7 +376,6 @@ async function main() {
 				name: "Quality Inspection",
 				stationId: stations[5].id, // QUALITY
 				description: "Inspect products for quality standards",
-				estimatedMinutesPerUnit: 4.0,
 				isActive: true,
 			},
 		}),
@@ -389,7 +384,6 @@ async function main() {
 				name: "Stock Count",
 				stationId: stations[6].id, // INVENTORY
 				description: "Count and verify inventory levels",
-				estimatedMinutesPerUnit: 8.0,
 				isActive: true,
 			},
 		}),

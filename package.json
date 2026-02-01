@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "Monorepo for React Router app and Astro marketing site",
 	"private": true,
+	"type": "module",
 	"workspaces": [
 		"apps/*",
 		"packages/*"

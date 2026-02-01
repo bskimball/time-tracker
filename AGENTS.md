@@ -7,6 +7,13 @@ Time Tracker is a monorepo containing a React Router web app (RSC Data mode), an
 - **Node.js**: `>=22.6.0`
 - **Package manager**: `npm` preferred; `pnpm` supported
 
+## Workspaces
+
+- `apps/web` — main application
+- `apps/marketing` — marketing site
+- `packages/design-system` — shared UI components
+
+
 ## Commands you’ll use often
 
 From repo root:

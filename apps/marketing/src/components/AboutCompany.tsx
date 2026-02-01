@@ -38,41 +38,20 @@ export default function AboutCompany() {
 			<div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-muted/30 to-primary/8" />
 			<div className="absolute inset-0 bg-grid-pattern opacity-20" />
 
-			<div className="container mx-auto px-4 relative">
-				{/* Corner Accents - System: XL size, Section spacing */}
-				<div className="corner-section-tl corner-accent-xl corner-primary animate-fade-in" />
-				<div className="corner-section-tr corner-accent-xl corner-secondary animate-fade-in" />
-				<div className="corner-section-bl corner-accent-lg corner-primary animate-fade-in animate-delay-100" />
-				<div className="corner-section-br corner-accent-lg corner-secondary animate-fade-in animate-delay-100" />
-
-				{/* Technical Labels */}
-				<div className="absolute top-2 left-[104px] font-mono text-[10px] text-primary/40 tracking-wider animate-fade-in animate-delay-200">
-					[ABOUT_COMPANY]
-				</div>
-				<div className="absolute top-2 right-[104px] font-mono text-[10px] text-secondary/40 tracking-wider animate-fade-in animate-delay-200">
-					OUR_MISSION
-				</div>
-
+			<div className="container mx-auto px-6 md:px-8 relative">
 				{/* Content with proper spacing */}
 				<div className="pt-20 pb-16 px-8">
+
 					{/* Mission & Vision */}
 					<div className="grid md:grid-cols-2 gap-8 mb-20">
 						<IndustrialPanel className="p-8 relative group">
-							{/* Panel corner accents */}
-							<div className="corner-card-tl corner-accent-md corner-primary" />
-							<div className="corner-card-tr corner-accent-md corner-secondary" />
-							<div className="corner-card-bl corner-accent-sm corner-primary" />
-							<div className="corner-card-br corner-accent-sm corner-secondary" />
-
 							<div className="flex items-start gap-4 mb-4">
 								<LiaBullseyeSolid className="text-4xl text-primary flex-shrink-0" />
 								<div>
 									<h2 className="text-2xl font-heading font-bold mb-2">Our Mission</h2>
-									<div className="font-mono text-[9px] text-muted-foreground/30 tracking-wider">
-										MISSION_001
-									</div>
 								</div>
 							</div>
+
 
 							{/* Divider line */}
 							<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
@@ -86,21 +65,13 @@ export default function AboutCompany() {
 						</IndustrialPanel>
 
 						<IndustrialPanel className="p-8 relative group">
-							{/* Panel corner accents */}
-							<div className="corner-card-tl corner-accent-md corner-secondary" />
-							<div className="corner-card-tr corner-accent-md corner-primary" />
-							<div className="corner-card-bl corner-accent-sm corner-secondary" />
-							<div className="corner-card-br corner-accent-sm corner-primary" />
-
 							<div className="flex items-start gap-4 mb-4">
 								<LiaEyeSolid className="text-4xl text-secondary flex-shrink-0" />
 								<div>
 									<h2 className="text-2xl font-heading font-bold mb-2">Our Vision</h2>
-									<div className="font-mono text-[9px] text-muted-foreground/30 tracking-wider">
-										VISION_001
-									</div>
 								</div>
 							</div>
+
 
 							{/* Divider line */}
 							<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
@@ -127,26 +98,10 @@ export default function AboutCompany() {
 					<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
 						{values.map((value, index) => (
 							<Card key={index} className="hover:shadow-lg transition-all hover:-translate-y-1 relative group">
-								{/* Card corner accents - System: MD size, Card spacing */}
-								<div className="corner-card-tl corner-accent-md corner-primary" />
-								<div className="corner-card-tr corner-accent-md corner-secondary" />
-								<div className="corner-card-bl corner-accent-sm corner-primary" />
-								<div className="corner-card-br corner-accent-sm corner-secondary" />
-
 								<CardBody className="text-center p-6">
-									{/* Value ID */}
-									<div className="flex items-center justify-between mb-4">
-										<span className="font-mono text-[9px] text-muted-foreground/30 tracking-wider">
-											VAL_{String(index + 1).padStart(2, '0')}
-										</span>
-										<div className="flex items-center gap-1">
-											<div className="w-1 h-1 rounded-full bg-primary/50" />
-											<span className="font-mono text-[8px] text-primary/40">CORE</span>
-										</div>
-									</div>
-
 									<value.icon className="text-5xl text-primary mx-auto mb-4" />
 									<h3 className="text-xl font-heading font-semibold mb-3">{value.title}</h3>
+
 									<p className="text-sm text-muted-foreground leading-relaxed">{value.description}</p>
 								</CardBody>
 							</Card>

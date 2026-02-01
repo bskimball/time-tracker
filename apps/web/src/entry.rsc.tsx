@@ -15,6 +15,14 @@ import { routes } from "./routes/config";
 import { runWithRequest } from "./lib/request-context";
 import { validateRequest, invalidateSession, deleteSessionTokenCookie } from "./lib/auth";
 
+type RSCMatch = {
+	payload: unknown;
+	statusCode: number;
+	headers: Headers | Record<string, string>;
+};
+
+type RSCStreamOptions = Parameters<typeof renderToReadableStream>[1];
+
 function fetchServer(request: Request) {
 	// Wrap RSC rendering in request context so Server Components can access request
 	return runWithRequest(request, () =>
@@ -30,7 +38,7 @@ function fetchServer(request: Request) {
 			// The app routes.
 			routes: routes(),
 			// Encode the match with the React Server implementation.
-			generateResponse(match: any, options: any) {
+			generateResponse(match: RSCMatch, options: RSCStreamOptions) {
 				return new Response(renderToReadableStream(match.payload, options), {
 					status: match.statusCode,
 					headers: match.headers,

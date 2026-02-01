@@ -1,36 +1,39 @@
 "use client";
 
 import { Link } from "react-router";
-import { Button } from "@monorepo/design-system";
 import {
 	IndustrialHeader,
 	IndustrialPanel,
 	SafetyStripes,
 } from "@monorepo/design-system";
 
+
 export function LoginClient() {
 	return (
-		<main className="min-h-screen flex items-center justify-center bg-grid-pattern p-4">
-			<div className="w-full max-w-md animate-scale-in">
-				<SafetyStripes position="top" />
-				<IndustrialPanel className="relative">
-					{/* Subtle corner accents - brand establishment */}
-					<div className="corner-card-tl corner-accent-md corner-primary" />
-					<div className="corner-card-tr corner-accent-md corner-secondary" />
+		<main className="min-h-screen flex items-center justify-center bg-noise p-4 selection:bg-primary/30">
+			{/* Tactical grid background */}
+			<div className="absolute inset-0 bg-tactical-grid opacity-20 pointer-events-none" aria-hidden="true" />
 
-					<IndustrialHeader title="Login" subtitle="Secure Access" />
+			<div className="w-full max-w-md animate-scale-in relative z-10">
+				<SafetyStripes position="top" aria-hidden="true" />
+				<IndustrialPanel className="relative group">
+					{/* Subtle corner accents - brand establishment */}
+					<div className="corner-machined corner-machined-tl opacity-50 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+					<div className="corner-machined corner-machined-br bottom-0 right-0 opacity-50 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+
+					<IndustrialHeader title="Login" subtitle="SECURE_ACCESS_v1.0" />
 					<div className="p-8">
-						<p className="text-center text-sm mb-8 text-muted-foreground animate-fade-in">
+						<p className="text-center text-sm mb-8 text-muted-foreground animate-fade-in font-heading uppercase tracking-wider">
 							Choose your authentication method
 						</p>
 
-						<div className="space-y-3">
+						<div className="space-y-4">
 							<Link
 								to="/auth/google/start"
-								className="flex w-full h-10 px-4 text-base inline-flex items-center justify-center font-medium rounded-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background active:scale-[0.98] font-heading tracking-tight border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 gap-3 group"
+								className="flex w-full h-12 px-6 text-base inline-flex items-center justify-center font-bold rounded-[2px] transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background active:translate-y-[1px] font-heading tracking-tight border border-border/50 bg-card text-foreground hover:bg-muted/50 hover:border-primary/30 gap-4 group shadow-sm"
 							>
 								<svg
-									className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12"
+									className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
 									viewBox="0 0 24 24"
 									aria-hidden="true"
 								>
@@ -51,60 +54,48 @@ export function LoginClient() {
 										d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
 									/>
 								</svg>
-								<span className="flex-1 text-left">Continue with Google</span>
+								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">Continue with Google</span>
+								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">AUTH_G</span>
 							</Link>
 
 							<Link
 								to="/auth/microsoft/start"
-								className="flex w-full h-10 px-4 text-base inline-flex items-center justify-center font-medium rounded-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background active:scale-[0.98] font-heading tracking-tight border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 gap-3 group"
+								className="flex w-full h-12 px-6 text-base inline-flex items-center justify-center font-bold rounded-[2px] transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background active:translate-y-[1px] font-heading tracking-tight border border-border/50 bg-card text-foreground hover:bg-muted/50 hover:border-primary/30 gap-4 group shadow-sm"
 							>
 								<svg
-									className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12"
+									className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
 									viewBox="0 0 24 24"
 									aria-hidden="true"
 								>
 									<path fill="#f25022" d="M1 1h10v10H1z" />
 									<path fill="#00a4ef" d="M13 1h10v10H13z" />
 									<path fill="#7fba00" d="M1 13h10v10H1z" />
-									<path fill="#ffb900" d="M13 13h10v10H1z" />
+									<path fill="#ffb900" d="M13 13h10v10H13z" />
 								</svg>
-								<span className="flex-1 text-left">Continue with Microsoft</span>
-							</Link>
-
-							<Link to="/auth/microsoft/start" className="flex w-full">
-								<Button variant="outline" className="w-full gap-3 group" onPress={() => {}}>
-									<svg
-										className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12"
-										viewBox="0 0 24 24"
-									>
-										<path fill="#f25022" d="M1 1h10v10H1z" />
-										<path fill="#00a4ef" d="M13 1h10v10H13z" />
-										<path fill="#7fba00" d="M1 13h10v10H1z" />
-										<path fill="#ffb900" d="M13 13h10v10H13z" />
-									</svg>
-									<span className="flex-1 text-left">Continue with Microsoft</span>
-								</Button>
+								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">Continue with Microsoft</span>
+								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">AUTH_M</span>
 							</Link>
 						</div>
 
-						<div className="my-8 flex items-center gap-4">
-							<div className="flex-1 border-t border-border" />
-							<span className="text-muted-foreground text-xs font-heading tracking-wider uppercase">
-								Or
+						<div className="my-10 flex items-center gap-4" aria-hidden="true">
+							<div className="flex-1 border-t border-border border-dashed" />
+							<span className="text-muted-foreground text-[10px] font-mono tracking-widest uppercase">
+								System_Gateway
 							</span>
-							<div className="flex-1 border-t border-border" />
+							<div className="flex-1 border-t border-border border-dashed" />
 						</div>
 
 						<Link
 							to="/floor"
-							className="flex w-full h-10 px-4 text-base inline-flex items-center justify-center font-medium rounded-sm transition-all duration-150 ease-out focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background active:scale-[0.98] font-heading tracking-tight text-muted-foreground border border-transparent hover:bg-accent active:bg-accent/80 hover:text-foreground"
+							className="flex w-full h-10 px-4 text-[10px] inline-flex items-center justify-center font-mono tracking-widest uppercase rounded-[2px] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ring-offset-background text-muted-foreground border border-border/30 bg-muted/10 hover:bg-muted/30 hover:text-foreground group"
 						>
-							Floor Time Clock (Guest)
+							<span className="group-hover:translate-x-1 transition-transform font-bold">Access Floor Kiosk &rarr;</span>
 						</Link>
 					</div>
 				</IndustrialPanel>
-				<SafetyStripes position="bottom" />
+				<SafetyStripes position="bottom" aria-hidden="true" />
 			</div>
 		</main>
 	);
 }
+

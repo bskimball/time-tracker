@@ -24,20 +24,52 @@ export function subscribe(listener: Listener) {
 	return () => listeners.delete(listener);
 }
 
-let audioContext: any = null;
+type AudioContextLike = {
+	createOscillator: () => {
+		frequency: {
+			setValueAtTime: (value: number, startTime: number) => void;
+			exponentialRampToValueAtTime: (value: number, endTime: number) => void;
+		};
+		start: (when?: number) => void;
+		stop: (when?: number) => void;
+		connect: (destination: unknown) => void;
+	};
+	createGain: () => {
+		gain: {
+			setValueAtTime: (value: number, startTime: number) => void;
+			exponentialRampToValueAtTime: (value: number, endTime: number) => void;
+		};
+		connect: (destination: unknown) => void;
+	};
+	currentTime: number;
+	destination: unknown;
+};
+
+type AudioContextCtor = new () => AudioContextLike;
+
+function getAudioContextConstructor(): AudioContextCtor | null {
+	const win = window as { webkitAudioContext?: unknown; AudioContext?: unknown };
+	const ctor = win.AudioContext ?? win.webkitAudioContext;
+	if (!ctor) return null;
+	return ctor as unknown as AudioContextCtor;
+}
+
+let audioContext: AudioContextLike | null = null;
 
 function playChime(type: NotificationType) {
 	if (typeof window === "undefined") return;
-	if (typeof (window as any).AudioContext === "undefined") return;
+	const AudioContextCtor = getAudioContextConstructor();
+	if (!AudioContextCtor) return;
 	if (!audioContext) {
 		try {
-			audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+			audioContext = new AudioContextCtor();
 		} catch {
 			return;
 		}
 	}
 
 	const duration = 0.2;
+	if (!audioContext) return;
 	const oscillator = audioContext.createOscillator();
 	const gain = audioContext.createGain();
 	const now = audioContext.currentTime;

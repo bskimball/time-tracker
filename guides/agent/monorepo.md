@@ -37,7 +37,7 @@ Use Docker Compose when you need a real database:
 
 ### Database
 
-- **Prisma + PostgreSQL** (see `docker-compose.yml` and `apps/web/prisma/schema.prisma`)
+- **Prisma + PostgreSQL** (see `docker-compose.yml` and `prisma/schema.prisma`)
 
 ## Where docs live
 

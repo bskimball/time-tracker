@@ -154,6 +154,7 @@ export function useOfflineActionQueue(apiKey: string) {
 						actions: prev.actions.filter((a) => a.id !== action.id),
 					}));
 				} catch (error) {
+					console.warn("Failed to sync offline action", error);
 					action.retries++;
 					if (action.retries >= action.maxRetries) {
 						failed.push(action);

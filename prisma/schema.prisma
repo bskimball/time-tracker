@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Employee {
@@ -26,8 +25,13 @@ model Employee {
   User             User?
   TaskAssignment   TaskAssignment[]      // NEW
   PerformanceMetric PerformanceMetric[]  // NEW
+  EmployeeSkill    EmployeeSkill[]
+  ShiftAssignment  ShiftAssignment[]
+  CallOut          CallOut[]
   defaultStation   Station?  @relation("DefaultStation", fields: [defaultStationId], references: [id])
   lastStation      Station?  @relation("LastStation", fields: [lastStationId], references: [id])
+  breakPolicyId String?
+  breakPolicy   BreakPolicy? @relation(fields: [breakPolicyId], references: [id])
 }
 
 enum EmployeeStatus {
@@ -75,8 +79,11 @@ model Station {
   updatedAt   DateTime     @updatedAt      // NEW
   TimeLog     TimeLog[]
   TaskType    TaskType[]                   // NEW
+  Shift       Shift[]
   employeesAtLastStation Employee[] @relation("LastStation")
   employeesWithDefault   Employee[] @relation("DefaultStation")
+  maintenanceStatus MaintenanceStatus @default(OK)
+  maintenanceNotes  String?
 }
 
 model TimeLog {
@@ -163,6 +170,98 @@ model PerformanceMetric {
   @@index([employeeId])
 }
 
+// === Skills and Certifications ===
+model Skill {
+  id             String           @id @default(cuid())
+  name           String           @unique
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  employeeSkills EmployeeSkill[]
+}
+
+model EmployeeSkill {
+  id           String    @id @default(cuid())
+  employeeId   String
+  skillId      String
+  certifiedAt  DateTime
+  expiresAt    DateTime?
+  level        Int
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  skill        Skill     @relation(fields: [skillId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([employeeId, skillId])
+}
+
+// === Break Compliance ===
+model BreakPolicy {
+  id                   String     @id @default(cuid())
+  name                 String     @unique
+  minBreakMinutes      Int
+  maxHoursWithoutBreak Int
+  minShiftHours        Int
+  employees            Employee[]
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+// === Scheduling (Real Data) ===
+model Shift {
+  id                String           @id @default(cuid())
+  stationId         String
+  startTime         DateTime
+  endTime           DateTime
+  requiredHeadcount Int
+  shiftType         String
+  station           Station          @relation(fields: [stationId], references: [id])
+  assignments       ShiftAssignment[]
+  callOuts          CallOut[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model ShiftAssignment {
+  id           String   @id @default(cuid())
+  shiftId      String
+  employeeId   String
+  role         String
+  status       String
+  notes        String?
+  shift        Shift    @relation(fields: [shiftId], references: [id])
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([shiftId])
+  @@index([employeeId])
+}
+
+model CallOut {
+  id           String   @id @default(cuid())
+  employeeId   String
+  shiftId      String
+  date         DateTime
+  reason       String?
+  status       String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  shift        Shift    @relation(fields: [shiftId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([shiftId])
+}
+
+// === Station Maintenance Enum ===
+enum MaintenanceStatus {
+  OK
+  DUE_SOON
+  DUE
+  OUT_OF_SERVICE
+}
+
 model Todo {
   id        String   @id @default(cuid())
   title     String
@@ -183,6 +282,21 @@ model User {
   OAuthAccount OAuthAccount[]
   Session      Session[]
   Employee     Employee?      @relation(fields: [employeeId], references: [id])
+  ApiKey       ApiKey[]
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  key        String    @unique
+  userId     String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum Station_name {
@@ -204,4 +318,5 @@ enum User_role {
   ADMIN
   MANAGER
   WORKER
+  EXECUTIVE
 }

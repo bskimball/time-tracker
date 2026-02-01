@@ -43,6 +43,8 @@ interface PieChartDataItem {
 
 type PieChartData = PieChartDataItem[];
 
+type RechartsDataPoint = Record<string, number | string>;
+
 interface LineChartProps {
 	title: string;
 	data: LineChartData;
@@ -62,11 +64,11 @@ interface PieChartProps {
 }
 
 // Helper function to convert our data format to recharts format
-function convertToRechartsData(data: LineChartData | BarChartData): Record<string, any>[] {
-	const result: Record<string, any>[] = [];
+function convertToRechartsData(data: LineChartData | BarChartData): RechartsDataPoint[] {
+	const result: RechartsDataPoint[] = [];
 
 	data.labels.forEach((label, index) => {
-		const dataPoint: Record<string, any> = { name: label };
+		const dataPoint: RechartsDataPoint = { name: label };
 		data.datasets.forEach((dataset) => {
 			dataPoint[dataset.label] = dataset.data[index] || 0;
 		});
@@ -110,7 +112,7 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 }
 
 export function BarChart({ title, data, height = 250 }: BarChartProps) {
-	const chartData = convertToRechartsData(data) as any;
+	const chartData = convertToRechartsData(data);
 
 	return (
 		<Card>
@@ -150,12 +152,14 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 				<ResponsiveContainer width="100%" height={height}>
 					<RechartsPieChart>
 						<Pie
-							data={data as any}
+							data={data}
 							cx="50%"
 							cy="50%"
 							outerRadius={80}
 							dataKey="value"
-							label={({ name, percent }) => `${name} ${(percent! * 100).toFixed(0)}%`}
+							label={({ name, percent }: { name?: string; percent?: number }) =>
+								`${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
+							}
 						>
 							{data.map((entry, index) => (
 								<Cell key={`cell-${index}`} fill={entry.color} />

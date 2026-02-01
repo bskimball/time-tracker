@@ -9,6 +9,7 @@ import {
 	CardBody,
 	Checkbox,
 	Select,
+	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 
@@ -92,15 +93,15 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 		return "ACTIVE";
 	};
 
-	const getStationStatusColor = (status: string): string => {
-		const colors = {
-			ACTIVE: "bg-green-100 text-green-800",
-			BUSY: "bg-yellow-100 text-yellow-800",
-			FULL: "bg-red-100 text-red-800",
-			EMPTY: "bg-accent text-muted-foreground",
-			INACTIVE: "bg-accent/50 text-muted-foreground",
+	const getStationStatusVariant = (status: string): "success" | "primary" | "destructive" | "secondary" => {
+		const variants: Record<string, "success" | "primary" | "destructive" | "secondary"> = {
+			ACTIVE: "success",
+			BUSY: "primary",
+			FULL: "destructive",
+			EMPTY: "secondary",
+			INACTIVE: "secondary",
 		};
-		return colors[status as keyof typeof colors] || colors.INACTIVE;
+		return variants[status] || "secondary";
 	};
 
 	const workLogs = activeLogs.filter((log) => log.type === "WORK" && !log.endTime);
@@ -187,19 +188,17 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 							const capacity = station.capacity || 999;
 
 							return (
-								<div key={station.id} className="border rounded-lg p-4 bg-muted/30">
+								<div key={station.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
 									<div className="flex justify-between items-start mb-2">
 										<div>
-											<h4 className="font-medium">{station.name}</h4>
+											<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{station.name}</h4>
 											{station.zone && (
-												<p className="text-sm text-muted-foreground">Zone: {station.zone}</p>
+												<p className="text-xs text-muted-foreground font-mono">Zone: {station.zone}</p>
 											)}
 										</div>
-										<span
-											className={`px-2 py-1 text-xs font-medium rounded-full ${getStationStatusColor(status)}`}
-										>
+										<Badge variant={getStationStatusVariant(status)}>
 											{status}
-										</span>
+										</Badge>
 									</div>
 
 									<div className="space-y-2">
@@ -210,9 +209,9 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 													{occupancy}/{capacity}
 												</span>
 											</div>
-											<div className="w-full bg-muted rounded-full h-2">
+											<div className="w-full bg-muted rounded-[1px] h-1.5 border border-border/30">
 												<div
-													className="bg-primary h-2 rounded-full transition-all duration-500"
+													className="bg-primary h-full transition-all duration-500"
 													style={{
 														width: `${Math.min((occupancy / capacity) * 100, 100)}%`,
 													}}
@@ -255,25 +254,19 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 							{workLogs.map((log) => (
-								<div key={log.id} className="border rounded p-4">
+								<div key={log.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
 									<div className="flex justify-between items-start">
 										<div>
-											<h4 className="font-medium">{log.Employee.name}</h4>
-											<p className="text-sm text-muted-foreground">
+											<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{log.Employee.name}</h4>
+											<p className="text-xs text-muted-foreground font-mono">
 												{log.Station?.name || "No Station"}
 											</p>
 										</div>
 										<div className="text-right">
-											<p className="font-medium">{calculateDuration(log.startTime)}</p>
-											<span
-												className={`px-2 py-1 text-xs rounded ${
-													log.type === "WORK"
-														? "bg-accent text-foreground"
-														: "bg-accent text-muted-foreground"
-												}`}
-											>
+											<p className="font-mono text-sm">{calculateDuration(log.startTime)}</p>
+											<Badge variant={log.type === "WORK" ? "primary" : "secondary"}>
 												{log.type}
-											</span>
+											</Badge>
 										</div>
 									</div>
 
@@ -282,9 +275,9 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 											<span className="text-muted-foreground">Started:</span>
 											<span>{new Date(log.startTime).toLocaleTimeString()}</span>
 										</div>
-										<div className="flex justify-between text-sm">
-											<span className="text-muted-foreground">Method:</span>
-											<span className="text-xs px-1 py-0.5 rounded bg-muted">
+										<div className="flex justify-between text-xs">
+											<span className="text-muted-foreground font-mono uppercase tracking-widest text-[10px]">Method:</span>
+											<span className="text-[10px] px-1 py-0.5 rounded-[1px] bg-muted font-mono">
 												{log.clockMethod}
 											</span>
 										</div>

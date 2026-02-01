@@ -637,7 +637,15 @@
 		animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.stagger-children > * {
+			opacity: 1;
+			animation: none !important;
+		}
+	}
+
 	.stagger-children > *:nth-child(1) {
+
 		animation-delay: 0.05s;
 	}
 	.stagger-children > *:nth-child(2) {

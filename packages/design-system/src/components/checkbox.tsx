@@ -44,11 +44,11 @@ export function Checkbox({
 					<div
 						className={cn(
 							// Base styles
-							"flex items-center justify-center w-5 h-5 mt-0.5",
-							"border-2 border-input rounded-sm transition-all duration-150",
-							"bg-background",
+							"flex items-center justify-center w-4 h-4 mt-0.5",
+							"border border-input rounded-[1px] transition-all duration-100",
+							"bg-muted/30",
 							// Focus states
-							"group-focus:outline-none group-focus:ring-2 group-focus:ring-ring group-focus:ring-offset-2",
+							"group-focus:outline-none group-focus:ring-1 group-focus:ring-primary group-focus:border-primary",
 							// Checked states
 							isSelected && "bg-primary border-primary",
 							// Indeterminate states
@@ -69,9 +69,9 @@ export function Checkbox({
 								<path
 									d="M10 3L4.5 8.5L2 6"
 									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
+									strokeWidth="1.5"
+									strokeLinecap="square"
+									strokeLinejoin="miter"
 								/>
 							</svg>
 						)}
@@ -85,22 +85,32 @@ export function Checkbox({
 								<path
 									d="M2 6H10"
 									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
+									strokeWidth="1.5"
+									strokeLinecap="square"
+									strokeLinejoin="miter"
 								/>
 							</svg>
 						)}
 					</div>
-					<div className="flex flex-col gap-1">
+					<div className="flex flex-col">
 						{(label || children) && (
-							<span className={cn("text-sm font-medium", labelClassName)}>{label || children}</span>
+							<span
+								className={cn(
+									"text-sm font-medium leading-none mt-0.5 font-industrial tracking-wide uppercase",
+									labelClassName
+								)}
+							>
+								{label || children}
+							</span>
 						)}
-						{description && <p className="text-xs text-muted-foreground">{description}</p>}
-						{error && <p className="text-xs text-destructive">{error}</p>}
+						{description && (
+							<p className="text-xs text-muted-foreground mt-1 font-mono">{description}</p>
+						)}
+						{error && <p className="text-xs text-destructive mt-1 font-mono">{error}</p>}
 					</div>
 				</>
 			)}
 		</AriaCheckbox>
 	);
 }
+

@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "react-router";
-import { Card, CardHeader, CardTitle, CardBody } from "@monorepo/design-system";
-import { Button } from "@monorepo/design-system";
+import { Card, CardHeader, CardTitle, CardBody, Badge, Button } from "@monorepo/design-system";
 import { LineChart, BarChart, PieChart } from "~/routes/executive/charts";
 import { SectionTabs } from "./section-tabs";
 import { AnalyticsTimeRangeTabs } from "./time-range-tabs";
 import { PageHeader } from "~/components/page-header";
 import { useEffect, useState } from "react";
+import WarehouseFloor from "./components/WarehouseFloor";
 import {
 	getProductivityTrendData,
 	getLaborCostTrendData,
@@ -20,8 +20,32 @@ import {
 	getCapacityUtilizationData,
 	getTrendAnalysisData,
 	getEmployeeProductivityRanking,
+	fetchAnalyticsDashboardData,
+	fetchLiveFloorData,
 	type Anomaly,
 } from "./actions";
+import type { AnalyticsDashboardData, AnalyticsStationOverview, LiveFloorData } from "./types";
+
+type AnalyticsSection = "productivity" | "labor-cost" | "trends" | "capacity" | "benchmarks";
+type AnalyticsRange = "today" | "week" | "month" | "quarter";
+
+const analyticsSections = new Set<AnalyticsSection>([
+	"productivity",
+	"labor-cost",
+	"trends",
+	"capacity",
+	"benchmarks",
+]);
+
+const analyticsRanges = new Set<AnalyticsRange>(["today", "week", "month", "quarter"]);
+
+function isAnalyticsSection(value: string | null): value is AnalyticsSection {
+	return value !== null && analyticsSections.has(value as AnalyticsSection);
+}
+
+function isAnalyticsRange(value: string | null): value is AnalyticsRange {
+	return value !== null && analyticsRanges.has(value as AnalyticsRange);
+}
 
 type AnalyticsData = {
 	productivityTrends: Awaited<ReturnType<typeof getProductivityTrendData>>;
@@ -35,12 +59,16 @@ type AnalyticsData = {
 	capacityData: Awaited<ReturnType<typeof getCapacityUtilizationData>>;
 	trendData: Awaited<ReturnType<typeof getTrendAnalysisData>>;
 	employeeProductivity: Awaited<ReturnType<typeof getEmployeeProductivityRanking>>;
+	dashboardData: AnalyticsDashboardData;
+	liveFloorData: LiveFloorData;
 };
 
 export default function Component() {
 	const searchParams = useSearchParams()[0];
-	const section = (searchParams.get("section") as any) || "productivity";
-	const range = (searchParams.get("range") as any) || "week";
+	const sectionParam = searchParams.get("section");
+	const rangeParam = searchParams.get("range");
+	const section = isAnalyticsSection(sectionParam) ? sectionParam : "productivity";
+	const range = isAnalyticsRange(rangeParam) ? rangeParam : "week";
 
 	const [data, setData] = useState<AnalyticsData | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -61,6 +89,8 @@ export default function Component() {
 					capacityData,
 					trendData,
 					employeeProductivity,
+					dashboardData,
+					liveFloorData,
 				] = await Promise.all([
 					getProductivityTrendData(range),
 					getLaborCostTrendData(range),
@@ -73,6 +103,8 @@ export default function Component() {
 					getCapacityUtilizationData(range),
 					getTrendAnalysisData(range),
 					getEmployeeProductivityRanking(range),
+					fetchAnalyticsDashboardData(),
+					fetchLiveFloorData(),
 				]);
 
 				setData({
@@ -87,6 +119,8 @@ export default function Component() {
 					capacityData,
 					trendData,
 					employeeProductivity,
+					dashboardData,
+					liveFloorData,
 				});
 			} catch (error) {
 				console.error("Failed to load analytics data:", error);
@@ -129,27 +163,21 @@ export default function Component() {
 			seasonal: { peakShift: "morning", peakDay: "Wednesday", seasonalFactor: 1.15 },
 		},
 		employeeProductivity = [],
+		dashboardData = {
+			stations: [],
+			costSummary: {
+				regular: 0,
+				overtime: 0,
+				total: 0,
+				variance: 0,
+				variancePercent: 0,
+			},
+		},
+		liveFloorData = { zones: [] },
 	} = data || {}; // Safe destructure for initial render
 
-	// Placeholder data until we implement full analytics
-	const placeholderData = {
-		productivity: [
-			{ employee: "John Smith", units: 245, hours: 8.2, rate: 29.9, station: "PICKING" },
-		],
-		costs: {
-			regular: 15000,
-			overtime: 2500,
-			total: 17500,
-			variance: -500,
-			variancePercent: -2.8,
-		},
-		stations: [
-			{ name: "PICKING", efficiency: 28.5, occupancy: 85, employees: 12 },
-			{ name: "PACKING", efficiency: 32.1, occupancy: 78, employees: 8 },
-			{ name: "FILLING", efficiency: 25.8, occupancy: 92, employees: 15 },
-			{ name: "RECEIVING", efficiency: 18.2, occupancy: 45, employees: 6 },
-		],
-	};
+	const { costSummary, stations: stationSnapshots } = dashboardData;
+	const liveFloorZones = liveFloorData.zones;
 
 	return (
 		<div className="space-y-6">
@@ -192,54 +220,54 @@ export default function Component() {
 						<div className="space-y-6">
 							{/* Productivity Overview Cards */}
 							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card className="border-2 border-primary bg-primary/10">
+								<Card className="border-l-4 border-l-primary">
 									<CardHeader>
-										<CardTitle className="text-primary">Avg Units/Hour</CardTitle>
+										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Avg Units/Hour</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-primary font-data">
+										<div className="text-3xl font-bold font-data">
 											{benchmarkData.productivity.current}
 										</div>
-										<p className="text-sm text-foreground mt-1">
+										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">
 											{trendData.productivity.changePercent > 0 ? "+" : ""}
-											{trendData.productivity.changePercent}% vs last period
+											{trendData.productivity.changePercent}% VS_LAST_PERIOD
 										</p>
 									</CardBody>
 								</Card>
 
-								<Card className="border-2 border-secondary bg-secondary/10">
+								<Card className="border-l-4 border-l-secondary">
 									<CardHeader>
-										<CardTitle className="text-secondary">Top Performer</CardTitle>
+										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Top Performer</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-secondary font-data">
+										<div className="text-3xl font-bold font-data">
 											{benchmarkData.productivity.top10Percent} u/h
 										</div>
-										<p className="text-sm text-foreground mt-1">Industry top 10%</p>
+										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">INDUSTRY_TOP_10%</p>
 									</CardBody>
 								</Card>
 
-								<Card className="border-2 border-accent bg-accent/10">
+								<Card className="border-l-4 border-l-chart-2">
 									<CardHeader>
-										<CardTitle className="text-accent">Task Completion</CardTitle>
+										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Task Completion</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-accent font-data">
+										<div className="text-3xl font-bold font-data">
 											{benchmarkData.quality.current}%
 										</div>
-										<p className="text-sm text-foreground mt-1">On-time rate</p>
+										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">ON_TIME_RATE</p>
 									</CardBody>
 								</Card>
 
-								<Card className="border-2 border-destructive bg-destructive/10">
+								<Card className="border-l-4 border-l-destructive">
 									<CardHeader>
-										<CardTitle className="text-destructive">Bottleneck Alert</CardTitle>
+										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Bottleneck Alert</CardTitle>
 									</CardHeader>
 									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-destructive font-data">
+										<div className="text-3xl font-bold font-data text-destructive">
 											RECEIVING
 										</div>
-										<p className="text-sm text-foreground mt-1 font-data">45% utilization</p>
+										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">45% UTILIZATION</p>
 									</CardBody>
 								</Card>
 							</div>
@@ -266,8 +294,8 @@ export default function Component() {
 								<CardBody>
 									<div className="overflow-x-auto">
 										<table className="min-w-full">
-											<thead>
-												<tr className="border-b">
+							<thead>
+								<tr className="border-b">
 													<th className="text-left py-3 px-4">Employee</th>
 													<th className="text-right py-3 px-4">Units</th>
 													<th className="text-right py-3 px-4">Hours</th>
@@ -284,23 +312,17 @@ export default function Component() {
 														<td className="text-right py-3 px-4 font-data">-</td>
 														<td className="text-right py-3 px-4 font-medium font-data">{employee.value}</td>
 														<td className="py-3 px-4">
-															<span className="px-2 py-1 text-xs font-industrial font-medium bg-secondary/20 text-secondary border border-secondary uppercase">
+															<Badge variant="secondary">
 																{employee.station}
-															</span>
+															</Badge>
 														</td>
 														<td className="py-3 px-4">
 															{employee.value >= benchmarkData.productivity.top10Percent ? (
-																<span className="px-2 py-1 text-xs font-industrial font-medium bg-primary/20 text-primary border border-primary uppercase">
-																	Top 10%
-																</span>
+																<Badge variant="primary">Top 10%</Badge>
 															) : employee.value >= benchmarkData.productivity.industryAvg ? (
-																<span className="px-2 py-1 text-xs font-industrial font-medium bg-secondary/20 text-secondary border border-secondary uppercase">
-																	Above Avg
-																</span>
+																<Badge variant="secondary">Above Avg</Badge>
 															) : (
-																<span className="px-2 py-1 text-xs font-industrial font-medium bg-muted text-muted-foreground border border-muted uppercase">
-																	Below Avg
-																</span>
+																<Badge variant="outline">Below Avg</Badge>
 															)}
 														</td>
 													</tr>
@@ -316,8 +338,8 @@ export default function Component() {
 								<h2 className="text-lg font-semibold text-foreground mb-4">
 									Station Performance & Capacity
 								</h2>
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-									{placeholderData.stations.map((station: any) => (
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+							{stationSnapshots.map((station: AnalyticsStationOverview) => (
 										<Card key={station.name} className="border">
 											<CardHeader>
 												<CardTitle className="text-base">{station.name}</CardTitle>
@@ -415,74 +437,76 @@ export default function Component() {
 					{section === "labor-cost" && (
 						<div className="space-y-6">
 							{/* Cost Summary Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card>
-									<CardHeader>
-										<CardTitle className="text-sm font-medium text-muted-foreground">
-											Regular Hours
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-2xl font-bold">
-											${placeholderData.costs.regular.toFixed(2)}
-										</div>
-										<p className="text-sm text-muted-foreground mt-1">840 hours</p>
-									</CardBody>
-								</Card>
+						<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Regular Hours
+									</CardTitle>
+								</CardHeader>
+								<CardBody>
+									<div className="text-2xl font-bold">
+										${costSummary.regular.toFixed(2)}
+									</div>
+									<p className="text-sm text-muted-foreground mt-1">840 hours</p>
+								</CardBody>
+							</Card>
 
-								<Card>
-									<CardHeader>
-										<CardTitle className="text-sm font-medium text-muted-foreground">
-											Overtime
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-2xl font-bold text-orange-600">
-											${placeholderData.costs.overtime.toFixed(2)}
-										</div>
-										<p className="text-sm text-muted-foreground mt-1">95 hours</p>
-									</CardBody>
-								</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Overtime
+									</CardTitle>
+								</CardHeader>
+								<CardBody>
+									<div className="text-2xl font-bold text-orange-600">
+										${costSummary.overtime.toFixed(2)}
+									</div>
+									<p className="text-sm text-muted-foreground mt-1">95 hours</p>
+								</CardBody>
+							</Card>
 
-								<Card>
-									<CardHeader>
-										<CardTitle className="text-sm font-medium text-muted-foreground">
-											Total Cost
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-2xl font-bold">
-											${placeholderData.costs.total.toFixed(2)}
-										</div>
-										<p className="text-sm text-muted-foreground mt-1">935 hours</p>
-									</CardBody>
-								</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Total Cost
+									</CardTitle>
+								</CardHeader>
+								<CardBody>
+									<div className="text-2xl font-bold">
+										${costSummary.total.toFixed(2)}
+									</div>
+									<p className="text-sm text-muted-foreground mt-1">935 hours</p>
+								</CardBody>
+							</Card>
 
-								<Card
-									className={
-										placeholderData.costs.variance > 0
-											? "border-2 border-destructive bg-destructive/10"
-											: "border-2 border-primary bg-primary/10"
-									}
-								>
-									<CardHeader>
-										<CardTitle className="text-sm font-medium text-muted-foreground">
-											Budget Variance
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div
-											className={`font-mono-industrial text-2xl font-bold ${placeholderData.costs.variance > 0 ? "text-destructive" : "text-primary"}`}
-										>
-											{placeholderData.costs.variance > 0 ? "+" : ""}
-											{placeholderData.costs.variance.toFixed(2)}
-										</div>
-										<p className="text-sm text-muted-foreground mt-1">
-											{placeholderData.costs.variancePercent}% vs budget
-										</p>
-									</CardBody>
-								</Card>
-							</div>
+							<Card
+								className={
+									costSummary.variance > 0
+										? "border-2 border-destructive bg-destructive/10"
+										: "border-2 border-primary bg-primary/10"
+								}
+							>
+								<CardHeader>
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Budget Variance
+									</CardTitle>
+								</CardHeader>
+								<CardBody>
+									<div
+										className={`font-mono-industrial text-2xl font-bold ${
+											costSummary.variance > 0 ? "text-destructive" : "text-primary"
+										}`}
+									>
+										{costSummary.variance > 0 ? "+" : ""}
+										{costSummary.variance.toFixed(2)}
+									</div>
+									<p className="text-sm text-muted-foreground mt-1">
+										{costSummary.variancePercent}% vs budget
+									</p>
+								</CardBody>
+							</Card>
+						</div>
 
 							{/* Cost Trend Charts */}
 							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -579,9 +603,9 @@ export default function Component() {
 													<th className="text-right py-3 px-4">Cost/Unit</th>
 													<th className="text-left py-3 px-4">Status</th>
 												</tr>
-											</thead>
-											<tbody>
-												{placeholderData.stations.map((station) => {
+								</thead>
+								<tbody>
+									{stationSnapshots.map((station: AnalyticsStationOverview) => {
 													const regularHours = 156.8;
 													const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
 													const totalHours = regularHours + overtimeHours;
@@ -949,12 +973,13 @@ export default function Component() {
 											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
 												Opportunities
 											</h4>
-											<p className="text-sm text-foreground">
-												{
-													placeholderData.stations.filter(
-														(s) => s.efficiency < benchmarkData.productivity.industryAvg
-													).length
-												}{" "}
+						<p className="text-sm text-foreground">
+							{
+								stationSnapshots.filter(
+									(s: AnalyticsStationOverview) =>
+										s.efficiency < benchmarkData.productivity.industryAvg
+								).length
+							}{" "}
 												stations below industry average. Focus improvement efforts on RECEIVING
 												station (45% below target).
 											</p>
@@ -1153,6 +1178,46 @@ export default function Component() {
 												reduced overtime.
 											</p>
 										</div>
+									</div>
+								</CardBody>
+							</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle>Live Floor Snapshot</CardTitle>
+								</CardHeader>
+								<CardBody>
+									{liveFloorZones.length > 0 ? (
+										<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+											{liveFloorZones.map((zone) => {
+												const updatedLabel = zone.updatedAt
+													? new Date(zone.updatedAt).toLocaleTimeString([], {
+														hour: "2-digit",
+														minute: "2-digit",
+													})
+													: "—";
+												return (
+													<div key={zone.id} className="border rounded-lg p-4 bg-muted/50">
+														<div className="flex items-center justify-between text-sm font-semibold">
+															<span>{zone.name}</span>
+															<span className="text-xs text-muted-foreground">{updatedLabel}</span>
+														</div>
+														<div className="mt-3 text-sm text-foreground">
+															Occupancy: {zone.occupancy}% · Efficiency: {zone.efficiency}%
+														</div>
+														<div className="text-xs text-muted-foreground mt-1">
+															Throughput: {zone.throughputPerHour} u/h
+														</div>
+													</div>
+												);
+											})}
+										</div>
+									) : (
+										<p className="text-sm text-muted-foreground">
+											Live warehouse telemetry is not available yet.
+										</p>
+									)}
+									<div className="mt-4">
+										<WarehouseFloor data={liveFloorData} metric="occupancy" />
 									</div>
 								</CardBody>
 							</Card>

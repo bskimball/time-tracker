@@ -18,22 +18,22 @@ interface ButtonProps extends Omit<AriaButtonProps, "className" | "isDisabled"> 
 
 const variantStyles: Record<ButtonVariant, string> = {
 	primary:
-		"bg-primary border border-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-primary border border-primary text-primary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-primary-hover active:bg-primary-active active:shadow-none active:translate-y-[1px]",
 	secondary:
-		"bg-secondary border border-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-secondary border border-secondary text-secondary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-secondary/90 active:bg-secondary/80 active:shadow-none active:translate-y-[1px]",
 	outline:
-		"border border-border bg-background text-foreground hover:bg-accent active:bg-accent/80 aria-disabled:border-muted aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
+		"border border-border bg-background text-foreground shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:shadow-none active:translate-y-[1px]",
 	ghost:
-		"text-muted-foreground border border-transparent hover:bg-accent active:bg-accent/80 hover:text-foreground aria-disabled:text-muted-foreground aria-disabled:cursor-not-allowed",
+		"text-muted-foreground border border-transparent hover:bg-accent hover:text-foreground active:bg-accent/90",
 	error:
-		"bg-destructive border border-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 aria-disabled:bg-muted aria-disabled:cursor-not-allowed",
+		"bg-destructive border border-destructive text-destructive-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-destructive/90 active:bg-destructive/80 active:shadow-none active:translate-y-[1px]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-	xs: "h-8 px-2 text-xs",
-	sm: "h-9 px-3 text-sm",
-	md: "h-10 px-4 text-base",
-	lg: "px-6 py-4 text-lg",
+	xs: "h-7 px-2 text-xs uppercase tracking-wider",
+	sm: "h-8 px-3 text-xs uppercase tracking-wider",
+	md: "h-10 px-5 text-sm uppercase tracking-widest",
+	lg: "h-12 px-8 text-base uppercase tracking-widest",
 };
 
 export function Button({
@@ -46,12 +46,11 @@ export function Button({
 	...props
 }: ButtonProps) {
 	const buttonClass = cn(
-		"inline-flex items-center justify-center font-medium rounded-sm",
-		"transition-all duration-150 ease-out",
-		"focus:outline-none focus:ring-2 ring-ring focus:ring-offset-2 ring-offset-background",
-		"active:scale-[0.98]",
-		"font-heading tracking-tight",
-		variant === "primary" ? "shadow-sm" : "",
+		"inline-flex items-center justify-center font-bold rounded-[2px]",
+		"transition-all duration-75 ease-out",
+		"focus:outline-none focus-visible:ring-2 ring-ring focus-visible:ring-offset-2 ring-offset-background",
+		"disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none disabled:translate-y-0",
+		"font-industrial antialiased",
 		variantStyles[variant],
 		sizeStyles[size],
 		className
@@ -63,3 +62,4 @@ export function Button({
 		</AriaButton>
 	);
 }
+

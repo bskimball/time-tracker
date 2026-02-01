@@ -448,7 +448,7 @@ Agent entry point: `guides/agent/README.md`
 ## Prisma
 
 - **Database ORM** - Use Prisma for all database operations
-- Schema located in `prisma/schema.prisma`
+- Schema located at repo root: `prisma/schema.prisma`
 - Generate Prisma Client after schema changes: `npx prisma generate`
 - Create migrations: `npx prisma migrate dev --name migration_name`
 - Push schema changes without migrations: `npx prisma db push`

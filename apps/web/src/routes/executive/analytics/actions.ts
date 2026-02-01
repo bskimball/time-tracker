@@ -8,12 +8,11 @@ import {
 	getStationPerformanceCacheKey,
 	getLaborCostAnalysisCacheKey,
 } from "~/lib/performance-cache";
-import { getProductivityMetrics } from "~/routes/manager/tasks/actions";
+import type { AnalyticsDashboardData, LiveFloorData } from "./types";
 
-/**
- * Get productivity trend data for charts
- */
-export async function getProductivityTrendData(timeRange: "today" | "week" | "month" = "week") {
+type AnalyticsTimeRange = "today" | "week" | "month" | "quarter";
+
+function getDateRange(timeRange: AnalyticsTimeRange) {
 	const now = new Date();
 	let startDate: Date;
 	let endDate: Date;
@@ -27,6 +26,10 @@ export async function getProductivityTrendData(timeRange: "today" | "week" | "mo
 			startDate = startOfMonth(now);
 			endDate = endOfMonth(now);
 			break;
+		case "quarter":
+			startDate = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 2, 1));
+			endDate = endOfMonth(now);
+			break;
 		case "today":
 		default:
 			startDate = new Date(now);
@@ -35,6 +38,15 @@ export async function getProductivityTrendData(timeRange: "today" | "week" | "mo
 			endDate.setHours(23, 59, 59, 999);
 			break;
 	}
+
+	return { startDate, endDate };
+}
+
+/**
+ * Get productivity trend data for charts
+ */
+export async function getProductivityTrendData(timeRange: AnalyticsTimeRange = "week") {
+	const { startDate, endDate } = getDateRange(timeRange);
 
 	const cacheKey = getPerformanceTrendsCacheKey(startDate, endDate, "productivity");
 	const trends = await performanceCache.get(
@@ -72,28 +84,8 @@ export async function getProductivityTrendData(timeRange: "today" | "week" | "mo
 /**
  * Get labor cost trend data for charts
  */
-export async function getLaborCostTrendData(timeRange: "today" | "week" | "month" = "week") {
-	const now = new Date();
-	let startDate: Date;
-	let endDate: Date;
-
-	switch (timeRange) {
-		case "week":
-			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
-			break;
-		case "month":
-			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
-			break;
-		case "today":
-		default:
-			startDate = new Date(now);
-			startDate.setHours(0, 0, 0, 0);
-			endDate = new Date(now);
-			endDate.setHours(23, 59, 59, 999);
-			break;
-	}
+export async function getLaborCostTrendData(timeRange: AnalyticsTimeRange = "week") {
+	const { startDate, endDate } = getDateRange(timeRange);
 
 	const cacheKey = getPerformanceTrendsCacheKey(startDate, endDate, "cost");
 	const trends = await performanceCache.get(
@@ -131,28 +123,8 @@ export async function getLaborCostTrendData(timeRange: "today" | "week" | "month
 /**
  * Get station efficiency comparison data for charts
  */
-export async function getStationEfficiencyData(timeRange: "today" | "week" | "month" = "week") {
-	const now = new Date();
-	let startDate: Date;
-	let endDate: Date;
-
-	switch (timeRange) {
-		case "week":
-			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
-			break;
-		case "month":
-			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
-			break;
-		case "today":
-		default:
-			startDate = new Date(now);
-			startDate.setHours(0, 0, 0, 0);
-			endDate = new Date(now);
-			endDate.setHours(23, 59, 59, 999);
-			break;
-	}
+export async function getStationEfficiencyData(timeRange: AnalyticsTimeRange = "week") {
+	const { startDate, endDate } = getDateRange(timeRange);
 
 	const cacheKey = getStationPerformanceCacheKey(startDate, endDate);
 	const stationData = await performanceCache.get(
@@ -188,29 +160,9 @@ export async function getStationEfficiencyData(timeRange: "today" | "week" | "mo
  * Get employee productivity ranking data
  */
 export async function getEmployeeProductivityRanking(
-	timeRange: "today" | "week" | "month" = "week"
+	timeRange: AnalyticsTimeRange = "week"
 ) {
-	const now = new Date();
-	let startDate: Date;
-	let endDate: Date;
-
-	switch (timeRange) {
-		case "week":
-			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
-			break;
-		case "month":
-			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
-			break;
-		case "today":
-		default:
-			startDate = new Date(now);
-			startDate.setHours(0, 0, 0, 0);
-			endDate = new Date(now);
-			endDate.setHours(23, 59, 59, 999);
-			break;
-	}
+	void timeRange;
 
 	// This would be expanded to include actual employee data
 	// For now, return placeholder top performers
@@ -246,7 +198,7 @@ export async function getEmployeeProductivityRanking(
 /**
  * Get cost breakdown data for pie chart
  */
-export async function getCostBreakdownData(timeRange: "today" | "week" | "month" = "week") {
+export async function getCostBreakdownData(timeRange: AnalyticsTimeRange = "week") {
 	const now = new Date();
 	let startDate: Date;
 	let endDate: Date;
@@ -339,7 +291,7 @@ export async function getStationOccupancyData() {
 /**
  * Get shift productivity comparison
  */
-export async function getShiftProductivityData(_timeRange: "today" | "week" | "month" = "week") {
+export async function getShiftProductivityData(_timeRange: AnalyticsTimeRange = "week") {
 	// This would be expanded to include actual shift data
 	// Ensure data is valid (no NaN values)
 	const data = [28.5, 24.2, 31.8];
@@ -360,7 +312,7 @@ export async function getShiftProductivityData(_timeRange: "today" | "week" | "m
 /**
  * Get task type efficiency data
  */
-export async function getTaskTypeEfficiencyData(_timeRange: "today" | "week" | "month" = "week") {
+export async function getTaskTypeEfficiencyData(_timeRange: AnalyticsTimeRange = "week") {
 	// This would be expanded to include actual task type data
 	// Ensure data is valid (no NaN values)
 	const data = [28.5, 24.2, 35.1, 22.3, 26.8];
@@ -381,7 +333,7 @@ export async function getTaskTypeEfficiencyData(_timeRange: "today" | "week" | "
 /**
  * Get benchmark data for performance comparisons
  */
-export async function getBenchmarkData(_timeRange: "today" | "week" | "month" = "week") {
+export async function getBenchmarkData(_timeRange: AnalyticsTimeRange = "week") {
 	// This would compare against industry standards and internal targets
 	return {
 		productivity: {
@@ -422,7 +374,7 @@ export interface Anomaly {
  * Get anomaly detection data
  */
 export async function getAnomalyData(
-	_timeRange: "today" | "week" | "month" = "week"
+	_timeRange: AnalyticsTimeRange = "week"
 ): Promise<Anomaly[]> {
 	// This would detect unusual patterns in performance data
 	return [
@@ -459,7 +411,7 @@ export async function getAnomalyData(
 /**
  * Get capacity utilization data
  */
-export async function getCapacityUtilizationData(_timeRange: "today" | "week" | "month" = "week") {
+export async function getCapacityUtilizationData(_timeRange: AnalyticsTimeRange = "week") {
 	// This would provide staffing and capacity insights
 	return {
 		stations: [
@@ -508,7 +460,7 @@ export async function getCapacityUtilizationData(_timeRange: "today" | "week" | 
 /**
  * Get trend analysis data
  */
-export async function getTrendAnalysisData(_timeRange: "today" | "week" | "month" = "week") {
+export async function getTrendAnalysisData(_timeRange: AnalyticsTimeRange = "week") {
 	// This would provide trend insights and forecasting
 	return {
 		productivity: {
@@ -535,5 +487,40 @@ export async function getTrendAnalysisData(_timeRange: "today" | "week" | "month
 			lowDay: "Sunday",
 			seasonalFactor: 1.15,
 		},
+	};
+}
+
+export async function fetchAnalyticsDashboardData(): Promise<AnalyticsDashboardData> {
+	const stations = [
+		{ name: "PICKING", efficiency: 28.5, occupancy: 85, employees: 12 },
+		{ name: "PACKING", efficiency: 32.1, occupancy: 78, employees: 8 },
+		{ name: "FILLING", efficiency: 25.8, occupancy: 92, employees: 15 },
+		{ name: "RECEIVING", efficiency: 18.2, occupancy: 45, employees: 6 },
+	];
+
+	const costSummary = {
+		regular: 15000,
+		overtime: 2500,
+		total: 17500,
+		variance: -500,
+		variancePercent: -2.8,
+	};
+
+	return {
+		stations,
+		costSummary,
+	};
+}
+
+export async function fetchLiveFloorData(): Promise<LiveFloorData> {
+	const timestamp = new Date().toISOString();
+	return {
+		zones: [
+			{ id: "zone-picking", name: "Picking", occupancy: 82, efficiency: 74, throughputPerHour: 720, updatedAt: timestamp },
+			{ id: "zone-packing", name: "Packing", occupancy: 75, efficiency: 69, throughputPerHour: 610, updatedAt: timestamp },
+			{ id: "zone-filling", name: "Filling", occupancy: 91, efficiency: 58, throughputPerHour: 530, updatedAt: timestamp },
+			{ id: "zone-receiving", name: "Receiving", occupancy: 49, efficiency: 44, throughputPerHour: 310, updatedAt: timestamp },
+			{ id: "zone-shipping", name: "Shipping", occupancy: 38, efficiency: 63, throughputPerHour: 420, updatedAt: timestamp },
+		],
 	};
 }

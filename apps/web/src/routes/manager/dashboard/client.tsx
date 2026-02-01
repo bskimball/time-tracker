@@ -5,6 +5,13 @@ import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-s
 import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import {
+	LiaUserPlusSolid,
+	LiaHistorySolid,
+	LiaTasksSolid,
+	LiaChartBarSolid,
+	LiaCheckCircleSolid,
+} from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 
 type TimeLogWithEmployee = TimeLog & {
@@ -14,7 +21,7 @@ type TimeLogWithEmployee = TimeLog & {
 
 type AlertData = {
 	id: string;
-	type: "OVERTIME" | "MISSING_PUNCH" | "PERFORMANCE" | "SYSTEM";
+	type: "OVERTIME" | "MISSING_PUNCH" | "PERFORMANCE" | "SYSTEM" | "COMPLIANCE";
 	severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 	title: string;
 	description: string;
@@ -27,17 +34,15 @@ type AlertData = {
 };
 
 export function ManagerDashboard({
-	activeTimeLogs,
-	totalEmployees,
-	recentLogs,
-	alerts = [],
-	user,
+   activeTimeLogs,
+   totalEmployees,
+   alerts = [],
+   user,
 }: {
-	activeTimeLogs: TimeLogWithEmployee[];
-	totalEmployees: number;
-	recentLogs: TimeLogWithEmployee[];
-	alerts: AlertData[];
-	user: User;
+   activeTimeLogs: TimeLogWithEmployee[];
+   totalEmployees: number;
+   alerts?: AlertData[];
+   user: User;
 }) {
 	const formatDuration = (startTime: Date): string => {
 		const now = new Date();
@@ -100,7 +105,7 @@ export function ManagerDashboard({
 			)}
 
 			{/* Summary Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
 				<Card>
 					<CardBody>
 						<div className="text-sm font-medium text-muted-foreground font-heading">
@@ -139,6 +144,17 @@ export function ManagerDashboard({
 							{activeTimeLogs.length > 0 ? formatDuration(activeTimeLogs[0].startTime) : "0h 0m"}
 						</div>
 						<div className="text-xs text-muted-foreground mt-1">Longest current shift</div>
+					</CardBody>
+				</Card>
+				<Card>
+					<CardBody>
+						<div className="text-sm font-medium text-muted-foreground font-heading">
+							Utilization
+						</div>
+						<div className="text-2xl font-bold font-data">85%</div>
+						<div className="text-xs text-muted-foreground mt-1">
+							Floor Utilization
+						</div>
 					</CardBody>
 				</Card>
 			</div>
@@ -202,7 +218,9 @@ export function ManagerDashboard({
 					<CardBody>
 						{alerts.filter((alert) => alert.severity !== "LOW").length === 0 ? (
 							<div className="text-center text-muted-foreground py-8">
-								<div className="text-2xl mb-2">✓</div>
+								<div className="text-3xl mb-2 text-emerald-500">
+									<LiaCheckCircleSolid className="mx-auto" />
+								</div>
 								<p>All systems normal</p>
 							</div>
 						) : (
@@ -243,32 +261,40 @@ export function ManagerDashboard({
 				<CardBody>
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 						<Link to="/manager/employees/new">
-							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
-								<div className="text-2xl mb-2">👤</div>
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200 group">
+								<div className="text-3xl mb-2 text-primary group-hover:scale-110 transition-transform duration-200">
+									<LiaUserPlusSolid className="mx-auto" />
+								</div>
 								<h4 className="font-medium font-heading">Add Employee</h4>
 								<p className="text-xs text-muted-foreground mt-1">Create new record</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/timesheets">
-							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
-								<div className="text-2xl mb-2">🕐</div>
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200 group">
+								<div className="text-3xl mb-2 text-primary group-hover:scale-110 transition-transform duration-200">
+									<LiaHistorySolid className="mx-auto" />
+								</div>
 								<h4 className="font-medium font-heading">Time Correction</h4>
 								<p className="text-xs text-muted-foreground mt-1">Edit entries</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/tasks">
-							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
-								<div className="text-2xl mb-2">📋</div>
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200 group">
+								<div className="text-3xl mb-2 text-primary group-hover:scale-110 transition-transform duration-200">
+									<LiaTasksSolid className="mx-auto" />
+								</div>
 								<h4 className="font-medium font-heading">Assign Tasks</h4>
 								<p className="text-xs text-muted-foreground mt-1">Manage tasks</p>
 							</div>
 						</Link>
 
 						<Link to="/manager/reports">
-							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200">
-								<div className="text-2xl mb-2">📊</div>
+							<div className="text-center p-4 border border-border rounded-sm hover:border-primary/20 cursor-pointer transition-colors duration-200 group">
+								<div className="text-3xl mb-2 text-primary group-hover:scale-110 transition-transform duration-200">
+									<LiaChartBarSolid className="mx-auto" />
+								</div>
 								<h4 className="font-medium font-heading">View Reports</h4>
 								<p className="text-xs text-muted-foreground mt-1">Analytics</p>
 							</div>
@@ -277,35 +303,19 @@ export function ManagerDashboard({
 				</CardBody>
 			</Card>
 
-			{/* Recent Activity */}
+			{/* Exceptions Feed */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Recent Activity</CardTitle>
+					<CardTitle>Exceptions Feed</CardTitle>
 				</CardHeader>
 				<CardBody>
-					{recentLogs.length === 0 ? (
-						<p className="text-center text-muted-foreground py-8">No recent activity</p>
-					) : (
-						<div className="space-y-2">
-							{recentLogs.slice(0, 5).map((log) => (
-								<div key={log.id} className="flex justify-between items-center py-2 border-b">
-									<div>
-										<span className="font-medium">{log.employee.name}</span>
-										{log.station && (
-											<span className="text-sm text-muted-foreground ml-2">
-												@ {log.station.name}
-											</span>
-										)}
-									</div>
-									<div className="text-sm text-muted-foreground">
-										{log.endTime
-											? `Worked ${formatDuration(log.startTime)}`
-											: `Started at ${new Date(log.startTime).toLocaleTimeString()}`}
-									</div>
-								</div>
-							))}
-						</div>
-					)}
+					<div className="space-y-2">
+						{['Late Arrivals', 'Break Violations', 'Maintenance Issues'].map((item) => (
+							<div key={item} className="border-b last:border-none py-2">
+								<span className="font-medium">{item}</span>
+							</div>
+						))}
+					</div>
 				</CardBody>
 			</Card>
 		</div>

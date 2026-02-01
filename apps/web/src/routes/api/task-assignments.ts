@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import type { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
 import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
 
@@ -71,7 +72,7 @@ app.openapi(
 		try {
 			const { employeeId, taskTypeId, active } = c.req.query();
 
-			const where: any = {};
+			const where: Prisma.TaskAssignmentWhereInput = {};
 			if (employeeId) where.employeeId = employeeId;
 			if (taskTypeId) where.taskTypeId = taskTypeId;
 			if (active === "true") where.endTime = null;

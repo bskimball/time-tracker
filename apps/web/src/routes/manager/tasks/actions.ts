@@ -3,7 +3,8 @@
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 
-import type { TaskAssignment } from "./types";
+import type { TaskAssignment, TaskType } from "./types";
+import type { Prisma } from "@prisma/client";
 
 export async function getTaskTypes() {
 	return await db.taskType.findMany({
@@ -80,7 +81,9 @@ export async function assignTask(data: {
 		},
 		include: {
 			Employee: true,
-			TaskType: true,
+			TaskType: {
+				include: { Station: true },
+			},
 		},
 	});
 
@@ -91,7 +94,7 @@ export async function assignTaskAction(
 	_prevState: { error?: string | null; success?: boolean } | null,
 	formData: FormData
 ): Promise<{
-	assignment?: any;
+	assignment?: TaskAssignment;
 	activeAssignments?: TaskAssignment[];
 	error?: string | null;
 	success?: boolean;
@@ -121,9 +124,9 @@ export async function assignTaskAction(
 		const activeAssignments = await getActiveTaskAssignments();
 
 		return { assignment, activeAssignments, success: true };
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			error: error?.message || "Failed to assign task",
+			error: error instanceof Error ? error.message : "Failed to assign task",
 			success: false,
 		};
 	}
@@ -156,7 +159,9 @@ export async function completeTask(taskId: string, unitsCompleted?: number, note
 		},
 		include: {
 			Employee: true,
-			TaskType: true,
+			TaskType: {
+				include: { Station: true },
+			},
 		},
 	});
 
@@ -216,7 +221,9 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 		},
 		include: {
 			Employee: true,
-			TaskType: true,
+			TaskType: {
+				include: { Station: true },
+			},
 		},
 	});
 }
@@ -251,7 +258,7 @@ export async function createTaskTypeAction(
 	_prevState: { error?: string | null; success?: boolean } | null,
 	formData: FormData
 ): Promise<{
-	TaskType?: any;
+	TaskType?: TaskType;
 	error?: string | null;
 	success?: boolean;
 }> {
@@ -277,9 +284,9 @@ export async function createTaskTypeAction(
 		});
 
 		return { TaskType, success: true };
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return {
-			error: error?.message || "Failed to create task type",
+			error: error instanceof Error ? error.message : "Failed to create task type",
 			success: false,
 		};
 	}
@@ -316,7 +323,7 @@ export async function getTaskHistory(
 	employeeId?: string,
 	taskTypeId?: string
 ) {
-	const whereClause: any = {};
+	const whereClause: Prisma.TaskAssignmentWhereInput = {};
 
 	if (startDate || endDate) {
 		whereClause.startTime = {};
@@ -353,7 +360,7 @@ export async function getProductivityMetrics(
 	startDate?: Date,
 	endDate?: Date
 ) {
-	const whereClause: any = {};
+	const whereClause: Prisma.TaskAssignmentWhereInput = {};
 
 	if (startDate || endDate) {
 		whereClause.startTime = {};

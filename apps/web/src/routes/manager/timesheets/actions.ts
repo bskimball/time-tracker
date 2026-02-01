@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "~/lib/db";
+import type { Prisma } from "@prisma/client";
 import { validateRequest } from "~/lib/auth";
 
 export async function getTimeLogsWithCorrections(
@@ -12,7 +13,7 @@ export async function getTimeLogsWithCorrections(
 	limit = 50
 ) {
 	const skip = (page - 1) * limit;
-	const where: any = {};
+	const where: Prisma.TimeLogWhereInput = {};
 
 	if (employeeId) {
 		where.employeeId = employeeId;
@@ -213,7 +214,7 @@ export async function approveCorrection(id: string) {
 }
 
 export async function getCorrectionHistory(employeeId?: string, limit = 100) {
-	const where: any = {
+	const where: Prisma.TimeLogWhereInput = {
 		clockMethod: "MANUAL",
 	};
 

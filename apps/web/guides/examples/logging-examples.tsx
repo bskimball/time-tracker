@@ -8,14 +8,46 @@
 "use server";
 
 import { getLogger } from "../../src/lib/request-context";
-import {
-	logPerformance,
-	logError,
-	createTimer,
-	logWarning,
-	logInfo,
-} from "../../src/lib/logging-helpers";
+import { createLogger } from "../../src/lib/logger";
 import { db } from "../../src/lib/db";
+
+async function logPerformance<T>(label: string, fn: () => Promise<T>): Promise<T> {
+	const start = Date.now();
+	try {
+		return await fn();
+	} finally {
+		const logger = createLogger({ component: "examples" });
+		logger.info({ label, durationMs: Date.now() - start }, "Performance");
+	}
+}
+
+function logError(error: Error, context?: Record<string, unknown>) {
+	const logger = createLogger({ component: "examples" });
+	logger.error({ err: error, ...context }, "Error");
+}
+
+function logWarning(message: string, context?: Record<string, unknown>) {
+	const logger = createLogger({ component: "examples" });
+	logger.warn({ ...context }, message);
+}
+
+function logInfo(message: string, context?: Record<string, unknown>) {
+	const logger = createLogger({ component: "examples" });
+	logger.info({ ...context }, message);
+}
+
+function createTimer(label: string) {
+	const start = Date.now();
+	const logger = createLogger({ component: "examples" });
+	return {
+		checkpoint: (name: string, context?: Record<string, unknown>) => {
+			logger.info({ label, checkpoint: name, ...context }, "Checkpoint");
+		},
+		finish: (message: string, context?: Record<string, unknown>) => {
+			logger.info({ label, durationMs: Date.now() - start, ...context }, message);
+		},
+	};
+}
 
 // ============================================================================
 // Example 1: Basic Logging in Server Components
@@ -143,8 +175,6 @@ app.get("/employees/:id", async (c) => {
 // ============================================================================
 // Example 6: Background Jobs (No Request Context)
 // ============================================================================
-
-import { createLogger } from "../../src/lib/logger";
 
 const schedulerLogger = createLogger({
 	component: "scheduler",
