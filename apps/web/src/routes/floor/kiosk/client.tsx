@@ -199,20 +199,16 @@ export function KioskTimeClock({
 
 	return (
 		<KioskContext.Provider value={contextValue}>
-			<div className="flex flex-col gap-8 bg-noise relative">
+			<div className="flex flex-col gap-6 bg-noise relative">
 				{/* Tactical grid overlay for the whole kiosk */}
 				<div className="absolute -inset-10 bg-tactical-grid opacity-5 pointer-events-none" aria-hidden="true" />
 
-				<div className="grid lg:grid-cols-12 gap-8 items-start relative z-10">
+				<div className="grid lg:grid-cols-12 gap-6 items-start relative z-10">
 					{/* Main Column: Clock In Form */}
 					<div
 						className={`transition-all duration-500 ${activeLogs.length > 0 ? "lg:col-span-7" : "lg:col-span-12"}`}
 					>
 						<Card className="bg-card/80 backdrop-blur-sm border-border shadow-2xl relative group overflow-hidden">
-							{/* Machined corners for the main kiosk card */}
-							<div className="corner-machined corner-machined-tl opacity-20 group-hover:opacity-100 transition-opacity scale-75" aria-hidden="true" />
-							<div className="corner-machined corner-machined-br bottom-0 right-0 opacity-20 group-hover:opacity-100 transition-opacity scale-75" aria-hidden="true" />
-
 							{/* Scanner effect on hover */}
 							<div className="absolute inset-0 z-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity">
 								<div className="animate-scanner" />
@@ -235,7 +231,7 @@ export function KioskTimeClock({
 									</div>
 								</div>
 							</CardHeader>
-							<CardBody className="p-8 md:p-12 relative z-10">
+							<CardBody className="p-6 md:p-8 relative z-10">
 								{pinState?.error && (
 									<Alert variant="error" className="mb-8 animate-shake">
 										{pinState.error}
@@ -296,7 +292,7 @@ export function KioskTimeClock({
 										type="submit"
 										variant="primary"
 										size="lg"
-										className="w-full py-8 text-2xl font-display font-black uppercase tracking-widest shadow-industrial hover:shadow-industrial-hover active:scale-[0.98] transition-all"
+										className="w-full py-6 text-2xl font-display font-black uppercase tracking-widest shadow-industrial hover:shadow-industrial-hover active:scale-[0.98] transition-all"
 										disabled={isPinPending || !pin.trim() || !stationId}
 									>
 										{isPinPending ? (
@@ -335,10 +331,7 @@ export function KioskTimeClock({
 										key={log.id}
 										className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
 									>
-										{/* Subtle secondary accents for telemetry cards */}
-										<div className="corner-machined corner-machined-tl scale-50 opacity-10 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-
-										<CardBody className="p-5">
+										<CardBody>
 											<div className="flex justify-between items-start">
 												<div className="flex-1 min-w-0">
 													<div className="text-lg font-bold text-foreground font-heading truncate group-hover:text-primary transition-colors">

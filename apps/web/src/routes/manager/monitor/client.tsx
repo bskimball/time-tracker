@@ -248,7 +248,7 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 				</CardHeader>
 				<CardBody>
 					{workLogs.length === 0 ? (
-						<p className="text-center text-muted-foreground py-8">
+						<p className="text-center text-muted-foreground py-6">
 							No workers currently clocked in
 						</p>
 					) : (
@@ -304,7 +304,7 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 					<CardTitle>Performance Indicators</CardTitle>
 				</CardHeader>
 				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div>
 							<h4 className="font-medium mb-3">Peak Performance</h4>
 							<div className="space-y-2">

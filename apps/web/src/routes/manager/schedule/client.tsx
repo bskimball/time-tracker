@@ -206,7 +206,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 									</div>
 								))}
 								{filteredEntries.length === 0 && (
-									<p className="text-center text-muted-foreground py-8">
+									<p className="text-center text-muted-foreground py-6">
 										No shifts match your filters.
 									</p>
 								)}
@@ -217,7 +217,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							<div className="overflow-x-auto">
 								<table className="w-full text-sm">
 									<thead>
-										<tr className="border-b">
+										<tr className="border-b border-border">
 											<th className="p-3 text-left">Employee</th>
 											<th className="p-3 text-left">Station</th>
 											<th className="p-3 text-left">Shift</th>
@@ -228,7 +228,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 									</thead>
 									<tbody>
 										{filteredEntries.map((entry) => (
-											<tr key={entry.id} className="border-b hover:bg-muted/40">
+											<tr key={entry.id} className="border-b border-border hover:bg-muted/40">
 												<td className="p-3">
 													<div className="font-medium">{entry.employeeName}</div>
 													<p className="text-xs text-muted-foreground">{entry.role}</p>
@@ -278,7 +278,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										))}
 										{filteredEntries.length === 0 && (
 											<tr>
-												<td colSpan={6} className="p-6 text-center text-muted-foreground">
+												<td colSpan={6} className="p-4 text-center text-muted-foreground">
 													No shifts match your filters.
 												</td>
 											</tr>
@@ -300,7 +300,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 						<div className="overflow-x-auto">
 							<table className="w-full text-sm">
 								<thead>
-									<tr className="border-b">
+									<tr className="border-b border-border">
 										<th className="p-3 text-left">Station</th>
 										{schedule.days.map((day) => (
 											<th key={day.date} className="p-3 text-center text-xs text-muted-foreground">
@@ -311,7 +311,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								</thead>
 								<tbody>
 									{stations.map((station) => (
-										<tr key={station.id} className="border-b">
+										<tr key={station.id} className="border-b border-border">
 											<td className="p-3 font-medium">{station.name}</td>
 											{schedule.days.map((day) => {
 												const count = day.entries.filter(

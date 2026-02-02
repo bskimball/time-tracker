@@ -80,8 +80,6 @@ export function ManagerDashboard({
 								className="relative"
 								aria-live="polite"
 							>
-								<div className={`corner-card-tl corner-accent-sm ${alert.severity === "CRITICAL" ? "corner-destructive" : "corner-warning"}`} />
-								<div className={`corner-card-tr corner-accent-sm ${alert.severity === "CRITICAL" ? "corner-destructive" : "corner-warning"}`} />
 								<div className="flex justify-between items-start">
 									<div>
 										<h4 className="font-medium">{alert.title}</h4>
@@ -160,18 +158,17 @@ export function ManagerDashboard({
 			</div>
 
 			{/* Dashboard Grid */}
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 				{/* Active Sessions */}
 				<IndustrialPanel className="relative lg:col-span-2">
-					<div className="corner-panel-tl corner-accent-sm corner-muted" />
-					<div className="p-6 border-b border-border">
+					<div className="p-4 border-b border-border">
 						<h3 className="font-heading text-lg font-bold uppercase tracking-wide">
 							Active Sessions
 						</h3>
 					</div>
-					<div className="p-6">
+					<div className="p-4">
 						{activeTimeLogs.length === 0 ? (
-							<p className="text-center text-muted-foreground py-8">No active sessions</p>
+							<p className="text-center text-muted-foreground py-6">No active sessions</p>
 						) : (
 							<div className="space-y-3">
 								{activeTimeLogs.slice(0, 5).map((log) => (
@@ -217,7 +214,7 @@ export function ManagerDashboard({
 					</CardHeader>
 					<CardBody>
 						{alerts.filter((alert) => alert.severity !== "LOW").length === 0 ? (
-							<div className="text-center text-muted-foreground py-8">
+							<div className="text-center text-muted-foreground py-6">
 								<div className="text-3xl mb-2 text-emerald-500">
 									<LiaCheckCircleSolid className="mx-auto" />
 								</div>
@@ -254,7 +251,6 @@ export function ManagerDashboard({
 
 			{/* Quick Actions */}
 			<Card className="relative">
-				<div className="corner-panel-tl corner-accent-sm corner-muted" />
 				<CardHeader>
 					<CardTitle className="uppercase tracking-wide">Quick Actions</CardTitle>
 				</CardHeader>
@@ -311,7 +307,7 @@ export function ManagerDashboard({
 				<CardBody>
 					<div className="space-y-2">
 						{['Late Arrivals', 'Break Violations', 'Maintenance Issues'].map((item) => (
-							<div key={item} className="border-b last:border-none py-2">
+							<div key={item} className="border-b border-border last:border-none py-2">
 								<span className="font-medium">{item}</span>
 							</div>
 						))}

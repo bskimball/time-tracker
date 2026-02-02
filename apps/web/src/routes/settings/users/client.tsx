@@ -19,7 +19,7 @@ const ROLES = [
 function SubmitButton() {
 	const { pending } = useFormStatus();
 	return (
-		<Button type="submit" size="sm" disabled={pending}>
+		<Button type="submit" disabled={pending}>
 			{pending ? "Updating..." : "Update"}
 		</Button>
 	);

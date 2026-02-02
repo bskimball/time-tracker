@@ -160,14 +160,14 @@ export function EmployeeRoster({
 			<Card>
 				<CardBody className="p-0">
 					{employees.length === 0 ? (
-						<div className="text-center py-8">
+						<div className="text-center py-6">
 							<p className="text-muted-foreground">No employees found</p>
 						</div>
 					) : (
 						<div className="overflow-x-auto">
 							<table className="w-full">
 								<thead>
-									<tr className="border-b">
+									<tr className="border-b border-border">
 										<th className="text-left p-4">Name</th>
 										<th className="text-left p-4">Email</th>
 										<th className="text-left p-4">Code</th>
@@ -179,7 +179,7 @@ export function EmployeeRoster({
 								</thead>
 								<tbody>
 									{employees.map((employee) => (
-										<tr key={employee.id} className="border-b hover:bg-muted/50">
+										<tr key={employee.id} className="border-b border-border hover:bg-muted/50">
 											<td className="p-4">
 												<div className="font-medium">{employee.name}</div>
 											</td>

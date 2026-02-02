@@ -1,0 +1,54 @@
+@layer base {
+	:root {
+		/* Legacy variable support if needed by components */
+		--primary: var(--color-primary);
+		--border: var(--color-border);
+		--foreground: var(--color-foreground);
+
+		/* Base Application Styles */
+		background-color: var(--color-background);
+		color: var(--color-foreground);
+		color-scheme: light;
+	}
+
+	.dark {
+		--color-background: oklch(0.141 0.01 264.5);
+		--color-foreground: oklch(0.985 0.002 247.8);
+		--color-card: oklch(0.21 0.014 264.5);
+		--color-card-foreground: oklch(0.985 0.002 247.8);
+
+		--color-primary: oklch(68% 0.16 45);
+		--color-primary-foreground: oklch(18% 0 0);
+
+		/* Dark Mode: Deep Zinc button, White text */
+		--color-secondary: oklch(0.27 0.02 264.5);
+		--color-secondary-foreground: oklch(0.985 0 0);
+
+		--color-destructive: oklch(45% 0.16 25);
+		--color-destructive-foreground: oklch(98% 0 0);
+
+		--color-success: oklch(70% 0.14 150);
+		--color-success-foreground: oklch(18% 0 0);
+
+		--color-warning: oklch(78% 0.16 85);
+		--color-warning-foreground: oklch(18% 0 0);
+
+		--color-border: oklch(0.27 0.02 264.5);
+		--color-input: oklch(0.37 0.025 264.5);
+		--color-input-hover: oklch(0.442 0.029 264.5);
+		--color-muted: oklch(0.21 0.014 264.5);
+		--color-muted-foreground: oklch(0.705 0.021 264.5);
+		--color-accent: oklch(0.27 0.02 264.5);
+		--color-ring: oklch(68% 0.16 45);
+
+		--color-led-off: oklch(0.37 0.025 264.5);
+		--color-led-on: oklch(68% 0.16 45);
+
+		color-scheme: dark;
+	}
+
+	body {
+		background-color: transparent;
+		min-height: 100vh;
+	}
+}

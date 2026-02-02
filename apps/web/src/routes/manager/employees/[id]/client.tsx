@@ -169,7 +169,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 				</TabList>
 
 				<TabPanel id="overview">
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<Card>
 							<CardHeader>
 								<CardTitle>Basic Information</CardTitle>
@@ -231,12 +231,12 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 						</CardHeader>
 						<CardBody>
 							{!employee.TimeLog || employee.TimeLog.length === 0 ? (
-								<p className="text-center text-muted-foreground py-8">No time logs found</p>
+								<p className="text-center text-muted-foreground py-6">No time logs found</p>
 							) : (
 								<div className="overflow-x-auto">
 									<table className="w-full">
 										<thead>
-											<tr className="border-b">
+											<tr className="border-b border-border">
 												<th className="text-left p-4">Date</th>
 												<th className="text-left p-4">Type</th>
 												<th className="text-left p-4">Station</th>
@@ -246,7 +246,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 										</thead>
 										<tbody>
 											{employee.TimeLog.map((log) => (
-												<tr key={log.id} className="border-b">
+												<tr key={log.id} className="border-b border-border">
 													<td className="p-4">
 														{new Date(log.startTime).toLocaleDateString()}
 														<br />
@@ -285,7 +285,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 						</CardHeader>
 						<CardBody>
 							{!employee.TaskAssignment || employee.TaskAssignment.length === 0 ? (
-								<p className="text-center text-muted-foreground py-8">No task assignments found</p>
+								<p className="text-center text-muted-foreground py-6">No task assignments found</p>
 							) : (
 								<div className="space-y-3">
 									{employee.TaskAssignment.map((task) => (
@@ -335,7 +335,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 							<CardTitle>Performance Metrics</CardTitle>
 						</CardHeader>
 						<CardBody>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
 									<h3 className="font-semibold mb-4">Weekly Summary</h3>
 									<div className="space-y-2">

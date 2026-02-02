@@ -316,15 +316,11 @@ function ClockInForm({
 
 						{pinState?.error && (
 							<Alert variant="error" className="relative mt-3">
-								<div className="corner-card-tl corner-accent-sm corner-destructive" />
-								<div className="corner-card-tr corner-accent-sm corner-destructive" />
 								{pinState.error}
 							</Alert>
 						)}
 						{pinState?.success && pinState?.message && (
 							<Alert variant="success" className="relative mt-3">
-								<div className="corner-card-tl corner-accent-sm corner-success" />
-								<div className="corner-card-tr corner-accent-sm corner-success" />
 								{pinState.message}
 							</Alert>
 						)}
@@ -373,15 +369,11 @@ function ClockInForm({
 
 						{selectState?.error && (
 							<Alert variant="error" className="relative mt-3">
-								<div className="corner-card-tl corner-accent-sm corner-destructive" />
-								<div className="corner-card-tr corner-accent-sm corner-destructive" />
 								{selectState.error}
 							</Alert>
 						)}
 						{selectState?.success && (
 							<Alert variant="success" className="relative mt-3">
-								<div className="corner-card-tl corner-accent-sm corner-success" />
-								<div className="corner-card-tr corner-accent-sm corner-success" />
 								Clocked in successfully!
 							</Alert>
 						)}
@@ -561,15 +553,11 @@ function ActiveSessions({
 				)}
 				{state?.error && (
 					<Alert variant="error" className="relative">
-						<div className="corner-card-tl corner-accent-sm corner-destructive" />
-						<div className="corner-card-tr corner-accent-sm corner-destructive" />
 						{state.error}
 					</Alert>
 				)}
 				{state?.success && (
 					<Alert variant="success" className="relative">
-						<div className="corner-card-tl corner-accent-sm corner-success" />
-						<div className="corner-card-tr corner-accent-sm corner-success" />
 						Clocked out successfully!
 					</Alert>
 				)}
@@ -627,9 +615,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 			<ModalOverlay className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
 				<Modal className="bg-base-100 rounded-lg shadow-xl w-full max-w-md mx-4">
 					<Dialog className="outline-none relative">
-						<div className="corner-card-tl corner-accent-md corner-primary" />
-						<div className="corner-card-tr corner-accent-md corner-secondary" />
-							<form action={formAction} className="p-6">
+							<form action={formAction} className="p-4">
 								<input type="hidden" name="logId" value={log.id} />
 								<h3 className="text-lg font-bold mb-4">Edit Time Log</h3>
 
@@ -641,7 +627,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 										type="datetime-local"
 										name="startTime"
 										defaultValue={formatDateTimeLocal(log.startTime)}
-										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										required
 									/>
 								</div>
@@ -654,7 +640,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 										type="datetime-local"
 										name="endTime"
 										defaultValue={formatDateTimeLocal(log.endTime)}
-										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									/>
 								</div>
 
@@ -665,7 +651,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 									<select
 										name="type"
 										defaultValue={log.type}
-										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										required
 									>
 										<option value="WORK">Work</option>
@@ -680,7 +666,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 									<select
 										name="stationId"
 										defaultValue={log.stationId || ""}
-										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									>
 										<option value="">None</option>
 										{stations.map((st) => (
@@ -698,15 +684,13 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 									<textarea
 										name="note"
 										defaultValue={log.note || ""}
-										className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 										rows={3}
 									/>
 								</div>
 
 								{state?.error && (
 									<Alert variant="error" className="relative mb-3 text-sm">
-										<div className="corner-card-tl corner-accent-sm corner-destructive" />
-										<div className="corner-card-tr corner-accent-sm corner-destructive" />
 										{state.error}
 									</Alert>
 								)}
@@ -1184,7 +1168,7 @@ export function TimeTracking({
 					{kioskEnabled ? "Disable Kiosk Mode" : "Enable Kiosk Mode"}
 				</Button>
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 				<ClockInForm
 					employees={employees}
 					stations={stations}
@@ -1204,8 +1188,6 @@ export function TimeTracking({
 							}
 							className="relative"
 						>
-							<div className={`corner-card-tl corner-accent-sm ${note.type === "success" ? "corner-success" : note.type === "error" ? "corner-destructive" : "corner-warning"}`} />
-							<div className={`corner-card-tr corner-accent-sm ${note.type === "success" ? "corner-success" : note.type === "error" ? "corner-destructive" : "corner-warning"}`} />
 							{note.message}
 						</Alert>
 					))}

@@ -21,6 +21,11 @@ interface CardBodyProps {
 	className?: string;
 }
 
+interface CardFooterProps {
+	children: React.ReactNode;
+	className?: string;
+}
+
 /**
  * Card component - Industrial Professional style (Braun/Rams).
  * Clean lines, subtle machined details, matte finish.
@@ -35,25 +40,20 @@ export function Card({ children, className = "" }: CardProps) {
 				className
 			)}
 		>
-			{/* Subtle machined corner accent - only visible on hover/active context */}
-			<div 
-				className="corner-machined corner-machined-tl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
-				aria-hidden="true" 
-			/>
 			<div className="relative z-10">{children}</div>
 		</div>
 	);
 }
 
-
 /**
  * Card header section - typically contains the title and actions.
+ * Standard padding: p-5 (20px)
  */
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
 	return (
 		<div
 			className={cn(
-				"px-6 py-5 border-b border-border/50 bg-muted/10",
+				"p-5 border-b border-border/50 bg-muted/10",
 				"transition-colors duration-150",
 				className
 			)}
@@ -76,8 +76,17 @@ export function CardTitle({ children, className = "" }: CardTitleProps) {
 
 /**
  * Card body section - main content area.
+ * Standard padding: p-5 (20px)
  */
 export function CardBody({ children, className = "" }: CardBodyProps) {
-	return <div className={cn("px-6 py-5", className)}>{children}</div>;
+	return <div className={cn("p-5", className)}>{children}</div>;
+}
+
+/**
+ * Card footer section - typically contains actions/buttons.
+ * Standard padding: p-5 (20px), pt-0 to sit flush with body.
+ */
+export function CardFooter({ children, className = "" }: CardFooterProps) {
+	return <div className={cn("p-5 pt-0 flex items-center", className)}>{children}</div>;
 }
 

@@ -9,6 +9,30 @@ The Time Tracker application uses a shared design system located in `packages/de
 3. **Data Density**: UI should feel like a technical instrument. Use tight spacing and high contrast for metadata.
 4. **Signal Colors**: Neutrals are cool Zinc grays. Color is used primarily for status ("Signals"). Safety Orange is the primary action color.
 
+## CSS Architecture (Source of Truth)
+
+The `packages/design-system` is the **single source of truth** for all styles. Both the Web App and Marketing site import these styles directly from the package.
+
+### Modular CSS Entrypoints
+The design system splits styles into opt-in modules to minimize payload:
+- `@monorepo/design-system/styles`: Core tokens, base layer, typography, and standard effects.
+- `@monorepo/design-system/styles/fonts`: Google Font loading (must be imported before Tailwind).
+- `@monorepo/design-system/styles/patterns`: Grids (`bg-grid-pattern`), noise (`bg-noise`), and stripes (`safety-stripes`).
+- `@monorepo/design-system/styles/animations`: Technical keyframes and `animate-*` utilities.
+- `@monorepo/design-system/styles/panels`: The `.industrial-panel` wrapper styles.
+- `@monorepo/design-system/styles/indicators`: The `.led-indicator` styles.
+- `@monorepo/design-system/styles/mechanical`: Interactive "mechanical" button/card hover effects.
+
+### Proper Import Order
+In app global CSS files, fonts **must** come before Tailwind:
+```css
+@import "@monorepo/design-system/styles/fonts";
+@import "tailwindcss";
+@import "@monorepo/design-system/styles";
+/* optional modules */
+@import "@monorepo/design-system/styles/patterns";
+```
+
 ## Design Tokens
 
 ### Typography
@@ -17,12 +41,12 @@ The Time Tracker application uses a shared design system located in `packages/de
 - **Data/Inputs**: `font-mono` (`JetBrains Mono`). Enforce `tabular-nums`.
 
 ### Colors (Oklch)
-- **Primary**: `oklch(0.58 0.2 45)` (Matte Signal Orange).
+- **Primary**: `var(--color-primary)` (Signal Orange).
 - **Neutrals**: Zinc scale (Zinc-50 to Zinc-950).
 - **Status**: 
-  - Success: Emerald/Chart Green (`border-l-chart-3`).
-  - Warning: Amber/Chart Orange (`border-l-chart-1`).
-  - Error: Destructive Red (`border-l-destructive`).
+  - Success: `var(--color-success)` (Technical Green).
+  - Warning: `var(--color-warning)` (Industrial Amber).
+  - Error: `var(--color-destructive)` (Crimson).
 
 ## Key Components
 
@@ -67,10 +91,11 @@ Never use tinted backgrounds. Use the **Left Border Strip** pattern.
 - `bg-noise`: Subtle aluminum/paper texture.
 - `bg-tactical-grid`: Fine alignment grid.
 - `shadow-industrial`: Hard 1px/2px elevation.
-- `corner-machined`: CSS clip-path for 45-degree chamfered corners.
+- `safety-stripes`: Signal boundary pattern.
 
 ## Rules for Agents
 - **NEVER** use `rounded-xl`, `rounded-lg`, or standard `shadow-md`.
 - **ALWAYS** use `font-mono` for numbers and technical data.
 - **PREFER** uppercase for short technical labels with wide tracking.
 - **REUSE** the `@monorepo/design-system` components; do not build local versions of buttons or cards.
+- **NO CORNERS**: The legacy `corner-machined` or `corner-accent` DIV elements have been removed. Do not add them back.

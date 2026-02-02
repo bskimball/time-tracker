@@ -93,9 +93,9 @@ export function Select({
 					// Reset button defaults to match input
 					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 py-2 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
+					"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
 					// Hover state - slight darkening or border change could go here
 					"hover:border-input/80",
 					// Pressed state
@@ -118,16 +118,16 @@ export function Select({
 				</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-background border border-input shadow-industrial min-w-[var(--trigger-width)]">
-				<ListBox className="p-1 bg-background text-foreground w-full outline-none">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
 							id={option.value}
 							className={cn(
 								"px-3 py-2 rounded-[1px] cursor-default transition-colors duration-75 outline-none font-mono text-sm",
-								"hover:bg-muted focus:bg-muted focus:text-foreground",
-								"selected:bg-primary/10 selected:text-primary selected:font-medium",
+								"hover:bg-zinc-100 focus:bg-zinc-100 focus:text-zinc-950 dark:hover:bg-zinc-800 dark:focus:bg-zinc-800 dark:focus:text-zinc-50",
+								"selected:bg-primary/20 selected:text-primary selected:font-medium",
 								option.isDisabled && "opacity-50 cursor-not-allowed"
 							)}
 							isDisabled={option.isDisabled}
@@ -202,9 +202,9 @@ export function SimpleSelect({
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 py-2 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
+					"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
 					// Disabled states
 					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:border-transparent",
 					// Error states
@@ -218,8 +218,8 @@ export function SimpleSelect({
 				<span>{selectedLabel}</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-background border border-input shadow-industrial min-w-[var(--trigger-width)]">
-				<ListBox className="p-1 bg-background text-foreground w-full outline-none">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
@@ -227,8 +227,8 @@ export function SimpleSelect({
 							isDisabled={option.isDisabled}
 							className={cn(
 								"px-3 py-2 rounded-[1px] cursor-default transition-colors duration-75 outline-none font-mono text-sm",
-								"hover:bg-muted focus:bg-muted focus:text-foreground",
-								"selected:bg-primary/10 selected:text-primary selected:font-medium",
+								"hover:bg-zinc-100 focus:bg-zinc-100 focus:text-zinc-950 dark:hover:bg-zinc-800 dark:focus:bg-zinc-800 dark:focus:text-zinc-50",
+								"selected:bg-primary/20 selected:text-primary selected:font-medium",
 								option.isDisabled && "opacity-50 cursor-not-allowed"
 							)}
 						>

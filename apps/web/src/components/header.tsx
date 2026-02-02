@@ -17,7 +17,7 @@ export function Header({
 				<h1 className="text-2xl font-bold">
 					Time Tracker <sup>v4</sup>
 				</h1>
-				<div className="flex items-center gap-6">
+				<div className="flex items-center gap-4">
 					<Nav userRole={userRole} />
 					<ThemeToggle />
 				</div>

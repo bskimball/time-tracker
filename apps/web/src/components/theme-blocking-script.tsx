@@ -35,6 +35,7 @@ const themeBlockingScriptContent = `
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(effectiveTheme);
+    root.setAttribute('data-theme', effectiveTheme);
     root.style.colorScheme = effectiveTheme;
   } catch (e) {
     // Silently fail if localStorage is not available (e.g., in private browsing)

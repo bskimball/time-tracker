@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Button, Input, Card, CardBody, Alert } from "@monorepo/design-system";
+import { Button, Input, Card, CardBody, Alert, Select } from "@monorepo/design-system";
 
 type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TERMINATED";
 
@@ -207,18 +207,12 @@ export function EmployeeForm({
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium mb-1">Status</label>
-								<select
-									className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								<Select
+									label="Status"
+									options={statusOptions}
 									value={employee.status}
-									onChange={(e) => updateEmployee("status", e.target.value as EmployeeStatus)}
-								>
-									{statusOptions.map((option) => (
-										<option key={option.value} value={option.value}>
-											{option.label}
-										</option>
-									))}
-								</select>
+									onChange={(value: string) => updateEmployee("status", value as EmployeeStatus)}
+								/>
 							</div>
 						</div>
 
@@ -227,19 +221,13 @@ export function EmployeeForm({
 							<h3 className="text-lg font-semibold">Work Settings</h3>
 
 							<div>
-								<label className="block text-sm font-medium mb-1">Default Station</label>
-								<select
-									className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								<Select
+									label="Default Station"
+									placeholder="Select a station"
+									options={stations.map((s) => ({ value: s.id, label: s.name }))}
 									value={employee.defaultStationId}
-									onChange={(e) => updateEmployee("defaultStationId", e.target.value)}
-								>
-									<option value="">Select a station</option>
-									{stations.map((station) => (
-										<option key={station.id} value={station.id}>
-											{station.name}
-										</option>
-									))}
-								</select>
+									onChange={(value: string) => updateEmployee("defaultStationId", value)}
+								/>
 							</div>
 
 							<div>
@@ -274,7 +262,7 @@ export function EmployeeForm({
 						</div>
 
 						{/* Form Actions */}
-						<div className="flex justify-between items-center pt-6 border-t">
+						<div className="flex justify-between items-center pt-6 border-t border-border">
 							<Link to="/manager/employees">
 								<Button variant="outline" type="button">
 									Cancel

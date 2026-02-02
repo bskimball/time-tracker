@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useNavigate } from "react-router";
-import { Button } from "@monorepo/design-system";
+import { Tabs, TabList, Tab } from "@monorepo/design-system";
 
 type TimeRange = "today" | "week" | "month" | "quarter";
 
@@ -17,25 +17,22 @@ export function AnalyticsTimeRangeTabs({
 
 	const currentRange = (searchParams.get("range") as TimeRange) || "week";
 
-	const handleRangeChange = (range: TimeRange) => {
+	const handleRangeChange = (range: string | number) => {
 		const newSearchParams = new URLSearchParams(searchParams);
-		newSearchParams.set("range", range);
+		newSearchParams.set("range", range.toString());
 		// Keep the current section if it exists
 		navigate(`?${newSearchParams.toString()}`, { replace: false });
 	};
 
 	return (
-		<div className="flex gap-2">
-			{ranges.map((range) => (
-				<Button
-					key={range}
-					variant={currentRange === range ? "primary" : "outline"}
-					size="sm"
-					onClick={() => handleRangeChange(range)}
-				>
-					{range.charAt(0).toUpperCase() + range.slice(1)}
-				</Button>
-			))}
-		</div>
+		<Tabs selectedKey={currentRange} onSelectionChange={handleRangeChange}>
+			<TabList className="inline-flex gap-1 justify-start bg-muted/20 p-0.5 border border-border rounded-[4px] shadow-inner w-auto">
+				{ranges.map((range) => (
+					<Tab id={range} key={range} className="h-7 px-3 text-[10px]">
+						{range.toUpperCase()}
+					</Tab>
+				))}
+			</TabList>
+		</Tabs>
 	);
 }

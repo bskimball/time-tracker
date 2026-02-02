@@ -32,8 +32,8 @@ const variantStyles: Record<ButtonVariant, string> = {
 const sizeStyles: Record<ButtonSize, string> = {
 	xs: "h-7 px-2 text-xs uppercase tracking-wider",
 	sm: "h-8 px-3 text-xs uppercase tracking-wider",
-	md: "h-10 px-5 text-sm uppercase tracking-widest",
-	lg: "h-12 px-8 text-base uppercase tracking-widest",
+	md: "h-10 px-4 text-sm uppercase tracking-widest",
+	lg: "h-12 px-6 text-base uppercase tracking-widest",
 };
 
 export function Button({

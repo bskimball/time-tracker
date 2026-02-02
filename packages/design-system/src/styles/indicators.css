@@ -1,0 +1,17 @@
+@layer utilities {
+	.led-indicator {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background-color: var(--color-led-off);
+		box-shadow: 0 0 0 2px var(--color-background);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.led-indicator.active {
+		background-color: var(--color-led-on);
+		box-shadow:
+			0 0 0 2px var(--color-background),
+			0 0 12px var(--color-led-on);
+	}
+}

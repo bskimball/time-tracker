@@ -93,6 +93,11 @@ export function routes(): RSCRouteConfig {
 							lazy: () => import("./manager/employees/route.tsx"),
 							children: [
 								{
+									id: "manager-employees-index",
+									index: true,
+									lazy: () => import("./manager/employees/list-route.tsx"),
+								},
+								{
 									id: "manager-employees-detail",
 									path: ":id",
 									lazy: () => import("./manager/employees/[id]/route.tsx"),

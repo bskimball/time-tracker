@@ -69,15 +69,11 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 					</form>
 					{addState?.error && (
 						<Alert variant="error" className="relative">
-							<div className="corner-card-tl corner-accent-sm corner-destructive" />
-							<div className="corner-card-tr corner-accent-sm corner-destructive" />
 							{addState.error}
 						</Alert>
 					)}
 					{addState?.success && (
 						<Alert variant="success" className="relative">
-							<div className="corner-card-tl corner-accent-sm corner-success" />
-							<div className="corner-card-tr corner-accent-sm corner-success" />
 							Employee added successfully!
 						</Alert>
 					)}
@@ -85,7 +81,6 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 			</Card>
 
 			<Card className="relative">
-				<div className="corner-panel-tl corner-accent-sm corner-muted" />
 				<CardHeader>
 					<CardTitle>Current Employees</CardTitle>
 				</CardHeader>
@@ -146,29 +141,21 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 					)}
 					{deleteState?.error && (
 						<Alert variant="error" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-destructive" />
-							<div className="corner-card-tr corner-accent-sm corner-destructive" />
 							{deleteState.error}
 						</Alert>
 					)}
 					{deleteState?.success && (
 						<Alert variant="success" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-success" />
-							<div className="corner-card-tr corner-accent-sm corner-success" />
 							Employee deleted successfully!
 						</Alert>
 					)}
 					{updatePinState?.error && (
 						<Alert variant="error" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-destructive" />
-							<div className="corner-card-tr corner-accent-sm corner-destructive" />
 							{updatePinState.error}
 						</Alert>
 					)}
 					{updatePinState?.success && (
 						<Alert variant="success" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-success" />
-							<div className="corner-card-tr corner-accent-sm corner-success" />
 							PIN updated successfully!
 						</Alert>
 					)}

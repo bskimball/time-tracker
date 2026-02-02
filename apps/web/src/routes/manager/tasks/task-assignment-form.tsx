@@ -84,8 +84,6 @@ export function TaskAssignmentForm({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
-				<div className="corner-card-tl corner-accent-md corner-primary" />
-				<div className="corner-card-tr corner-accent-md corner-secondary" />
 				<CardHeader>
 					<CardTitle>Assign Task</CardTitle>
 				</CardHeader>

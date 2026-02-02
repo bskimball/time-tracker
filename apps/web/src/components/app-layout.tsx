@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { IndustrialSidebar } from "~/components/industrial-sidebar";
 import { ThemeToggle } from "~/components/theme-toggle";
@@ -29,7 +31,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ title, brandHref = "/", navLinks = [], children }: AppLayoutProps) {
-	// User section with theme toggle and logout
+	// Composable Layout using IndustrialSidebar Compound Components
 	const userSection = (
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center justify-between">
@@ -41,13 +43,30 @@ export function AppLayout({ title, brandHref = "/", navLinks = [], children }: A
 	);
 
 	return (
-		<IndustrialSidebar
-			title={title}
-			brandHref={brandHref}
-			navLinks={navLinks}
-			userSection={userSection}
-		>
-			{children}
+		<IndustrialSidebar brandHref={brandHref}>
+			<IndustrialSidebar.Sidebar>
+				<IndustrialSidebar.Header title={title} brandHref={brandHref} />
+				<IndustrialSidebar.Nav>
+					{navLinks.map((link) => (
+						<IndustrialSidebar.Item
+							key={link.to}
+							to={link.to}
+							label={link.label}
+							icon={link.icon}
+						/>
+					))}
+				</IndustrialSidebar.Nav>
+				<IndustrialSidebar.Footer>
+					{userSection}
+					<IndustrialSidebar.CollapseButton />
+				</IndustrialSidebar.Footer>
+			</IndustrialSidebar.Sidebar>
+			<IndustrialSidebar.Main>
+				<IndustrialSidebar.StatusBar />
+				<div id="main-content" className="flex-1 overflow-y-auto p-6 relative z-0" tabIndex={-1}>
+					{children}
+				</div>
+			</IndustrialSidebar.Main>
 		</IndustrialSidebar>
 	);
 }

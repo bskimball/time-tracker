@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
 	isRouteErrorResponse,
 	useRouteError,
@@ -15,11 +16,13 @@ import {
 	IndustrialPanel,
 	IndustrialSection,
 	SafetyStripes,
+	Button,
 } from "@monorepo/design-system";
+import { LiaCheckSolid, LiaCopySolid } from "react-icons/lia";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" suppressHydrationWarning className="[color-scheme:light] dark:[color-scheme:dark]">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				<ThemeBlockingScript />
 				<meta charSet="utf-8" />
@@ -48,6 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export function ErrorBoundary() {
 	const error = useRouteError();
+	const [copied, setCopied] = useState(false);
 
 	if (error instanceof Response && error.status >= 300 && error.status < 400) {
 		const location = error.headers.get("Location") ?? "/";
@@ -78,6 +82,17 @@ export function ErrorBoundary() {
 
 	const isDev = import.meta.env.DEV;
 
+	const handleCopy = async () => {
+		const textToCopy = errorStack ? `${message}\n\n${errorStack}` : message;
+		try {
+			await navigator.clipboard.writeText(textToCopy);
+			setCopied(true);
+			window.setTimeout(() => setCopied(false), 2000);
+		} catch {
+			setCopied(false);
+		}
+	};
+
 	return (
 		<main className="min-h-screen bg-grid-pattern flex items-center justify-center p-4">
 			<div className="w-full max-w-4xl animate-scale-in">
@@ -94,9 +109,26 @@ export function ErrorBoundary() {
 					
 					{/* Error Message */}
 					<IndustrialSection title="Error Message">
-						<p className="text-xl text-foreground font-medium leading-relaxed animate-slide-up">
-							{message}
-						</p>
+						<div className="flex justify-between items-start gap-4">
+							<p className="text-xl text-foreground font-medium leading-relaxed animate-slide-up">
+								{message}
+							</p>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="shrink-0 text-muted-foreground hover:text-foreground"
+								onClick={handleCopy}
+							>
+								<span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider">
+									{copied ? (
+										<LiaCheckSolid className="h-4 w-4" aria-hidden="true" />
+									) : (
+										<LiaCopySolid className="h-4 w-4" aria-hidden="true" />
+									)}
+									{copied ? "COPIED" : "COPY"}
+								</span>
+							</Button>
+						</div>
 					</IndustrialSection>
 					
 					{/* Error Details - Development Only */}

@@ -41,15 +41,11 @@ export function ApiKeyManagement({ apiKeys }: { apiKeys: ApiKey[] }) {
 					</form>
 					{addState?.error && (
 						<Alert variant="error" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-destructive" />
-							<div className="corner-card-tr corner-accent-sm corner-destructive" />
 							{addState.error}
 						</Alert>
 					)}
 					{addState?.success && (
 						<Alert variant="success" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-success" />
-							<div className="corner-card-tr corner-accent-sm corner-success" />
 							API Key generated successfully!
 						</Alert>
 					)}
@@ -92,15 +88,11 @@ export function ApiKeyManagement({ apiKeys }: { apiKeys: ApiKey[] }) {
 					)}
 					{deleteState?.error && (
 						<Alert variant="error" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-destructive" />
-							<div className="corner-card-tr corner-accent-sm corner-destructive" />
 							{deleteState.error}
 						</Alert>
 					)}
 					{deleteState?.success && (
 						<Alert variant="success" className="relative mt-4">
-							<div className="corner-card-tl corner-accent-sm corner-success" />
-							<div className="corner-card-tr corner-accent-sm corner-success" />
 							API Key revoked successfully!
 						</Alert>
 					)}

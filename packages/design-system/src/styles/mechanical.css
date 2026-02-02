@@ -1,0 +1,38 @@
+@layer utilities {
+	.hover-mechanical-card {
+		transition: all 0.15s steps(4);
+	}
+
+	.hover-mechanical-card:hover {
+		border-color: var(--color-primary);
+		box-shadow: 4px 4px 0px var(--color-primary);
+		transform: translate(-2px, -2px);
+	}
+
+	.btn-mechanical {
+		position: relative;
+		overflow: hidden;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		z-index: 1;
+	}
+
+	.btn-mechanical::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--color-primary);
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform 0.3s cubic-bezier(0.75, 0, 0.25, 1);
+		z-index: -1;
+	}
+
+	.btn-mechanical:hover::before {
+		transform: scaleX(1);
+	}
+
+	.btn-mechanical:hover {
+		color: var(--color-primary-foreground) !important;
+		border-color: var(--color-primary);
+	}
+}

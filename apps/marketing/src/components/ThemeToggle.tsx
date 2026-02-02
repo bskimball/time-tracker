@@ -7,8 +7,16 @@ export default function ThemeToggle() {
 
 	useEffect(() => {
 		setMounted(true);
-		const isDark = document.documentElement.classList.contains("dark");
-		setTheme(isDark ? "dark" : "light");
+		const storedTheme = localStorage.getItem("theme");
+		const currentTheme =
+			storedTheme === "dark" || storedTheme === "light"
+				? storedTheme
+				: document.documentElement.dataset.theme === "dark"
+					? "dark"
+					: "light";
+		setTheme(currentTheme);
+		document.documentElement.dataset.theme = currentTheme;
+		document.documentElement.classList.toggle("dark", currentTheme === "dark");
 	}, []);
 
 	const toggleTheme = () => {
@@ -20,13 +28,9 @@ export default function ThemeToggle() {
 
 		const newTheme = theme === "light" ? "dark" : "light";
 		setTheme(newTheme);
-		if (newTheme === "dark") {
-			document.documentElement.classList.add("dark");
-			localStorage.setItem("theme", "dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-			localStorage.setItem("theme", "light");
-		}
+		document.documentElement.dataset.theme = newTheme;
+		document.documentElement.classList.toggle("dark", newTheme === "dark");
+		localStorage.setItem("theme", newTheme);
 	};
 
 	if (!mounted) {

@@ -197,11 +197,8 @@ export default function Component() {
 			/>
 
 			{/* Section Navigation */}
-			<Card>
-				<CardBody>
-					<SectionTabs />
-				</CardBody>
-			</Card>
+			<SectionTabs />
+
 
 			{/* Time Range Selector */}
 			<div className="flex items-center gap-4">
@@ -273,7 +270,7 @@ export default function Component() {
 							</div>
 
 							{/* Charts Section */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<LineChart
 									title="Productivity Trends Over Time"
 									data={productivityTrends}
@@ -295,7 +292,7 @@ export default function Component() {
 									<div className="overflow-x-auto">
 										<table className="min-w-full">
 							<thead>
-								<tr className="border-b">
+								<tr className="border-b border-border">
 													<th className="text-left py-3 px-4">Employee</th>
 													<th className="text-right py-3 px-4">Units</th>
 													<th className="text-right py-3 px-4">Hours</th>
@@ -306,7 +303,7 @@ export default function Component() {
 											</thead>
 											<tbody>
 												{employeeProductivity.map((employee, index) => (
-													<tr key={index} className="border-b">
+													<tr key={index} className="border-b border-border">
 														<td className="py-3 px-4 font-medium">{employee.employee}</td>
 														<td className="text-right py-3 px-4 font-data">-</td>
 														<td className="text-right py-3 px-4 font-data">-</td>
@@ -509,7 +506,7 @@ export default function Component() {
 						</div>
 
 							{/* Cost Trend Charts */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<LineChart
 									title="Labor Cost Trends (Cost per Unit)"
 									data={laborCostTrends}
@@ -523,7 +520,7 @@ export default function Component() {
 							</div>
 
 							{/* Cost Breakdown */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
 								<Card>
 									<CardHeader>
@@ -593,7 +590,7 @@ export default function Component() {
 									<div className="overflow-x-auto">
 										<table className="min-w-full">
 											<thead>
-												<tr className="border-b">
+												<tr className="border-b border-border">
 													<th className="text-left py-3 px-4">Station</th>
 													<th className="text-right py-3 px-4">Regular Hours</th>
 													<th className="text-right py-3 px-4">Overtime Hours</th>
@@ -613,7 +610,7 @@ export default function Component() {
 													const costPerUnit = totalCost / ((station.efficiency * totalHours) / 8); // Rough estimate
 
 													return (
-														<tr key={station.name} className="border-b">
+														<tr key={station.name} className="border-b border-border">
 															<td className="py-3 px-4 font-medium">{station.name}</td>
 															<td className="text-right py-3 px-4">{regularHours.toFixed(1)}</td>
 															<td className="text-right py-3 px-4 text-orange-600 font-medium">
@@ -641,7 +638,7 @@ export default function Component() {
 														</tr>
 													);
 												})}
-												<tr className="font-bold border-t-2">
+												<tr className="font-bold border-t-2 border-border">
 													<td className="py-3 px-4">Total</td>
 													<td className="text-right py-3 px-4">840.0</td>
 													<td className="text-right py-3 px-4 text-orange-600">95.0</td>
@@ -873,7 +870,7 @@ export default function Component() {
 							</div>
 
 							{/* Trend Charts */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<LineChart
 									title="Productivity Trends Over Time"
 									data={productivityTrends}
@@ -886,7 +883,7 @@ export default function Component() {
 								/>
 							</div>
 
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<BarChart
 									title="Shift Productivity Comparison"
 									data={shiftProductivity}
@@ -908,7 +905,7 @@ export default function Component() {
 									<div className="overflow-x-auto">
 										<table className="min-w-full">
 											<thead>
-												<tr className="border-b">
+												<tr className="border-b border-border">
 													<th className="text-left py-3 px-4">Type</th>
 													<th className="text-left py-3 px-4">Description</th>
 													<th className="text-right py-3 px-4">Impact</th>
@@ -918,7 +915,7 @@ export default function Component() {
 											</thead>
 											<tbody>
 												{anomalyData.map((anomaly: Anomaly, index: number) => (
-													<tr key={index} className="border-b">
+													<tr key={index} className="border-b border-border">
 														<td className="py-3 px-4">
 															<span
 																className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
@@ -1074,7 +1071,7 @@ export default function Component() {
 									<CardTitle>Station Capacity & Staffing</CardTitle>
 								</CardHeader>
 								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										{capacityData.stations.map((station) => (
 											<div key={station.name} className="border rounded-lg p-4">
 												<div className="flex justify-between items-center mb-3">
@@ -1288,32 +1285,32 @@ export default function Component() {
 							</div>
 
 							{/* Benchmark Comparison Tables */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 								<Card>
 									<CardHeader>
 										<CardTitle>Productivity Benchmarks</CardTitle>
 									</CardHeader>
 									<CardBody>
 										<div className="space-y-4">
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="font-medium">Current Performance</span>
 												<span className="font-mono-industrial font-bold">
 													{benchmarkData.productivity.current} u/h
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Internal Target</span>
 												<span className="font-mono-industrial">
 													{benchmarkData.productivity.target} u/h
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Industry Average</span>
 												<span className="font-mono-industrial">
 													{benchmarkData.productivity.industryAvg} u/h
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Top 10% Performers</span>
 												<span className="font-mono-industrial">
 													{benchmarkData.productivity.top10Percent} u/h
@@ -1351,25 +1348,25 @@ export default function Component() {
 									</CardHeader>
 									<CardBody>
 										<div className="space-y-4">
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="font-medium">Current Cost/Unit</span>
 												<span className="font-mono-industrial font-bold">
 													${benchmarkData.costPerUnit.current.toFixed(2)}
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Internal Target</span>
 												<span className="font-mono-industrial">
 													${benchmarkData.costPerUnit.target.toFixed(2)}
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Industry Average</span>
 												<span className="font-mono-industrial">
 													${benchmarkData.costPerUnit.industryAvg.toFixed(2)}
 												</span>
 											</div>
-											<div className="flex justify-between items-center py-2 border-b">
+											<div className="flex justify-between items-center py-2 border-b border-border">
 												<span className="text-muted-foreground">Best in Class (Top 10%)</span>
 												<span className="font-mono-industrial">
 													${benchmarkData.costPerUnit.bottom10Percent.toFixed(2)}
@@ -1408,17 +1405,17 @@ export default function Component() {
 								</CardHeader>
 								<CardBody>
 									<div className="space-y-4">
-										<div className="flex justify-between items-center py-2 border-b">
+										<div className="flex justify-between items-center py-2 border-b border-border">
 											<span className="font-medium">Current Quality Rate</span>
 											<span className="font-mono-industrial font-bold">
 												{benchmarkData.quality.current}%
 											</span>
 										</div>
-										<div className="flex justify-between items-center py-2 border-b">
+										<div className="flex justify-between items-center py-2 border-b border-border">
 											<span className="text-muted-foreground">Internal Target</span>
 											<span className="font-mono-industrial">{benchmarkData.quality.target}%</span>
 										</div>
-										<div className="flex justify-between items-center py-2 border-b">
+										<div className="flex justify-between items-center py-2 border-b border-border">
 											<span className="text-muted-foreground">Industry Average</span>
 											<span className="font-mono-industrial">
 												{benchmarkData.quality.industryAvg}%

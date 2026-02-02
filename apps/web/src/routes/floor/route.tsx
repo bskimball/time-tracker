@@ -93,7 +93,7 @@ export default async function Component() {
 
 			<KioskRedirect />
 
-			<main className="container mx-auto py-8 lg:py-12">
+			<main className="container mx-auto py-6 lg:py-12">
 				<PageHeader title="Floor Time Clock" subtitle="Employee floor time tracking system" />
 				<TimeTracking
 					employees={employees}

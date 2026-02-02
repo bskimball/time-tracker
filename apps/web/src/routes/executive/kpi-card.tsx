@@ -47,7 +47,7 @@ export function KPICard({
 	if (loading) {
 		return (
 			<Card className="h-full border-0 shadow-sm bg-card/50">
-				<CardBody className="p-6">
+				<CardBody className="p-4">
 					<div className="animate-pulse space-y-4">
 						<div className="h-4 bg-muted/50 rounded w-1/2"></div>
 						<div className="h-8 bg-muted/50 rounded w-3/4"></div>
@@ -60,7 +60,7 @@ export function KPICard({
 
 	return (
 		<Card className="h-full group hover:border-primary/50 transition-colors duration-300">
-			<CardBody className="p-6 flex flex-col h-full justify-between gap-4">
+			<CardBody className="p-4 flex flex-col h-full justify-between gap-4">
 				<div className="flex items-start justify-between">
 					<Metric
 						label={title}
@@ -70,7 +70,7 @@ export function KPICard({
 						className="flex-1"
 					/>
 					{Icon && (
-						<div className="p-2 bg-muted/30 rounded-[2px] text-muted-foreground group-hover:text-primary transition-colors duration-300">
+						<div className="p-2 bg-muted/30 rounded-xs text-muted-foreground group-hover:text-primary transition-colors duration-300">
 							<Icon className="h-5 w-5" aria-hidden="true" />
 						</div>
 					)}
@@ -88,4 +88,3 @@ export function KPICard({
 		</Card>
 	);
 }
-

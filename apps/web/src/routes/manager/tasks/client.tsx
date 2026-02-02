@@ -235,7 +235,7 @@ export function TaskManager({
 							</div>
 
 							{optimisticAssignments.length === 0 && (
-								<div className="text-center py-8">
+								<div className="text-center py-6">
 									<p className="text-muted-foreground">No active task assignments</p>
 									<Button
 										onClick={() => setShowAssignForm(true)}
@@ -259,7 +259,7 @@ export function TaskManager({
 							<div className="overflow-x-auto">
 								<table className="w-full">
 									<thead>
-										<tr className="border-b">
+										<tr className="border-b border-border">
 											<th className="text-left p-4">Employee</th>
 											<th className="text-left p-4">Task</th>
 											<th className="text-left p-4">Station</th>
@@ -285,7 +285,7 @@ export function TaskManager({
 														: 0;
 
 												return (
-													<tr key={assignment.id} className="border-b hover:bg-muted/50">
+													<tr key={assignment.id} className="border-b border-border hover:bg-muted/50">
 														<td className="p-4">{assignment.Employee.name}</td>
 														<td className="p-4">{assignment.TaskType.name}</td>
 														<td className="p-4">{assignment.TaskType.Station.name}</td>
@@ -311,7 +311,7 @@ export function TaskManager({
 							</div>
 
 							{taskHistory.length === 0 && (
-								<div className="text-center py-8">
+								<div className="text-center py-6">
 									<p className="text-muted-foreground">No task history found</p>
 								</div>
 							)}

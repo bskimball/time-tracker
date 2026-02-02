@@ -106,7 +106,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 							<div className="overflow-x-auto">
 								<table className="w-full">
 									<thead>
-										<tr className="border-b">
+										<tr className="border-b border-border">
 											<th className="text-left p-4">Employee</th>
 											<th className="text-left p-4">Type</th>
 											<th className="text-left p-4">Station</th>
@@ -119,7 +119,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 									</thead>
 									<tbody>
 										{logs.map((log) => (
-											<tr key={log.id} className="border-b hover:bg-muted/50">
+											<tr key={log.id} className="border-b border-border hover:bg-muted/50">
 												<td className="p-4">
 													<div>
 														<p className="font-medium">{log.Employee.name}</p>
@@ -173,7 +173,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 							</div>
 
 							{logs.length === 0 && (
-								<div className="text-center py-8">
+								<div className="text-center py-6">
 									<p className="text-muted-foreground">No time logs found</p>
 								</div>
 							)}
@@ -215,7 +215,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 										</div>
 									))}
 								{logs.filter((log) => log.clockMethod === "MANUAL").length === 0 && (
-									<p className="text-center text-muted-foreground py-8">No corrections found</p>
+									<p className="text-center text-muted-foreground py-6">No corrections found</p>
 								)}
 							</div>
 						</CardBody>
@@ -251,7 +251,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 							</div>
 
 							{logs.filter((log) => !log.endTime && log.type === "WORK").length === 0 && (
-								<p className="text-center text-muted-foreground py-8">
+								<p className="text-center text-muted-foreground py-6">
 									No employees currently clocked in
 								</p>
 							)}
@@ -319,8 +319,6 @@ function TimeCorrectionForm({
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain">
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overscroll-contain">
-				<div className="corner-card-tl corner-accent-md corner-primary" />
-				<div className="corner-card-tr corner-accent-md corner-secondary" />
 				<CardHeader>
 					<CardTitle>Add Time Entry</CardTitle>
 				</CardHeader>

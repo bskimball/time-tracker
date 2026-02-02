@@ -17,7 +17,7 @@ This is a monorepo with a React Router web app (RSC Data mode), an Astro marketi
 
 ## Common commands (repo root)
 
-- Dev (web + marketing): `npm run dev`
+- Dev (all): `npm run dev` (watches design-system + web + marketing)
 - Build all: `npm run build`
 - Lint all: `npm run lint`
 - Typecheck all: `npm run typecheck`

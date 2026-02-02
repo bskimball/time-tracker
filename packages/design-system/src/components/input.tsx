@@ -50,18 +50,31 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 					<AriaInput
 						{...props}
 						ref={ref}
-						className={cn(
-							"w-full h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px]",
-							"font-mono text-sm transition-all duration-100",
-							"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
-							"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:border-transparent",
+					className={cn(
+						// Layout & Base
+						"w-full h-10 px-3 py-2 rounded-[2px]",
+						"bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100",
+						"font-mono text-sm transition-all duration-150",
+
+							// Borders - Precision Industrial (Hairline, High Contrast)
+							"border border-input hover:border-input-hover",
+
+						// Focus - Signal Orange, Sharp
+						"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
+
+							// Disabled - Maintain structure but dim
+							"disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
+
+							// Placeholder
 							"placeholder:text-muted-foreground/50",
+
+							// Error State
 							error && "border-destructive focus:border-destructive focus:ring-destructive",
+
 							inputClassName,
 							className
 						)}
 					/>
-					{/* Corner accent for active state could go here, but keeping it clean for now */}
 				</div>
 
 				{description && <p className="text-xs text-muted-foreground font-mono">{description}</p>}
@@ -84,16 +97,16 @@ export function SimpleInput(props: React.ComponentProps<"input">) {
 	return (
 		<input
 			{...props}
-			className={cn(
-				"w-full h-10 px-3 py-2 bg-muted/30 text-foreground border border-input rounded-[2px]",
-				"font-mono text-sm transition-all duration-100",
-				"focus:outline-none focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary",
-				"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
+		className={cn(
+			"w-full h-10 px-3 py-2 rounded-[2px]",
+			"bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100",
+			"font-mono text-sm transition-all duration-150",
+			"border border-input hover:border-input-hover",
+			"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
+				"disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
 				"placeholder:text-muted-foreground/50",
 				props.className
 			)}
 		/>
 	);
 }
-
-

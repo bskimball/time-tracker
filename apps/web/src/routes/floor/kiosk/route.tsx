@@ -172,12 +172,12 @@ export default async function Component() {
 		<>
 			<title>Kiosk Time Clock</title>
 			<meta name="description" content="Employee kiosk time tracking" />
-			<div className="min-h-screen bg-background bg-grid-pattern-subtle p-4 lg:p-8">
+			<div className="min-h-screen bg-background bg-grid-pattern-subtle p-4 lg:p-6">
 				<div className="container mx-auto max-w-6xl">
 					<SafetyStripes position="top" />
 					<IndustrialPanel variant="default" className="mt-8">
 						<IndustrialHeader title="KIOSK TIME CLOCK" active={isActive} className="py-6" />
-						<div className="p-8">
+						<div className="p-6">
 							<KioskTimeClock employees={employees} stations={stations} activeLogs={activeLogs} />
 						</div>
 					</IndustrialPanel>

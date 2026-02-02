@@ -9,15 +9,22 @@ import { ThemeToggle } from "~/components/theme-toggle";
 const renderSidebar = () => {
 	return render(
 		<MemoryRouter initialEntries={["/manager"]}>
-			<IndustrialSidebar
-				title="Manager Portal"
-				navLinks={[
-					{ to: "/manager", label: "Dashboard" },
-					{ to: "/manager/employees", label: "Employees" },
-				]}
-				userSection={<div>user</div>}
-			>
-				<div>content</div>
+			<IndustrialSidebar>
+				<IndustrialSidebar.Sidebar>
+					<IndustrialSidebar.Header title="Manager Portal" />
+					<IndustrialSidebar.Nav>
+						<IndustrialSidebar.Item to="/manager" label="Dashboard" />
+						<IndustrialSidebar.Item to="/manager/employees" label="Employees" />
+					</IndustrialSidebar.Nav>
+					<IndustrialSidebar.Footer>
+						<div>user</div>
+						<IndustrialSidebar.CollapseButton />
+					</IndustrialSidebar.Footer>
+				</IndustrialSidebar.Sidebar>
+				<IndustrialSidebar.Main>
+					<IndustrialSidebar.StatusBar />
+					<div>content</div>
+				</IndustrialSidebar.Main>
 			</IndustrialSidebar>
 		</MemoryRouter>
 	);

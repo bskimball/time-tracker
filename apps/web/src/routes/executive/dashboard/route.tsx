@@ -17,7 +17,6 @@ import {
 	getExecutiveAlerts,
 	refreshDashboardCache,
 } from "./actions";
-import { getDateRange } from "~/lib/date-utils";
 import { format } from "date-fns";
 import { RefreshButton } from "./refresh-button";
 import { TimeRangeTabs } from "./time-range-tabs";
@@ -46,8 +45,6 @@ export default async function Component({
 		getStationPerformanceData(timeRange),
 		getExecutiveAlerts(),
 	]);
-
-	const dateRange = getDateRange(timeRange);
 
 	// Helper to determine KPI trends
 	const getKPIConfig = (value: number, type: string) => {
@@ -87,14 +84,8 @@ export default async function Component({
 			/>
 
 			{/* Time Range Selector */}
-			<div className="flex justify-center">
+			<div>
 				<TimeRangeTabs />
-			</div>
-
-			<div className="flex items-center justify-between px-1">
-				<p className="text-sm font-medium text-muted-foreground font-mono">
-					DATA_RANGE: <span className="text-foreground">{dateRange.display}</span>
-				</p>
 			</div>
 
 			{/* Critical Alerts */}
@@ -137,7 +128,7 @@ export default async function Component({
 			)}
 
 			{/* Main KPI Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
 				<KPICard
 					title="Active Employees"
 					value={kpis.totalActiveEmployees}
@@ -203,7 +194,7 @@ export default async function Component({
 				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
 					Financial Overview
 				</h2>
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 					<KPICard
 						title="Labor Cost Per Unit"
 						value={`$${kpis.laborCostPerUnit}`}
@@ -246,7 +237,7 @@ export default async function Component({
 							</Link>
 						</div>
 					</CardHeader>
-					<CardBody className="p-6">
+					<CardBody className="p-4">
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 							{stationData.slice(0, 6).map((station) => (
 								<div
@@ -330,7 +321,7 @@ export default async function Component({
 					].map((action) => (
 						<Link key={action.title} to={action.href}>
 							<Card className="h-full hover:border-primary/50 transition-colors duration-200">
-								<CardBody className="p-6 flex flex-col items-center text-center gap-3 group">
+								<CardBody className="p-4 flex flex-col items-center text-center gap-3 group">
 									<div className="p-3 rounded-[2px] bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-200">
 										<action.icon className="w-5 h-5" aria-hidden="true" />
 									</div>
@@ -351,4 +342,3 @@ export default async function Component({
 		</div>
 	);
 }
-

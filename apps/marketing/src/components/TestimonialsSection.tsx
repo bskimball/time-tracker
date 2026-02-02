@@ -54,7 +54,7 @@ export default function TestimonialsSection() {
 							className="animate-fade-in-up"
 							style={{ animationDelay: `${index * 150 + 200}ms` }}
 						>
-							<Card className="p-6 hover:shadow-lg transition-all hover:-translate-y-1 relative group h-full">
+							<Card className="hover:shadow-lg transition-all hover:-translate-y-1 relative group h-full">
 								<CardBody>
 									<div className="mb-6">
 										<div className="flex text-primary mb-4 animate-scale-in" style={{ animationDelay: `${index * 150 + 400}ms` }}>

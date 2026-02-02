@@ -16,11 +16,7 @@ export function LoginClient() {
 
 			<div className="w-full max-w-md animate-scale-in relative z-10">
 				<SafetyStripes position="top" aria-hidden="true" />
-				<IndustrialPanel className="relative group">
-					{/* Subtle corner accents - brand establishment */}
-					<div className="corner-machined corner-machined-tl opacity-50 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-					<div className="corner-machined corner-machined-br bottom-0 right-0 opacity-50 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-
+				<IndustrialPanel className="relative">
 					<IndustrialHeader title="Login" subtitle="SECURE_ACCESS_v1.0" />
 					<div className="p-8">
 						<p className="text-center text-sm mb-8 text-muted-foreground animate-fade-in font-heading uppercase tracking-wider">

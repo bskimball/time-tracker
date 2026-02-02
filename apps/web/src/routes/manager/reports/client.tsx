@@ -123,7 +123,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<thead>
-								<tr className="border-b">
+								<tr className="border-b border-border">
 									<th className="text-left p-4">Date</th>
 									<th className="text-left p-4">Employee</th>
 									<th className="text-left p-4">Station</th>
@@ -135,7 +135,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 							</thead>
 							<tbody>
 								{data.productivityData.map((row, index) => (
-									<tr key={index} className="border-b hover:bg-muted/50">
+									<tr key={index} className="border-b border-border hover:bg-muted/50">
 										<td className="p-4">{row.date}</td>
 										<td className="p-4 font-medium">{row.employeeName}</td>
 										<td className="p-4">{row.stationName || "-"}</td>
@@ -154,7 +154,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					</div>
 
 					{data.productivityData.length === 0 && (
-						<div className="text-center py-8">
+						<div className="text-center py-6">
 							<p className="text-muted-foreground">
 								No productivity data found for selected period
 							</p>
@@ -175,7 +175,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<thead>
-								<tr className="border-b">
+								<tr className="border-b border-border">
 									<th className="text-left p-4">Date</th>
 									<th className="text-left p-4">Task Type</th>
 									<th className="text-left p-4">Tasks Completed</th>
@@ -187,7 +187,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 							</thead>
 							<tbody>
 								{data.taskPerformanceData.map((row, index) => (
-									<tr key={index} className="border-b hover:bg-muted/50">
+									<tr key={index} className="border-b border-border hover:bg-muted/50">
 										<td className="p-4">{row.date}</td>
 										<td className="p-4 font-medium">{row.taskTypeName}</td>
 										<td className="p-4 text-center">{row.taskCount}</td>
@@ -262,7 +262,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<thead>
-								<tr className="border-b">
+								<tr className="border-b border-border">
 									<th className="text-left p-4">Date</th>
 									<th className="text-left p-4">Employee</th>
 									<th className="text-left p-4">Regular Hours</th>
@@ -272,7 +272,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 							</thead>
 							<tbody>
 								{data.overtimeData.map((row, index) => (
-									<tr key={index} className="border-b hover:bg-muted/50">
+									<tr key={index} className="border-b border-border hover:bg-muted/50">
 										<td className="p-4">{row.date}</td>
 										<td className="p-4 font-medium">{row.employeeName}</td>
 										<td className="p-4">{row.regularHoursWorked.toFixed(2)}h</td>
@@ -297,7 +297,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					<CardTitle>Executive Summary</CardTitle>
 				</CardHeader>
 				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						<div className="text-center">
 							<h3 className="text-lg font-medium mb-2">Workforce</h3>
 							<div className="space-y-2">
@@ -305,7 +305,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 									{data.summaryStats.totalEmployees}
 								</p>
 								<p className="text-sm text-muted-foreground">Total Employees</p>
-								<div className="pt-2 border-t">
+								<div className="pt-2 border-t border-border">
 									<p className="text-xl font-semibold text-green-600">
 										{data.summaryStats.activeEmployees}
 									</p>
@@ -321,7 +321,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 									{data.summaryStats.totalHoursWorked.toFixed(1)}h
 								</p>
 								<p className="text-sm text-muted-foreground">Total Hours</p>
-								<div className="pt-2 border-t">
+								<div className="pt-2 border-t border-border">
 									<p className="text-xl font-semibold text-foreground">
 										{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
 									</p>
@@ -337,7 +337,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 									{data.summaryStats.peakDayOccupancy}
 								</p>
 								<p className="text-sm text-muted-foreground">Peak Daily Count</p>
-								<div className="pt-2 border-t">
+								<div className="pt-2 border-t border-border">
 									<p className="text-xl font-semibold text-red-600">
 										{data.summaryStats.totalOvertimeHours.toFixed(1)}h
 									</p>
@@ -422,7 +422,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 			{loading && (
 				<div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
 					<Card className="max-w-xs w-full shadow-industrial animate-pulse">
-						<CardBody className="py-8 text-center">
+						<CardBody className="py-6 text-center">
 							<p className="font-industrial font-bold uppercase tracking-widest">Processing_Data…</p>
 						</CardBody>
 					</Card>

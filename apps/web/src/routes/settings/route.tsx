@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Card } from "@monorepo/design-system";
+import { Card, CardBody } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { LiaWarehouseSolid, LiaUsersSolid, LiaUserShieldSolid, LiaKeySolid } from "react-icons/lia";
 
@@ -36,7 +36,7 @@ export default function SettingsIndex() {
 			{settingsOptions.map((option) => (
 				<Link key={option.href} to={option.href} className="block h-full">
 					<Card className="h-full transition-colors hover:bg-muted/50">
-						<div className="p-6 flex flex-col h-full">
+						<CardBody className="flex flex-col h-full">
 							<div className="flex items-center gap-4 mb-4">
 								<div className="p-2 rounded-[2px] bg-primary/10 text-primary border border-primary/20">{option.icon}</div>
 								<h3 className="font-semibold text-lg">{option.title}</h3>
@@ -47,7 +47,7 @@ export default function SettingsIndex() {
 									Manage {option.title}
 								</Button>
 							</div>
-						</div>
+						</CardBody>
 					</Card>
 				</Link>
 			))}

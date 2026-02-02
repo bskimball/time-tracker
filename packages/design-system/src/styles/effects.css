@@ -1,0 +1,26 @@
+@layer utilities {
+	.border-input { border-color: var(--color-input); }
+	.hover\:border-input-hover:hover { border-color: var(--color-input-hover); }
+	.focus\:border-primary:focus { border-color: var(--color-primary); }
+	.focus\:ring-primary:focus { --tw-ring-color: var(--color-primary); }
+	.focus\:border-destructive:focus { border-color: var(--color-destructive); }
+	.focus\:ring-destructive:focus { --tw-ring-color: var(--color-destructive); }
+
+	.shadow-industrial {
+		box-shadow:
+			0 1px 0 0 rgba(0, 0, 0, 0.05),
+			0 2px 4px -2px rgba(0, 0, 0, 0.1);
+	}
+
+	.shadow-industrial-hover {
+		box-shadow:
+			0 1px 0 0 rgba(0, 0, 0, 0.06),
+			0 6px 14px -8px rgba(0, 0, 0, 0.18);
+	}
+
+	.hover\:shadow-industrial-hover:hover {
+		box-shadow:
+			0 1px 0 0 rgba(0, 0, 0, 0.06),
+			0 6px 14px -8px rgba(0, 0, 0, 0.18);
+	}
+}
