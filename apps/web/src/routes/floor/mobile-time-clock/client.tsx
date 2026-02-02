@@ -2,15 +2,15 @@
 
 import React from "react";
 import { Link } from "react-router";
-import { TouchButton } from "~/components/mobile/touch-button";
-import { TouchInput, TouchSelect } from "~/components/mobile/touch-input";
+import { TouchButton } from "./components/touch-button";
+import { TouchInput, TouchSelect } from "./components/touch-input";
 import {
 	MobileLayout,
 	MobileNavigation,
 	MobileCard,
 	MobileSection,
 	MobileHeader,
-} from "~/components/mobile/mobile-layout";
+} from "./components/mobile-layout";
 import { Alert } from "@monorepo/design-system";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import { clockIn, clockOut, startBreak, endBreak, pinToggleClock } from "../../time-clock/actions";
