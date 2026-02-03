@@ -2,17 +2,17 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import TimeClockRoute from "~/routes/time-clock/route";
 import { mockDb } from "~/__tests__/setup";
 
-vi.mock("~/routes/time-clock/hooks", () => ({
+vi.mock("~/components/time-tracking/hooks", () => ({
 	useKioskMode: () => [false, vi.fn()],
 	useAutoRefresh: vi.fn(),
 }));
 
-vi.mock("~/routes/time-clock/notifications", () => ({
+vi.mock("~/components/time-tracking/notifications", () => ({
 	notify: vi.fn(),
 	subscribe: vi.fn(() => vi.fn()),
 }));
 
-vi.mock("~/routes/time-clock/offline-queue", () => ({
+vi.mock("~/components/time-tracking/offline-queue", () => ({
 	useOfflineActionQueue: () => ({
 		queue: [],
 		enqueue: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("~/routes/time-clock/actions", () => ({
 	pinToggleClock: vi.fn(),
 }));
 
-vi.mock("~/routes/time-clock/utils", () => ({
+vi.mock("~/lib/domain/time-tracking", () => ({
 	calculateNetHours: () => 8,
 	isOvertime: () => false,
 	getWeekBounds: () => ({
@@ -39,6 +39,7 @@ vi.mock("~/routes/time-clock/utils", () => ({
 		end: new Date("2024-01-07"),
 	}),
 	DEFAULT_DAILY_LIMIT: 8,
+	DEFAULT_WEEKLY_LIMIT: 40,
 }));
 
 vi.mock("~/lib/auth", () => ({

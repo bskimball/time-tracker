@@ -3,7 +3,7 @@ import { cn } from "../utils/cn";
 
 type BadgeVariant = "primary" | "secondary" | "outline" | "destructive" | "success";
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+interface BadgeProps extends React.ComponentPropsWithoutRef<"span"> {
 	variant?: BadgeVariant;
 }
 

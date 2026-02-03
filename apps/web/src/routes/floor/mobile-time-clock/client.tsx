@@ -15,7 +15,7 @@ import { Alert } from "@monorepo/design-system";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import { clockIn, clockOut, startBreak, endBreak, pinToggleClock } from "../../time-clock/actions";
 import { useOnlineStatus, useOfflineActionQueue } from "~/lib/offline-support";
-import { notify } from "../../time-clock/notifications";
+import { notify } from "~/components/time-tracking/notifications";
 
 type TimeLogWithRelations = TimeLog & {
 	employee: Employee;

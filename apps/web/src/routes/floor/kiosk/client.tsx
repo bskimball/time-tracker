@@ -15,9 +15,9 @@ import {
 	LedIndicator,
 } from "@monorepo/design-system";
 import { pinToggleClock as pinToggleAction } from "../../time-clock/actions";
-import { useKioskMode, useAutoRefresh } from "../../time-clock/hooks";
-import { useOfflineActionQueue } from "../../time-clock/offline-queue";
-import { KioskContext, type KioskContextValue } from "../../time-clock/context";
+import { useKioskMode, useAutoRefresh } from "~/components/time-tracking/hooks";
+import { useOfflineActionQueue } from "~/components/time-tracking/offline-queue";
+import { KioskContext, type KioskContextValue } from "~/components/time-tracking/context";
 
 const createId = () =>
 	typeof crypto !== "undefined" && crypto.randomUUID
@@ -201,7 +201,10 @@ export function KioskTimeClock({
 		<KioskContext.Provider value={contextValue}>
 			<div className="flex flex-col gap-6 bg-noise relative">
 				{/* Tactical grid overlay for the whole kiosk */}
-				<div className="absolute -inset-10 bg-tactical-grid opacity-5 pointer-events-none" aria-hidden="true" />
+				<div
+					className="absolute -inset-10 bg-tactical-grid opacity-5 pointer-events-none"
+					aria-hidden="true"
+				/>
 
 				<div className="grid lg:grid-cols-12 gap-6 items-start relative z-10">
 					{/* Main Column: Clock In Form */}
@@ -220,11 +223,16 @@ export function KioskTimeClock({
 										<span className="font-mono text-[10px] text-primary/50 tracking-widest uppercase mb-1">
 											Terminal_01 // Auth_Req
 										</span>
-										<CardTitle className="text-3xl font-display font-bold tracking-tight">Clock In</CardTitle>
+										<CardTitle className="text-3xl font-display font-bold tracking-tight">
+											Clock In
+										</CardTitle>
 									</div>
 									{/* Status Indicator inside Card Header */}
 									<div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-[2px] border border-border/50 shadow-inner">
-										<LedIndicator active={queue.length === 0} className={queue.length > 0 ? "animate-pulse" : ""} />
+										<LedIndicator
+											active={queue.length === 0}
+											className={queue.length > 0 ? "animate-pulse" : ""}
+										/>
 										<span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">
 											{queue.length > 0 ? "Sync_Active" : "System_Ready"}
 										</span>
@@ -321,8 +329,11 @@ export function KioskTimeClock({
 										Active Personnel
 									</h3>
 								</div>
-								<Badge variant="primary" className="font-mono text-sm font-bold shadow-sm px-3 py-1">
-									{activeLogs.length.toString().padStart(2, '0')}
+								<Badge
+									variant="primary"
+									className="font-mono text-sm font-bold shadow-sm px-3 py-1"
+								>
+									{activeLogs.length.toString().padStart(2, "0")}
 								</Badge>
 							</div>
 							<div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
@@ -338,8 +349,13 @@ export function KioskTimeClock({
 														{log.employee.name}
 													</div>
 													<div className="flex items-center gap-2 mt-1">
-														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">Station:</span>
-														<Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+															Station:
+														</span>
+														<Badge
+															variant="secondary"
+															className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5"
+														>
 															{log.station?.name || "Unassigned"}
 														</Badge>
 													</div>
@@ -368,7 +384,10 @@ export function KioskTimeClock({
 				<div className="pt-8 border-t border-border border-dashed flex flex-wrap justify-between items-center gap-6 text-sm text-muted-foreground relative z-10">
 					<div className="flex items-center gap-6">
 						<div className="flex items-center gap-3 bg-muted/20 px-4 py-2 rounded-[2px] border border-border/30 backdrop-blur-sm">
-							<LedIndicator active={status !== "syncing"} className={status === "syncing" ? "animate-pulse" : ""} />
+							<LedIndicator
+								active={status !== "syncing"}
+								className={status === "syncing" ? "animate-pulse" : ""}
+							/>
 							<span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em]">
 								{status === "syncing"
 									? "Network_Sync_v2"
@@ -427,8 +446,12 @@ export function KioskTimeClock({
 							}
 						>
 							<div className="flex items-center gap-3">
-								<span className="font-mono text-[10px] opacity-50 uppercase tracking-widest">Msg_{notification.id.slice(-4)}</span>
-								<span className="font-bold font-heading uppercase tracking-tight">{notification.message}</span>
+								<span className="font-mono text-[10px] opacity-50 uppercase tracking-widest">
+									Msg_{notification.id.slice(-4)}
+								</span>
+								<span className="font-bold font-heading uppercase tracking-tight">
+									{notification.message}
+								</span>
 							</div>
 						</Alert>
 					</div>
@@ -437,4 +460,3 @@ export function KioskTimeClock({
 		</KioskContext.Provider>
 	);
 }
-

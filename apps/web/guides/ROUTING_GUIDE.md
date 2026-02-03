@@ -70,7 +70,7 @@ flowchart TD
 
 **Notes:**
 
-- All routes are children of the `root` layout defined in `apps/web/apps/web/src/routes/config.ts`
+- All routes are children of the `root` layout defined in `apps/web/src/routes/config.ts`
 - `manager` routes require `authMiddleware` and `roleMiddleware(["MANAGER", "ADMIN"])`
 - `executive` routes require `authMiddleware` and `roleMiddleware(["ADMIN"])`
 - `settings` and `todo` require `authMiddleware` only
@@ -83,7 +83,7 @@ The application now uses a simplified, consolidated routing structure for time t
 
 #### 1. `/floor` - Primary Time Clock Interface
 
-**Location:** `apps/web/apps/web/src/routes/floor/index/route.tsx`
+**Location:** `apps/web/src/routes/floor/index/route.tsx`
 
 **Purpose:** Main entry point for floor time tracking
 
@@ -91,7 +91,7 @@ The application now uses a simplified, consolidated routing structure for time t
 
 - Device-aware (auto-redirects mobile devices to `/floor/time-clock/mobile`)
 - Clean interface without header/footer
-- Uses shared `TimeTracking` component from `apps/web/apps/web/src/routes/time-clock/client.tsx`
+- Uses shared `TimeTracking` component from `apps/web/src/routes/time-clock/client.tsx`
 - Includes `KioskRedirect` for automatic kiosk mode detection
 - Seeds demo data (employees & stations) if database is empty
 - Public access (no authentication required)
@@ -112,7 +112,7 @@ The application now uses a simplified, consolidated routing structure for time t
 
 #### 2. `/time-clock/kiosk` - Dedicated Kiosk Mode
 
-**Location:** `apps/web/apps/web/src/routes/time-clock/kiosk/route.tsx`
+**Location:** `apps/web/src/routes/time-clock/kiosk/route.tsx`
 
 **Purpose:** Full-screen kiosk interface for dedicated time-clock terminals
 
@@ -200,18 +200,23 @@ Client components are separated into dedicated files:
 
 ### Shared Components
 
-The time clock interface uses shared components:
+The time clock interface uses shared modules:
 
 ```
 apps/web/src/routes/time-clock/
 ├── actions.ts           # Shared server actions (clockIn, clockOut, etc.)
 ├── client.tsx           # Shared TimeTracking client component
-├── context.tsx          # Kiosk context provider
-├── hooks.ts             # Shared hooks (useKioskMode, useAutoRefresh)
-├── notifications.ts     # Toast notification system
-├── offline-queue.ts     # Offline action queue
-├── utils.ts             # Utility functions
 └── kiosk-redirect.tsx   # Kiosk mode redirect logic
+
+apps/web/src/components/time-tracking/
+├── time-tracking.tsx    # Main interactive UI
+├── context.tsx          # Kiosk context
+├── hooks.ts             # useKioskMode/useAutoRefresh
+├── notifications.ts     # notify/subscribe + audio chime
+└── offline-queue.ts     # Offline action queue
+
+apps/web/src/lib/domain/
+└── time-tracking.ts     # Pure utilities/constants (net hours, week bounds, limits)
 ```
 
 ## Request Flow
@@ -310,7 +315,8 @@ The application had **four overlapping routes**:
 1. **Server-side logic:** Add to `apps/web/src/routes/floor/index/route.tsx`
 2. **Client-side interactivity:** Add to `apps/web/src/routes/time-clock/client.tsx`
 3. **Mutations:** Add to `apps/web/src/routes/time-clock/actions.ts`
-4. **Utilities:** Add to `apps/web/src/routes/time-clock/utils.ts`
+4. **Domain/utilities:** Add to `apps/web/src/lib/domain/time-tracking.ts` (pure functions/constants)
+5. **Client helpers (kiosk/offline/notifications):** Add to `apps/web/src/components/time-tracking/*`
 
 ### Testing Routes
 

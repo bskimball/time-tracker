@@ -247,7 +247,7 @@ We use **OKLCH color space** for perceptual uniformity, vibrance, and consistent
 
 ## Component Library
 
-All components are located in `packages/design-system/apps/web/src/components/` and `apps/web/apps/web/src/components/`.
+All components are located in `packages/design-system/src/components/` and `apps/web/src/components/`.
 
 ### Button
 
@@ -911,8 +911,8 @@ export default async function Component() {
 
 ## Resources
 
-- **Component Source**: `packages/design-system/apps/web/src/components/`
-- **Theme Configuration**: `apps/web/apps/web/src/routes/root/styles.css`
+- **Component Source**: `packages/design-system/src/components/`
+- **Theme Configuration**: `apps/web/src/routes/root/styles.css`
 - **PageHeader Component**: `/apps/web/src/components/page-header.tsx`
 - **React Aria Components**: https://react-spectrum.adobe.com/react-aria/
 - **Tailwind CSS v4**: https://tailwindcss.com/
