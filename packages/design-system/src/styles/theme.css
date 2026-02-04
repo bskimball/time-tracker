@@ -49,6 +49,7 @@
 
 	/* Borders & Precision Lines */
 	--color-border: oklch(0.92 0.006 264.5);
+	--color-input-background: oklch(0.985 0.002 247.8);
 	--color-input: oklch(0.705 0.021 264.5);
 	--color-input-hover: oklch(0.552 0.029 264.5);
 	--color-ring: oklch(61% 0.16 42);

@@ -92,7 +92,7 @@ export function TaskAssignmentForm({
 						<div>
 							<label className="block text-sm font-medium mb-1">Employee</label>
 							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
 								value={formData.employeeId}
 								onChange={(e) => setFormData((prev) => ({ ...prev, employeeId: e.target.value }))}
 								required
@@ -113,7 +113,7 @@ export function TaskAssignmentForm({
 						<div>
 							<label className="block text-sm font-medium mb-1">Task Type</label>
 							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
 								value={formData.taskTypeId}
 								onChange={(e) => setFormData((prev) => ({ ...prev, taskTypeId: e.target.value }))}
 								required
@@ -130,7 +130,7 @@ export function TaskAssignmentForm({
 						<div>
 							<label className="block text-sm font-medium mb-1">Priority</label>
 							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
 								value={formData.priority}
 								onChange={(e) =>
 									setFormData((prev) => ({

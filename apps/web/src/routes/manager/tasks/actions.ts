@@ -59,35 +59,35 @@ export async function assignTask(data: {
 		throw new Error("Unauthorized");
 	}
 
-	// Check if employee has an active task
-	const existingAssignment = await db.taskAssignment.findFirst({
-		where: {
-			employeeId: data.employeeId,
-			endTime: null,
-		},
-	});
-
-	if (existingAssignment) {
-		throw new Error("Employee already has an active task assignment");
-	}
-
-	// Create new task assignment
-	const assignment = await db.taskAssignment.create({
-		data: {
-			employeeId: data.employeeId,
-			taskTypeId: data.taskTypeId,
-			startTime: new Date(),
-			notes: data.notes,
-		},
-		include: {
-			Employee: true,
-			TaskType: {
-				include: { Station: true },
+	return await db.$transaction(async (tx) => {
+		// Check if employee has an active task
+		const existingAssignment = await tx.taskAssignment.findFirst({
+			where: {
+				employeeId: data.employeeId,
+				endTime: null,
 			},
-		},
-	});
+		});
 
-	return assignment;
+		if (existingAssignment) {
+			throw new Error("Employee already has an active task assignment");
+		}
+
+		// Create new task assignment
+		return await tx.taskAssignment.create({
+			data: {
+				employeeId: data.employeeId,
+				taskTypeId: data.taskTypeId,
+				startTime: new Date(),
+				notes: data.notes,
+			},
+			include: {
+				Employee: true,
+				TaskType: {
+					include: { Station: true },
+				},
+			},
+		});
+	});
 }
 
 export async function assignTaskAction(
@@ -174,61 +174,116 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 		throw new Error("Unauthorized");
 	}
 
-	const [currentAssignment, employee] = await Promise.all([
-		db.taskAssignment.findFirst({
-			where: {
-				employeeId: employeeId,
-				endTime: null,
-			},
-		}),
-		db.employee.findUnique({
-			where: { id: employeeId },
-		}),
-	]);
+	return await db.$transaction(async (tx) => {
+		const [currentAssignment, employee] = await Promise.all([
+			tx.taskAssignment.findFirst({
+				where: {
+					employeeId: employeeId,
+					endTime: null,
+				},
+			}),
+			tx.employee.findUnique({
+				where: { id: employeeId },
+			}),
+		]);
 
-	if (!employee) {
-		throw new Error("Employee not found");
-	}
+		if (!employee) {
+			throw new Error("Employee not found");
+		}
 
-	if (!currentAssignment) {
-		// No existing task, just assign new one
-		return await assignTask({
-			employeeId,
-			taskTypeId: newTaskTypeId,
-			priority: "MEDIUM",
-			notes: reason,
-		});
-	}
+		if (currentAssignment) {
+			await tx.taskAssignment.update({
+				where: { id: currentAssignment.id },
+				data: {
+					endTime: new Date(),
+					notes: `Switched to new task. Reason: ${reason || "Manager override"}. ${currentAssignment.notes || ""}`,
+				},
+			});
+		}
 
-	// Complete current task and assign new one
-	await Promise.all([
-		db.taskAssignment.update({
-			where: { id: currentAssignment.id },
+		// Create new assignment
+		return await tx.taskAssignment.create({
 			data: {
-				endTime: new Date(),
-				notes: `Switched to new task. Reason: ${reason || "Manager override"}. ${currentAssignment.notes || ""}`,
+				employeeId: employeeId,
+				taskTypeId: newTaskTypeId,
+				startTime: new Date(),
+				notes: reason,
 			},
-		}),
-	]);
-
-	// Create new assignment
-	return await db.taskAssignment.create({
-		data: {
-			employeeId: employeeId,
-			taskTypeId: newTaskTypeId,
-			startTime: new Date(),
-			notes: reason,
-		},
-		include: {
-			Employee: true,
-			TaskType: {
-				include: { Station: true },
+			include: {
+				Employee: true,
+				TaskType: {
+					include: { Station: true },
+				},
 			},
-		},
+		});
 	});
 }
 
+export async function completeTaskAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{
+	assignment?: TaskAssignment;
+	activeAssignments?: TaskAssignment[];
+	error?: string | null;
+	success?: boolean;
+}> {
+	try {
+		const taskId = String(formData.get("taskId") || "");
+		const unitsValue = formData.get("unitsCompleted");
+		const unitsCompleted = unitsValue ? Number(unitsValue) : undefined;
+		const notesValue = formData.get("notes");
+		const notes = notesValue ? String(notesValue) : undefined;
+
+		if (!taskId) {
+			return { error: "Task ID is required", success: false };
+		}
+
+		const assignment = await completeTask(taskId, unitsCompleted, notes);
+		const activeAssignments = await getActiveTaskAssignments();
+
+		return { assignment, activeAssignments, success: true };
+	} catch (error: unknown) {
+		return {
+			error: error instanceof Error ? error.message : "Failed to complete task",
+			success: false,
+		};
+	}
+}
+
+export async function switchTaskAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{
+	assignment?: TaskAssignment;
+	activeAssignments?: TaskAssignment[];
+	error?: string | null;
+	success?: boolean;
+}> {
+	try {
+		const employeeId = String(formData.get("employeeId") || "");
+		const newTaskTypeId = String(formData.get("newTaskTypeId") || "");
+		const reasonValue = formData.get("reason");
+		const reason = reasonValue ? String(reasonValue) : undefined;
+
+		if (!employeeId || !newTaskTypeId) {
+			return { error: "Employee and new task type are required", success: false };
+		}
+
+		const assignment = await switchTask(employeeId, newTaskTypeId, reason);
+		const activeAssignments = await getActiveTaskAssignments();
+
+		return { assignment, activeAssignments, success: true };
+	} catch (error: unknown) {
+		return {
+			error: error instanceof Error ? error.message : "Failed to switch task",
+			success: false,
+		};
+	}
+}
+
 export async function createTaskType(data: {
+
 	name: string;
 	stationId: string;
 	description?: string;

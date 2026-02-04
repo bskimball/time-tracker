@@ -8,6 +8,8 @@ import {
 	getStations,
 	assignTask,
 	assignTaskAction,
+	completeTaskAction,
+	switchTaskAction,
 } from "./actions";
 
 export default async function Component() {
@@ -32,12 +34,15 @@ export default async function Component() {
 			employees={employees}
 			stations={stations}
 			assignTaskAction={assignTaskAction}
+			completeTaskAction={completeTaskAction}
+			switchTaskAction={switchTaskAction}
 			taskHistory={taskHistory}
 		/>
 	);
 }
 
 export async function action({ request }: { request: Request }) {
+
 	const { user } = await validateRequest();
 	if (!user) {
 		return new Response("Unauthorized", { status: 401 });

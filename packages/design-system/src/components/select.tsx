@@ -93,9 +93,9 @@ export function Select({
 					// Reset button defaults to match input
 					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 py-2 bg-input-background text-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
+					"focus:outline-none focus:border-primary focus:bg-input-background focus:ring-1 focus:ring-primary",
 					// Hover state - slight darkening or border change could go here
 					"hover:border-input/80",
 					// Pressed state
@@ -118,8 +118,8 @@ export function Select({
 				</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
-				<ListBox className="p-1 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 w-full outline-none">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-input-background text-zinc-950 dark:text-zinc-100 w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}
@@ -202,9 +202,9 @@ export function SimpleSelect({
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"h-10 px-3 py-2 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 py-2 bg-input-background text-zinc-950 dark:text-zinc-100 border border-input rounded-[2px] transition-all duration-100",
 					// Focus states matching Input
-					"focus:outline-none focus:border-primary focus:bg-zinc-50 dark:focus:bg-zinc-950 focus:ring-1 focus:ring-primary",
+					"focus:outline-none focus:border-primary focus:bg-input-background focus:ring-1 focus:ring-primary",
 					// Disabled states
 					"disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:border-transparent",
 					// Error states
@@ -218,8 +218,8 @@ export function SimpleSelect({
 				<span>{selectedLabel}</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
-				<ListBox className="p-1 bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 w-full outline-none">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-zinc-950 dark:text-zinc-100 border border-input shadow-industrial min-w-[var(--trigger-width)]">
+				<ListBox className="p-1 bg-input-background text-zinc-950 dark:text-zinc-100 w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
 							key={option.value}

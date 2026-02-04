@@ -15,16 +15,29 @@ services:
   app-dev:
     image: node:24-alpine
     container_name: app-dev
-    working_dir: /app
+    working_dir: /repo
     volumes:
-      - ./apps/web:/app
-      - /app/node_modules
+      - ./:/repo
+      - /repo/node_modules
+      - /repo/apps/web/node_modules
+      - /repo/apps/marketing/node_modules
+      - /repo/packages/design-system/node_modules
     ports:
       - "5173:5173"
+      - "4321:4321"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-time_tracker}
       NODE_ENV: development
-    command: sh -c "npm install && npx prisma db push && npm run dev"
+    command: >
+      sh -c
+      "set -e;
+      npm install;
+      npx prisma db push --schema prisma/schema.prisma;
+      trap 'kill 0' INT TERM;
+      npm -w packages/design-system run dev &
+      npm -w apps/web run dev -- --host 0.0.0.0 --port 5173 &
+      npm -w apps/marketing run dev -- --host 0.0.0.0 --port 4321 &
+      wait"
     depends_on:
       - postgres
     profiles:
@@ -48,15 +61,17 @@ services:
   marketing-dev:
     image: node:24-alpine
     container_name: marketing-dev
-    working_dir: /app
+    working_dir: /repo
     volumes:
-      - ./apps/marketing:/app
-      - /app/node_modules
+      - ./:/repo
+      - /repo/node_modules
+      - /repo/apps/marketing/node_modules
+      - /repo/packages/design-system/node_modules
     ports:
       - "4321:4321"
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 4321"
+    command: sh -c "npm install && npm -w packages/design-system run build && npm -w apps/marketing run dev -- --host 0.0.0.0 --port 4321"
     profiles:
-      - dev
+      - marketing
 
   marketing-prod:
     build:

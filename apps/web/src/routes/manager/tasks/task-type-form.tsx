@@ -87,7 +87,7 @@ export function TaskTypeForm({
 						<div>
 							<label className="block text-sm font-medium mb-1">Station</label>
 							<select
-								className="w-full px-3 py-2 bg-background text-foreground border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
 								value={formData.stationId}
 								onChange={(e) => setFormData((prev) => ({ ...prev, stationId: e.target.value }))}
 								required

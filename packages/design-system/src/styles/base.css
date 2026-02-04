@@ -34,6 +34,7 @@
 		--color-warning-foreground: oklch(18% 0 0);
 
 		--color-border: oklch(0.27 0.02 264.5);
+		--color-input-background: oklch(0.141 0.005 285.8);
 		--color-input: oklch(0.37 0.025 264.5);
 		--color-input-hover: oklch(0.442 0.029 264.5);
 		--color-muted: oklch(0.21 0.014 264.5);
