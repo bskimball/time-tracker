@@ -1,13 +1,23 @@
 "use client";
 
 import { useSearchParams } from "react-router";
-import { Card, CardHeader, CardTitle, CardBody, Badge, Button } from "@monorepo/design-system";
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+	Badge,
+	Button,
+	Metric,
+} from "@monorepo/design-system";
 import { LineChart, BarChart, PieChart } from "~/routes/executive/charts";
 import { SectionTabs } from "./section-tabs";
-import { AnalyticsTimeRangeTabs } from "./time-range-tabs";
+import { TimeRangeTabs } from "../time-range-tabs";
+import { ComparisonTabs } from "./comparison-tabs";
 import { PageHeader } from "~/components/page-header";
 import { useEffect, useState } from "react";
 import WarehouseFloor from "./components/WarehouseFloor";
+import { KPICard } from "~/routes/executive/kpi-card";
 import {
 	getProductivityTrendData,
 	getLaborCostTrendData,
@@ -20,14 +30,22 @@ import {
 	getCapacityUtilizationData,
 	getTrendAnalysisData,
 	getEmployeeProductivityRanking,
+	getComparativeAnalyticsData,
+	type ComparisonBasis,
 	fetchAnalyticsDashboardData,
 	fetchLiveFloorData,
 	type Anomaly,
 } from "./actions";
 import type { AnalyticsDashboardData, AnalyticsStationOverview, LiveFloorData } from "./types";
+import {
+	LiaChartBarSolid,
+	LiaDownloadSolid,
+	LiaFileAltSolid,
+} from "react-icons/lia";
 
 type AnalyticsSection = "productivity" | "labor-cost" | "trends" | "capacity" | "benchmarks";
 type AnalyticsRange = "today" | "week" | "month" | "quarter";
+type AnalyticsComparison = ComparisonBasis;
 
 const analyticsSections = new Set<AnalyticsSection>([
 	"productivity",
@@ -38,6 +56,11 @@ const analyticsSections = new Set<AnalyticsSection>([
 ]);
 
 const analyticsRanges = new Set<AnalyticsRange>(["today", "week", "month", "quarter"]);
+const analyticsComparisons = new Set<AnalyticsComparison>([
+	"previous-period",
+	"last-year",
+	"rolling-30d",
+]);
 
 function isAnalyticsSection(value: string | null): value is AnalyticsSection {
 	return value !== null && analyticsSections.has(value as AnalyticsSection);
@@ -45,6 +68,10 @@ function isAnalyticsSection(value: string | null): value is AnalyticsSection {
 
 function isAnalyticsRange(value: string | null): value is AnalyticsRange {
 	return value !== null && analyticsRanges.has(value as AnalyticsRange);
+}
+
+function isAnalyticsComparison(value: string | null): value is AnalyticsComparison {
+	return value !== null && analyticsComparisons.has(value as AnalyticsComparison);
 }
 
 type AnalyticsData = {
@@ -61,14 +88,17 @@ type AnalyticsData = {
 	employeeProductivity: Awaited<ReturnType<typeof getEmployeeProductivityRanking>>;
 	dashboardData: AnalyticsDashboardData;
 	liveFloorData: LiveFloorData;
+	comparativeData: Awaited<ReturnType<typeof getComparativeAnalyticsData>>;
 };
 
 export default function Component() {
 	const searchParams = useSearchParams()[0];
 	const sectionParam = searchParams.get("section");
 	const rangeParam = searchParams.get("range");
+	const compareParam = searchParams.get("compare");
 	const section = isAnalyticsSection(sectionParam) ? sectionParam : "productivity";
 	const range = isAnalyticsRange(rangeParam) ? rangeParam : "week";
+	const compareBasis = isAnalyticsComparison(compareParam) ? compareParam : "previous-period";
 
 	const [data, setData] = useState<AnalyticsData | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -91,6 +121,7 @@ export default function Component() {
 					employeeProductivity,
 					dashboardData,
 					liveFloorData,
+					comparativeData,
 				] = await Promise.all([
 					getProductivityTrendData(range),
 					getLaborCostTrendData(range),
@@ -105,6 +136,7 @@ export default function Component() {
 					getEmployeeProductivityRanking(range),
 					fetchAnalyticsDashboardData(),
 					fetchLiveFloorData(),
+					getComparativeAnalyticsData(range, compareBasis),
 				]);
 
 				setData({
@@ -121,6 +153,7 @@ export default function Component() {
 					employeeProductivity,
 					dashboardData,
 					liveFloorData,
+					comparativeData,
 				});
 			} catch (error) {
 				console.error("Failed to load analytics data:", error);
@@ -130,9 +163,7 @@ export default function Component() {
 		}
 
 		loadData();
-	}, [section, range]);
-
-	/* Loading check moved to render phase */
+	}, [section, range, compareBasis]);
 
 	const {
 		productivityTrends = { labels: [], datasets: [] },
@@ -174,216 +205,242 @@ export default function Component() {
 			},
 		},
 		liveFloorData = { zones: [] },
-	} = data || {}; // Safe destructure for initial render
+		comparativeData = {
+			currentWindow: { start: new Date().toISOString(), end: new Date().toISOString() },
+			comparisonWindow: { start: new Date().toISOString(), end: new Date().toISOString() },
+			summary: {
+				productivity: { current: 0, comparison: 0, changePercent: 0 },
+				costPerUnit: { current: 0, comparison: 0, changePercent: 0 },
+				throughput: { current: 0, comparison: 0, changePercent: 0 },
+			},
+			charts: {
+				productivityComparison: { labels: [], datasets: [] },
+				costComparison: { labels: [], datasets: [] },
+			},
+		},
+	} = data || {};
 
 	const { costSummary, stations: stationSnapshots } = dashboardData;
-	const liveFloorZones = liveFloorData.zones;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const currentWindowLabel = `${new Date(comparativeData.currentWindow.start).toLocaleDateString()} - ${new Date(comparativeData.currentWindow.end).toLocaleDateString()}`;
+	const comparisonWindowLabel = `${new Date(comparativeData.comparisonWindow.start).toLocaleDateString()} - ${new Date(comparativeData.comparisonWindow.end).toLocaleDateString()}`;
 
 	return (
-		<div className="space-y-6">
-			<PageHeader
-				title="Analytics & Reporting"
-				subtitle="Comprehensive workforce productivity and cost analysis"
-				actions={
-					<>
-						<Button variant="outline" size="sm">
-							Export Data
-						</Button>
-						<Button variant="primary" size="sm">
-							Generate Report
-						</Button>
-					</>
-				}
-			/>
+		<div className="space-y-8 pb-12">
+			{/* ── Header ──────────────────────────────────────────────────────── */}
+			<div className="animate-fade-in">
+				<PageHeader
+					title="Analytics & Reporting"
+					subtitle="Comprehensive workforce productivity, financial metrics, and operational insights"
+					actions={
+						<div className="flex items-center gap-2">
+							<Button variant="outline" size="sm" className="gap-2">
+								<LiaDownloadSolid className="w-4 h-4" />
+								Export Data
+							</Button>
+							<Button variant="primary" size="sm" className="gap-2">
+								<LiaFileAltSolid className="w-4 h-4" />
+								Generate Report
+							</Button>
+						</div>
+					}
+				/>
+			</div>
 
-			{/* Section Navigation */}
-			<SectionTabs />
-
-
-			{/* Time Range Selector */}
-			<div className="flex items-center gap-4">
-				<span className="text-sm font-medium">Time Range:</span>
-				<AnalyticsTimeRangeTabs />
+			{/* ── Controls ────────────────────────────────────────────────────── */}
+			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 pt-2 border-b border-border/40 -mx-4 px-4 sm:mx-0 sm:px-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:static sm:pb-0 sm:pt-0">
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<SectionTabs />
+					<div className="flex flex-col items-end gap-1">
+						<div className="flex flex-col sm:flex-row sm:items-center gap-4">
+							<div className="flex items-center gap-2">
+								<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground hidden sm:inline-block">
+									Range
+								</span>
+								<TimeRangeTabs defaultRange="week" />
+							</div>
+							<div className="flex items-center gap-2">
+								<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground hidden sm:inline-block">
+									Compare
+								</span>
+								<ComparisonTabs />
+							</div>
+						</div>
+						{compareParam && (
+							<div className="text-[10px] font-mono text-muted-foreground text-right hidden sm:block">
+								{currentWindowLabel} vs {comparisonWindowLabel}
+							</div>
+						)}
+					</div>
+				</div>
 			</div>
 
 			{loading || !data ? (
-				<div className="flex items-center justify-center py-12">
-					<div className="text-muted-foreground">Loading…</div>
+				<div className="flex flex-col items-center justify-center py-24 space-y-4">
+					<div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+					<div className="text-sm font-mono text-muted-foreground animate-pulse">
+						LOADING_ANALYTICS_DATA...
+					</div>
 				</div>
 			) : (
 				<>
-					{/* Section Content */}
+					{/* ── Productivity Section ────────────────────────────────────────── */}
 					{section === "productivity" && (
-						<div className="space-y-6">
-							{/* Productivity Overview Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card className="border-l-4 border-l-primary">
-									<CardHeader>
-										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Avg Units/Hour</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-3xl font-bold font-data">
-											{benchmarkData.productivity.current}
+						<div className="space-y-6 animate-fade-in-up">
+							{/* KPIs */}
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+								<KPICard
+									title="Avg Units/Hour"
+									value={benchmarkData.productivity.current}
+									subtitle="Current Period Average"
+									icon="chart"
+									trend={{
+										direction:
+											trendData.productivity.changePercent > 0
+												? "up"
+												: trendData.productivity.changePercent < 0
+													? "down"
+													: "neutral",
+										value: `${trendData.productivity.changePercent > 0 ? "+" : ""}${trendData.productivity.changePercent}%`,
+										label: "vs last period",
+									}}
+								/>
+								<KPICard
+									title="Top Performer"
+									value={`${benchmarkData.productivity.top10Percent} u/h`}
+									subtitle="98th Percentile"
+									icon="award"
+									trend={{
+										direction: "up",
+										value: "Top 10%",
+										label: "Industry Benchmark",
+									}}
+								/>
+								<KPICard
+									title="Task Completion"
+									value={`${benchmarkData.quality.current}%`}
+									subtitle="On-Time Rate"
+									icon="percent"
+									trend={{
+										direction: "neutral",
+										value: "95%",
+										label: "Target",
+									}}
+								/>
+								<Card className="h-full border-l-4 border-l-destructive bg-destructive/5">
+									<CardBody className="p-4 flex flex-col justify-between h-full">
+										<div>
+											<div className="text-xs font-industrial uppercase tracking-widest text-destructive mb-1">
+												Bottleneck Alert
+											</div>
+											<div className="text-2xl font-bold font-data text-foreground">
+												RECEIVING
+											</div>
+											<div className="text-xs text-muted-foreground font-mono mt-1">
+												45% Utilization
+											</div>
 										</div>
-										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">
-											{trendData.productivity.changePercent > 0 ? "+" : ""}
-											{trendData.productivity.changePercent}% VS_LAST_PERIOD
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-l-4 border-l-secondary">
-									<CardHeader>
-										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Top Performer</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-3xl font-bold font-data">
-											{benchmarkData.productivity.top10Percent} u/h
+										<div className="mt-4 pt-3 border-t border-destructive/20">
+											<div className="flex items-center gap-2 text-xs text-destructive font-medium">
+												<span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+												Requires Attention
+											</div>
 										</div>
-										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">INDUSTRY_TOP_10%</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-l-4 border-l-chart-2">
-									<CardHeader>
-										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Task Completion</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-3xl font-bold font-data">
-											{benchmarkData.quality.current}%
-										</div>
-										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">ON_TIME_RATE</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-l-4 border-l-destructive">
-									<CardHeader>
-										<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">Bottleneck Alert</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="text-3xl font-bold font-data text-destructive">
-											RECEIVING
-										</div>
-										<p className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-tight">45% UTILIZATION</p>
 									</CardBody>
 								</Card>
 							</div>
 
-							{/* Charts Section */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+							{/* Main Charts */}
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 								<LineChart
 									title="Productivity Trends Over Time"
 									data={productivityTrends}
-									height={300}
+									height={320}
 								/>
 								<BarChart
 									title="Station Efficiency Comparison"
 									data={stationEfficiency}
-									height={300}
+									height={320}
 								/>
 							</div>
 
-							{/* Employee Productivity Table */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Employee Productivity Rankings</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="overflow-x-auto">
-										<table className="min-w-full">
-							<thead>
-								<tr className="border-b border-border">
-													<th className="text-left py-3 px-4">Employee</th>
-													<th className="text-right py-3 px-4">Units</th>
-													<th className="text-right py-3 px-4">Hours</th>
-													<th className="text-right py-3 px-4">Rate (u/h)</th>
-													<th className="text-left py-3 px-4">Station</th>
-													<th className="text-left py-3 px-4">Performance</th>
-												</tr>
-											</thead>
-											<tbody>
-												{employeeProductivity.map((employee, index) => (
-													<tr key={index} className="border-b border-border">
-														<td className="py-3 px-4 font-medium">{employee.employee}</td>
-														<td className="text-right py-3 px-4 font-data">-</td>
-														<td className="text-right py-3 px-4 font-data">-</td>
-														<td className="text-right py-3 px-4 font-medium font-data">{employee.value}</td>
-														<td className="py-3 px-4">
-															<Badge variant="secondary">
-																{employee.station}
-															</Badge>
-														</td>
-														<td className="py-3 px-4">
-															{employee.value >= benchmarkData.productivity.top10Percent ? (
-																<Badge variant="primary">Top 10%</Badge>
-															) : employee.value >= benchmarkData.productivity.industryAvg ? (
-																<Badge variant="secondary">Above Avg</Badge>
-															) : (
-																<Badge variant="outline">Below Avg</Badge>
-															)}
-														</td>
-													</tr>
-												))}
-											</tbody>
-										</table>
-									</div>
-								</CardBody>
-							</Card>
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<BarChart
+									title="Task Type Efficiency"
+									data={taskTypeEfficiency}
+									height={320}
+								/>
+								<BarChart
+									title="Shift Productivity"
+									data={shiftProductivity}
+									height={320}
+								/>
+							</div>
 
 							{/* Station Performance Grid */}
 							<div>
-								<h2 className="text-lg font-semibold text-foreground mb-4">
-									Station Performance & Capacity
-								</h2>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-							{stationSnapshots.map((station: AnalyticsStationOverview) => (
-										<Card key={station.name} className="border">
-											<CardHeader>
-												<CardTitle className="text-base">{station.name}</CardTitle>
-											</CardHeader>
-											<CardBody>
-												<div className="space-y-3">
-													<div className="flex justify-between items-center">
-														<span className="text-sm text-muted-foreground">Efficiency:</span>
-														<span className="font-medium">{station.efficiency} u/h</span>
-													</div>
-													<div className="flex justify-between items-center">
-														<span className="text-sm text-muted-foreground">Occupancy:</span>
-														<span
-															className={`font-mono-industrial font-bold ${
-																station.occupancy > 85
-																	? "text-destructive"
-																	: station.occupancy > 70
-																		? "text-primary"
-																		: "text-secondary"
-															}`}
-														>
-															{station.occupancy}%
-														</span>
-													</div>
-													<div className="flex justify-between items-center">
-														<span className="text-sm text-muted-foreground">Staff:</span>
-														<span className="font-medium">{station.employees}</span>
-													</div>
-													<div className="w-full bg-muted h-2">
-														<div
-															className={`h-2 ${
-																station.efficiency > 30
+								<h3 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
+									Station Performance Breakdown
+								</h3>
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+									{stationSnapshots.map((station: AnalyticsStationOverview) => (
+										<Card key={station.name} className="overflow-hidden">
+											<CardHeader className="bg-muted/30 border-b border-border/50 py-2">
+												<div className="flex items-center justify-between">
+													<CardTitle className="uppercase tracking-widest font-industrial text-xs">
+														{station.name}
+													</CardTitle>
+													<div
+														className={`w-2 h-2 rounded-full ${
+															station.occupancy > 85
+																? "bg-destructive"
+																: station.occupancy > 70
 																	? "bg-primary"
-																	: station.efficiency > 20
-																		? "bg-secondary"
-																		: "bg-destructive"
-															}`}
-															style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
-														></div>
+																	: "bg-secondary"
+														}`}
+													/>
+												</div>
+											</CardHeader>
+											<CardBody className="p-4 space-y-3">
+												<div className="grid grid-cols-2 gap-2">
+													<div>
+														<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+															Eff.
+														</div>
+														<div className="font-mono font-bold text-lg">
+															{station.efficiency}
+														</div>
 													</div>
-													<div className="text-xs text-muted-foreground">
+													<div>
+														<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+															Occ.
+														</div>
+														<div className="font-mono font-bold text-lg">
+															{station.occupancy}%
+														</div>
+													</div>
+												</div>
+												<div className="w-full bg-muted/50 h-1.5 rounded-full overflow-hidden">
+													<div
+														className={`h-full rounded-full ${
+															station.efficiency > 30
+																? "bg-primary"
+																: station.efficiency > 20
+																	? "bg-secondary"
+																	: "bg-destructive"
+														}`}
+														style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
+													/>
+												</div>
+												<div className="flex justify-between items-center text-xs text-muted-foreground font-mono">
+													<span>{station.employees} Staff</span>
+													<span>
 														{station.occupancy < 60
-															? "Underutilized"
+															? "LOW"
 															: station.occupancy > 85
-																? "Overloaded"
-																: "Optimal"}
-													</div>
+																? "HIGH"
+																: "OK"}
+													</span>
 												</div>
 											</CardBody>
 										</Card>
@@ -391,1110 +448,379 @@ export default function Component() {
 								</div>
 							</div>
 
-							{/* Performance Insights */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Performance Insights</CardTitle>
+							{/* Employee Ranking Table */}
+							<Card className="overflow-hidden">
+								<CardHeader className="bg-muted/30 border-b border-border/50 py-3">
+									<CardTitle className="uppercase tracking-widest font-industrial text-sm text-muted-foreground">
+										Employee Productivity Rankings
+									</CardTitle>
 								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-primary mb-2">
-												Peak Performance
-											</h4>
-											<p className="text-sm text-foreground">
-												{trendData.seasonal.peakShift} shifts on {trendData.seasonal.peakDay}s show{" "}
-												{trendData.seasonal.seasonalFactor}x higher productivity
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-secondary mb-2">
-												Improvement Areas
-											</h4>
-											<p className="text-sm text-foreground">
-												RECEIVING station operating at 45% capacity. Consider cross-training or
-												additional staffing.
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
-												Quality Impact
-											</h4>
-											<p className="text-sm text-foreground">
-												High-performing stations maintain 97%+ quality rates. Monitor PACKING for
-												recent declines.
-											</p>
-										</div>
-									</div>
-								</CardBody>
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
+												<th className="text-left py-3 px-4 font-medium">Employee</th>
+												<th className="text-right py-3 px-4 font-medium">Units</th>
+												<th className="text-right py-3 px-4 font-medium">Hours</th>
+												<th className="text-right py-3 px-4 font-medium">Rate (u/h)</th>
+												<th className="text-left py-3 px-4 font-medium">Station</th>
+												<th className="text-left py-3 px-4 font-medium">Performance</th>
+											</tr>
+										</thead>
+										<tbody className="divide-y divide-border/30">
+											{employeeProductivity.map((employee, index) => (
+												<tr key={index} className="text-xs font-mono hover:bg-muted/20 transition-colors">
+													<td className="py-2.5 px-4 font-medium">{employee.employee}</td>
+													<td className="text-right py-2.5 px-4 text-muted-foreground">-</td>
+													<td className="text-right py-2.5 px-4 text-muted-foreground">-</td>
+													<td className="text-right py-2.5 px-4 font-bold text-foreground">
+														{employee.value}
+													</td>
+													<td className="py-2.5 px-4">
+														<Badge variant="secondary" className="text-[10px] h-5">
+															{employee.station}
+														</Badge>
+													</td>
+													<td className="py-2.5 px-4">
+														{employee.value >= benchmarkData.productivity.top10Percent ? (
+															<span className="text-primary font-bold">TOP 10%</span>
+														) : employee.value >= benchmarkData.productivity.industryAvg ? (
+															<span className="text-secondary">ABOVE AVG</span>
+														) : (
+															<span className="text-muted-foreground">BELOW AVG</span>
+														)}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
 							</Card>
 						</div>
 					)}
 
+					{/* ── Labor Cost Section ────────────────────────────────────────── */}
 					{section === "labor-cost" && (
-						<div className="space-y-6">
-							{/* Cost Summary Cards */}
-						<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-							<Card>
-								<CardHeader>
-									<CardTitle className="text-sm font-medium text-muted-foreground">
-										Regular Hours
-									</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="text-2xl font-bold">
-										${costSummary.regular.toFixed(2)}
-									</div>
-									<p className="text-sm text-muted-foreground mt-1">840 hours</p>
-								</CardBody>
-							</Card>
+						<div className="space-y-6 animate-fade-in-up">
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+								<KPICard
+									title="Regular Hours"
+									value={`$${costSummary.regular.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+									subtitle="840 Hours Logged"
+									icon="clock"
+								/>
+								<KPICard
+									title="Overtime Cost"
+									value={`$${costSummary.overtime.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+									subtitle="95 Hours Logged"
+									icon="dollar"
+									trend={{
+										direction: "down",
+										value: "-5%",
+										label: "vs last period",
+									}}
+								/>
+								<KPICard
+									title="Total Cost"
+									value={`$${costSummary.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+									subtitle="Combined Labor"
+									icon="dollar"
+								/>
+								<Card
+									className={`h-full border-l-4 ${costSummary.variance > 0 ? "border-l-destructive bg-destructive/5" : "border-l-primary bg-primary/5"}`}
+								>
+									<CardBody className="p-4 flex flex-col justify-between h-full">
+										<div>
+											<div
+												className={`text-xs font-industrial uppercase tracking-widest mb-1 ${costSummary.variance > 0 ? "text-destructive" : "text-primary"}`}
+											>
+												Budget Variance
+											</div>
+											<div className="text-2xl font-bold font-data text-foreground">
+												{costSummary.variance > 0 ? "+" : ""}
+												{costSummary.variance.toLocaleString(undefined, {
+													maximumFractionDigits: 0,
+												})}
+											</div>
+											<div className="text-xs text-muted-foreground font-mono mt-1">
+												{costSummary.variancePercent}% vs budget
+											</div>
+										</div>
+									</CardBody>
+								</Card>
+							</div>
 
-							<Card>
-								<CardHeader>
-									<CardTitle className="text-sm font-medium text-muted-foreground">
-										Overtime
-									</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="text-2xl font-bold text-orange-600">
-										${costSummary.overtime.toFixed(2)}
-									</div>
-									<p className="text-sm text-muted-foreground mt-1">95 hours</p>
-								</CardBody>
-							</Card>
-
-							<Card>
-								<CardHeader>
-									<CardTitle className="text-sm font-medium text-muted-foreground">
-										Total Cost
-									</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="text-2xl font-bold">
-										${costSummary.total.toFixed(2)}
-									</div>
-									<p className="text-sm text-muted-foreground mt-1">935 hours</p>
-								</CardBody>
-							</Card>
-
-							<Card
-								className={
-									costSummary.variance > 0
-										? "border-2 border-destructive bg-destructive/10"
-										: "border-2 border-primary bg-primary/10"
-								}
-							>
-								<CardHeader>
-									<CardTitle className="text-sm font-medium text-muted-foreground">
-										Budget Variance
-									</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div
-										className={`font-mono-industrial text-2xl font-bold ${
-											costSummary.variance > 0 ? "text-destructive" : "text-primary"
-										}`}
-									>
-										{costSummary.variance > 0 ? "+" : ""}
-										{costSummary.variance.toFixed(2)}
-									</div>
-									<p className="text-sm text-muted-foreground mt-1">
-										{costSummary.variancePercent}% vs budget
-									</p>
-								</CardBody>
-							</Card>
-						</div>
-
-							{/* Cost Trend Charts */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 								<LineChart
 									title="Labor Cost Trends (Cost per Unit)"
 									data={laborCostTrends}
-									height={300}
+									height={320}
 								/>
 								<BarChart
 									title="Shift Productivity vs Cost"
 									data={shiftProductivity}
-									height={300}
+									height={320}
 								/>
 							</div>
 
-							{/* Cost Breakdown */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-								<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
-								<Card>
-									<CardHeader>
-										<CardTitle>Cost Efficiency Metrics</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="space-y-4">
-											<div className="flex justify-between items-center">
-												<span className="text-sm text-muted-foreground">Current Cost/Unit:</span>
-												<span className="font-mono-industrial font-bold">
-													${benchmarkData.costPerUnit.current.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm text-muted-foreground">Target Cost/Unit:</span>
-												<span className="font-mono-industrial font-bold text-primary">
-													${benchmarkData.costPerUnit.target.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm text-muted-foreground">Industry Average:</span>
-												<span className="font-mono-industrial font-bold text-secondary">
-													${benchmarkData.costPerUnit.industryAvg.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center">
-												<span className="text-sm text-muted-foreground">Best in Class:</span>
-												<span className="font-mono-industrial font-bold text-accent">
-													${benchmarkData.costPerUnit.bottom10Percent.toFixed(2)}
-												</span>
-											</div>
-											<div className="pt-2 border-t">
-												<div className="flex justify-between items-center">
-													<span className="text-sm font-medium">Efficiency Rating:</span>
-													<span
-														className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
-															benchmarkData.costPerUnit.current <=
-															benchmarkData.costPerUnit.bottom10Percent
-																? "bg-primary/20 text-primary border border-primary"
-																: benchmarkData.costPerUnit.current <=
-																	  benchmarkData.costPerUnit.target
-																	? "bg-secondary/20 text-secondary border border-secondary"
-																	: "bg-destructive/20 text-destructive border border-destructive"
-														}`}
-													>
-														{benchmarkData.costPerUnit.current <=
-														benchmarkData.costPerUnit.bottom10Percent
-															? "Top 10%"
-															: benchmarkData.costPerUnit.current <=
-																  benchmarkData.costPerUnit.target
-																? "On Target"
-																: "Over Budget"}
-													</span>
-												</div>
-											</div>
-										</div>
-									</CardBody>
-								</Card>
-							</div>
-
-							{/* Cost Analysis Table */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Cost Analysis by Station</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="overflow-x-auto">
-										<table className="min-w-full">
-											<thead>
-												<tr className="border-b border-border">
-													<th className="text-left py-3 px-4">Station</th>
-													<th className="text-right py-3 px-4">Regular Hours</th>
-													<th className="text-right py-3 px-4">Overtime Hours</th>
-													<th className="text-right py-3 px-4">Total Hours</th>
-													<th className="text-right py-3 px-4">Total Cost</th>
-													<th className="text-right py-3 px-4">Cost/Hour</th>
-													<th className="text-right py-3 px-4">Cost/Unit</th>
-													<th className="text-left py-3 px-4">Status</th>
-												</tr>
-								</thead>
-								<tbody>
-									{stationSnapshots.map((station: AnalyticsStationOverview) => {
-													const regularHours = 156.8;
-													const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
-													const totalHours = regularHours + overtimeHours;
-													const totalCost = totalHours * 18.55;
-													const costPerUnit = totalCost / ((station.efficiency * totalHours) / 8); // Rough estimate
-
-													return (
-														<tr key={station.name} className="border-b border-border">
-															<td className="py-3 px-4 font-medium">{station.name}</td>
-															<td className="text-right py-3 px-4">{regularHours.toFixed(1)}</td>
-															<td className="text-right py-3 px-4 text-orange-600 font-medium">
-																{overtimeHours.toFixed(1)}
-															</td>
-															<td className="text-right py-3 px-4">{totalHours.toFixed(1)}</td>
-															<td className="text-right py-3 px-4">${totalCost.toFixed(2)}</td>
-															<td className="text-right py-3 px-4">$18.55</td>
-															<td className="text-right py-3 px-4">${costPerUnit.toFixed(2)}</td>
-															<td className="py-3 px-4">
-																{overtimeHours > 20 ? (
-																	<span className="px-2 py-1 text-xs font-industrial font-medium bg-destructive/20 text-destructive border border-destructive uppercase">
-																		High OT
-																	</span>
-																) : costPerUnit > benchmarkData.costPerUnit.target ? (
-																	<span className="px-2 py-1 text-xs font-industrial font-medium bg-orange-500/20 text-orange-600 border border-orange-500 uppercase">
-																		Over Target
-																	</span>
-																) : (
-																	<span className="px-2 py-1 text-xs font-industrial font-medium bg-primary/20 text-primary border border-primary uppercase">
-																		On Target
-																	</span>
-																)}
-															</td>
-														</tr>
-													);
-												})}
-												<tr className="font-bold border-t-2 border-border">
-													<td className="py-3 px-4">Total</td>
-													<td className="text-right py-3 px-4">840.0</td>
-													<td className="text-right py-3 px-4 text-orange-600">95.0</td>
-													<td className="text-right py-3 px-4">935.0</td>
-													<td className="text-right py-3 px-4">$18,975.75</td>
-													<td className="text-right py-3 px-4">$20.30</td>
-													<td className="text-right py-3 px-4">
-														${benchmarkData.costPerUnit.current.toFixed(2)}
-													</td>
-													<td className="py-3 px-4">
-														<span className="px-2 py-1 text-xs font-industrial font-medium bg-secondary/20 text-secondary border border-secondary uppercase">
-															{trendData.costs.changePercent > 0 ? "+" : ""}
-															{trendData.costs.changePercent}%
-														</span>
-													</td>
-												</tr>
-											</tbody>
-										</table>
-									</div>
-								</CardBody>
-							</Card>
-
-							{/* Cost Optimization Insights */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Cost Optimization Opportunities</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div className="panel-shadow border-2 border-destructive bg-destructive/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-destructive mb-2">
-												Overtime Reduction
-											</h4>
-											<p className="text-sm text-foreground">
-												FILLING station has 25.5 overtime hours this period. Consider additional
-												staffing or workload balancing.
-											</p>
-											<div className="mt-2 text-xs text-muted-foreground">
-												Potential savings: $1,250/week
-											</div>
-										</div>
-										<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-primary mb-2">
-												Efficiency Gains
-											</h4>
-											<p className="text-sm text-foreground">
-												{trendData.costs.trend === "down"
-													? "Cost per unit trending down"
-													: "Cost per unit stable"}{" "}
-												at ${benchmarkData.costPerUnit.current.toFixed(2)}. Maintain current
-												efficiency initiatives.
-											</p>
-											<div className="mt-2 text-xs text-muted-foreground">
-												{trendData.costs.changePercent > 0 ? "Increase" : "Decrease"} of{" "}
-												{Math.abs(trendData.costs.changePercent)}% vs last period
-											</div>
-										</div>
-										<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
-												Budget Forecast
-											</h4>
-											<p className="text-sm text-foreground">
-												Projected cost per unit: ${trendData.costs.forecast.toFixed(2)} by end of{" "}
-												{range}.
-												{capacityData.overall.costImpact > 0
-													? `Staffing shortage adding $${capacityData.overall.costImpact.toFixed(2)}/week.`
-													: "No additional staffing costs projected."}
-											</p>
-											<div className="mt-2 text-xs text-muted-foreground">
-												Confidence: {trendData.costs.confidence}%
-											</div>
-										</div>
-									</div>
-								</CardBody>
-							</Card>
-						</div>
-					)}
-
-					{section === "trends" && (
-						<div className="space-y-6">
-							{/* Trend Overview Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card
-									className={`border-2 ${
-										trendData.productivity.trend === "up"
-											? "border-primary bg-primary/10"
-											: trendData.productivity.trend === "down"
-												? "border-destructive bg-destructive/10"
-												: "border-secondary bg-secondary/10"
-									}`}
-								>
-									<CardHeader>
-										<CardTitle
-											className={
-												trendData.productivity.trend === "up"
-													? "text-primary"
-													: trendData.productivity.trend === "down"
-														? "text-destructive"
-														: "text-secondary"
-											}
-										>
-											Productivity
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div
-											className={`font-mono-industrial text-2xl font-bold ${
-												trendData.productivity.trend === "up"
-													? "text-primary"
-													: trendData.productivity.trend === "down"
-														? "text-destructive"
-														: "text-secondary"
-											}`}
-										>
-											{trendData.productivity.changePercent > 0 ? "+" : ""}
-											{trendData.productivity.changePercent}%
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											{trendData.productivity.trend === "up"
-												? "Improving"
-												: trendData.productivity.trend === "down"
-													? "Declining"
-													: "Stable"}
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card
-									className={`border-2 ${
-										trendData.costs.trend === "down"
-											? "border-primary bg-primary/10"
-											: trendData.costs.trend === "up"
-												? "border-destructive bg-destructive/10"
-												: "border-secondary bg-secondary/10"
-									}`}
-								>
-									<CardHeader>
-										<CardTitle
-											className={
-												trendData.costs.trend === "down"
-													? "text-primary"
-													: trendData.costs.trend === "up"
-														? "text-destructive"
-														: "text-secondary"
-											}
-										>
-											Costs
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div
-											className={`font-mono-industrial text-2xl font-bold ${
-												trendData.costs.trend === "down"
-													? "text-primary"
-													: trendData.costs.trend === "up"
-														? "text-destructive"
-														: "text-secondary"
-											}`}
-										>
-											{trendData.costs.changePercent > 0 ? "+" : ""}
-											{trendData.costs.changePercent}%
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											{trendData.costs.trend === "down"
-												? "Decreasing"
-												: trendData.costs.trend === "up"
-													? "Increasing"
-													: "Stable"}
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card
-									className={`border-2 ${
-										trendData.quality.trend === "up"
-											? "border-primary bg-primary/10"
-											: trendData.quality.trend === "down"
-												? "border-destructive bg-destructive/10"
-												: "border-secondary bg-secondary/10"
-									}`}
-								>
-									<CardHeader>
-										<CardTitle
-											className={
-												trendData.quality.trend === "up"
-													? "text-primary"
-													: trendData.quality.trend === "down"
-														? "text-destructive"
-														: "text-secondary"
-											}
-										>
-											Quality
-										</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div
-											className={`font-mono-industrial text-2xl font-bold ${
-												trendData.quality.trend === "up"
-													? "text-primary"
-													: trendData.quality.trend === "down"
-														? "text-destructive"
-														: "text-secondary"
-											}`}
-										>
-											{trendData.quality.changePercent > 0 ? "+" : ""}
-											{trendData.quality.changePercent}%
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											{trendData.quality.trend === "up"
-												? "Improving"
-												: trendData.quality.trend === "down"
-													? "Declining"
-													: "Stable"}
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-accent bg-accent/10">
-									<CardHeader>
-										<CardTitle className="text-accent">Anomalies</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-accent">
-											{anomalyData.length}
-										</div>
-										<p className="text-sm text-foreground mt-1">Detected this period</p>
-									</CardBody>
-								</Card>
-							</div>
-
-							{/* Trend Charts */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-								<LineChart
-									title="Productivity Trends Over Time"
-									data={productivityTrends}
-									height={350}
-								/>
-								<LineChart
-									title="Labor Cost Trends (Cost per Unit)"
-									data={laborCostTrends}
-									height={350}
-								/>
-							</div>
-
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-								<BarChart
-									title="Shift Productivity Comparison"
-									data={shiftProductivity}
-									height={300}
-								/>
-								<BarChart
-									title="Task Type Efficiency Trends"
-									data={taskTypeEfficiency}
-									height={300}
-								/>
-							</div>
-
-							{/* Anomalies Table */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Detected Anomalies</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="overflow-x-auto">
-										<table className="min-w-full">
-											<thead>
-												<tr className="border-b border-border">
-													<th className="text-left py-3 px-4">Type</th>
-													<th className="text-left py-3 px-4">Description</th>
-													<th className="text-right py-3 px-4">Impact</th>
-													<th className="text-left py-3 px-4">Status</th>
-													<th className="text-left py-3 px-4">Action</th>
-												</tr>
-											</thead>
-											<tbody>
-												{anomalyData.map((anomaly: Anomaly, index: number) => (
-													<tr key={index} className="border-b border-border">
-														<td className="py-3 px-4">
-															<span
-																className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
-																	anomaly.severity === "high"
-																		? "bg-destructive/20 text-destructive border border-destructive"
-																		: anomaly.severity === "medium"
-																			? "bg-orange-500/20 text-orange-600 border border-orange-500"
-																			: "bg-secondary/20 text-secondary border border-secondary"
-																}`}
-															>
-																{anomaly.type}
-															</span>
-														</td>
-														<td className="py-3 px-4 text-sm">{anomaly.description}</td>
-														<td className="text-right py-3 px-4">{anomaly.impact}</td>
-														<td className="py-3 px-4">
-															<span className="text-sm text-muted-foreground">
-																{anomaly.status}
-															</span>
-														</td>
-														<td className="py-3 px-4">
-															<Button variant="ghost" size="sm">
-																Investigate
-															</Button>
-														</td>
+							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+								<div className="lg:col-span-1">
+									<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
+								</div>
+								<div className="lg:col-span-2">
+									<Card className="h-full flex flex-col">
+										<CardHeader className="bg-muted/30 border-b border-border/50 py-3">
+											<CardTitle className="uppercase tracking-widest font-industrial text-sm text-muted-foreground">
+												Cost Analysis by Station
+											</CardTitle>
+										</CardHeader>
+										<div className="overflow-x-auto flex-1">
+											<table className="w-full">
+												<thead>
+													<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
+														<th className="text-left py-2 px-4">Station</th>
+														<th className="text-right py-2 px-4">Total Hours</th>
+														<th className="text-right py-2 px-4">OT Hours</th>
+														<th className="text-right py-2 px-4">Cost/Unit</th>
+														<th className="text-left py-2 px-4">Status</th>
 													</tr>
-												))}
-											</tbody>
-										</table>
-									</div>
-								</CardBody>
-							</Card>
+												</thead>
+												<tbody className="divide-y divide-border/30">
+													{stationSnapshots.map((station) => {
+														const regularHours = 156.8;
+														const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
+														const totalHours = regularHours + overtimeHours;
+														const totalCost = totalHours * 18.55;
+														const costPerUnit =
+															totalCost / ((station.efficiency * totalHours) / 8);
 
-							{/* Insights */}
-							<Card>
-								<CardHeader>
-									<CardTitle>AI Insights</CardTitle>
+														return (
+															<tr
+																key={station.name}
+																className="text-xs font-mono hover:bg-muted/20 transition-colors"
+															>
+																<td className="py-2 px-4 font-medium">{station.name}</td>
+																<td className="text-right py-2 px-4 text-muted-foreground">
+																	{totalHours.toFixed(1)}
+																</td>
+																<td
+																	className={`text-right py-2 px-4 ${overtimeHours > 20 ? "text-destructive font-bold" : "text-muted-foreground"}`}
+																>
+																	{overtimeHours.toFixed(1)}
+																</td>
+																<td className="text-right py-2 px-4 font-bold">
+																	${costPerUnit.toFixed(2)}
+																</td>
+																<td className="py-2 px-4">
+																	{costPerUnit > benchmarkData.costPerUnit.target ? (
+																		<span className="text-destructive font-bold">OVER</span>
+																	) : (
+																		<span className="text-primary">OK</span>
+																	)}
+																</td>
+															</tr>
+														);
+													})}
+												</tbody>
+											</table>
+										</div>
+									</Card>
+								</div>
+							</div>
+						</div>
+					)}
+
+					{/* ── Trends Section ────────────────────────────────────────────── */}
+					{section === "trends" && (
+						<div className="space-y-6 animate-fade-in-up">
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<Metric
+									label="Productivity Trend"
+									value={`${trendData.productivity.changePercent > 0 ? "+" : ""}${trendData.productivity.changePercent}%`}
+									trendDirection={trendData.productivity.trend as any}
+									className="bg-card border border-border rounded-lg p-6"
+								/>
+								<Metric
+									label="Cost Trend"
+									value={`${trendData.costs.changePercent > 0 ? "+" : ""}${trendData.costs.changePercent}%`}
+									trendDirection={trendData.costs.trend as any}
+									className="bg-card border border-border rounded-lg p-6"
+								/>
+								<Metric
+									label="Quality Trend"
+									value={`${trendData.quality.changePercent > 0 ? "+" : ""}${trendData.quality.changePercent}%`}
+									trendDirection={trendData.quality.trend as any}
+									className="bg-card border border-border rounded-lg p-6"
+								/>
+							</div>
+
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<LineChart
+									title="Productivity Momentum"
+									data={productivityTrends}
+									height={320}
+								/>
+								<LineChart title="Cost Efficiency" data={laborCostTrends} height={320} />
+							</div>
+
+							<Card className="overflow-hidden">
+								<CardHeader className="bg-muted/30 border-b border-border/50 py-3">
+									<CardTitle className="uppercase tracking-widest font-industrial text-sm text-muted-foreground">
+										Detected Anomalies & Alerts
+									</CardTitle>
 								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-primary mb-2">
-												Pattern Detected
-											</h4>
-											<p className="text-sm text-foreground">
-												Productivity consistently drops 15% during shift handovers. Implementing
-												overlap periods could recover {trendData.seasonal.seasonalFactor * 10}%
-												efficiency.
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
-												Opportunities
-											</h4>
-						<p className="text-sm text-foreground">
-							{
-								stationSnapshots.filter(
-									(s: AnalyticsStationOverview) =>
-										s.efficiency < benchmarkData.productivity.industryAvg
-								).length
-							}{" "}
-												stations below industry average. Focus improvement efforts on RECEIVING
-												station (45% below target).
-											</p>
-											<div className="mt-2 text-xs text-muted-foreground">
-												Potential: 15-25% productivity improvement
-											</div>
-										</div>
-										<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-secondary mb-2">
-												Industry Position
-											</h4>
-											<p className="text-sm text-foreground">
-												Current performance places you in the{" "}
-												{benchmarkData.productivity.current >=
-												benchmarkData.productivity.industryAvg
-													? "upper"
-													: "middle"}{" "}
-												quartile of industry peers.
-												{benchmarkData.productivity.current >= benchmarkData.productivity.target
-													? " On track"
-													: " Room for improvement"}{" "}
-												to reach target metrics.
-											</p>
-											<div className="mt-2 text-xs text-muted-foreground">
-												Next milestone: {benchmarkData.productivity.target} u/h target
-											</div>
-										</div>
-									</div>
-								</CardBody>
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
+												<th className="text-left py-3 px-4">Severity</th>
+												<th className="text-left py-3 px-4">Type</th>
+												<th className="text-left py-3 px-4">Description</th>
+												<th className="text-right py-3 px-4">Impact</th>
+												<th className="text-right py-3 px-4">Action</th>
+											</tr>
+										</thead>
+										<tbody className="divide-y divide-border/30">
+											{anomalyData.map((anomaly, index) => (
+												<tr key={index} className="text-xs font-mono hover:bg-muted/20">
+													<td className="py-2.5 px-4">
+														<Badge
+															variant={
+																anomaly.severity === "high"
+																	? "destructive"
+																	: anomaly.severity === "medium"
+																		? "secondary" // Was warning, mapped to secondary
+																		: "secondary"
+															}
+															className={`uppercase text-[10px] h-5 ${
+																anomaly.severity === "medium"
+																	? "bg-warning/20 text-warning border-warning"
+																	: ""
+															}`}
+														>
+															{anomaly.severity}
+														</Badge>
+													</td>
+													<td className="py-2.5 px-4 uppercase text-muted-foreground">
+														{anomaly.type}
+													</td>
+													<td className="py-2.5 px-4 font-medium">{anomaly.description}</td>
+													<td className="text-right py-2.5 px-4">{anomaly.impact}</td>
+													<td className="text-right py-2.5 px-4">
+														<Button variant="ghost" size="sm" className="h-6 text-[10px]">
+															INVESTIGATE
+														</Button>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
 							</Card>
 						</div>
 					)}
 
+					{/* ── Capacity Section ──────────────────────────────────────────── */}
 					{section === "capacity" && (
-						<div className="space-y-6">
-							{/* Capacity Overview Cards */}
+						<div className="space-y-6 animate-fade-in-up">
 							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card className="border-2 border-primary bg-primary/10">
-									<CardHeader>
-										<CardTitle className="text-primary">Overall Utilization</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-primary">
-											{capacityData.overall.currentUtilization}%
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											Target: {capacityData.overall.optimalUtilization}%
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-secondary bg-secondary/10">
-									<CardHeader>
-										<CardTitle className="text-secondary">Staff Shortage</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-secondary">
-											{capacityData.overall.staffShortage}
-										</div>
-										<p className="text-sm text-foreground mt-1">Positions needed</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-accent bg-accent/10">
-									<CardHeader>
-										<CardTitle className="text-accent">Cost Impact</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-accent">
-											${capacityData.overall.costImpact.toFixed(0)}
-										</div>
-										<p className="text-sm text-foreground mt-1">Weekly cost</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-destructive bg-destructive/10">
-									<CardHeader>
-										<CardTitle className="text-destructive">Bottleneck Alert</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-destructive">
-											{capacityData.stations.filter((s) => s.utilization < 60).length}
-										</div>
-										<p className="text-sm text-foreground mt-1">Stations underutilized</p>
-									</CardBody>
-								</Card>
+								<KPICard
+									title="Overall Utilization"
+									value={`${capacityData.overall.currentUtilization}%`}
+									subtitle={`Target: ${capacityData.overall.optimalUtilization}%`}
+									icon="industry"
+								/>
+								<KPICard
+									title="Staff Shortage"
+									value={capacityData.overall.staffShortage}
+									subtitle="Positions Needed"
+									icon="users"
+									trend={{
+										direction: "down",
+										value: "Critical",
+										label: "Impact High",
+									}}
+								/>
+								<KPICard
+									title="Cost Impact"
+									value={`$${capacityData.overall.costImpact.toLocaleString()}`}
+									subtitle="Weekly Opportunity"
+									icon="dollar"
+								/>
+								<KPICard
+									title="Bottlenecks"
+									value={capacityData.stations.filter((s) => s.utilization < 60).length}
+									subtitle="Stations Underutilized"
+									icon="chart"
+								/>
 							</div>
 
-							{/* Station Capacity Grid */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Station Capacity & Staffing</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{capacityData.stations.map((station) => (
-											<div key={station.name} className="border rounded-lg p-4">
-												<div className="flex justify-between items-center mb-3">
-													<h4 className="font-industrial font-medium">{station.name}</h4>
+							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+								<div className="lg:col-span-2">
+									<WarehouseFloor data={liveFloorData} metric="occupancy" />
+								</div>
+								<div className="lg:col-span-1 space-y-4">
+									{capacityData.stations.slice(0, 3).map((station) => (
+										<Card key={station.name} className="overflow-hidden">
+											<CardHeader className="bg-muted/30 border-b border-border/50 py-2">
+												<div className="flex justify-between items-center">
+													<CardTitle className="text-xs font-industrial uppercase tracking-widest">
+														{station.name}
+													</CardTitle>
 													<span
-														className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
-															station.utilization >= 80
-																? "bg-destructive/20 text-destructive border border-destructive"
-																: station.utilization >= 60
-																	? "bg-primary/20 text-primary border border-primary"
-																	: "bg-secondary/20 text-secondary border border-secondary"
+														className={`text-[10px] font-bold font-mono ${
+															station.utilization > 90
+																? "text-destructive"
+																: station.utilization > 70
+																	? "text-primary"
+																	: "text-muted-foreground"
 														}`}
 													>
-														{station.utilization}% utilized
+														{station.utilization}% UTIL
 													</span>
 												</div>
-
-												<div className="space-y-2">
-													<div className="flex justify-between text-sm">
-														<span className="text-muted-foreground">Current Staff:</span>
-														<span className="font-medium">{station.currentStaff}</span>
-													</div>
-													<div className="flex justify-between text-sm">
-														<span className="text-muted-foreground">Required Staff:</span>
-														<span className="font-medium">{station.requiredStaff}</span>
-													</div>
-													<div className="flex justify-between text-sm">
-														<span className="text-muted-foreground">Recommended:</span>
-														<span className="font-medium">{station.recommendedStaff}</span>
-													</div>
-													<div className="flex justify-between text-sm">
-														<span className="text-muted-foreground">Max Capacity:</span>
-														<span className="font-medium">{station.maxCapacity}</span>
-													</div>
+											</CardHeader>
+											<CardBody className="p-3 space-y-2">
+												<div className="flex justify-between text-xs font-mono">
+													<span className="text-muted-foreground">Staffing:</span>
+													<span>
+														{station.currentStaff} / {station.requiredStaff}
+													</span>
 												</div>
-
-												<div className="mt-3">
-													<div className="w-full bg-muted h-2 rounded">
-														<div
-															className={`h-2 rounded ${
-																station.utilization >= 90
-																	? "bg-destructive"
-																	: station.utilization >= 70
-																		? "bg-primary"
-																		: "bg-secondary"
-															}`}
-															style={{ width: `${Math.min(station.utilization, 100)}%` }}
-														></div>
-													</div>
-													<div className="text-xs text-muted-foreground mt-1">
-														{station.utilization < 60
-															? "Underutilized - Consider reducing staff"
-															: station.utilization > 90
-																? "Overloaded - Needs more staff"
-																: "Optimal utilization"}
-													</div>
+												<div className="flex justify-between text-xs font-mono">
+													<span className="text-muted-foreground">Rec:</span>
+													<span className="font-bold text-primary">
+														{station.recommendedStaff} (+
+														{station.recommendedStaff - station.currentStaff})
+													</span>
 												</div>
-											</div>
-										))}
-									</div>
-								</CardBody>
-							</Card>
-
-							{/* Capacity Optimization Insights */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Capacity Optimization Recommendations</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-primary mb-2">
-												Staffing Adjustments
-											</h4>
-											<p className="text-sm text-foreground">
-												{
-													capacityData.stations.filter((s) => s.currentStaff !== s.recommendedStaff)
-														.length
-												}{" "}
-												stations need staffing adjustments. Consider cross-training to balance
-												workload.
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-secondary mb-2">
-												Capacity Planning
-											</h4>
-											<p className="text-sm text-foreground">
-												Overall utilization at {capacityData.overall.currentUtilization}%. Target
-												utilization of {capacityData.overall.optimalUtilization}% would increase
-												throughput by ~15%.
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
-												Cost Optimization
-											</h4>
-											<p className="text-sm text-foreground">
-												Addressing staff shortages could reduce weekly costs by $
-												{capacityData.overall.costImpact.toFixed(0)} through better utilization and
-												reduced overtime.
-											</p>
-										</div>
-									</div>
-								</CardBody>
-							</Card>
-							<Card>
-								<CardHeader>
-									<CardTitle>Live Floor Snapshot</CardTitle>
-								</CardHeader>
-								<CardBody>
-									{liveFloorZones.length > 0 ? (
-										<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-											{liveFloorZones.map((zone) => {
-												const updatedLabel = zone.updatedAt
-													? new Date(zone.updatedAt).toLocaleTimeString([], {
-														hour: "2-digit",
-														minute: "2-digit",
-													})
-													: "—";
-												return (
-													<div key={zone.id} className="border rounded-lg p-4 bg-muted/50">
-														<div className="flex items-center justify-between text-sm font-semibold">
-															<span>{zone.name}</span>
-															<span className="text-xs text-muted-foreground">{updatedLabel}</span>
-														</div>
-														<div className="mt-3 text-sm text-foreground">
-															Occupancy: {zone.occupancy}% · Efficiency: {zone.efficiency}%
-														</div>
-														<div className="text-xs text-muted-foreground mt-1">
-															Throughput: {zone.throughputPerHour} u/h
-														</div>
-													</div>
-												);
-											})}
-										</div>
-									) : (
-										<p className="text-sm text-muted-foreground">
-											Live warehouse telemetry is not available yet.
-										</p>
-									)}
-									<div className="mt-4">
-										<WarehouseFloor data={liveFloorData} metric="occupancy" />
-									</div>
-								</CardBody>
-							</Card>
+												<div className="w-full bg-muted/50 h-1.5 rounded-full overflow-hidden mt-1">
+													<div
+														className="h-full bg-primary"
+														style={{ width: `${station.utilization}%` }}
+													/>
+												</div>
+											</CardBody>
+										</Card>
+									))}
+								</div>
+							</div>
 						</div>
 					)}
 
+					{/* ── Benchmarks Section ────────────────────────────────────────── */}
 					{section === "benchmarks" && (
-						<div className="space-y-6">
-							{/* Benchmark Overview Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card className="border-2 border-primary bg-primary/10">
-									<CardHeader>
-										<CardTitle className="text-primary">Productivity Score</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-primary">
-											{benchmarkData.productivity.current}
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											Target: {benchmarkData.productivity.target} u/h
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-secondary bg-secondary/10">
-									<CardHeader>
-										<CardTitle className="text-secondary">Industry Position</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-secondary">
-											{benchmarkData.productivity.current >= benchmarkData.productivity.industryAvg
-												? "Above"
-												: "Below"}
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											Industry average: {benchmarkData.productivity.industryAvg} u/h
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-accent bg-accent/10">
-									<CardHeader>
-										<CardTitle className="text-accent">Quality Rate</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-accent">
-											{benchmarkData.quality.current}%
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											Target: {benchmarkData.quality.target}%
-										</p>
-									</CardBody>
-								</Card>
-
-								<Card className="border-2 border-destructive bg-destructive/10">
-									<CardHeader>
-										<CardTitle className="text-destructive">Cost Efficiency</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="font-mono-industrial text-2xl font-bold text-destructive">
-											${benchmarkData.costPerUnit.current.toFixed(2)}
-										</div>
-										<p className="text-sm text-foreground mt-1">
-											Target: ${benchmarkData.costPerUnit.target.toFixed(2)}
-										</p>
-									</CardBody>
-								</Card>
-							</div>
-
-							{/* Benchmark Comparison Tables */}
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-								<Card>
-									<CardHeader>
-										<CardTitle>Productivity Benchmarks</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="space-y-4">
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="font-medium">Current Performance</span>
-												<span className="font-mono-industrial font-bold">
-													{benchmarkData.productivity.current} u/h
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Internal Target</span>
-												<span className="font-mono-industrial">
-													{benchmarkData.productivity.target} u/h
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Industry Average</span>
-												<span className="font-mono-industrial">
-													{benchmarkData.productivity.industryAvg} u/h
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Top 10% Performers</span>
-												<span className="font-mono-industrial">
-													{benchmarkData.productivity.top10Percent} u/h
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2">
-												<span className="font-medium">Performance Rating</span>
-												<span
-													className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
-														benchmarkData.productivity.current >=
-														benchmarkData.productivity.top10Percent
-															? "bg-primary/20 text-primary border border-primary"
-															: benchmarkData.productivity.current >=
-																  benchmarkData.productivity.target
-																? "bg-secondary/20 text-secondary border border-secondary"
-																: "bg-destructive/20 text-destructive border border-destructive"
-													}`}
-												>
-													{benchmarkData.productivity.current >=
-													benchmarkData.productivity.top10Percent
-														? "Top 10%"
-														: benchmarkData.productivity.current >=
-															  benchmarkData.productivity.target
-															? "On Target"
-															: "Below Target"}
-												</span>
-											</div>
-										</div>
-									</CardBody>
-								</Card>
-
-								<Card>
-									<CardHeader>
-										<CardTitle>Cost Efficiency Benchmarks</CardTitle>
-									</CardHeader>
-									<CardBody>
-										<div className="space-y-4">
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="font-medium">Current Cost/Unit</span>
-												<span className="font-mono-industrial font-bold">
-													${benchmarkData.costPerUnit.current.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Internal Target</span>
-												<span className="font-mono-industrial">
-													${benchmarkData.costPerUnit.target.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Industry Average</span>
-												<span className="font-mono-industrial">
-													${benchmarkData.costPerUnit.industryAvg.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2 border-b border-border">
-												<span className="text-muted-foreground">Best in Class (Top 10%)</span>
-												<span className="font-mono-industrial">
-													${benchmarkData.costPerUnit.bottom10Percent.toFixed(2)}
-												</span>
-											</div>
-											<div className="flex justify-between items-center py-2">
-												<span className="font-medium">Efficiency Rating</span>
-												<span
-													className={`px-2 py-1 text-xs font-industrial font-medium uppercase ${
-														benchmarkData.costPerUnit.current <=
-														benchmarkData.costPerUnit.bottom10Percent
-															? "bg-primary/20 text-primary border border-primary"
-															: benchmarkData.costPerUnit.current <=
-																  benchmarkData.costPerUnit.target
-																? "bg-secondary/20 text-secondary border border-secondary"
-																: "bg-destructive/20 text-destructive border border-destructive"
-													}`}
-												>
-													{benchmarkData.costPerUnit.current <=
-													benchmarkData.costPerUnit.bottom10Percent
-														? "Top 10%"
-														: benchmarkData.costPerUnit.current <= benchmarkData.costPerUnit.target
-															? "On Target"
-															: "Over Budget"}
-												</span>
-											</div>
-										</div>
-									</CardBody>
-								</Card>
-							</div>
-
-							{/* Quality Benchmarks */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Quality Benchmarks</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="space-y-4">
-										<div className="flex justify-between items-center py-2 border-b border-border">
-											<span className="font-medium">Current Quality Rate</span>
-											<span className="font-mono-industrial font-bold">
-												{benchmarkData.quality.current}%
-											</span>
-										</div>
-										<div className="flex justify-between items-center py-2 border-b border-border">
-											<span className="text-muted-foreground">Internal Target</span>
-											<span className="font-mono-industrial">{benchmarkData.quality.target}%</span>
-										</div>
-										<div className="flex justify-between items-center py-2 border-b border-border">
-											<span className="text-muted-foreground">Industry Average</span>
-											<span className="font-mono-industrial">
-												{benchmarkData.quality.industryAvg}%
-											</span>
-										</div>
-										<div className="flex justify-between items-center py-2">
-											<span className="text-muted-foreground">Top 10% Performers</span>
-											<span className="font-mono-industrial">
-												{benchmarkData.quality.top10Percent}%
-											</span>
-										</div>
-									</div>
-								</CardBody>
-							</Card>
-
-							{/* Benchmark Insights */}
-							<Card>
-								<CardHeader>
-									<CardTitle>Performance Insights & Recommendations</CardTitle>
-								</CardHeader>
-								<CardBody>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div className="panel-shadow border-2 border-primary bg-primary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-primary mb-2">
-												Productivity Gap
-											</h4>
-											<p className="text-sm text-foreground">
-												Current productivity is{" "}
-												{(
-													(benchmarkData.productivity.current / benchmarkData.productivity.target) *
-													100
-												).toFixed(1)}
-												% of target. Focus on training and process optimization to close the{" "}
-												{(
-													((benchmarkData.productivity.target -
-														benchmarkData.productivity.current) /
-														benchmarkData.productivity.current) *
-													100
-												).toFixed(1)}
-												% gap.
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-secondary bg-secondary/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-secondary mb-2">
-												Cost Optimization
-											</h4>
-											<p className="text-sm text-foreground">
-												Cost per unit is{" "}
-												{benchmarkData.costPerUnit.current > benchmarkData.costPerUnit.target
-													? "above"
-													: "below"}{" "}
-												target by $
-												{Math.abs(
-													benchmarkData.costPerUnit.current - benchmarkData.costPerUnit.target
-												).toFixed(2)}
-												.
-												{benchmarkData.costPerUnit.current > benchmarkData.costPerUnit.target
-													? "Implement efficiency measures to reduce costs."
-													: "Excellent cost control - maintain current practices."}
-											</p>
-										</div>
-										<div className="panel-shadow border-2 border-accent bg-accent/10 p-4">
-											<h4 className="font-industrial font-medium uppercase text-accent mb-2">
-												Industry Position
-											</h4>
-											<p className="text-sm text-foreground">
-												Performance places you in the{" "}
-												{benchmarkData.productivity.current >=
-												benchmarkData.productivity.industryAvg
-													? "upper"
-													: "middle"}{" "}
-												quartile of industry peers. Quality rates exceed industry average by{" "}
-												{(
-													benchmarkData.quality.current - benchmarkData.quality.industryAvg
-												).toFixed(1)}
-												%.
-											</p>
-										</div>
-									</div>
+						<div className="space-y-6 animate-fade-in-up">
+							<Card className="bg-muted/10 border-dashed border-2">
+								<CardBody className="p-8 text-center">
+									<LiaChartBarSolid className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+									<h3 className="font-industrial uppercase tracking-widest text-lg font-bold text-muted-foreground">
+										Industry Benchmarks
+									</h3>
+									<p className="text-sm text-muted-foreground max-w-md mx-auto mt-2 font-mono">
+										Advanced industry comparison data is currently being aggregated. Check back
+										for peer comparisons and sector analysis.
+									</p>
 								</CardBody>
 							</Card>
 						</div>

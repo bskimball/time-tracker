@@ -11,11 +11,11 @@ interface SectionTabsProps {
 
 export function SectionTabs({
 	sections = [
-		{ id: "productivity", label: "Productivity" },
-		{ id: "labor-cost", label: "Labor Costs" },
-		{ id: "trends", label: "Trends" },
-		{ id: "capacity", label: "Capacity" },
-		{ id: "benchmarks", label: "Benchmarks" },
+		{ id: "productivity", label: "PRODUCTIVITY" },
+		{ id: "labor-cost", label: "LABOR COSTS" },
+		{ id: "trends", label: "TRENDS" },
+		{ id: "capacity", label: "CAPACITY" },
+		{ id: "benchmarks", label: "BENCHMARKS" },
 	],
 }: SectionTabsProps) {
 	const searchParams = useSearchParams()[0];
@@ -31,14 +31,14 @@ export function SectionTabs({
 	};
 
 	return (
-		<div className="mb-8">
+		<div className="mb-0">
 			<Tabs selectedKey={currentSection} onSelectionChange={handleSectionChange}>
-				<TabList className="inline-flex flex-wrap gap-2 border border-border p-1 rounded-[2px]">
+				<TabList className="inline-flex w-full sm:w-auto flex-wrap gap-1 rounded-[2px] border border-border bg-muted/20 p-1">
 					{sections.map(({ id, label }) => (
 						<Tab
 							id={id}
 							key={id}
-							className="h-9 px-4"
+							className="h-9 px-4 text-xs font-bold tracking-wide"
 						>
 							{label}
 						</Tab>
