@@ -1,6 +1,18 @@
 "use server";
 
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import {
+	format,
+	startOfWeek,
+	endOfWeek,
+	startOfMonth,
+	endOfMonth,
+	subDays,
+	subMonths,
+	subYears,
+	differenceInCalendarDays,
+	addDays,
+	isAfter,
+} from "date-fns";
 import { getPerformanceTrends, getStationPerformance, getLaborCostAnalysis } from "~/lib/analytics";
 import {
 	performanceCache,
@@ -11,6 +23,7 @@ import {
 import type { AnalyticsDashboardData, LiveFloorData } from "./types";
 
 type AnalyticsTimeRange = "today" | "week" | "month" | "quarter";
+export type ComparisonBasis = "previous-period" | "last-year" | "rolling-30d";
 
 function getDateRange(timeRange: AnalyticsTimeRange) {
 	const now = new Date();
@@ -20,15 +33,15 @@ function getDateRange(timeRange: AnalyticsTimeRange) {
 	switch (timeRange) {
 		case "week":
 			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
+			endDate = now;
 			break;
 		case "month":
 			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
+			endDate = now;
 			break;
 		case "quarter":
 			startDate = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 2, 1));
-			endDate = endOfMonth(now);
+			endDate = now;
 			break;
 		case "today":
 		default:
@@ -40,6 +53,179 @@ function getDateRange(timeRange: AnalyticsTimeRange) {
 	}
 
 	return { startDate, endDate };
+}
+
+function getComparisonDateRange(
+	timeRange: AnalyticsTimeRange,
+	basis: ComparisonBasis
+): {
+	currentStart: Date;
+	currentEnd: Date;
+	comparisonStart: Date;
+	comparisonEnd: Date;
+} {
+	const { startDate: currentStart, endDate: currentEnd } = getDateRange(timeRange);
+
+	if (basis === "rolling-30d") {
+		const rollingEnd = new Date();
+		const rollingStart = subDays(rollingEnd, 30);
+		return {
+			currentStart: rollingStart,
+			currentEnd: rollingEnd,
+			comparisonStart: subDays(rollingStart, 30),
+			comparisonEnd: rollingStart,
+		};
+	}
+
+	if (basis === "last-year") {
+		return {
+			currentStart,
+			currentEnd,
+			comparisonStart: subYears(currentStart, 1),
+			comparisonEnd: subYears(currentEnd, 1),
+		};
+	}
+
+	if (timeRange === "month") {
+		const lastMonthStart = startOfMonth(subMonths(currentStart, 1));
+		const lastMonthEnd = endOfMonth(lastMonthStart);
+		const elapsedDays = Math.max(0, differenceInCalendarDays(currentEnd, currentStart));
+		const sameDayLastMonth = addDays(lastMonthStart, elapsedDays);
+		return {
+			currentStart,
+			currentEnd,
+			comparisonStart: lastMonthStart,
+			comparisonEnd: isAfter(sameDayLastMonth, lastMonthEnd) ? lastMonthEnd : sameDayLastMonth,
+		};
+	}
+
+	const periodLength = Math.max(1, differenceInCalendarDays(currentEnd, currentStart) + 1);
+	const comparisonEnd = subDays(currentStart, 1);
+	const comparisonStart = subDays(comparisonEnd, periodLength - 1);
+
+	return {
+		currentStart,
+		currentEnd,
+		comparisonStart,
+		comparisonEnd,
+	};
+}
+
+function average(values: number[]) {
+	if (values.length === 0) return 0;
+	return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function changePercent(current: number, previous: number) {
+	if (previous === 0) return current === 0 ? 0 : 100;
+	return ((current - previous) / previous) * 100;
+}
+
+/**
+ * Period-over-period comparison data used by the executive analytics overview.
+ */
+export async function getComparativeAnalyticsData(
+	timeRange: AnalyticsTimeRange = "month",
+	basis: ComparisonBasis = "previous-period"
+) {
+	const { currentStart, currentEnd, comparisonStart, comparisonEnd } = getComparisonDateRange(
+		timeRange,
+		basis
+	);
+
+	const [currentProductivity, comparisonProductivity, currentCost, comparisonCost] =
+		await Promise.all([
+			getPerformanceTrends(currentStart, currentEnd, "productivity"),
+			getPerformanceTrends(comparisonStart, comparisonEnd, "productivity"),
+			getPerformanceTrends(currentStart, currentEnd, "cost"),
+			getPerformanceTrends(comparisonStart, comparisonEnd, "cost"),
+		]);
+
+	const currentProductivityValues = currentProductivity.map((point) => point.value);
+	const comparisonProductivityValues = comparisonProductivity.map((point) => point.value);
+	const currentCostValues = currentCost.map((point) => point.value);
+	const comparisonCostValues = comparisonCost.map((point) => point.value);
+
+	const currentProductivityAvg = average(currentProductivityValues);
+	const comparisonProductivityAvg = average(comparisonProductivityValues);
+	const currentCostAvg = average(currentCostValues);
+	const comparisonCostAvg = average(comparisonCostValues);
+
+	const currentDays = Math.max(currentProductivity.length, currentCost.length, 1);
+	const comparisonDays = Math.max(comparisonProductivity.length, comparisonCost.length, 1);
+
+	const labels = currentProductivity.map((point) => format(new Date(point.date), "MMM d"));
+	const alignedComparisonProductivity = labels.map(
+		(_, index) => comparisonProductivityValues[index] ?? 0
+	);
+	const alignedComparisonCost = labels.map((_, index) => comparisonCostValues[index] ?? 0);
+
+	return {
+		currentWindow: {
+			start: currentStart.toISOString(),
+			end: currentEnd.toISOString(),
+		},
+		comparisonWindow: {
+			start: comparisonStart.toISOString(),
+			end: comparisonEnd.toISOString(),
+		},
+		summary: {
+			productivity: {
+				current: Number(currentProductivityAvg.toFixed(2)),
+				comparison: Number(comparisonProductivityAvg.toFixed(2)),
+				changePercent: Number(
+					changePercent(currentProductivityAvg, comparisonProductivityAvg).toFixed(1)
+				),
+			},
+			costPerUnit: {
+				current: Number(currentCostAvg.toFixed(2)),
+				comparison: Number(comparisonCostAvg.toFixed(2)),
+				changePercent: Number(changePercent(currentCostAvg, comparisonCostAvg).toFixed(1)),
+			},
+			throughput: {
+				current: Number((currentProductivityAvg * currentDays).toFixed(1)),
+				comparison: Number((comparisonProductivityAvg * comparisonDays).toFixed(1)),
+				changePercent: Number(
+					changePercent(
+						currentProductivityAvg * currentDays,
+						comparisonProductivityAvg * comparisonDays
+					).toFixed(1)
+				),
+			},
+		},
+		charts: {
+			productivityComparison: {
+				labels,
+				datasets: [
+					{
+						label: "Current",
+						data: currentProductivityValues,
+						color: "#e07426",
+					},
+					{
+						label: "Comparison",
+						data: alignedComparisonProductivity,
+						color: "#64748b",
+					},
+				],
+			},
+			costComparison: {
+				labels,
+				datasets: [
+					{
+						label: "Current",
+						data: currentCostValues,
+						color: "#ef4444",
+					},
+					{
+						label: "Comparison",
+						data: alignedComparisonCost,
+						color: "#64748b",
+					},
+				],
+			},
+		},
+	};
 }
 
 /**
@@ -159,9 +345,7 @@ export async function getStationEfficiencyData(timeRange: AnalyticsTimeRange = "
 /**
  * Get employee productivity ranking data
  */
-export async function getEmployeeProductivityRanking(
-	timeRange: AnalyticsTimeRange = "week"
-) {
+export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRange = "week") {
 	void timeRange;
 
 	// This would be expanded to include actual employee data
@@ -373,9 +557,7 @@ export interface Anomaly {
 /**
  * Get anomaly detection data
  */
-export async function getAnomalyData(
-	_timeRange: AnalyticsTimeRange = "week"
-): Promise<Anomaly[]> {
+export async function getAnomalyData(_timeRange: AnalyticsTimeRange = "week"): Promise<Anomaly[]> {
 	// This would detect unusual patterns in performance data
 	return [
 		{
@@ -516,11 +698,46 @@ export async function fetchLiveFloorData(): Promise<LiveFloorData> {
 	const timestamp = new Date().toISOString();
 	return {
 		zones: [
-			{ id: "zone-picking", name: "Picking", occupancy: 82, efficiency: 74, throughputPerHour: 720, updatedAt: timestamp },
-			{ id: "zone-packing", name: "Packing", occupancy: 75, efficiency: 69, throughputPerHour: 610, updatedAt: timestamp },
-			{ id: "zone-filling", name: "Filling", occupancy: 91, efficiency: 58, throughputPerHour: 530, updatedAt: timestamp },
-			{ id: "zone-receiving", name: "Receiving", occupancy: 49, efficiency: 44, throughputPerHour: 310, updatedAt: timestamp },
-			{ id: "zone-shipping", name: "Shipping", occupancy: 38, efficiency: 63, throughputPerHour: 420, updatedAt: timestamp },
+			{
+				id: "zone-picking",
+				name: "Picking",
+				occupancy: 82,
+				efficiency: 74,
+				throughputPerHour: 720,
+				updatedAt: timestamp,
+			},
+			{
+				id: "zone-packing",
+				name: "Packing",
+				occupancy: 75,
+				efficiency: 69,
+				throughputPerHour: 610,
+				updatedAt: timestamp,
+			},
+			{
+				id: "zone-filling",
+				name: "Filling",
+				occupancy: 91,
+				efficiency: 58,
+				throughputPerHour: 530,
+				updatedAt: timestamp,
+			},
+			{
+				id: "zone-receiving",
+				name: "Receiving",
+				occupancy: 49,
+				efficiency: 44,
+				throughputPerHour: 310,
+				updatedAt: timestamp,
+			},
+			{
+				id: "zone-shipping",
+				name: "Shipping",
+				occupancy: 38,
+				efficiency: 63,
+				throughputPerHour: 420,
+				updatedAt: timestamp,
+			},
 		],
 	};
 }

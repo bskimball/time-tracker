@@ -1,50 +1,60 @@
 "use client";
 
 import { useSearchParams, useNavigate } from "react-router";
-import { Tabs, TabList, Tab } from "@monorepo/design-system";
+import { cn } from "~/lib/cn";
 
 type Section = "productivity" | "labor-cost" | "trends" | "capacity" | "benchmarks";
 
+
 interface SectionTabsProps {
 	sections?: Array<{ id: Section; label: string }>;
+	className?: string;
 }
 
 export function SectionTabs({
 	sections = [
-		{ id: "productivity", label: "PRODUCTIVITY" },
-		{ id: "labor-cost", label: "LABOR COSTS" },
-		{ id: "trends", label: "TRENDS" },
-		{ id: "capacity", label: "CAPACITY" },
-		{ id: "benchmarks", label: "BENCHMARKS" },
+		{ id: "productivity", label: "Productivity" },
+		{ id: "labor-cost", label: "Labor Costs" },
+		{ id: "trends", label: "Trends" },
+		{ id: "capacity", label: "Capacity" },
+		{ id: "benchmarks", label: "Benchmarks" },
 	],
+	className,
 }: SectionTabsProps) {
 	const searchParams = useSearchParams()[0];
 	const navigate = useNavigate();
 
 	const currentSection = (searchParams.get("section") as Section) || "productivity";
 
-	const handleSectionChange = (section: string | number) => {
+	const handleSectionChange = (section: string) => {
 		const newSearchParams = new URLSearchParams(searchParams);
-		newSearchParams.set("section", section.toString());
+		newSearchParams.set("section", section);
 		// Keep the current range if it exists
 		navigate(`?${newSearchParams.toString()}`, { replace: false });
 	};
 
 	return (
-		<div className="mb-0">
-			<Tabs selectedKey={currentSection} onSelectionChange={handleSectionChange}>
-				<TabList className="inline-flex w-full sm:w-auto flex-wrap gap-1 rounded-[2px] border border-border bg-muted/20 p-1">
-					{sections.map(({ id, label }) => (
-						<Tab
-							id={id}
+		<nav className={cn("w-full overflow-x-auto pb-1", className)} aria-label="Analytics Sections">
+			<div className="flex items-center gap-1 min-w-max border-b border-border/60">
+				{sections.map(({ id, label }) => {
+					const isActive = currentSection === id;
+					return (
+						<button
 							key={id}
-							className="h-9 px-4 text-xs font-bold tracking-wide"
+							onClick={() => handleSectionChange(id)}
+							className={cn(
+								"relative flex items-center px-4 h-9 text-xs font-industrial uppercase tracking-widest transition-colors duration-150 border-b-2",
+								isActive
+									? "text-foreground border-primary"
+									: "text-muted-foreground border-transparent hover:text-foreground"
+							)}
+							aria-current={isActive ? "page" : undefined}
 						>
-							{label}
-						</Tab>
-					))}
-				</TabList>
-			</Tabs>
-		</div>
+							<span className="font-bold">{label}</span>
+						</button>
+					);
+				})}
+			</div>
+		</nav>
 	);
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { startOfWeek, endOfWeek, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import {
 	getExecutiveKPIs,
 	getLaborCostAnalysis,
@@ -101,13 +101,30 @@ export async function getStationPerformanceData(
 }
 
 /**
- * Get performance trend data for charts
+ * Get performance trend data for charts.
+ * Uses the same calendar windows as the selected dashboard range.
  */
 export async function getPerformanceTrendData(
-	metric: "productivity" | "cost" | "occupancy" = "productivity"
+	metric: "productivity" | "cost" | "occupancy" = "productivity",
+	timeRange: "today" | "week" | "month" = "week"
 ) {
 	const now = new Date();
-	const startDate = subDays(now, 7); // Last 7 days
+	let startDate: Date;
+
+	switch (timeRange) {
+		case "today":
+			startDate = new Date(now);
+			startDate.setHours(0, 0, 0, 0);
+			break;
+		case "month":
+			startDate = startOfMonth(now);
+			break;
+		case "week":
+		default:
+			startDate = startOfWeek(now);
+			break;
+	}
+
 	const endDate = now;
 
 	const cacheKey = getPerformanceTrendsCacheKey(startDate, endDate, metric);

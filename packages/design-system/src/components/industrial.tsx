@@ -48,7 +48,7 @@ interface IndustrialPanelProps extends React.HTMLAttributes<HTMLDivElement> {
 export function IndustrialPanel({
 	className,
 	children,
-	variant = "destructive",
+	variant = "default",
 	...props
 }: IndustrialPanelProps) {
 	return (
@@ -138,4 +138,3 @@ export function IndustrialSection({
 		</div>
 	);
 }
-

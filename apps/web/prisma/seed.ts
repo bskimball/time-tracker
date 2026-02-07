@@ -488,12 +488,83 @@ async function main() {
 
 	console.log(`✅ Created ${taskAssignments.length} task assignments`);
 
+	// Create historical performance metrics for analytics charts
+	console.log("📈 Creating performance metrics history...");
+	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
+	const stationBaselineRate = new Map<string, number>([
+		["PICKING", 28],
+		["PACKING", 24],
+		["FILLING", 32],
+		["RECEIVING", 20],
+		["SHIPPING", 26],
+		["QUALITY", 18],
+		["INVENTORY", 16],
+	]);
+
+	const metricRows: Array<{
+		employeeId: string;
+		date: Date;
+		stationId: string | null;
+		hoursWorked: number;
+		unitsProcessed: number;
+		efficiency: number;
+		qualityScore: number;
+		overtimeHours: number;
+	}> = [];
+
+	for (let dayOffset = 0; dayOffset < 45; dayOffset++) {
+		const metricDate = new Date();
+		metricDate.setDate(metricDate.getDate() - dayOffset);
+		metricDate.setHours(0, 0, 0, 0);
+
+		for (const [employeeIndex, employee] of activeEmployees.entries()) {
+			if (!employee.defaultStationId) continue;
+
+			// Introduce realistic attendance variability
+			if ((dayOffset + employeeIndex) % 11 === 0) continue;
+
+			const station = stations.find((s) => s.id === employee.defaultStationId);
+			const stationName = station?.name ?? "PICKING";
+			const baselineRate = stationBaselineRate.get(stationName) ?? 24;
+
+			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 9) - 4; // -4..+4
+			const hoursWorked = Number((7.1 + ((dayOffset + employeeIndex) % 4) * 0.45).toFixed(2));
+			const overtimeHours = Math.max(0, Number((hoursWorked - 8).toFixed(2)));
+			const unitsProcessed = Math.max(
+				0,
+				Math.round(hoursWorked * (baselineRate + dailyVariation * 0.65))
+			);
+			const efficiency = Number((unitsProcessed / hoursWorked).toFixed(2));
+			const qualityScore = Number((94 + ((employeeIndex + dayOffset) % 6) * 0.6).toFixed(2));
+
+			metricRows.push({
+				employeeId: employee.id,
+				date: metricDate,
+				stationId: employee.defaultStationId,
+				hoursWorked,
+				unitsProcessed,
+				efficiency,
+				qualityScore,
+				overtimeHours,
+			});
+		}
+	}
+
+	if (metricRows.length > 0) {
+		await prisma.performanceMetric.createMany({
+			data: metricRows,
+		});
+	}
+
+	console.log(`✅ Created ${metricRows.length} performance metric rows`);
+
 	console.log("\n✨ Database seeded successfully!");
 	console.log("\n📊 Summary:");
 	console.log(`   - Stations: ${stations.length}`);
 	console.log(`   - Employees: ${employees.length}`);
 	console.log(`   - Task Types: ${taskTypes.length}
-   - Task Assignments: ${taskAssignments.length}`);
+	 - Task Assignments: ${taskAssignments.length}`);
+	console.log(`   - Performance Metrics: ${metricRows.length}`);
 	console.log(`   - Users: 3 (Admin, Manager, Worker)`);
 	console.log("\n🔑 Login Information:");
 	console.log(`   - Admin: admin@warehouse.com`);

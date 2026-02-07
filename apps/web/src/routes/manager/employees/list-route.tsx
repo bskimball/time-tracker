@@ -1,22 +1,27 @@
 import { validateRequest } from "~/lib/auth";
+import { getRequest } from "~/lib/request-context";
 import { EmployeeRoster } from "./client";
 import { getEmployees as getEmployeesFn, getStations } from "./actions";
 import { EmployeeStatus } from "@prisma/client";
 
-export default async function Component({
-	searchParams,
-}: {
-	searchParams?: { search?: string; status?: string; page?: string };
-}) {
+export default async function Component() {
 	const { user } = await validateRequest();
 	if (!user) {
 		throw new Error("Not authenticated");
 	}
 
+	const request = getRequest();
+	const query = request ? new URL(request.url).searchParams : new URLSearchParams();
+
 	// Parse search params
-	const search = searchParams?.search;
-	const status = searchParams?.status as EmployeeStatus | undefined;
-	const page = searchParams?.page ? parseInt(searchParams.page) : 1;
+	const search = query.get("search") || undefined;
+	const statusParam = query.get("status");
+	const status = statusParam && Object.values(EmployeeStatus).includes(statusParam as EmployeeStatus)
+		? (statusParam as EmployeeStatus)
+		: undefined;
+	const pageParam = query.get("page");
+	const parsedPage = pageParam ? parseInt(pageParam, 10) : NaN;
+	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 	const limit = 25;
 
 	// Fetch employees and stations in parallel

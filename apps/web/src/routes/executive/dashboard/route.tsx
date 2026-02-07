@@ -4,22 +4,31 @@ import {
 	CardHeader,
 	CardTitle,
 	Badge,
-	Alert,
+	LedIndicator,
 	Metric,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { KPICard } from "~/routes/executive/kpi-card";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
+import { getRequest } from "~/lib/request-context";
 import {
 	getExecutiveDashboardKPIs,
 	getStationPerformanceData,
 	getExecutiveAlerts,
+	getPerformanceTrendData,
 	refreshDashboardCache,
 } from "./actions";
 import { format } from "date-fns";
 import { RefreshButton } from "./refresh-button";
-import { TimeRangeTabs } from "./time-range-tabs";
+import { TimeRangeTabs } from "../time-range-tabs";
+import { AlertsPopover } from "./alerts-popover";
+import {
+	ProductivityTrendChart,
+	StationPerformanceChart,
+	CostComparisonChart,
+} from "./dashboard-charts";
+import type { TrendDataPoint, StationBarData, CostBarData } from "./dashboard-charts";
 import {
 	LiaChartBarSolid,
 	LiaDollarSignSolid,
@@ -29,24 +38,72 @@ import {
 
 type TimeRange = "today" | "week" | "month";
 
-export default async function Component({
-	searchParams,
-}: {
-	searchParams?: { range?: TimeRange };
-}) {
+function getTimeRangeFromRequest(): TimeRange {
+	const request = getRequest();
+	if (!request) return "today";
+
+	const range = new URL(request.url).searchParams.get("range");
+	if (range === "today" || range === "week" || range === "month") {
+		return range;
+	}
+
+	return "today";
+}
+
+export default async function Component() {
 	await validateRequest();
-	// Middleware ensures ADMIN role
 
-	const timeRange = searchParams?.range || "today";
+	const timeRange = getTimeRangeFromRequest();
 
-	// Get all dashboard data
-	const [{ kpis, laborCost }, stationData, alerts] = await Promise.all([
+	const [{ kpis, laborCost }, stationData, alerts, trendData] = await Promise.all([
 		getExecutiveDashboardKPIs(timeRange),
 		getStationPerformanceData(timeRange),
 		getExecutiveAlerts(),
+		getPerformanceTrendData("productivity", timeRange),
 	]);
 
-	// Helper to determine KPI trends
+	// ── Derived chart data ───────────────────────────────────────────────────
+
+	const trendDateFormat = timeRange === "month" ? "MMM d" : "EEE";
+	const trendRangeLabel =
+		timeRange === "today" ? "TODAY" : timeRange === "month" ? "MONTH TO DATE" : "WEEK TO DATE";
+
+	const trendChartData: TrendDataPoint[] = trendData.map((point) => ({
+		date: format(new Date(point.date), trendDateFormat),
+		value: point.value,
+	}));
+
+	const stationChartData: StationBarData[] = stationData.slice(0, 6).map((s) => ({
+		name: s.stationName.length > 12 ? s.stationName.slice(0, 12) + "\u2026" : s.stationName,
+		productivity: Number(s.avgUnitsPerHour.toFixed(1)),
+		occupancy: Number(s.occupancyRate.toFixed(0)),
+	}));
+
+	const costChartData: CostBarData[] = [
+		{
+			label: "Budgeted",
+			value: Math.round(laborCost.budgetedCost),
+			fill: "var(--color-chart-5)",
+		},
+		{
+			label: "Actual",
+			value: Math.round(laborCost.actualCost),
+			fill: laborCost.variance > 0 ? "var(--color-destructive)" : "var(--color-chart-3)",
+		},
+		{
+			label: "Regular",
+			value: Math.round(laborCost.regularCost),
+			fill: "var(--color-primary)",
+		},
+		{
+			label: "Overtime",
+			value: Math.round(laborCost.overtimeCost),
+			fill: "var(--color-warning)",
+		},
+	];
+
+	// ── KPI trend helpers ────────────────────────────────────────────────────
+
 	const getKPIConfig = (value: number, type: string) => {
 		switch (type) {
 			case "productivity":
@@ -77,222 +134,279 @@ export default async function Component({
 
 	return (
 		<div className="space-y-8 pb-8">
-			<PageHeader
-				title="Executive Dashboard"
-				subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
-				actions={<RefreshButton action={refreshDashboardCache} />}
-			/>
-
-			{/* Time Range Selector */}
-			<div>
-				<TimeRangeTabs />
-			</div>
-
-			{/* Critical Alerts */}
-			{alerts.length > 0 && (
-				<div className="space-y-4">
-					<h2 className="text-sm font-industrial font-bold text-foreground flex items-center gap-2 tracking-widest uppercase">
-						<span className="relative flex h-2 w-2">
-							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-							<span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-						</span>
-						Critical Attention Needed
-					</h2>
-					<div className="grid gap-3">
-						{alerts.map((alert) => (
-							<Alert
-								key={alert.id}
-								variant={alert.type}
-							>
-								<div className="flex justify-between items-start">
-									<div>
-										<h3 className="font-bold text-base font-heading tracking-tight">{alert.title}</h3>
-										<p className="text-sm mt-1 opacity-90 font-mono text-xs">{alert.message}</p>
-									</div>
-									<Badge
-										variant={
-											alert.priority === "high"
-												? "destructive"
-												: alert.priority === "medium"
-													? "primary"
-													: "secondary"
-										}
-									>
-										{alert.priority}
-									</Badge>
-								</div>
-							</Alert>
-						))}
-					</div>
-				</div>
-			)}
-
-			{/* Main KPI Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
-				<KPICard
-					title="Active Employees"
-					value={kpis.totalActiveEmployees}
-					subtitle="Current workforce"
-					icon="users"
-					trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
-				/>
-
-				<KPICard
-					title="Productivity Rate"
-					value={`${kpis.productivityRate} u/hr`}
-					subtitle={`${format(new Date(), "EEEE")}'s average`}
-					icon="chart"
-					trend={{
-						direction: productivityConfig.direction,
-						value:
-							productivityConfig.direction === "up"
-								? "+8%"
-								: productivityConfig.direction === "down"
-									? "-5%"
-									: "0%",
-						label: "vs yesterday",
-					}}
-				/>
-
-				<KPICard
-					title="Overtime %"
-					value={`${kpis.overtimePercentage}%`}
-					subtitle="Of total hours"
-					icon="clock"
-					trend={{
-						direction: overtimeConfig.direction,
-						value:
-							overtimeConfig.direction === "up"
-								? "+2.3%"
-								: overtimeConfig.direction === "down"
-									? "-1.2%"
-									: "0%",
-						label: "vs last week",
-					}}
-				/>
-
-				<KPICard
-					title="Occupancy Level"
-					value={`${kpis.occupancyLevel.toFixed(1)}%`}
-					subtitle="Station utilization"
-					icon="industry"
-					trend={{
-						direction: occupancyConfig.direction,
-						value:
-							occupancyConfig.direction === "up"
-								? "+15%"
-								: occupancyConfig.direction === "down"
-									? "-8%"
-									: "0%",
-						label: "vs average",
-					}}
+			{/* ── Header ──────────────────────────────────────────────────── */}
+			<div className="animate-fade-in">
+				<PageHeader
+					title="Executive Dashboard"
+					subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
+					actions={
+						<div className="flex items-center gap-3">
+							<AlertsPopover alerts={alerts} />
+							<RefreshButton action={refreshDashboardCache} />
+						</div>
+					}
 				/>
 			</div>
 
-			{/* Financial Overview */}
-			<div className="relative">
-				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
-					Financial Overview
-				</h2>
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-					<KPICard
-						title="Labor Cost Per Unit"
-						value={`$${kpis.laborCostPerUnit}`}
-						subtitle="Average cost analysis"
-						icon="dollar"
-					/>
-
-					<KPICard
-						title="Cost Variance"
-						value={`${laborCost.variancePercentage > 0 ? "+" : ""}${laborCost.variancePercentage}%`}
-						subtitle={`${laborCost.variance > 0 ? "Over" : "Under"} budget`}
-						icon="percent"
-						trend={{
-							direction: varianceConfig.direction,
-							value: `$${Math.abs(laborCost.variance).toFixed(0)}`,
-							label: "vs $" + laborCost.budgetedCost.toFixed(0),
-						}}
-					/>
-
-					<KPICard
-						title="Efficiency Ratio"
-						value={`${(kpis.efficiencyRatio * 100).toFixed(0)}%`}
-						subtitle="Performance score"
-						icon="award"
-						trend={{ direction: "up", value: "+2%", label: "vs target" }}
-					/>
-				</div>
+			{/* ── Time Range ──────────────────────────────────────────────── */}
+			<div className="animate-fade-in-up animate-delay-100">
+				<TimeRangeTabs ranges={["today", "week", "month"]} defaultRange="today" />
 			</div>
 
-			{/* Station Performance Overview */}
-			<div className="relative">
-				<Card className="overflow-visible border-border/60">
+			{/* ── Hero: Productivity Trend ─────────────────────────────────── */}
+			<section className="animate-fade-in-up animate-delay-200">
+				<Card className="overflow-hidden">
 					<CardHeader className="bg-muted/30 border-b border-border/50">
 						<div className="flex items-center justify-between">
-							<CardTitle className="uppercase tracking-widest font-industrial text-sm">
-								Station Performance
-							</CardTitle>
-							<Link to="/executive/analytics" className="text-xs font-mono text-primary hover:underline">
-								VIEW_ALL &rarr;
+							<div className="flex items-center gap-3">
+								<LedIndicator active />
+								<CardTitle className="uppercase tracking-widest font-industrial text-sm">
+									Productivity Trend
+								</CardTitle>
+								<Badge variant="secondary">{trendRangeLabel}</Badge>
+							</div>
+							<Link
+								to="/executive/analytics?section=trends"
+								className="text-xs font-mono text-primary hover:underline"
+							>
+								FULL_ANALYSIS &rarr;
 							</Link>
 						</div>
 					</CardHeader>
-					<CardBody className="p-4">
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{stationData.slice(0, 6).map((station) => (
-								<div
-									key={station.stationId}
-									className="group border border-border/50 rounded-[2px] p-4 bg-card hover:border-primary/50 transition-all duration-200"
-								>
-									<div className="flex justify-between items-center mb-4">
-										<h3 className="font-bold font-heading text-sm">{station.stationName}</h3>
-										<div
-											className={`w-1.5 h-1.5 rounded-full ${
-												station.occupancyRate > 90
-													? "bg-destructive animate-pulse"
-													: station.occupancyRate > 70
-														? "bg-chart-3"
-														: "bg-chart-1"
-											}`}
-										/>
-									</div>
-									<div className="grid grid-cols-3 gap-4 text-center">
-										<Metric
-											label="Staff"
-											value={station.totalEmployees}
-											className="items-center text-center"
-										/>
-										<Metric
-											label="U/Hr"
-											value={station.avgUnitsPerHour.toFixed(1)}
-											className="items-center text-center"
-										/>
-										<Metric
-											label="Occ"
-											value={`${station.occupancyRate.toFixed(0)}%`}
-											className="items-center text-center"
-											trendDirection={
-												station.occupancyRate > 90
-													? "down"
-													: station.occupancyRate > 70
-														? "up"
-														: "neutral"
-											}
-										/>
-									</div>
-								</div>
-							))}
-						</div>
+					<CardBody className="p-5">
+						{trendChartData.length > 0 ? (
+							<ProductivityTrendChart data={trendChartData} />
+						) : (
+							<div className="h-[260px] flex items-center justify-center text-muted-foreground font-mono text-sm">
+								No trend data available for the selected period
+							</div>
+						)}
 					</CardBody>
 				</Card>
-			</div>
+			</section>
 
-			{/* Quick Actions */}
-			<div className="relative">
+			{/* ── KPI Row ─────────────────────────────────────────────────── */}
+			<section>
+				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
+					Key Performance Indicators
+				</h2>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+					<KPICard
+						title="Active Employees"
+						value={kpis.totalActiveEmployees}
+						subtitle="Current workforce"
+						icon="users"
+						trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
+					/>
+					<KPICard
+						title="Productivity Rate"
+						value={`${kpis.productivityRate} u/hr`}
+						subtitle={`${format(new Date(), "EEEE")}'s average`}
+						icon="chart"
+						trend={{
+							direction: productivityConfig.direction,
+							value:
+								productivityConfig.direction === "up"
+									? "+8%"
+									: productivityConfig.direction === "down"
+										? "-5%"
+										: "0%",
+							label: "vs yesterday",
+						}}
+					/>
+					<KPICard
+						title="Overtime %"
+						value={`${kpis.overtimePercentage}%`}
+						subtitle="Of total hours"
+						icon="clock"
+						trend={{
+							direction: overtimeConfig.direction,
+							value:
+								overtimeConfig.direction === "up"
+									? "+2.3%"
+									: overtimeConfig.direction === "down"
+										? "-1.2%"
+										: "0%",
+							label: "vs last week",
+						}}
+					/>
+					<KPICard
+						title="Occupancy Level"
+						value={`${kpis.occupancyLevel.toFixed(1)}%`}
+						subtitle="Station utilization"
+						icon="industry"
+						trend={{
+							direction: occupancyConfig.direction,
+							value:
+								occupancyConfig.direction === "up"
+									? "+15%"
+									: occupancyConfig.direction === "down"
+										? "-8%"
+										: "0%",
+							label: "vs average",
+						}}
+					/>
+				</div>
+			</section>
+
+			{/* ── Operations: Station Performance + Financial Health ────── */}
+			<section>
+				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
+					Operations Overview
+				</h2>
+
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					{/* ── Station Performance ────────────────────────────── */}
+					<div className="animate-fade-in-up animate-delay-100">
+						<Card className="h-full flex flex-col overflow-hidden">
+							<CardHeader className="bg-muted/30 border-b border-border/50">
+								<div className="flex items-center justify-between">
+									<CardTitle className="uppercase tracking-widest font-industrial text-sm">
+										Station Performance
+									</CardTitle>
+									<Link
+										to="/executive/analytics"
+										className="text-xs font-mono text-primary hover:underline"
+									>
+										VIEW_ALL &rarr;
+									</Link>
+								</div>
+							</CardHeader>
+							<CardBody className="p-4 flex-1">
+								{stationChartData.length > 0 ? (
+									<StationPerformanceChart data={stationChartData} />
+								) : (
+									<div className="h-[240px] flex items-center justify-center text-muted-foreground font-mono text-sm">
+										No station data available
+									</div>
+								)}
+							</CardBody>
+							{/* Station summary table */}
+							{stationData.length > 0 && (
+								<div className="border-t border-border/50 bg-muted/10 px-4 py-2">
+									<table className="w-full">
+										<thead>
+											<tr className="text-[10px] font-industrial text-muted-foreground uppercase tracking-widest">
+												<th className="text-left py-1 font-medium">Station</th>
+												<th className="text-right py-1 font-medium">Staff</th>
+												<th className="text-right py-1 font-medium">U/Hr</th>
+												<th className="text-right py-1 font-medium">Occ %</th>
+											</tr>
+										</thead>
+										<tbody className="divide-y divide-border/30">
+											{stationData.slice(0, 4).map((station) => (
+												<tr key={station.stationId} className="text-xs font-mono">
+													<td className="py-1.5 flex items-center gap-2">
+														<div
+															className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+																station.occupancyRate > 90
+																	? "bg-destructive"
+																	: station.occupancyRate > 70
+																		? "bg-chart-3"
+																		: "bg-chart-1"
+															}`}
+														/>
+														<span className="truncate max-w-[120px]">{station.stationName}</span>
+													</td>
+													<td className="py-1.5 text-right text-muted-foreground">
+														{station.totalEmployees}
+													</td>
+													<td className="py-1.5 text-right font-bold">
+														{station.avgUnitsPerHour.toFixed(1)}
+													</td>
+													<td className="py-1.5 text-right text-muted-foreground">
+														{station.occupancyRate.toFixed(0)}%
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							)}
+						</Card>
+					</div>
+
+					{/* ── Financial Health ────────────────────────────────── */}
+					<div className="animate-fade-in-up animate-delay-200">
+						<Card className="h-full flex flex-col overflow-hidden">
+							<CardHeader className="bg-muted/30 border-b border-border/50">
+								<div className="flex items-center justify-between">
+									<CardTitle className="uppercase tracking-widest font-industrial text-sm">
+										Financial Health
+									</CardTitle>
+									<Link
+										to="/executive/analytics?section=labor-cost"
+										className="text-xs font-mono text-primary hover:underline"
+									>
+										DETAILS &rarr;
+									</Link>
+								</div>
+							</CardHeader>
+
+							{/* Key financial metrics as a tight row */}
+							<div className="grid grid-cols-3 divide-x divide-border/50 border-b border-border/50">
+								<div className="p-4">
+									<Metric
+										label="Cost/Unit"
+										value={`$${kpis.laborCostPerUnit}`}
+										className="items-center text-center"
+									/>
+								</div>
+								<div className="p-4">
+									<Metric
+										label="Variance"
+										value={`${laborCost.variancePercentage > 0 ? "+" : ""}${laborCost.variancePercentage}%`}
+										trendDirection={varianceConfig.direction}
+										className="items-center text-center"
+									/>
+								</div>
+								<div className="p-4">
+									<Metric
+										label="Efficiency"
+										value={`${(kpis.efficiencyRatio * 100).toFixed(0)}%`}
+										trendDirection="up"
+										className="items-center text-center"
+									/>
+								</div>
+							</div>
+
+							{/* Cost breakdown chart */}
+							<CardBody className="p-4 flex-1">
+								<p className="text-[10px] font-industrial text-muted-foreground uppercase tracking-widest mb-3">
+									Cost Breakdown
+								</p>
+								<CostComparisonChart data={costChartData} />
+							</CardBody>
+
+							{/* Budget summary footer */}
+							<div className="border-t border-border/50 bg-muted/10 px-4 py-3 flex items-center justify-between text-xs font-mono">
+								<span className="text-muted-foreground">
+									Budget: $
+									{laborCost.budgetedCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+								</span>
+								<span
+									className={
+										laborCost.variance > 0 ? "text-destructive font-bold" : "text-chart-3 font-bold"
+									}
+								>
+									{laborCost.variance > 0 ? "+" : ""}$
+									{Math.abs(laborCost.variance).toLocaleString(undefined, {
+										maximumFractionDigits: 0,
+									})}{" "}
+									{laborCost.variance > 0 ? "over" : "under"}
+								</span>
+							</div>
+						</Card>
+					</div>
+				</div>
+			</section>
+
+			{/* ── Quick Actions ───────────────────────────────────────────── */}
+			<section>
 				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
 					Quick Actions
 				</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
 					{[
 						{
 							title: "Productivity Report",
@@ -320,9 +434,9 @@ export default async function Component({
 						},
 					].map((action) => (
 						<Link key={action.title} to={action.href}>
-							<Card className="h-full hover:border-primary/50 transition-colors duration-200">
-								<CardBody className="p-4 flex flex-col items-center text-center gap-3 group">
-									<div className="p-3 rounded-[2px] bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-200">
+							<Card className="h-full group hover:border-primary/50 transition-colors duration-200">
+								<CardBody className="p-5 flex items-start gap-4">
+									<div className="p-3 rounded-[2px] bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-200 flex-shrink-0">
 										<action.icon className="w-5 h-5" aria-hidden="true" />
 									</div>
 									<div>
@@ -338,7 +452,7 @@ export default async function Component({
 						</Link>
 					))}
 				</div>
-			</div>
+			</section>
 		</div>
 	);
 }

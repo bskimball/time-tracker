@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "react-router";
+import { useSearchParams, useNavigate } from "react-router";
 import {
 	Card,
 	CardHeader,
@@ -61,6 +61,15 @@ const analyticsComparisons = new Set<AnalyticsComparison>([
 	"last-year",
 	"rolling-30d",
 ]);
+const DEFAULT_COMPARE: AnalyticsComparison = "previous-period";
+
+// Compatibility Matrix: Defines valid comparisons for each range
+const COMPARISON_COMPATIBILITY: Record<AnalyticsRange, AnalyticsComparison[]> = {
+	today: ["previous-period", "last-year"],
+	week: ["previous-period", "last-year"], // Explicitly excluding rolling-30d
+	month: ["previous-period", "last-year", "rolling-30d"],
+	quarter: ["previous-period", "last-year"],
+};
 
 function isAnalyticsSection(value: string | null): value is AnalyticsSection {
 	return value !== null && analyticsSections.has(value as AnalyticsSection);
@@ -72,6 +81,14 @@ function isAnalyticsRange(value: string | null): value is AnalyticsRange {
 
 function isAnalyticsComparison(value: string | null): value is AnalyticsComparison {
 	return value !== null && analyticsComparisons.has(value as AnalyticsComparison);
+}
+
+function toMetricTrendDirection(value: string): "up" | "down" | "neutral" {
+	if (value === "up" || value === "down" || value === "neutral") {
+		return value;
+	}
+
+	return "neutral";
 }
 
 type AnalyticsData = {
@@ -93,12 +110,27 @@ type AnalyticsData = {
 
 export default function Component() {
 	const searchParams = useSearchParams()[0];
+	const navigate = useNavigate();
 	const sectionParam = searchParams.get("section");
 	const rangeParam = searchParams.get("range");
 	const compareParam = searchParams.get("compare");
+	
 	const section = isAnalyticsSection(sectionParam) ? sectionParam : "productivity";
 	const range = isAnalyticsRange(rangeParam) ? rangeParam : "week";
-	const compareBasis = isAnalyticsComparison(compareParam) ? compareParam : "previous-period";
+	const rawCompare = isAnalyticsComparison(compareParam) ? compareParam : DEFAULT_COMPARE;
+
+	// Validate comparison against range
+	const validComparisons = COMPARISON_COMPATIBILITY[range];
+	const compareBasis = validComparisons.includes(rawCompare) ? rawCompare : DEFAULT_COMPARE;
+
+	// Redirect if invalid combination detected
+	useEffect(() => {
+		if (compareBasis !== rawCompare) {
+			const newParams = new URLSearchParams(searchParams);
+			newParams.set("compare", compareBasis);
+			navigate(`?${newParams.toString()}`, { replace: true });
+		}
+	}, [compareBasis, rawCompare, searchParams, navigate]);
 
 	const [data, setData] = useState<AnalyticsData | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -221,7 +253,6 @@ export default function Component() {
 	} = data || {};
 
 	const { costSummary, stations: stationSnapshots } = dashboardData;
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const currentWindowLabel = `${new Date(comparativeData.currentWindow.start).toLocaleDateString()} - ${new Date(comparativeData.currentWindow.end).toLocaleDateString()}`;
 	const comparisonWindowLabel = `${new Date(comparativeData.comparisonWindow.start).toLocaleDateString()} - ${new Date(comparativeData.comparisonWindow.end).toLocaleDateString()}`;
 
@@ -248,29 +279,49 @@ export default function Component() {
 			</div>
 
 			{/* ── Controls ────────────────────────────────────────────────────── */}
-			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 pt-2 border-b border-border/40 -mx-4 px-4 sm:mx-0 sm:px-0 sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:static sm:pb-0 sm:pt-0">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<SectionTabs />
-					<div className="flex flex-col items-end gap-1">
-						<div className="flex flex-col sm:flex-row sm:items-center gap-4">
-							<div className="flex items-center gap-2">
-								<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground hidden sm:inline-block">
-									Range
+			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pt-2 border-b border-border -mx-4 px-4 sm:mx-0 sm:px-0 mb-6">
+				<SectionTabs />
+
+				<div className="py-3 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+					{/* Left: Inputs */}
+					<div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+						{/* Time Range */}
+						<div className="flex items-center gap-3">
+							<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground/60 font-bold shrink-0">
+								Period
+							</span>
+							<TimeRangeTabs />
+						</div>
+
+						<div className="hidden sm:block h-4 w-px bg-border/50 mx-2" />
+
+						{/* Comparison */}
+						<div className="flex items-center gap-3">
+							<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground/60 font-bold shrink-0">
+								Comparison
+							</span>
+							<ComparisonTabs availableOptions={validComparisons} />
+						</div>
+					</div>
+
+					{/* Right: Readout */}
+					<div className="flex items-center justify-end">
+						<div className="flex items-center gap-3 px-3 py-1.5 bg-muted/10 rounded-[2px] border border-border/40">
+							<div className="flex items-center gap-2 border-r border-border/40 pr-3">
+								<span className="relative flex h-1.5 w-1.5">
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+									<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
 								</span>
-								<TimeRangeTabs defaultRange="week" />
+								<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground font-bold">
+									Active
+								</span>
 							</div>
-							<div className="flex items-center gap-2">
-								<span className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground hidden sm:inline-block">
-									Compare
-								</span>
-								<ComparisonTabs />
+							<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-[10px] font-mono leading-none">
+								<span className="text-foreground font-semibold">{currentWindowLabel}</span>
+								<span className="hidden sm:inline text-muted-foreground/40">/</span>
+								<span className="text-muted-foreground">{comparisonWindowLabel}</span>
 							</div>
 						</div>
-						{compareParam && (
-							<div className="text-[10px] font-mono text-muted-foreground text-right hidden sm:block">
-								{currentWindowLabel} vs {comparisonWindowLabel}
-							</div>
-						)}
 					</div>
 				</div>
 			</div>
@@ -634,24 +685,24 @@ export default function Component() {
 					{section === "trends" && (
 						<div className="space-y-6 animate-fade-in-up">
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-								<Metric
-									label="Productivity Trend"
-									value={`${trendData.productivity.changePercent > 0 ? "+" : ""}${trendData.productivity.changePercent}%`}
-									trendDirection={trendData.productivity.trend as any}
-									className="bg-card border border-border rounded-lg p-6"
-								/>
-								<Metric
-									label="Cost Trend"
-									value={`${trendData.costs.changePercent > 0 ? "+" : ""}${trendData.costs.changePercent}%`}
-									trendDirection={trendData.costs.trend as any}
-									className="bg-card border border-border rounded-lg p-6"
-								/>
-								<Metric
-									label="Quality Trend"
-									value={`${trendData.quality.changePercent > 0 ? "+" : ""}${trendData.quality.changePercent}%`}
-									trendDirection={trendData.quality.trend as any}
-									className="bg-card border border-border rounded-lg p-6"
-								/>
+							<Metric
+								label="Productivity Trend"
+								value={`${trendData.productivity.changePercent > 0 ? "+" : ""}${trendData.productivity.changePercent}%`}
+								trendDirection={toMetricTrendDirection(trendData.productivity.trend)}
+								className="bg-card border border-border rounded-lg p-6"
+							/>
+							<Metric
+								label="Cost Trend"
+								value={`${trendData.costs.changePercent > 0 ? "+" : ""}${trendData.costs.changePercent}%`}
+								trendDirection={toMetricTrendDirection(trendData.costs.trend)}
+								className="bg-card border border-border rounded-lg p-6"
+							/>
+							<Metric
+								label="Quality Trend"
+								value={`${trendData.quality.changePercent > 0 ? "+" : ""}${trendData.quality.changePercent}%`}
+								trendDirection={toMetricTrendDirection(trendData.quality.trend)}
+								className="bg-card border border-border rounded-lg p-6"
+							/>
 							</div>
 
 							<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,4 +1,5 @@
 import { validateRequest } from "~/lib/auth";
+import { getRequest } from "~/lib/request-context";
 import { ReportsManager } from "./client";
 import {
 	getProductivityReport,
@@ -76,21 +77,25 @@ function formatCsvValue(value: unknown): string {
 	return value ? String(value) : "";
 }
 
-export default async function Component({
-	searchParams,
-}: {
-	searchParams?: { startDate?: string; endDate?: string; type?: string };
-}) {
+export default async function Component() {
 	const { user } = await validateRequest();
 	if (!user) {
 		throw new Error("Not authenticated");
 	}
 
+	const request = getRequest();
+	const query = request ? new URL(request.url).searchParams : new URLSearchParams();
+
 	// Default to last 7 days if no dates provided
-	const endDate = searchParams?.endDate ? new Date(searchParams.endDate) : new Date();
-	const startDate = searchParams?.startDate
-		? new Date(searchParams.startDate)
-		: new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const endDateParam = query.get("endDate");
+	const startDateParam = query.get("startDate");
+	const parsedEndDate = endDateParam ? new Date(endDateParam) : null;
+	const endDate = parsedEndDate && !Number.isNaN(parsedEndDate.getTime()) ? parsedEndDate : new Date();
+	const parsedStartDate = startDateParam ? new Date(startDateParam) : null;
+	const startDate =
+		parsedStartDate && !Number.isNaN(parsedStartDate.getTime())
+			? parsedStartDate
+			: new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
 	// Fetch all data in parallel
 	const [productivityData, taskData, stationData, overtimeData, summaryStats] = await Promise.all([

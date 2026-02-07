@@ -1,8 +1,9 @@
 "use client";
 
 import {
-	LineChart as RechartsLineChart,
+	ComposedChart,
 	Line,
+	Area,
 	XAxis,
 	YAxis,
 	CartesianGrid,
@@ -15,6 +16,7 @@ import {
 	Pie,
 	Cell,
 } from "recharts";
+import { useId } from "react";
 import { Card, CardHeader, CardTitle, CardBody } from "@monorepo/design-system";
 
 // ─── Shared Styles ──────────────────────────────────────────────────────────
@@ -49,6 +51,10 @@ const axisFontProps = {
 	fontSize: 10,
 	fill: axisTickFill,
 };
+
+function normalizeGradientId(id: string) {
+	return `chart-${id.replaceAll(":", "")}`;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -117,6 +123,7 @@ function convertToRechartsData(data: LineChartData | BarChartData): RechartsData
 
 export function LineChart({ title, data, height = 250 }: LineChartProps) {
 	const chartData = convertToRechartsData(data);
+	const chartId = normalizeGradientId(useId());
 
 	return (
 		<Card className="h-full flex flex-col">
@@ -127,7 +134,22 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 			</CardHeader>
 			<CardBody className="p-4 flex-1">
 				<ResponsiveContainer width="100%" height={height}>
-					<RechartsLineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+					<ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+						<defs>
+							{data.datasets.map((dataset, index) => (
+								<linearGradient
+									key={`${dataset.label}-area-gradient`}
+									id={`${chartId}-area-${index}`}
+									x1="0"
+									y1="0"
+									x2="0"
+									y2="1"
+								>
+									<stop offset="0%" stopColor={dataset.color} stopOpacity={0.3} />
+									<stop offset="100%" stopColor={dataset.color} stopOpacity={0.02} />
+								</linearGradient>
+							))}
+						</defs>
 						<CartesianGrid
 							strokeDasharray="none"
 							stroke={gridStroke}
@@ -157,6 +179,17 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 						<Legend
 							wrapperStyle={{ paddingTop: "16px", fontSize: "11px", fontFamily: "var(--font-mono)" }}
 						/>
+						{data.datasets.map((dataset, index) => (
+							<Area
+								key={`${dataset.label}-area`}
+								type="monotone"
+								dataKey={dataset.label}
+								fill={`url(#${chartId}-area-${index})`}
+								stroke="none"
+								dot={false}
+								activeDot={false}
+							/>
+						))}
 						{data.datasets.map((dataset) => (
 							<Line
 								key={dataset.label}
@@ -165,10 +198,10 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 								stroke={dataset.color}
 								strokeWidth={2}
 								dot={{ r: 3, fill: dataset.color, strokeWidth: 0 }}
-								activeDot={{ r: 5, strokeWidth: 0 }}
+								activeDot={{ r: 5, fill: dataset.color, strokeWidth: 0 }}
 							/>
 						))}
-					</RechartsLineChart>
+					</ComposedChart>
 				</ResponsiveContainer>
 			</CardBody>
 		</Card>
@@ -177,6 +210,7 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 
 export function BarChart({ title, data, height = 250 }: BarChartProps) {
 	const chartData = convertToRechartsData(data);
+	const chartId = normalizeGradientId(useId());
 
 	return (
 		<Card className="h-full flex flex-col">
@@ -188,6 +222,21 @@ export function BarChart({ title, data, height = 250 }: BarChartProps) {
 			<CardBody className="p-4 flex-1">
 				<ResponsiveContainer width="100%" height={height}>
 					<RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+						<defs>
+							{data.datasets.map((dataset, index) => (
+								<linearGradient
+									key={`${dataset.label}-bar-gradient`}
+									id={`${chartId}-bar-${index}`}
+									x1="0"
+									y1="0"
+									x2="0"
+									y2="1"
+								>
+									<stop offset="0%" stopColor={dataset.color} stopOpacity={1} />
+									<stop offset="100%" stopColor={dataset.color} stopOpacity={0.35} />
+								</linearGradient>
+							))}
+						</defs>
 						<CartesianGrid
 							strokeDasharray="none"
 							stroke={gridStroke}
@@ -217,11 +266,11 @@ export function BarChart({ title, data, height = 250 }: BarChartProps) {
 						<Legend
 							wrapperStyle={{ paddingTop: "16px", fontSize: "11px", fontFamily: "var(--font-mono)" }}
 						/>
-						{data.datasets.map((dataset) => (
+						{data.datasets.map((dataset, index) => (
 							<Bar
 								key={dataset.label}
 								dataKey={dataset.label}
-								fill={dataset.color}
+								fill={`url(#${chartId}-bar-${index})`}
 								radius={[2, 2, 0, 0]}
 								maxBarSize={40}
 							/>
@@ -234,6 +283,8 @@ export function BarChart({ title, data, height = 250 }: BarChartProps) {
 }
 
 export function PieChart({ title, data, height = 250 }: PieChartProps) {
+	const chartId = normalizeGradientId(useId());
+
 	return (
 		<Card className="h-full flex flex-col">
 			<CardHeader className="bg-muted/30 border-b border-border/50 py-3">
@@ -244,6 +295,21 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 			<CardBody className="p-4 flex-1">
 				<ResponsiveContainer width="100%" height={height}>
 					<RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+						<defs>
+							{data.map((entry, index) => (
+								<linearGradient
+									key={`${entry.name}-pie-gradient`}
+									id={`${chartId}-pie-${index}`}
+									x1="0"
+									y1="0"
+									x2="1"
+									y2="1"
+								>
+									<stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+									<stop offset="100%" stopColor={entry.color} stopOpacity={0.45} />
+								</linearGradient>
+							))}
+						</defs>
 						<Pie
 							data={data}
 							cx="50%"
@@ -253,8 +319,13 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 							paddingAngle={2}
 							dataKey="value"
 						>
-							{data.map((entry, index) => (
-								<Cell key={`cell-${index}`} fill={entry.color} stroke="var(--color-card)" strokeWidth={2} />
+							{data.map((_, index) => (
+								<Cell
+									key={`cell-${index}`}
+									fill={`url(#${chartId}-pie-${index})`}
+									stroke="var(--color-card)"
+									strokeWidth={2}
+								/>
 							))}
 						</Pie>
 						<Tooltip contentStyle={tooltipStyle.contentStyle} labelStyle={tooltipStyle.labelStyle} />
@@ -270,4 +341,3 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 		</Card>
 	);
 }
-

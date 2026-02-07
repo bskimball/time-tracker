@@ -1,15 +1,19 @@
 import { validateRequest } from "~/lib/auth";
+import { getRequest } from "~/lib/request-context";
 import { TimesheetManager } from "./client";
 import { getTimeLogsWithCorrections, getEmployeesForCorrection } from "./actions";
 import { getStations } from "../employees/actions";
 
-export default async function Component({ searchParams }: { searchParams?: { page?: string } }) {
+export default async function Component() {
 	const { user } = await validateRequest();
 	if (!user) {
 		throw new Error("Not authenticated");
 	}
 
-	const page = searchParams?.page ? parseInt(searchParams.page) : 1;
+	const request = getRequest();
+	const pageParam = request ? new URL(request.url).searchParams.get("page") : null;
+	const parsedPage = pageParam ? parseInt(pageParam, 10) : NaN;
+	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 	const limit = 50;
 
 	// Fetch data in parallel
