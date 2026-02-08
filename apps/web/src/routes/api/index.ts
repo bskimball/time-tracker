@@ -22,23 +22,39 @@ const app = new OpenAPIHono();
 app.use("*", pinoLogger({ logger }));
 
 // OpenAPI documentation
-app.doc("/doc", {
+const apiDocConfig = {
 	openapi: "3.0.0",
 	info: {
 		title: "Time Clock API",
 		version: "1.0.0",
 		description: "Operational endpoints for warehouse time tracking and performance analytics",
 	},
-});
+	components: {
+		securitySchemes: {
+			ApiKeyAuth: {
+				type: "apiKey",
+				in: "header",
+				name: "x-api-key",
+				description: "API key required for all endpoints except health",
+			},
+		},
+	},
+	security: [{ ApiKeyAuth: [] }],
+} as unknown as Parameters<typeof app.doc>[1];
 
-// Swagger UI
-app.get("/ui", swaggerUI({ url: "/api/doc" }));
+app.doc("/doc", apiDocConfig);
 
 // Register route modules with proper prefixes
 app.route("/", healthRoutes);
 
+// Protect API documentation routes with API key auth
+app.use("/doc", requiredApiKey());
+
 // Apply API key authentication to all routes except health
 app.use("/*", requiredApiKey());
+
+// Swagger UI
+app.get("/ui", swaggerUI({ url: "/api/doc" }));
 
 // Register other routes
 app.route("/time-clock", timeClockRoutes);

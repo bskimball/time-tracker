@@ -1,7 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
-import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
+import {
+	actionError,
+	errorResponseSchema,
+	serializeArrayDates,
+	serializeDates,
+} from "./types";
 
 const app = new OpenAPIHono();
 
@@ -26,9 +31,9 @@ const performanceMetricsResponseSchema = z.object({
 });
 
 const createPerformanceMetricSchema = z.object({
-	employeeId: z.string().uuid(),
+	employeeId: z.string().cuid(),
 	date: z.string().date(),
-	stationId: z.string().uuid().optional(),
+	stationId: z.string().cuid().optional(),
 	hoursWorked: z.number().nonnegative(),
 	unitsProcessed: z.number().int().nonnegative().optional(),
 	efficiency: z.number().nonnegative().optional(),
@@ -36,13 +41,23 @@ const createPerformanceMetricSchema = z.object({
 	overtimeHours: z.number().nonnegative().optional(),
 });
 
-const updatePerformanceMetricSchema = z.object({
-	hoursWorked: z.number().nonnegative().optional(),
-	unitsProcessed: z.number().int().nonnegative().optional(),
-	efficiency: z.number().nonnegative().optional(),
-	qualityScore: z.number().min(0).max(100).optional(),
-	overtimeHours: z.number().nonnegative().optional(),
-});
+const updatePerformanceMetricSchema = z
+	.object({
+		hoursWorked: z.number().nonnegative().optional(),
+		unitsProcessed: z.number().int().nonnegative().optional(),
+		efficiency: z.number().nonnegative().optional(),
+		qualityScore: z.number().min(0).max(100).optional(),
+		overtimeHours: z.number().nonnegative().optional(),
+	})
+	.refine(
+		(data) =>
+			data.hoursWorked !== undefined ||
+			data.unitsProcessed !== undefined ||
+			data.efficiency !== undefined ||
+			data.qualityScore !== undefined ||
+			data.overtimeHours !== undefined,
+		{ message: "At least one field is required" }
+	);
 
 // Get all performance metrics
 app.openapi(
@@ -51,11 +66,11 @@ app.openapi(
 		path: "/",
 		request: {
 			query: z.object({
-				employeeId: z.string().uuid().optional(),
-				stationId: z.string().uuid().optional(),
-				startDate: z.string().date().optional(),
-				endDate: z.string().date().optional(),
-				limit: z.string().optional(),
+				employeeId: z.string().cuid().optional(),
+				stationId: z.string().cuid().optional(),
+				startDate: z.coerce.date().optional(),
+				endDate: z.coerce.date().optional(),
+				limit: z.coerce.number().int().positive().max(100).optional(),
 			}),
 		},
 		responses: {
@@ -79,29 +94,21 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { employeeId, stationId, startDate, endDate, limit } = c.req.query();
+			const { employeeId, stationId, startDate, endDate, limit } = c.req.valid("query");
 
 			const where: Prisma.PerformanceMetricWhereInput = {};
 			if (employeeId) where.employeeId = employeeId;
 			if (stationId) where.stationId = stationId;
 			if (startDate || endDate) {
 				where.date = {};
-				if (startDate) where.date.gte = new Date(startDate);
-				if (endDate) where.date.lte = new Date(endDate);
+				if (startDate) where.date.gte = startDate;
+				if (endDate) where.date.lte = endDate;
 			}
 
 			const performanceMetrics = await db.performanceMetric.findMany({
 				where,
-				include: {
-					Employee: {
-						select: {
-							name: true,
-							email: true,
-						},
-					},
-				},
 				orderBy: { date: "desc" },
-				take: limit ? parseInt(limit) : undefined,
+				take: limit,
 			});
 
 			const serializedMetrics = serializeArrayDates(performanceMetrics);
@@ -120,7 +127,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -155,17 +162,9 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			const performanceMetric = await db.performanceMetric.findUnique({
 				where: { id },
-				include: {
-					Employee: {
-						select: {
-							name: true,
-							email: true,
-						},
-					},
-				},
 			});
 			if (!performanceMetric) {
 				return c.json({ success: false as const, error: "Performance metric not found" }, 404);
@@ -193,11 +192,11 @@ app.openapi(
 		path: "/employee/{employeeId}/summary",
 		request: {
 			params: z.object({
-				employeeId: z.string().uuid(),
+				employeeId: z.string().cuid(),
 			}),
 			query: z.object({
-				startDate: z.string().date().optional(),
-				endDate: z.string().date().optional(),
+				startDate: z.coerce.date().optional(),
+				endDate: z.coerce.date().optional(),
 			}),
 		},
 		responses: {
@@ -230,14 +229,14 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { employeeId } = c.req.param();
-			const { startDate, endDate } = c.req.query();
+			const { employeeId } = c.req.valid("param");
+			const { startDate, endDate } = c.req.valid("query");
 
 			const where: Prisma.PerformanceMetricWhereInput = { employeeId };
 			if (startDate || endDate) {
 				where.date = {};
-				if (startDate) where.date.gte = new Date(startDate);
-				if (endDate) where.date.lte = new Date(endDate);
+				if (startDate) where.date.gte = startDate;
+				if (endDate) where.date.lte = endDate;
 			}
 
 			const aggregation = await db.performanceMetric.aggregate({
@@ -307,7 +306,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const body = await c.req.json();
+			const body = c.req.valid("json");
 			const performanceMetric = await db.performanceMetric.create({
 				data: {
 					...body,
@@ -330,7 +329,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 			body: {
 				content: {
@@ -372,8 +371,8 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
-			const body = await c.req.json();
+			const { id } = c.req.valid("param");
+			const body = c.req.valid("json");
 			const performanceMetric = await db.performanceMetric.update({
 				where: { id },
 				data: body,
@@ -394,7 +393,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -429,7 +428,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			await db.performanceMetric.delete({
 				where: { id },
 			});

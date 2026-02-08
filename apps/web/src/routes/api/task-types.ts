@@ -1,6 +1,11 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "../../lib/db";
-import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
+import {
+	actionError,
+	errorResponseSchema,
+	serializeArrayDates,
+	serializeDates,
+} from "./types";
 
 const app = new OpenAPIHono();
 
@@ -22,19 +27,28 @@ const taskTypesResponseSchema = z.object({
 });
 
 const createTaskTypeSchema = z.object({
-	name: z.string().min(1),
-	stationId: z.string().uuid(),
+	name: z.string().trim().min(1),
+	stationId: z.string().cuid(),
 	description: z.string().optional(),
 	estimatedMinutesPerUnit: z.number().positive().optional(),
 	isActive: z.boolean().optional(),
 });
 
-const updateTaskTypeSchema = z.object({
-	name: z.string().min(1).optional(),
-	description: z.string().optional(),
-	estimatedMinutesPerUnit: z.number().positive().optional(),
-	isActive: z.boolean().optional(),
-});
+const updateTaskTypeSchema = z
+	.object({
+		name: z.string().trim().min(1).optional(),
+		description: z.string().optional(),
+		estimatedMinutesPerUnit: z.number().positive().optional(),
+		isActive: z.boolean().optional(),
+	})
+	.refine(
+		(data) =>
+			data.name !== undefined ||
+			data.description !== undefined ||
+			data.estimatedMinutesPerUnit !== undefined ||
+			data.isActive !== undefined,
+		{ message: "At least one field is required" }
+	);
 
 // Get all task types
 app.openapi(
@@ -63,13 +77,6 @@ app.openapi(
 	async (c) => {
 		try {
 			const taskTypes = await db.taskType.findMany({
-				include: {
-					Station: {
-						select: {
-							name: true,
-						},
-					},
-				},
 				orderBy: { name: "asc" },
 			});
 			const serializedTaskTypes = serializeArrayDates(taskTypes);
@@ -88,7 +95,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -123,16 +130,9 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			const taskType = await db.taskType.findUnique({
 				where: { id },
-				include: {
-					Station: {
-						select: {
-							name: true,
-						},
-					},
-				},
 			});
 			if (!taskType) {
 				return c.json({ success: false as const, error: "Task type not found" }, 404);
@@ -191,7 +191,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const body = await c.req.json();
+			const body = c.req.valid("json");
 			const taskType = await db.taskType.create({
 				data: body,
 			});
@@ -211,7 +211,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 			body: {
 				content: {
@@ -253,8 +253,8 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
-			const body = await c.req.json();
+			const { id } = c.req.valid("param");
+			const body = c.req.valid("json");
 			const taskType = await db.taskType.update({
 				where: { id },
 				data: body,
@@ -275,7 +275,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -310,7 +310,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			await db.taskType.delete({
 				where: { id },
 			});

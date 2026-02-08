@@ -1,7 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
-import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
+import {
+	actionError,
+	errorResponseSchema,
+	serializeArrayDates,
+	serializeDates,
+} from "./types";
 
 const app = new OpenAPIHono();
 
@@ -24,18 +29,24 @@ const taskAssignmentsResponseSchema = z.object({
 });
 
 const createTaskAssignmentSchema = z.object({
-	employeeId: z.string().uuid(),
-	taskTypeId: z.string().uuid(),
+	employeeId: z.string().cuid(),
+	taskTypeId: z.string().cuid(),
 	startTime: z.string().datetime().optional(),
 	unitsCompleted: z.number().int().nonnegative().optional(),
 	notes: z.string().optional(),
 });
 
-const updateTaskAssignmentSchema = z.object({
-	endTime: z.string().datetime().optional(),
-	unitsCompleted: z.number().int().nonnegative().optional(),
-	notes: z.string().optional(),
-});
+const updateTaskAssignmentSchema = z
+	.object({
+		endTime: z.string().datetime().optional(),
+		unitsCompleted: z.number().int().nonnegative().optional(),
+		notes: z.string().optional(),
+	})
+	.refine(
+		(data) =>
+			data.endTime !== undefined || data.unitsCompleted !== undefined || data.notes !== undefined,
+		{ message: "At least one field is required" }
+	);
 
 // Get all task assignments
 app.openapi(
@@ -44,9 +55,9 @@ app.openapi(
 		path: "/",
 		request: {
 			query: z.object({
-				employeeId: z.string().uuid().optional(),
-				taskTypeId: z.string().uuid().optional(),
-				active: z.string().optional(), // "true" for active (no endTime)
+				employeeId: z.string().cuid().optional(),
+				taskTypeId: z.string().cuid().optional(),
+				active: z.enum(["true", "false"]).optional(),
 			}),
 		},
 		responses: {
@@ -70,7 +81,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { employeeId, taskTypeId, active } = c.req.query();
+			const { employeeId, taskTypeId, active } = c.req.valid("query");
 
 			const where: Prisma.TaskAssignmentWhereInput = {};
 			if (employeeId) where.employeeId = employeeId;
@@ -79,19 +90,6 @@ app.openapi(
 
 			const taskAssignments = await db.taskAssignment.findMany({
 				where,
-				include: {
-					Employee: {
-						select: {
-							name: true,
-							email: true,
-						},
-					},
-					TaskType: {
-						select: {
-							name: true,
-						},
-					},
-				},
 				orderBy: { startTime: "desc" },
 			});
 			const serializedTaskAssignments = serializeArrayDates(taskAssignments);
@@ -110,7 +108,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -145,22 +143,9 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			const taskAssignment = await db.taskAssignment.findUnique({
 				where: { id },
-				include: {
-					Employee: {
-						select: {
-							name: true,
-							email: true,
-						},
-					},
-					TaskType: {
-						select: {
-							name: true,
-						},
-					},
-				},
 			});
 			if (!taskAssignment) {
 				return c.json({ success: false as const, error: "Task assignment not found" }, 404);
@@ -219,7 +204,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const body = await c.req.json();
+			const body = c.req.valid("json");
 			const taskAssignment = await db.taskAssignment.create({
 				data: body,
 			});
@@ -239,7 +224,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 			body: {
 				content: {
@@ -281,8 +266,8 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
-			const body = await c.req.json();
+			const { id } = c.req.valid("param");
+			const body = c.req.valid("json");
 			const taskAssignment = await db.taskAssignment.update({
 				where: { id },
 				data: body,
@@ -303,7 +288,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -338,7 +323,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			await db.taskAssignment.delete({
 				where: { id },
 			});

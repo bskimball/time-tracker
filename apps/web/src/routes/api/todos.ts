@@ -3,6 +3,7 @@ import { db } from "../../lib/db";
 import {
 	actionError,
 	errorResponseSchema,
+	isPrismaNotFoundError,
 	serializeArrayDates,
 	serializeDates,
 	successWithMessageSchema,
@@ -11,6 +12,19 @@ import {
 } from "./types";
 
 const app = new OpenAPIHono();
+
+const createTodoBodySchema = z.object({
+	title: z.string().trim().min(1),
+});
+
+const updateTodoBodySchema = z
+	.object({
+		title: z.string().trim().min(1).optional(),
+		completed: z.boolean().optional(),
+	})
+	.refine((data) => data.title !== undefined || data.completed !== undefined, {
+		message: "At least one field is required",
+	});
 
 // Get all todos
 app.openapi(
@@ -54,14 +68,12 @@ app.openapi(
 app.openapi(
 	createRoute({
 		method: "post",
-		path: "/todos",
+		path: "/",
 		request: {
 			body: {
 				content: {
 					"application/json": {
-						schema: z.object({
-							title: z.string().min(1),
-						}),
+						schema: createTodoBodySchema,
 					},
 				},
 			},
@@ -87,21 +99,10 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const body = await c.req.json();
-			const parsed = z.object({ title: z.string().min(1) }).safeParse(body);
-			if (!parsed.success) {
-				return c.json(
-					{
-						success: false as const,
-						error: parsed.error.issues.map((issue) => issue.message).join(", "),
-					},
-					400
-				);
-			}
+			const parsed = c.req.valid("json");
 			const todo = await db.todo.create({
 				data: {
-					id: crypto.randomUUID(),
-					title: parsed.data.title,
+					title: parsed.title,
 					updatedAt: new Date(),
 				},
 			});
@@ -121,15 +122,12 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 			body: {
 				content: {
 					"application/json": {
-						schema: z.object({
-							title: z.string().min(1).optional(),
-							completed: z.boolean().optional(),
-						}),
+						schema: updateTodoBodySchema,
 					},
 				},
 			},
@@ -163,32 +161,20 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
-			const body = await c.req.json();
-			const parsed = z
-				.object({
-					title: z.string().min(1).optional(),
-					completed: z.boolean().optional(),
-				})
-				.safeParse(body);
-
-			if (!parsed.success) {
-				return c.json(
-					{
-						success: false as const,
-						error: parsed.error.issues.map((issue) => issue.message).join(", "),
-					},
-					400
-				);
-			}
+			const { id } = c.req.valid("param");
+			const parsed = c.req.valid("json");
 
 			const todo = await db.todo.update({
 				where: { id },
-				data: parsed.data,
+				data: parsed,
 			});
 			const serializedTodo = serializeDates(todo);
 			return c.json({ success: true as const, data: serializedTodo }, 200);
 		} catch (error) {
+			if (isPrismaNotFoundError(error)) {
+				return c.json({ success: false as const, error: "Todo not found" }, 404);
+			}
+
 			const errorResponse = actionError(error);
 			return c.json(errorResponse, 400);
 		}
@@ -202,7 +188,7 @@ app.openapi(
 		path: "/{id}",
 		request: {
 			params: z.object({
-				id: z.string().uuid(),
+				id: z.string().cuid(),
 			}),
 		},
 		responses: {
@@ -234,7 +220,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 
 			// Check if todo exists first
 			const existingTodo = await db.todo.findUnique({

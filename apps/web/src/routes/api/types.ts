@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 // Base schemas
 const errorResponseSchema = z.object({
@@ -12,15 +13,15 @@ const successWithMessageSchema = z.object({
 });
 
 // Parameter schemas
-const employeeIdSchema = z.string().uuid().openapi({
+const employeeIdSchema = z.string().cuid().openapi({
 	description: "Employee identifier",
 });
 
-const stationIdSchema = z.string().uuid().openapi({
+const stationIdSchema = z.string().cuid().openapi({
 	description: "Station identifier",
 });
 
-const logIdSchema = z.string().uuid().openapi({
+const logIdSchema = z.string().cuid().openapi({
 	description: "Time log identifier",
 });
 
@@ -113,7 +114,7 @@ const todoResponseSchema = z.object({
 export function serializeDates<T extends Record<string, unknown>>(obj: T): T {
 	const serialized: Record<string, unknown> = { ...obj };
 
-	const dateFields = ["createdAt", "updatedAt", "startTime", "endTime", "deletedAt"];
+	const dateFields = ["createdAt", "updatedAt", "startTime", "endTime", "deletedAt", "date"];
 
 	for (const field of dateFields) {
 		if (field in serialized && serialized[field] instanceof Date) {
@@ -155,11 +156,42 @@ export const okResponse = (message?: string) => ({
 });
 
 export const actionError = (error: unknown) => {
-	if (error instanceof Error) {
-		return { success: false as const, error: error.message };
+	if (error instanceof z.ZodError) {
+		return {
+			success: false as const,
+			error: error.issues.map((issue) => issue.message).join(", "),
+		};
 	}
+
+	if (error instanceof Prisma.PrismaClientKnownRequestError) {
+		if (error.code === "P2025") {
+			return { success: false as const, error: "Resource not found" };
+		}
+
+		if (error.code === "P2002") {
+			return { success: false as const, error: "Resource already exists" };
+		}
+
+		if (error.code === "P2003") {
+			return { success: false as const, error: "Related resource not found" };
+		}
+	}
+
+	if (error instanceof SyntaxError) {
+		return { success: false as const, error: "Invalid JSON payload" };
+	}
+
+	if (error instanceof Error) {
+		return { success: false as const, error: "Internal server error" };
+	}
+
 	return { success: false as const, error: "Unknown error" };
 };
+
+export const isPrismaNotFoundError = (
+	error: unknown
+): error is Prisma.PrismaClientKnownRequestError =>
+	error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
 
 export type ApiError = z.infer<typeof errorResponseSchema>;
 export type ApiSuccess = z.infer<typeof successWithMessageSchema>;

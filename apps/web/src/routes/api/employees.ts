@@ -100,7 +100,7 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { id } = c.req.param();
+			const { id } = c.req.valid("param");
 			const employee = await db.employee.findUnique({
 				where: { id },
 				select: {

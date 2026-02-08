@@ -17,10 +17,10 @@ app.openapi(
 		path: "/",
 		request: {
 			query: z.object({
-				employeeId: z.string().optional(),
-				stationId: z.string().optional(),
-				startDate: z.string().optional(),
-				endDate: z.string().optional(),
+				employeeId: z.string().cuid().optional(),
+				stationId: z.string().cuid().optional(),
+				startDate: z.coerce.date().optional(),
+				endDate: z.coerce.date().optional(),
 			}),
 		},
 		responses: {
@@ -44,12 +44,12 @@ app.openapi(
 	}),
 	async (c) => {
 		try {
-			const { employeeId, stationId, startDate, endDate } = c.req.query();
+			const { employeeId, stationId, startDate, endDate } = c.req.valid("query");
 			const timeLogs = await listTimeLogs(db, {
 				employeeId,
 				stationId,
-				startDate: startDate ? new Date(startDate) : undefined,
-				endDate: endDate ? new Date(endDate) : undefined,
+				startDate,
+				endDate,
 			});
 			const serializedTimeLogs = serializeArrayDates(timeLogs);
 			return c.json({ success: true as const, data: serializedTimeLogs }, 200);
