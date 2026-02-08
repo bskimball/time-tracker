@@ -119,6 +119,33 @@ export default async function Component() {
 		orderBy: { startTime: "desc" },
 	});
 
+	const activeAssignments = await db.taskAssignment.findMany({
+		where: { endTime: null },
+		include: {
+			Employee: true,
+			TaskType: {
+				include: { Station: true },
+			},
+		},
+		orderBy: { startTime: "desc" },
+	});
+
+	const activeTasksByEmployee = activeAssignments.reduce<
+		Record<string, { assignmentId: string; taskTypeName: string; stationName: string | null }>
+	>((acc, assignment) => {
+		if (acc[assignment.employeeId]) {
+			return acc;
+		}
+
+		acc[assignment.employeeId] = {
+			assignmentId: assignment.id,
+			taskTypeName: assignment.TaskType.name,
+			stationName: assignment.TaskType.Station.name,
+		};
+
+		return acc;
+	}, {});
+
 	// Convert Date objects to strings for client component with proper typing
 	const employees = rawEmployees.map((emp) => ({
 		...emp,
@@ -178,7 +205,12 @@ export default async function Component() {
 					<IndustrialPanel variant="default" className="mt-8">
 						<IndustrialHeader title="KIOSK TIME CLOCK" active={isActive} className="py-6" />
 						<div className="p-6">
-							<KioskTimeClock employees={employees} stations={stations} activeLogs={activeLogs} />
+							<KioskTimeClock
+								employees={employees}
+								stations={stations}
+								activeLogs={activeLogs}
+								activeTasksByEmployee={activeTasksByEmployee}
+							/>
 						</div>
 					</IndustrialPanel>
 					<SafetyStripes position="bottom" className="mt-8" />

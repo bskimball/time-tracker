@@ -60,12 +60,17 @@ interface KioskTimeClockProps {
 	employees: Employee[];
 	stations: Station[];
 	activeLogs: TimeLog[];
+	activeTasksByEmployee?: Record<
+		string,
+		{ assignmentId: string; taskTypeName: string; stationName: string | null }
+	>;
 }
 
 export function KioskTimeClock({
 	employees: _employees,
 	stations,
 	activeLogs,
+	activeTasksByEmployee,
 }: KioskTimeClockProps) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const apiKey =
@@ -337,29 +342,39 @@ export function KioskTimeClock({
 								</Badge>
 							</div>
 							<div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
-								{activeLogs.map((log) => (
-									<Card
-										key={log.id}
-										className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
-									>
-										<CardBody>
-											<div className="flex justify-between items-start">
+							{activeLogs.map((log) => (
+								<Card
+									key={log.id}
+									className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
+								>
+									<CardBody>
+										<div className="flex justify-between items-start">
 												<div className="flex-1 min-w-0">
 													<div className="text-lg font-bold text-foreground font-heading truncate group-hover:text-primary transition-colors">
 														{log.employee.name}
 													</div>
-													<div className="flex items-center gap-2 mt-1">
-														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
-															Station:
-														</span>
+												<div className="flex items-center gap-2 mt-1">
+													<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+														Station:
+													</span>
 														<Badge
 															variant="secondary"
 															className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5"
 														>
-															{log.station?.name || "Unassigned"}
+														{log.station?.name || "Unassigned"}
+													</Badge>
+												</div>
+												{activeTasksByEmployee?.[log.employeeId] && (
+													<div className="mt-1 flex items-center gap-2">
+														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+															Task:
+														</span>
+														<Badge variant="primary" className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+															{activeTasksByEmployee[log.employeeId].taskTypeName}
 														</Badge>
 													</div>
-												</div>
+												)}
+											</div>
 												<div className="text-right flex flex-col items-end">
 													<div className="text-lg font-data font-bold text-primary tabular-nums">
 														{new Date(log.startTime).toLocaleTimeString([], {

@@ -390,107 +390,98 @@ async function main() {
 	]);
 
 	console.log(`✅ Created ${taskTypes.length} task types`);
-	// Create Sample Task Assignments
+	// Create task assignments with broad historical coverage and active in-progress work
 	console.log("📋 Creating sample task assignments...");
-	const taskAssignments = await Promise.all([
-		// Completed tasks from yesterday
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[0].id, // John Smith
-				taskTypeId: taskTypes[0].id, // Pick Orders
-				startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-				endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000), // 8 hours later
-				unitsCompleted: 245,
-				notes: "Completed picking orders for zone A",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[1].id, // Sarah Johnson
-				taskTypeId: taskTypes[1].id, // Pack Orders
-				startTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 7.5 * 60 * 60 * 1000),
-				unitsCompleted: 198,
-				notes: "Packing completed with quality checks",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[2].id, // Michael Chen
-				taskTypeId: taskTypes[2].id, // Fill Containers
-				startTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000),
-				unitsCompleted: 312,
-				notes: "High efficiency filling shift",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[3].id, // Emily Davis
-				taskTypeId: taskTypes[3].id, // Receive Shipment
-				startTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8.2 * 60 * 60 * 1000),
-				unitsCompleted: 167,
-				notes: "Processed incoming shipment",
-			},
-		}),
-		// Active tasks (currently in progress)
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[4].id, // David Martinez
-				taskTypeId: taskTypes[4].id, // Load Truck
-				startTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-				unitsCompleted: 45,
-				notes: "Loading truck for delivery route 1",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[5].id, // Jennifer Wilson
-				taskTypeId: taskTypes[5].id, // Quality Inspection
-				startTime: new Date(Date.now() - 1.5 * 60 * 60 * 1000), // 1.5 hours ago
-				unitsCompleted: 28,
-				notes: "Quality inspection in progress",
-			},
-		}),
-		// More completed tasks from 2 days ago
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[0].id, // John Smith
-				taskTypeId: taskTypes[0].id, // Pick Orders
-				startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 7.8 * 60 * 60 * 1000),
-				unitsCompleted: 238,
-				notes: "Zone B picking completed",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[1].id, // Sarah Johnson
-				taskTypeId: taskTypes[1].id, // Pack Orders
-				startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 8.1 * 60 * 60 * 1000),
-				unitsCompleted: 215,
-				notes: "High volume packing day",
-			},
-		}),
-		prisma.taskAssignment.create({
-			data: {
-				employeeId: employees[6].id, // Robert Taylor
-				taskTypeId: taskTypes[6].id, // Stock Count
-				startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-				endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 6.5 * 60 * 60 * 1000),
-				unitsCompleted: 89,
-				notes: "Monthly inventory count",
-			},
-		}),
-	]);
+	const now = new Date();
+	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
+	const taskTypeByStation = new Map(taskTypes.map((taskType) => [taskType.stationId, taskType]));
 
-	console.log(`✅ Created ${taskAssignments.length} task assignments`);
+	const assignmentRows: Array<{
+		employeeId: string;
+		taskTypeId: string;
+		startTime: Date;
+		endTime: Date | null;
+		unitsCompleted: number | null;
+		notes: string;
+	}> = [];
+
+	for (let dayOffset = 2; dayOffset <= 75; dayOffset++) {
+		for (const [employeeIndex, employee] of activeEmployees.entries()) {
+			if ((dayOffset + employeeIndex) % 8 === 0) continue;
+
+			const stationTaskType = employee.defaultStationId
+				? taskTypeByStation.get(employee.defaultStationId)
+				: null;
+			const fallbackTaskType = taskTypes[(employeeIndex + dayOffset) % taskTypes.length];
+			const selectedTaskType = stationTaskType ?? fallbackTaskType;
+
+			const shiftDate = new Date(now);
+			shiftDate.setDate(now.getDate() - dayOffset);
+			shiftDate.setHours(
+				6 + ((employeeIndex + dayOffset) % 3),
+				((employeeIndex * 11) % 4) * 15,
+				0,
+				0
+			);
+
+			const segmentCount = (dayOffset + employeeIndex) % 3 === 0 ? 2 : 1;
+			let segmentStart = new Date(shiftDate);
+
+			for (let segment = 0; segment < segmentCount; segment++) {
+				const durationHours =
+					segmentCount === 2 && segment === 0 ? 3.5 : 3.6 + ((dayOffset + segment) % 4) * 0.4;
+				const endTime = new Date(segmentStart.getTime() + durationHours * 60 * 60 * 1000);
+				const unitsBase = 120 + ((employeeIndex * 17 + dayOffset * 9 + segment * 13) % 210);
+
+				assignmentRows.push({
+					employeeId: employee.id,
+					taskTypeId: selectedTaskType.id,
+					startTime: segmentStart,
+					endTime,
+					unitsCompleted: unitsBase,
+					notes: `Historical shift d-${dayOffset} segment ${segment + 1}`,
+				});
+
+				segmentStart = new Date(endTime.getTime() + 30 * 60 * 1000);
+			}
+		}
+	}
+
+	const activeAssignmentsToCreate = activeEmployees.slice(0, 7).map((employee, index) => {
+		const stationTaskType = employee.defaultStationId
+			? taskTypeByStation.get(employee.defaultStationId)
+			: null;
+		const selectedTaskType = stationTaskType ?? taskTypes[index % taskTypes.length];
+		const startedMinutesAgo = 45 + index * 22;
+
+		return {
+			employeeId: employee.id,
+			taskTypeId: selectedTaskType.id,
+			startTime: new Date(now.getTime() - startedMinutesAgo * 60 * 1000),
+			endTime: null,
+			unitsCompleted: 18 + index * 7,
+			notes: `Active assignment in progress at ${selectedTaskType.name}`,
+		};
+	});
+
+	assignmentRows.push(...activeAssignmentsToCreate);
+
+	const createdAssignments = await prisma.taskAssignment.createMany({
+		data: assignmentRows,
+	});
+
+	const activeAssignmentCount = assignmentRows.filter(
+		(assignment) => assignment.endTime === null
+	).length;
+	const historicalAssignmentCount = assignmentRows.length - activeAssignmentCount;
+
+	console.log(
+		`✅ Created ${createdAssignments.count} task assignments (${activeAssignmentCount} active, ${historicalAssignmentCount} historical)`
+	);
 
 	// Create historical performance metrics for analytics charts
 	console.log("📈 Creating performance metrics history...");
-	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
+	const activeEmployeesForMetrics = employees.filter((employee) => employee.status === "ACTIVE");
 	const stationBaselineRate = new Map<string, number>([
 		["PICKING", 28],
 		["PACKING", 24],
@@ -517,7 +508,7 @@ async function main() {
 		metricDate.setDate(metricDate.getDate() - dayOffset);
 		metricDate.setHours(0, 0, 0, 0);
 
-		for (const [employeeIndex, employee] of activeEmployees.entries()) {
+		for (const [employeeIndex, employee] of activeEmployeesForMetrics.entries()) {
 			if (!employee.defaultStationId) continue;
 
 			// Introduce realistic attendance variability
@@ -562,8 +553,10 @@ async function main() {
 	console.log("\n📊 Summary:");
 	console.log(`   - Stations: ${stations.length}`);
 	console.log(`   - Employees: ${employees.length}`);
-	console.log(`   - Task Types: ${taskTypes.length}
-	 - Task Assignments: ${taskAssignments.length}`);
+	console.log(`   - Task Types: ${taskTypes.length}`);
+	console.log(
+		`   - Task Assignments: ${createdAssignments.count} (${activeAssignmentCount} active, ${historicalAssignmentCount} historical)`
+	);
 	console.log(`   - Performance Metrics: ${metricRows.length}`);
 	console.log(`   - Users: 3 (Admin, Manager, Worker)`);
 	console.log("\n🔑 Login Information:");

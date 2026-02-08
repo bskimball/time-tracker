@@ -10,8 +10,18 @@ export type TimeLogWithRelations = Prisma.TimeLogGetPayload<{
 	include: { Employee: true; Station: true };
 }>;
 
+type ActiveTaskByEmployee = Record<
+	string,
+	{
+		assignmentId: string;
+		taskTypeName: string;
+		stationName: string | null;
+	}
+>;
+
 export default async function Component() {
-	const [employees, stations, activeLogs, activeBreaks, completedLogs] = await Promise.all([
+	const [employees, stations, activeLogs, activeBreaks, completedLogs, activeAssignments] =
+		await Promise.all([
 		db.employee.findMany({ orderBy: { name: "asc" } }),
 		db.station.findMany({ orderBy: { name: "asc" } }),
 		db.timeLog.findMany({
@@ -30,7 +40,30 @@ export default async function Component() {
 			orderBy: { startTime: "desc" },
 			take: 50,
 		}),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			include: {
+				TaskType: {
+					include: { Station: true },
+				},
+			},
+			orderBy: { startTime: "desc" },
+		}),
 	]);
+
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
+		if (acc[assignment.employeeId]) {
+			return acc;
+		}
+
+		acc[assignment.employeeId] = {
+			assignmentId: assignment.id,
+			taskTypeName: assignment.TaskType.name,
+			stationName: assignment.TaskType.Station.name,
+		};
+
+		return acc;
+	}, {});
 
 	// No more 'as any' casts - type safety is preserved
 	return (
@@ -40,6 +73,7 @@ export default async function Component() {
 			activeLogs={activeLogs as TimeLogWithRelations[]}
 			activeBreaks={activeBreaks as TimeLogWithRelations[]}
 			completedLogs={completedLogs as TimeLogWithRelations[]}
+			activeTasksByEmployee={activeTasksByEmployee}
 		/>
 	);
 }

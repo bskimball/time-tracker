@@ -18,15 +18,15 @@ interface ButtonProps extends Omit<AriaButtonProps, "className" | "isDisabled"> 
 
 const variantStyles: Record<ButtonVariant, string> = {
 	primary:
-		"bg-primary border border-primary text-primary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-primary-hover active:bg-primary-active active:shadow-none active:translate-y-[1px]",
+		"bg-primary border border-white/15 text-primary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-primary-hover active:bg-primary-active active:shadow-none active:translate-y-[1px]",
 	secondary:
-		"bg-secondary border border-secondary text-secondary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-secondary/90 active:bg-secondary/80 active:shadow-none active:translate-y-[1px]",
+		"bg-secondary border border-white/40 text-secondary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-secondary/90 active:bg-secondary/80 active:shadow-none active:translate-y-[1px]",
 	outline:
-		"border border-border bg-background text-foreground shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:shadow-none active:translate-y-[1px]",
+		"border border-border/60 bg-background text-foreground shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:shadow-none active:translate-y-[1px]",
 	ghost:
 		"text-muted-foreground border border-transparent hover:bg-accent hover:text-foreground active:bg-accent/90",
 	error:
-		"bg-destructive border border-destructive text-destructive-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-destructive/90 active:bg-destructive/80 active:shadow-none active:translate-y-[1px]",
+		"bg-destructive border border-white/15 text-destructive-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-destructive/90 active:bg-destructive/80 active:shadow-none active:translate-y-[1px]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -46,7 +46,7 @@ export function Button({
 	...props
 }: ButtonProps) {
 	const buttonClass = cn(
-		"inline-flex items-center justify-center font-bold rounded-[2px]",
+		"relative overflow-hidden inline-flex items-center justify-center font-bold rounded-[2px]",
 		"transition-all duration-75 ease-out",
 		"focus:outline-none focus-visible:ring-2 ring-ring focus-visible:ring-offset-2 ring-offset-background",
 		"disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none disabled:translate-y-0",
@@ -58,6 +58,10 @@ export function Button({
 
 	return (
 		<AriaButton type={type} isDisabled={disabled} className={buttonClass} {...props}>
+			{/* Light Blade for Primary Variant */}
+			{variant === "primary" && (
+				<span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/40 shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+			)}
 			{children}
 		</AriaButton>
 	);

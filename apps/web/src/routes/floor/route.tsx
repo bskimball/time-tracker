@@ -10,6 +10,15 @@ type TimeLogWithRelations = TimeLog & {
 	Station: Station | null;
 };
 
+type ActiveTaskByEmployee = Record<
+	string,
+	{
+		assignmentId: string;
+		taskTypeName: string;
+		stationName: string | null;
+	}
+>;
+
 export default async function Component() {
 	// Mobile redirect is now handled in entry.rsc.tsx
 
@@ -18,6 +27,7 @@ export default async function Component() {
 	let activeLogs: TimeLogWithRelations[] = [];
 	let activeBreaks: TimeLogWithRelations[] = [];
 	let completedLogs: TimeLogWithRelations[] = [];
+	let activeTasksByEmployee: ActiveTaskByEmployee = {};
 
 	// Initialize demo data if needed
 	const stationCount = await db.station.count();
@@ -86,6 +96,30 @@ export default async function Component() {
 		orderBy: { startTime: "desc" },
 	});
 
+	const activeAssignments = await db.taskAssignment.findMany({
+		where: { endTime: null },
+		include: {
+			TaskType: {
+				include: { Station: true },
+			},
+		},
+		orderBy: { startTime: "desc" },
+	});
+
+	activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
+		if (acc[assignment.employeeId]) {
+			return acc;
+		}
+
+		acc[assignment.employeeId] = {
+			assignmentId: assignment.id,
+			taskTypeName: assignment.TaskType.name,
+			stationName: assignment.TaskType.Station.name,
+		};
+
+		return acc;
+	}, {});
+
 	return (
 		<>
 			<title>Floor Time Clock</title>
@@ -101,6 +135,7 @@ export default async function Component() {
 					activeLogs={activeLogs as TimeLogWithRelations[]}
 					activeBreaks={activeBreaks as TimeLogWithRelations[]}
 					completedLogs={completedLogs as TimeLogWithRelations[]}
+					activeTasksByEmployee={activeTasksByEmployee}
 				/>
 			</main>
 		</>

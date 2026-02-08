@@ -27,11 +27,16 @@ export function MobileTimeClock({
 	stations,
 	activeLogs,
 	activeBreaks,
+	activeTasksByEmployee,
 }: {
 	employees: Employee[];
 	stations: Station[];
 	activeLogs: TimeLogWithRelations[];
 	activeBreaks: TimeLogWithRelations[];
+	activeTasksByEmployee?: Record<
+		string,
+		{ assignmentId: string; taskTypeName: string; stationName: string | null }
+	>;
 }) {
 	const [method, setMethod] = React.useState<"pin" | "select">("pin");
 	const [pin, setPin] = React.useState("");
@@ -341,6 +346,7 @@ export function MobileTimeClock({
 						<div className="space-y-4">
 							{activeLogs.map((log) => {
 								const isOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
+								const activeTask = activeTasksByEmployee?.[log.employeeId];
 								return (
 									<MobileCard key={log.id} padding="md">
 										<div className="space-y-3">
@@ -349,6 +355,11 @@ export function MobileTimeClock({
 												<p className="text-sm text-muted-foreground">
 													{log.station?.name || "No station"}
 												</p>
+												{activeTask && (
+													<p className="text-xs text-muted-foreground">
+														Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+													</p>
+												)}
 											</div>
 
 											<div className="flex items-center justify-between">

@@ -112,6 +112,11 @@
 		100% { opacity: 1; filter: brightness(1); }
 	}
 
+	@keyframes sequence-pulse {
+		0%, 100% { opacity: 0.3; transform: scaleY(0.9); }
+		50% { opacity: 1; transform: scaleY(1); }
+	}
+
 	.animate-scale-in { animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 	.animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 	.animate-slide-down { animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -136,6 +141,7 @@
 	.animate-power-cycle { animation: power-cycle 0.4s ease-out forwards; }
 	.animate-scanner-line { animation: scanner-line 3s ease-in-out infinite; }
 	.animate-data-stream { animation: data-stream 4s ease-in-out infinite; }
+	.animate-sequence-pulse { animation: sequence-pulse 1.5s ease-in-out infinite; }
 
 	.animate-delay-100 { animation-delay: 100ms; }
 	.animate-delay-200 { animation-delay: 200ms; }
@@ -170,7 +176,8 @@
 		.animate-blink,
 		.animate-grid-pan,
 		.animate-glitch,
-		.animate-power-cycle {
+		.animate-power-cycle,
+		.animate-sequence-pulse {
 			animation: none !important;
 			opacity: 1 !important;
 			transform: none !important;

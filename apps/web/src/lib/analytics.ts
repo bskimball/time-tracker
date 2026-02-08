@@ -350,11 +350,18 @@ export async function getStationPerformance(
  * Get current occupancy level
  */
 async function getCurrentOccupancy(): Promise<number> {
-	const activeSessions = await db.timeLog.count({
+	const activeWorkLogs = await db.timeLog.findMany({
 		where: {
 			endTime: null,
 			type: "WORK",
+			deletedAt: null,
 		},
+		select: { employeeId: true },
+	});
+
+	const activeAssignments = await db.taskAssignment.findMany({
+		where: { endTime: null },
+		select: { employeeId: true },
 	});
 
 	const totalStations = await db.station.count({
@@ -366,8 +373,16 @@ async function getCurrentOccupancy(): Promise<number> {
 		_sum: { capacity: true },
 	});
 
+	const activeEmployeeIds = new Set<string>();
+	for (const log of activeWorkLogs) {
+		activeEmployeeIds.add(log.employeeId);
+	}
+	for (const assignment of activeAssignments) {
+		activeEmployeeIds.add(assignment.employeeId);
+	}
+
 	const capacity = totalCapacity._sum.capacity || totalStations * 2; // Default to 2 per station
-	return capacity > 0 ? (activeSessions / capacity) * 100 : 0;
+	return capacity > 0 ? (activeEmployeeIds.size / capacity) * 100 : 0;
 }
 
 /**

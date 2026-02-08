@@ -475,9 +475,14 @@ function BreakButton({ employeeId, onBreak }: { employeeId: string; onBreak: boo
 function ActiveSessions({
 	activeLogs,
 	activeBreaks,
+	activeTasksByEmployee,
 }: {
 	activeLogs: TimeLogWithRelations[];
 	activeBreaks: TimeLogWithRelations[];
+	activeTasksByEmployee?: Record<
+		string,
+		{ assignmentId: string; taskTypeName: string; stationName: string | null }
+	>;
 }) {
 	const { kioskEnabled, enqueueOfflineAction } = useKioskContext();
 	const [state, formAction] = useActionState<ClockActionState, FormData>(clockOut, null);
@@ -514,6 +519,7 @@ function ActiveSessions({
 					<div className="space-y-2">
 						{activeLogs.map((log) => {
 							const employeeOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
+							const activeTask = activeTasksByEmployee?.[log.employeeId];
 							return (
 								<div
 									key={log.id}
@@ -531,6 +537,11 @@ function ActiveSessions({
 										<p className="text-sm text-muted-foreground">
 											{log.Station?.name || "No station"}
 										</p>
+										{activeTask && (
+											<p className="text-xs text-muted-foreground">
+												Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+											</p>
+										)}
 										<p className="text-xs">
 											Started: {new Date(log.startTime).toLocaleTimeString()}
 										</p>
@@ -1089,12 +1100,17 @@ export function TimeTracking({
 	activeLogs,
 	activeBreaks,
 	completedLogs,
+	activeTasksByEmployee,
 }: {
 	employees: Employee[];
 	stations: Station[];
 	activeLogs: TimeLogWithRelations[];
 	activeBreaks: TimeLogWithRelations[];
 	completedLogs: TimeLogWithRelations[];
+	activeTasksByEmployee?: Record<
+		string,
+		{ assignmentId: string; taskTypeName: string; stationName: string | null }
+	>;
 }) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
@@ -1175,7 +1191,11 @@ export function TimeTracking({
 					pinInputRef={pinInputRef}
 					onOptimisticClockIn={addOptimisticLog}
 				/>
-				<ActiveSessions activeLogs={optimisticLogs} activeBreaks={activeBreaks} />
+				<ActiveSessions
+					activeLogs={optimisticLogs}
+					activeBreaks={activeBreaks}
+					activeTasksByEmployee={activeTasksByEmployee}
+				/>
 			</div>
 			<TimeHistory completedLogs={completedLogs} stations={stations} employees={employees} />
 			{notifications.length > 0 && (

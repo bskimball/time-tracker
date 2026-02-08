@@ -10,9 +10,10 @@ import {
 	useState,
 	type ReactNode,
 } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigation } from "react-router";
 import { cn } from "~/lib/cn";
 import { Button, SafetyStripes } from "@monorepo/design-system";
+import { IndustrialLoader } from "~/components/industrial-loader";
 import {
 	LiaTachometerAltSolid,
 	LiaDesktopSolid,
@@ -97,7 +98,7 @@ function IndustrialSidebarSidebar({ children, className }: IndustrialSidebarSide
 		<aside
 			data-collapsed={isCollapsed}
 			className={cn(
-				"bg-card relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden",
+				"bg-card relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden bg-gradient-to-b from-muted/30 to-background",
 				isCollapsed ? "w-16" : "w-72",
 				className
 			)}
@@ -175,11 +176,13 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 					"relative flex items-center transition-all duration-200 rounded-[2px] overflow-hidden",
 					isCollapsed ? "justify-center h-10 w-10 mx-auto" : "h-10 px-3",
 					isActive
-						? "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+						? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)]/70 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
 						: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
 				)}
 			>
-				{isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/20" />}
+				{isActive && (
+					<div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white/40 shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+				)}
 
 				{Icon ? (
 					<Icon
@@ -327,6 +330,8 @@ interface IndustrialSidebarStatusBarProps {
 
 function IndustrialSidebarStatusBar({ className }: IndustrialSidebarStatusBarProps) {
 	const [now, setNow] = useState<Date | null>(null);
+	const navigation = useNavigation();
+	const isAnimating = navigation.state !== "idle";
 
 	useEffect(() => {
 		// Update immediately (next tick) to show time but avoid synchronous setState warning
@@ -341,11 +346,17 @@ function IndustrialSidebarStatusBar({ className }: IndustrialSidebarStatusBarPro
 	return (
 		<div
 			className={cn(
-				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between",
+				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border/40",
 				className
 			)}
 		>
-			<div />
+			<div className="flex items-center gap-4">
+				<IndustrialLoader 
+					variant="processing" 
+					className="opacity-60" 
+					isAnimated={isAnimating}
+				/>
+			</div>
 
 			<div className="flex items-center gap-3">
 				<div className="font-mono text-xs text-muted-foreground tabular-nums tracking-wide">
