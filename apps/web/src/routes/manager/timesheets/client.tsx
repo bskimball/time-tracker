@@ -78,7 +78,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 	return (
 		<div className="space-y-6">
 			<PageHeader
-				title="Time Sheet Management"
+				title="Timesheet Management"
 				subtitle="View and manage employee time entries and corrections"
 				actions={
 					<Button onClick={() => setShowCorrectionForm(true)} variant="primary">
@@ -106,7 +106,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 							<div className="overflow-x-auto">
 								<table className="w-full">
 									<thead>
-										<tr className="border-b border-border">
+									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
 											<th className="text-left p-4">Employee</th>
 											<th className="text-left p-4">Type</th>
 											<th className="text-left p-4">Station</th>
@@ -149,7 +149,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 															</p>
 														</div>
 													) : (
-														<span className="text-orange-600 font-medium">Active</span>
+														<Badge variant="primary">Active</Badge>
 													)}
 												</td>
 												<td className="p-4">{formatDuration(log.startTime, log.endTime)}</td>
@@ -194,7 +194,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 								{logs
 									.filter((log) => log.clockMethod === "MANUAL")
 									.map((log) => (
-										<div key={log.id} className="border rounded p-4 bg-muted/30">
+											<div key={log.id} className="border border-border rounded-[2px] p-4 bg-muted/30">
 											<div className="flex justify-between items-start">
 												<div>
 													<h4 className="font-medium">
@@ -206,11 +206,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 													</p>
 													<p className="text-sm mt-2">{log.note}</p>
 												</div>
-												<div>
-													<span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
-														Correction
-													</span>
-												</div>
+												<Badge variant="primary">Correction</Badge>
 											</div>
 										</div>
 									))}
@@ -317,7 +313,7 @@ function TimeCorrectionForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain" aria-live="polite">
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overscroll-contain">
 				<CardHeader>
 					<CardTitle>Add Time Entry</CardTitle>

@@ -46,7 +46,7 @@ interface ScheduleViewProps {
 const shiftColors: Record<string, string> = {
 	MORNING: "border-l-4 border-l-amber-500",
 	SWING: "border-l-4 border-l-blue-500",
-	NIGHT: "border-l-4 border-l-purple-500",
+	NIGHT: "border-l-4 border-l-zinc-600",
 };
 
 export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleViewProps) {
@@ -95,6 +95,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					<div className="grid grid-cols-2 md:grid-cols-7 gap-3">
 						{currentDayEntries.map((day) => (
 							<button
+								type="button"
 								key={day.date}
 								onClick={() => setSelectedDate(day.date)}
 								className={`rounded-[2px] border p-3 text-left transition-all ${
@@ -120,6 +121,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 				<CardBody className="space-y-4">
 					<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
 						<Select
+							name="stationFilter"
 							label="Station"
 							options={[
 								{ value: "all", label: "All Stations" },
@@ -129,10 +131,12 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							onChange={(value: string) => setSelectedStation(value || "all")}
 						/>
 						<Input
+							name="employeeSearch"
 							label="Search"
-							placeholder="Search employees..."
+							placeholder="Search employees…"
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
+							autoComplete="off"
 						/>
 						<div className="flex flex-col gap-1">
 							<label className="text-sm font-medium">View</label>

@@ -9,6 +9,7 @@ import {
 	CardTitle,
 	CardBody,
 	Form,
+	SimpleSelect,
 } from "@monorepo/design-system";
 import type { TaskAssignment, TaskType } from "./types";
 
@@ -68,7 +69,7 @@ export function TaskSwitchForm({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-live="polite">
 			<Card className="relative w-full max-h-[90vh] max-w-lg overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Switch Task</CardTitle>
@@ -81,22 +82,17 @@ export function TaskSwitchForm({
 							<p className="text-xs mt-1">Switching will complete the current task and start a new one.</p>
 						</div>
 
-						<div>
-							<label className="block text-sm font-medium mb-1">New Task Type</label>
-							<select
-								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.taskTypeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, taskTypeId: e.target.value }))}
-								required
-							>
-								<option value="">Select a task type</option>
-								{taskTypes.map((taskType) => (
-									<option key={taskType.id} value={taskType.id}>
-										{taskType.name} - {taskType.Station.name}
-									</option>
-								))}
-							</select>
-						</div>
+						<SimpleSelect
+							label="New Task Type"
+							value={formData.taskTypeId}
+							onChange={(value) => setFormData((prev) => ({ ...prev, taskTypeId: value ?? "" }))}
+							options={taskTypes.map((taskType) => ({
+								value: taskType.id,
+								label: `${taskType.name} - ${taskType.Station.name}`,
+							}))}
+							placeholder="Select a task type…"
+							isRequired
+						/>
 
 						<div>
 							<Input
@@ -114,7 +110,7 @@ export function TaskSwitchForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isPending}>
-								{isPending ? "Switching..." : "Switch Task"}
+								{isPending ? "Switching…" : "Switch Task"}
 							</Button>
 						</div>
 					</Form>

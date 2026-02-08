@@ -9,6 +9,7 @@ import {
 	CardTitle,
 	CardBody,
 	Form,
+	SimpleSelect,
 } from "@monorepo/design-system";
 import type { Employee, TaskType, TaskAssignment } from "./types";
 
@@ -82,68 +83,51 @@ export function TaskAssignmentForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" aria-live="polite">
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Assign Task</CardTitle>
 				</CardHeader>
 				<CardBody>
 					<Form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<label className="block text-sm font-medium mb-1">Employee</label>
-							<select
-								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.employeeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, employeeId: e.target.value }))}
-								required
-							>
-								<option value="">Select an employee</option>
-								{employees
-									.filter(
-										(emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime)
-									)
-									.map((employee) => (
-										<option key={employee.id} value={employee.id}>
-											{employee.name}
-										</option>
-									))}
-							</select>
-						</div>
+						<SimpleSelect
+							label="Employee"
+							value={formData.employeeId}
+							onChange={(value) => setFormData((prev) => ({ ...prev, employeeId: value ?? "" }))}
+							options={employees
+								.filter((emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime))
+								.map((employee) => ({ value: employee.id, label: employee.name }))}
+							placeholder="Select an employee…"
+							isRequired
+						/>
 
-						<div>
-							<label className="block text-sm font-medium mb-1">Task Type</label>
-							<select
-								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.taskTypeId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, taskTypeId: e.target.value }))}
-								required
-							>
-								<option value="">Select a task type</option>
-								{taskTypes.map((taskType) => (
-									<option key={taskType.id} value={taskType.id}>
-										{taskType.name} - {taskType.Station.name}
-									</option>
-								))}
-							</select>
-						</div>
+						<SimpleSelect
+							label="Task Type"
+							value={formData.taskTypeId}
+							onChange={(value) => setFormData((prev) => ({ ...prev, taskTypeId: value ?? "" }))}
+							options={taskTypes.map((taskType) => ({
+								value: taskType.id,
+								label: `${taskType.name} - ${taskType.Station.name}`,
+							}))}
+							placeholder="Select a task type…"
+							isRequired
+						/>
 
-						<div>
-							<label className="block text-sm font-medium mb-1">Priority</label>
-							<select
-								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.priority}
-								onChange={(e) =>
-									setFormData((prev) => ({
-										...prev,
-										priority: e.target.value as "LOW" | "MEDIUM" | "HIGH",
-									}))
-								}
-							>
-								<option value="LOW">Low</option>
-								<option value="MEDIUM">Medium</option>
-								<option value="HIGH">High</option>
-							</select>
-						</div>
+						<SimpleSelect
+							label="Priority"
+							value={formData.priority}
+							onChange={(value) =>
+								setFormData((prev) => ({
+									...prev,
+									priority: (value as "LOW" | "MEDIUM" | "HIGH") ?? "MEDIUM",
+								}))
+							}
+							options={[
+								{ value: "LOW", label: "Low" },
+								{ value: "MEDIUM", label: "Medium" },
+								{ value: "HIGH", label: "High" },
+							]}
+						/>
 
 						<div>
 							<Input
@@ -161,7 +145,7 @@ export function TaskAssignmentForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isPending}>
-								{isPending ? "Assigning..." : "Assign Task"}
+								{isPending ? "Assigning…" : "Assign Task"}
 							</Button>
 						</div>
 					</Form>

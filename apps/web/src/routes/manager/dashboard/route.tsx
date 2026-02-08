@@ -3,17 +3,28 @@ import { validateRequest } from "~/lib/auth";
 import { ManagerDashboard } from "./client";
 import { getActiveAlerts } from "./actions";
 
-async function getTimeLogs(take?: number) {
+type ActiveTaskByEmployee = Record<
+	string,
+	{
+		assignmentId: string;
+		employeeName: string;
+		taskTypeName: string;
+		stationName: string | null;
+		startTime: Date;
+	}
+>;
+
+async function getActiveTimeLogs() {
 	const logs = await db.timeLog.findMany({
 		where: {
 			deletedAt: null,
+			endTime: null,
 		},
 		include: {
 			Employee: true,
 			Station: true,
 		},
-		orderBy: { startTime: "desc" },
-		take,
+		orderBy: { startTime: "asc" },
 	});
 
 	return logs.map((log) => ({
@@ -31,18 +42,42 @@ export default async function Component() {
 	// Middleware ensures MANAGER or ADMIN role
 
 	// Fetch all data in parallel
-	const [allTimeLogs, totalEmployees, activeAlerts] = await Promise.all([
-		getTimeLogs(50),
+	const [activeTimeLogs, totalEmployees, activeAlerts, activeAssignments] = await Promise.all([
+		getActiveTimeLogs(),
 		db.employee.count(),
 		getActiveAlerts(),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			include: {
+				Employee: true,
+				TaskType: {
+					include: { Station: true },
+				},
+			},
+			orderBy: { startTime: "desc" },
+		}),
 	]);
 
-	// Filter for active employees
-	const activeTimeLogs = allTimeLogs.filter((log) => log.endTime === null && log.type === "WORK");
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
+		if (acc[assignment.employeeId]) {
+			return acc;
+		}
+
+		acc[assignment.employeeId] = {
+			assignmentId: assignment.id,
+			employeeName: assignment.Employee.name,
+			taskTypeName: assignment.TaskType.name,
+			stationName: assignment.TaskType.Station.name,
+			startTime: assignment.startTime,
+		};
+
+		return acc;
+	}, {});
 
 	return (
 		<ManagerDashboard
 			activeTimeLogs={activeTimeLogs}
+			activeTasksByEmployee={activeTasksByEmployee}
 			totalEmployees={totalEmployees}
 			alerts={activeAlerts.slice(0, 5)} // Show top 5 alerts
 			user={user}

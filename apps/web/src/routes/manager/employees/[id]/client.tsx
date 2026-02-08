@@ -13,7 +13,9 @@ import {
 	TabList,
 	Tab,
 	TabPanel,
+	Badge,
 } from "@monorepo/design-system";
+import { PageHeader } from "~/components/page-header";
 
 type EmployeeDetailProps = {
 	employee: {
@@ -64,20 +66,14 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 	);
 
 	const getStatusBadge = (status: string) => {
-		const styles = {
-			ACTIVE: "bg-green-100 text-green-800",
-			INACTIVE: "bg-accent text-muted-foreground",
-			ON_LEAVE: "bg-yellow-100 text-yellow-800",
-			TERMINATED: "bg-red-100 text-red-800",
+		const variantByStatus: Record<string, "success" | "secondary" | "primary" | "destructive"> = {
+			ACTIVE: "success",
+			INACTIVE: "secondary",
+			ON_LEAVE: "primary",
+			TERMINATED: "destructive",
 		};
 
-		return (
-			<span
-				className={`px-3 py-1 text-sm font-medium rounded-full ${styles[status as keyof typeof styles]}`}
-			>
-				{status.replace("_", " ")}
-			</span>
-		);
+		return <Badge variant={variantByStatus[status] ?? "secondary"}>{status.replace("_", " ")}</Badge>;
 	};
 
 	const formatDuration = (start: Date, end: Date | null) => {
@@ -114,23 +110,21 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 
 	return (
 		<div className="max-w-6xl mx-auto space-y-6">
-			{/* Header */}
-			<div className="flex justify-between items-start">
-				<div>
-					<h1 className="text-2xl font-bold">{employee.name}</h1>
-					<p className="text-muted-foreground">{employee.email}</p>
-					<div className="flex items-center space-x-2 mt-2">
+			<PageHeader
+				title={employee.name}
+				subtitle={employee.email}
+				actions={
+					<div className="flex items-center gap-2">
 						{getStatusBadge(employee.status)}
-						<span className="text-sm text-muted-foreground">
-							Employee Code: <code>{employee.employeeCode}</code>
-						</span>
+						<Link to={`/manager/employees/${employee.id}/edit`}>
+							<Button variant="primary">Edit Employee</Button>
+						</Link>
 					</div>
-				</div>
-				<div className="flex space-x-2">
-					<Link to={`/manager/employees/${employee.id}/edit`}>
-						<Button variant="primary">Edit Employee</Button>
-					</Link>
-				</div>
+				}
+			/>
+
+			<div className="text-sm text-muted-foreground -mt-4">
+				Employee Code: <code className="font-mono tabular-nums">{employee.employeeCode || "-"}</code>
 			</div>
 
 			{/* Summary Cards */}
@@ -236,7 +230,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 								<div className="overflow-x-auto">
 									<table className="w-full">
 										<thead>
-											<tr className="border-b border-border">
+									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
 												<th className="text-left p-4">Date</th>
 												<th className="text-left p-4">Type</th>
 												<th className="text-left p-4">Station</th>
@@ -256,7 +250,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 													</td>
 													<td className="p-4">
 														<span
-															className={`px-2 py-1 text-xs rounded ${
+															className={`px-2 py-1 text-xs rounded-[2px] ${
 																log.type === "WORK"
 																	? "bg-accent text-foreground"
 																	: "bg-accent text-muted-foreground"
@@ -289,7 +283,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 							) : (
 								<div className="space-y-3">
 									{employee.TaskAssignment.map((task) => (
-										<div key={task.id} className="border rounded p-4">
+											<div key={task.id} className="border border-border rounded-[2px] p-4">
 											<div className="flex justify-between items-start">
 												<div>
 													<h4 className="font-medium">{task.TaskType.name}</h4>
@@ -310,15 +304,9 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 													{task.unitsCompleted !== null && (
 														<p className="font-medium">{task.unitsCompleted} units</p>
 													)}
-													<span
-														className={`text-xs px-2 py-1 rounded ${
-															task.endTime
-																? "bg-accent text-muted-foreground"
-																: "bg-green-100 text-green-800"
-														}`}
-													>
+													<Badge variant={task.endTime ? "secondary" : "success"}>
 														{task.endTime ? "Completed" : "In Progress"}
-													</span>
+													</Badge>
 												</div>
 											</div>
 										</div>

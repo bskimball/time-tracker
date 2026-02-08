@@ -220,24 +220,24 @@ export function TaskManager({
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<Card>
 					<CardBody>
-						<h3 className="font-semibold mb-2">Active Tasks</h3>
-						<p className="text-2xl">{optimisticAssignments.filter((a) => !a.endTime).length}</p>
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Active Tasks</h3>
+						<p className="text-2xl font-mono tabular-nums">{optimisticAssignments.filter((a) => !a.endTime).length}</p>
 						<p className="text-sm text-muted-foreground">In progress</p>
 					</CardBody>
 				</Card>
 
 				<Card>
 					<CardBody>
-						<h3 className="font-semibold mb-2">Task Types</h3>
-						<p className="text-2xl">{taskTypes.length}</p>
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Task Types</h3>
+						<p className="text-2xl font-mono tabular-nums">{taskTypes.length}</p>
 						<p className="text-sm text-muted-foreground">Available</p>
 					</CardBody>
 				</Card>
 
 				<Card>
 					<CardBody>
-						<h3 className="font-semibold mb-2">Avg Duration</h3>
-						<p className="text-2xl">
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Avg Duration</h3>
+						<p className="text-2xl font-mono tabular-nums">
 							{optimisticAssignments.length > 0
 								? Math.round(
 										optimisticAssignments
@@ -258,8 +258,8 @@ export function TaskManager({
 
 				<Card>
 					<CardBody>
-						<h3 className="font-semibold mb-2">Completion Rate</h3>
-						<p className="text-2xl">
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Completion Rate</h3>
+						<p className="text-2xl font-mono tabular-nums">
 							{optimisticAssignments.length > 0
 								? Math.round(
 										(optimisticAssignments.filter((a) => a.endTime).length /
@@ -427,7 +427,7 @@ export function TaskManager({
 							<div className="overflow-x-auto">
 								<table className="w-full">
 									<thead>
-										<tr className="border-b border-border">
+									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
 											<th className="text-left p-4">Employee</th>
 											<th className="text-left p-4">Task</th>
 											<th className="text-left p-4">Station</th>

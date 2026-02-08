@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button, Input, Card, CardBody, Alert, Select } from "@monorepo/design-system";
+import { PageHeader } from "~/components/page-header";
 
 type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE" | "TERMINATED";
 
@@ -134,23 +135,30 @@ export function EmployeeForm({
 	};
 
 	return (
-		<div className="max-w-2xl mx-auto">
-			<div className="flex justify-between items-center mb-6">
-				<h1 className="text-2xl font-bold">{isEdit ? "Edit Employee" : "Create New Employee"}</h1>
-				<Link to="/manager/employees">
-					<Button variant="outline">Cancel</Button>
-				</Link>
-			</div>
+		<div className="max-w-3xl mx-auto space-y-6">
+			<PageHeader
+				title={isEdit ? "Edit Employee" : "New Employee"}
+				subtitle={
+					isEdit
+						? "Update profile, limits, and station assignment"
+						: "Create a new employee profile for floor operations"
+				}
+				actions={
+					<Link to="/manager/employees">
+						<Button variant="outline">Back to Employees</Button>
+					</Link>
+				}
+			/>
 
 			{errors.submit && (
-				<Alert variant="error" className="mb-4">
+				<Alert variant="error" className="mb-4" aria-live="polite">
 					{errors.submit}
 				</Alert>
 			)}
 
 			{success && (
-				<Alert variant="success" className="mb-4">
-					Employee {isEdit ? "updated" : "created"} successfully! Redirecting...
+				<Alert variant="success" className="mb-4" aria-live="polite">
+					Employee {isEdit ? "updated" : "created"} successfully. Redirecting…
 				</Alert>
 			)}
 
@@ -164,6 +172,8 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="Name"
+									name="name"
+									autoComplete="name"
 									value={employee.name}
 									onChange={(e) => updateEmployee("name", e.target.value)}
 									error={errors.name}
@@ -174,7 +184,10 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="Email"
+									name="email"
 									type="email"
+									autoComplete="email"
+									spellCheck={false}
 									value={employee.email}
 									onChange={(e) => updateEmployee("email", e.target.value)}
 									error={errors.email}
@@ -185,7 +198,9 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="Phone Number"
+									name="phoneNumber"
 									type="tel"
+									autoComplete="tel"
 									value={employee.phoneNumber}
 									onChange={(e) => updateEmployee("phoneNumber", e.target.value)}
 									placeholder="(555) 123-4567"
@@ -195,7 +210,10 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="PIN"
+									name="pin"
 									type="password"
+									autoComplete="off"
+									inputMode="numeric"
 									value={employee.pin}
 									onChange={(e) => updateEmployee("pin", e.target.value)}
 									error={errors.pin}
@@ -209,6 +227,7 @@ export function EmployeeForm({
 							<div>
 								<Select
 									label="Status"
+									name="status"
 									options={statusOptions}
 									value={employee.status}
 									onChange={(value: string) => updateEmployee("status", value as EmployeeStatus)}
@@ -223,6 +242,7 @@ export function EmployeeForm({
 							<div>
 								<Select
 									label="Default Station"
+									name="defaultStationId"
 									placeholder="Select a station"
 									options={stations.map((s) => ({ value: s.id, label: s.name }))}
 									value={employee.defaultStationId}
@@ -233,7 +253,9 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="Daily Hours Limit"
+									name="dailyHoursLimit"
 									type="number"
+									autoComplete="off"
 									step="0.5"
 									min="0"
 									max="24"
@@ -248,7 +270,9 @@ export function EmployeeForm({
 							<div>
 								<Input
 									label="Weekly Hours Limit"
+									name="weeklyHoursLimit"
 									type="number"
+									autoComplete="off"
 									step="0.5"
 									min="0"
 									max="168"
@@ -269,7 +293,7 @@ export function EmployeeForm({
 								</Button>
 							</Link>
 							<Button type="submit" variant="primary" disabled={isSubmitting}>
-								{isSubmitting ? "Saving..." : isEdit ? "Update Employee" : "Create Employee"}
+								{isSubmitting ? "Saving…" : isEdit ? "Update Employee" : "Create Employee"}
 							</Button>
 						</div>
 					</form>

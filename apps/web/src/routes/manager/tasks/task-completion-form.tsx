@@ -68,7 +68,7 @@ export function TaskCompletionForm({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-live="polite">
 			<Card className="relative w-full max-h-[90vh] max-w-lg overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Complete Task: {assignment.TaskType.name}</CardTitle>
@@ -101,7 +101,7 @@ export function TaskCompletionForm({
 								label="Notes (optional)"
 								value={formData.notes}
 								onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-								placeholder="Any comments on the task completion..."
+								placeholder="Any comments on the task completion…"
 							/>
 						</div>
 
@@ -112,7 +112,7 @@ export function TaskCompletionForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isPending}>
-								{isPending ? "Completing..." : "Complete Task"}
+								{isPending ? "Completing…" : "Complete Task"}
 							</Button>
 						</div>
 					</Form>

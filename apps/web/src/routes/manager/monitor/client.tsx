@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import {
-	Button,
 	Card,
-	CardHeader,
-	CardTitle,
-	CardBody,
 	Checkbox,
-	Select,
 	Badge,
+	IndustrialPanel,
+	LedIndicator,
+	Metric,
+	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { cn } from "~/lib/cn";
 
 type ActiveTimeLog = {
 	id: string;
@@ -42,32 +42,39 @@ type Station = {
 interface FloorMonitorProps {
 	activeLogs: ActiveTimeLog[];
 	stations: Station[];
+	activeTasksByEmployee: Record<
+		string,
+		{
+			assignmentId: string;
+			taskTypeName: string;
+			employeeName: string;
+			startTime: Date;
+			stationId: string;
+			stationName: string | null;
+		}
+	>;
 }
 
-export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
+export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: FloorMonitorProps) {
 	const [currentTime, setCurrentTime] = useState(new Date());
 	const [autoRefresh, setAutoRefresh] = useState(true);
 	const [refreshInterval, setRefreshInterval] = useState(30); // seconds
+	const stationStatusOptions = ["ACTIVE", "BUSY", "FULL", "IDLE", "INACTIVE"] as const;
+	const [statusFilters, setStatusFilters] = useState<string[]>([...stationStatusOptions]);
 
 	useEffect(() => {
-		if (!autoRefresh) return;
-
 		const interval = setInterval(() => {
 			setCurrentTime(new Date());
 		}, 1000);
-
 		return () => clearInterval(interval);
-	}, [autoRefresh]);
+	}, []);
 
-	// Auto-refresh data every N seconds
+	// Auto-refresh simulation
 	useEffect(() => {
 		if (!autoRefresh) return;
-
 		const interval = setInterval(() => {
-			// In a real app, you'd fetch fresh data here
-			console.log("Auto-refreshing floor data...");
+			// In production this can trigger route revalidation.
 		}, refreshInterval * 1000);
-
 		return () => clearInterval(interval);
 	}, [autoRefresh, refreshInterval]);
 
@@ -78,282 +85,403 @@ export function FloorMonitor({ activeLogs, stations }: FloorMonitorProps) {
 		return `${hours}h ${minutes}m`;
 	};
 
+	const workLogs = activeLogs.filter((log) => log.type === "WORK" && !log.endTime);
+	const breakLogs = activeLogs.filter((log) => log.type === "BREAK" && !log.endTime);
+
+	const activeTaskEntries = Object.entries(activeTasksByEmployee);
+
 	const getStationOccupancy = (stationId: string): number => {
-		return activeLogs.filter((log) => log.Station?.id === stationId && !log.endTime).length;
+		const employeeIds = new Set<string>();
+		for (const log of workLogs) {
+			if (log.Station?.id === stationId) employeeIds.add(log.Employee.id);
+		}
+		for (const [employeeId, task] of activeTaskEntries) {
+			if (task.stationId === stationId) employeeIds.add(employeeId);
+		}
+		return employeeIds.size;
 	};
 
 	const getStationStatus = (station: Station): string => {
 		const occupancy = getStationOccupancy(station.id);
 		const capacity = station.capacity || 999;
-
 		if (!station.isActive) return "INACTIVE";
-		if (occupancy === 0) return "EMPTY";
+		if (occupancy === 0) return "IDLE";
 		if (occupancy >= capacity) return "FULL";
 		if (occupancy >= Math.ceil(capacity * 0.8)) return "BUSY";
 		return "ACTIVE";
 	};
 
-	const getStationStatusVariant = (status: string): "success" | "primary" | "destructive" | "secondary" => {
-		const variants: Record<string, "success" | "primary" | "destructive" | "secondary"> = {
-			ACTIVE: "success",
-			BUSY: "primary",
-			FULL: "destructive",
-			EMPTY: "secondary",
-			INACTIVE: "secondary",
-		};
-		return variants[status] || "secondary";
+	const toggleStatusFilter = (status: string) => {
+		setStatusFilters((current) => {
+			if (current.includes(status)) {
+				if (current.length === 1) {
+					return current;
+				}
+				return current.filter((item) => item !== status);
+			}
+			return [...current, status];
+		});
 	};
 
-	const workLogs = activeLogs.filter((log) => log.type === "WORK" && !log.endTime);
-	const breakLogs = activeLogs.filter((log) => log.type === "BREAK" && !log.endTime);
+	const activeWorkerIds = new Set<string>();
+	for (const log of workLogs) activeWorkerIds.add(log.Employee.id);
+	for (const employeeId of Object.keys(activeTasksByEmployee)) activeWorkerIds.add(employeeId);
+
+	// Calculate longest shift
+	const shiftStartCandidates = [
+		...workLogs.map((log) => new Date(log.startTime)),
+		...activeTaskEntries.map(([, task]) => new Date(task.startTime)),
+	];
+	const longestCurrentStartTime =
+		shiftStartCandidates.length > 0
+			? new Date(Math.min(...shiftStartCandidates.map((d) => d.getTime())))
+			: null;
+
+	const activeStationsCount = stations.filter(
+		(s) => s.isActive && getStationOccupancy(s.id) > 0,
+	).length;
+	const filteredStations = stations.filter((station) => statusFilters.includes(getStationStatus(station)));
+
+	// Identify workers who are assigned tasks but not in active work logs
+	const taskOnlyWorkers = activeTaskEntries
+		.filter(([employeeId]) => !workLogs.some((log) => log.Employee.id === employeeId))
+		.map(([employeeId, task]) => ({
+			id: employeeId,
+			name: task.employeeName,
+			stationName: task.stationName,
+			startTime: task.startTime,
+			taskName: task.taskTypeName,
+		}));
 
 	return (
-		<div className="space-y-6">
-			<PageHeader title="Floor Monitor" subtitle="Real-time view of warehouse floor activity" />
+		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none">
+			{/* Header */}
+			<PageHeader
+				title="Floor Monitor"
+				subtitle="Live Operations Control"
+				actions={
+					<div className="flex items-center gap-4">
+						<div className="text-right mr-4" aria-live="polite">
+							<div className="font-mono text-xl font-bold tracking-tighter tabular-nums">
+								{currentTime.toLocaleTimeString([], { hour12: false })}
+							</div>
+						</div>
+						<div className="flex items-center gap-3 bg-muted/50 p-1.5 rounded-[2px] border border-border">
+							<Checkbox
+								isSelected={autoRefresh}
+								onChange={setAutoRefresh}
+								label="Live"
+							/>
+							<div className="h-4 w-px bg-border" />
+							<Select
+								value={refreshInterval.toString()}
+								onChange={(val: string) => setRefreshInterval(Number(val))}
+								isDisabled={!autoRefresh}
+								className="w-20"
+								options={[
+									{ value: "10", label: "10s" },
+									{ value: "30", label: "30s" },
+									{ value: "60", label: "1m" },
+									{ value: "300", label: "5m" },
+								]}
+							/>
+						</div>
+					</div>
+				}
+			/>
 
-			{/* Monitor Controls */}
-			<div className="flex justify-end items-center gap-4">
-				<div className="text-right">
-					<p className="text-sm text-muted-foreground">Current Time</p>
-					<p className="text-lg font-medium">{currentTime.toLocaleTimeString()}</p>
-				</div>
-				<div className="flex items-center gap-4">
-					<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} label="Auto-refresh" />
-					<Select
-						options={[
-							{ value: "10", label: "10s" },
-							{ value: "30", label: "30s" },
-							{ value: "60", label: "1m" },
-							{ value: "300", label: "5m" },
-						]}
-						value={refreshInterval.toString()}
-						onChange={(value: string) => setRefreshInterval(parseInt(value))}
-						isDisabled={!autoRefresh}
-						className="w-24"
+			{/* Metrics Dashboard */}
+			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
+				<IndustrialPanel className="p-6 bg-card">
+					<Metric
+						label="Active Personnel"
+						value={activeWorkerIds.size}
+						trend={activeWorkerIds.size > 0 ? "ON FLOOR" : "CLEAR"}
+						trendDirection="neutral"
 					/>
-				</div>
+				</IndustrialPanel>
+				<IndustrialPanel className="p-6 bg-card">
+					<Metric
+						label="Station Load"
+						value={`${Math.round((activeStationsCount / stations.length) * 100)}%`}
+						trend={`${activeStationsCount}/${stations.length} ACTIVE`}
+						trendDirection="up"
+					/>
+				</IndustrialPanel>
+				<IndustrialPanel className="p-6 bg-card">
+					<Metric
+						label="Break Status"
+						value={breakLogs.length}
+						trend="PAUSED"
+						trendDirection={breakLogs.length > 0 ? "down" : "neutral"}
+					/>
+				</IndustrialPanel>
+				<IndustrialPanel className="p-6 bg-card">
+					<Metric
+						label="Shift Max"
+						value={longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--:--"}
+						trend="DURATION"
+						trendDirection="neutral"
+					/>
+				</IndustrialPanel>
 			</div>
 
-			{/* Summary Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-				<Card>
-					<CardBody>
-						<h3 className="font-semibold mb-2">Active Workers</h3>
-						<p className="text-2xl">{workLogs.length}</p>
-						<p className="text-sm text-muted-foreground">Currently clocked in</p>
-					</CardBody>
-				</Card>
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				{/* Left Column: Station Map (2/3 width) */}
+				<div className="lg:col-span-2 space-y-6">
+					<div className="flex items-center justify-between border-b border-border pb-2">
+						<h3 className="font-heading font-semibold text-lg flex items-center gap-2">
+							<span className="w-2 h-2 bg-primary rounded-[1px] animate-pulse" />
+							STATION STATUS
+						</h3>
+						<div className="flex gap-2">
+							{stationStatusOptions.map((status) => (
+								<button
+									type="button"
+									key={status}
+									onClick={() => toggleStatusFilter(status)}
+									className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-[2px]"
+									aria-pressed={statusFilters.includes(status)}
+								>
+									<Badge
+										variant={statusFilters.includes(status) ? "primary" : "outline"}
+										className={cn(
+											"text-[10px] font-mono",
+											!statusFilters.includes(status) && "opacity-60",
+										)}
+									>
+										{status}
+									</Badge>
+								</button>
+							))}
+						</div>
+					</div>
 
-				<Card>
-					<CardBody>
-						<h3 className="font-semibold mb-2">On Break</h3>
-						<p className="text-2xl">{breakLogs.length}</p>
-						<p className="text-sm text-muted-foreground">Currently on break</p>
-					</CardBody>
-				</Card>
-
-				<Card>
-					<CardBody>
-						<h3 className="font-semibold mb-2">Active Stations</h3>
-						<p className="text-2xl">
-							{stations.filter((s) => s.isActive && getStationOccupancy(s.id) > 0).length}
-						</p>
-						<p className="text-sm text-muted-foreground">
-							of {stations.filter((s) => s.isActive).length} total
-						</p>
-					</CardBody>
-				</Card>
-
-				<Card>
-					<CardBody>
-						<h3 className="font-semibold mb-2">Average Shift Length</h3>
-						<p className="text-2xl">
-							{workLogs.length > 0 ? calculateDuration(workLogs[0].startTime) : "0h 0m"}
-						</p>
-						<p className="text-sm text-muted-foreground">Longest current shift</p>
-					</CardBody>
-				</Card>
-			</div>
-
-			{/* Station Occupancy */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Station Occupancy</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{stations.map((station) => {
+					<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+						{filteredStations.map((station) => {
 							const occupancy = getStationOccupancy(station.id);
 							const status = getStationStatus(station);
-							const capacity = station.capacity || 999;
+							const capacity = station.capacity || 5; // Default for visual if null
+
+							// Get workers at this station
+							const stationWorkers = [
+								...workLogs
+									.filter((log) => log.Station?.id === station.id)
+									.map((log) => ({
+										id: log.Employee.id,
+										name: log.Employee.name,
+										task: activeTasksByEmployee[log.Employee.id]?.taskTypeName,
+										time: log.startTime,
+									})),
+								...activeTaskEntries
+									.filter(([, task]) => task.stationId === station.id)
+									.filter(([id]) => !workLogs.some((l) => l.Employee.id === id)) // Avoid dupes if clocked in AND assigned task
+									.map(([id, task]) => ({
+										id,
+										name: task.employeeName,
+										task: task.taskTypeName,
+										time: task.startTime,
+									})),
+							];
 
 							return (
-								<div key={station.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
-									<div className="flex justify-between items-start mb-2">
-										<div>
-											<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{station.name}</h4>
-											{station.zone && (
-												<p className="text-xs text-muted-foreground font-mono">Zone: {station.zone}</p>
-											)}
+								<IndustrialPanel
+									key={station.id}
+									className={cn(
+										"flex flex-col h-full",
+										status === "INACTIVE" && "opacity-60 grayscale",
+									)}
+									variant={status === "FULL" ? "destructive" : "default"}
+								>
+									<div className="p-4 flex-1">
+										<div className="flex justify-between items-start mb-4">
+											<div>
+												<div className="flex items-center gap-2">
+													<h4 className="font-heading font-bold text-sm tracking-tight uppercase">
+														{station.name}
+													</h4>
+													{station.zone && (
+														<span className="text-[10px] font-mono bg-muted px-1 rounded-[1px] text-muted-foreground">
+															{station.zone}
+														</span>
+													)}
+												</div>
+												<div className="text-[10px] font-mono text-muted-foreground mt-1">
+													CAP: {capacity} | ID: {station.id.slice(0, 4)}
+												</div>
+											</div>
+											<LedIndicator
+												active={status !== "IDLE" && status !== "INACTIVE"}
+												className={cn(
+													status === "FULL" && "bg-destructive shadow-destructive/50",
+													status === "BUSY" && "bg-amber-500 shadow-amber-500/50",
+												)}
+											/>
 										</div>
-										<Badge variant={getStationStatusVariant(status)}>
-											{status}
-										</Badge>
-									</div>
 
-									<div className="space-y-2">
-										<div>
-											<div className="flex justify-between text-sm">
-												<span>Occupancy</span>
+										{/* Occupancy Bar */}
+										<div className="mb-4 space-y-1">
+											<div className="flex justify-between text-[10px] font-mono text-muted-foreground">
+												<span>LOAD</span>
 												<span>
 													{occupancy}/{capacity}
 												</span>
 											</div>
-											<div className="w-full bg-muted rounded-[1px] h-1.5 border border-border/30">
-												<div
-													className="bg-primary h-full transition-all duration-500"
-													style={{
-														width: `${Math.min((occupancy / capacity) * 100, 100)}%`,
-													}}
-												/>
+											<div className="h-2 w-full bg-muted rounded-[1px] overflow-hidden flex gap-[1px]">
+												{Array.from({ length: capacity }).map((_, i) => (
+													<div
+														key={i}
+														className={cn(
+															"flex-1 transition-all duration-300",
+															i < occupancy
+																? status === "FULL"
+																	? "bg-destructive"
+																	: status === "BUSY"
+																		? "bg-amber-500"
+																		: "bg-primary"
+																: "bg-transparent",
+														)}
+													/>
+												))}
 											</div>
 										</div>
 
-										{occupancy > 0 && (
-											<div className="space-y-1">
-												{activeLogs
-													.filter((log) => log.Station?.id === station.id && !log.endTime)
-													.map((log) => (
-														<div key={log.id} className="flex justify-between items-center text-xs">
-															<span>{log.Employee.name}</span>
-															<span className="text-muted-foreground">
-																{calculateDuration(log.startTime)}
+										{/* Worker List */}
+										{stationWorkers.length > 0 ? (
+											<div className="space-y-2 mt-4 border-t border-border/50 pt-2">
+												{stationWorkers.map((worker) => (
+													<div
+														key={worker.id}
+														className="flex justify-between items-center text-xs group"
+													>
+														<div className="flex flex-col">
+															<span className="font-medium group-hover:text-primary transition-colors">
+																{worker.name}
 															</span>
+															{worker.task && (
+																<span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+																	{worker.task}
+																</span>
+															)}
 														</div>
-													))}
+														<span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+															{calculateDuration(worker.time)}
+														</span>
+													</div>
+												))}
+											</div>
+										) : (
+											<div className="h-12 flex items-center justify-center text-xs text-muted-foreground/50 font-mono italic">
+												STATION CLEAR
 											</div>
 										)}
 									</div>
-								</div>
+								</IndustrialPanel>
 							);
 						})}
+						{filteredStations.length === 0 && (
+							<div className="md:col-span-2 xl:col-span-3 py-10 text-center text-sm text-muted-foreground border border-dashed border-border rounded-[2px]">
+								No stations match the selected status filters
+							</div>
+						)}
 					</div>
-				</CardBody>
-			</Card>
+				</div>
 
-			{/* Active Workers List */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Active Workers</CardTitle>
-				</CardHeader>
-				<CardBody>
-					{workLogs.length === 0 ? (
-						<p className="text-center text-muted-foreground py-6">
-							No workers currently clocked in
-						</p>
-					) : (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{/* Right Column: Manifest (1/3 width) */}
+				<div className="space-y-6">
+					<div className="flex items-center justify-between border-b border-border pb-2">
+						<h3 className="font-heading font-semibold text-lg">PERSONNEL MANIFEST</h3>
+						<Badge variant="secondary" className="font-mono">
+							TOTAL: {activeWorkerIds.size}
+						</Badge>
+					</div>
+
+					<Card className="h-[calc(100vh-300px)] overflow-hidden flex flex-col">
+						<div className="bg-muted/30 p-2 grid grid-cols-4 gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider border-b border-border">
+							<div className="col-span-2">Employee</div>
+							<div className="text-right">Time</div>
+							<div className="text-center">Status</div>
+						</div>
+						<div className="overflow-y-auto flex-1 p-2 space-y-1">
 							{workLogs.map((log) => (
-								<div key={log.id} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
-									<div className="flex justify-between items-start">
-										<div>
-											<h4 className="font-bold font-heading text-sm uppercase tracking-tight">{log.Employee.name}</h4>
-											<p className="text-xs text-muted-foreground font-mono">
-												{log.Station?.name || "No Station"}
-											</p>
-										</div>
-										<div className="text-right">
-											<p className="font-mono text-sm">{calculateDuration(log.startTime)}</p>
-											<Badge variant={log.type === "WORK" ? "primary" : "secondary"}>
-												{log.type}
-											</Badge>
+								<div
+									key={log.id}
+									className="grid grid-cols-4 gap-2 p-2 rounded-[1px] hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 items-center"
+								>
+									<div className="col-span-2">
+										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
+										<div className="text-[10px] text-muted-foreground font-mono mt-1">
+											{log.Station?.name || (log.Employee.defaultStation ? `FLOAT (Def: ${log.Employee.defaultStation.name})` : "FLOAT")}
 										</div>
 									</div>
-
-									<div className="mt-3 space-y-1">
-										<div className="flex justify-between text-sm">
-											<span className="text-muted-foreground">Started:</span>
-											<span>{new Date(log.startTime).toLocaleTimeString()}</span>
-										</div>
-										<div className="flex justify-between text-xs">
-											<span className="text-muted-foreground font-mono uppercase tracking-widest text-[10px]">Method:</span>
-											<span className="text-[10px] px-1 py-0.5 rounded-[1px] bg-muted font-mono">
-												{log.clockMethod}
-											</span>
-										</div>
+									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+										{calculateDuration(log.startTime)}
 									</div>
-
-									<div className="mt-3 flex space-x-2">
-										<Button size="sm" variant="outline">
-											View Details
-										</Button>
-										<Button size="sm" variant="outline">
-											End Shift
-										</Button>
+									<div className="text-center">
+										<Badge variant="outline" className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20">
+											WORK
+										</Badge>
 									</div>
 								</div>
 							))}
-						</div>
-					)}
-				</CardBody>
-			</Card>
-
-			{/* Performance Indicators */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Performance Indicators</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<h4 className="font-medium mb-3">Peak Performance</h4>
-							<div className="space-y-2">
-								{activeLogs
-									.filter((log) => !log.endTime)
-									.sort((a, b) => {
-										const aDuration = currentTime.getTime() - new Date(a.startTime).getTime();
-										const bDuration = currentTime.getTime() - new Date(b.startTime).getTime();
-										return bDuration - aDuration;
-									})
-									.slice(0, 3)
-									.map((log, index) => (
-										<div key={log.id} className="flex justify-between items-center">
-											<span className="text-sm">
-												{index + 1}. {log.Employee.name}
-											</span>
-											<span className="text-sm font-medium">
-												{calculateDuration(log.startTime)}
-											</span>
+							
+							{breakLogs.map((log) => (
+								<div
+									key={log.id}
+									className="grid grid-cols-4 gap-2 p-2 rounded-[1px] hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 items-center opacity-70"
+								>
+									<div className="col-span-2">
+										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
+										<div className="text-[10px] text-muted-foreground font-mono mt-1">
+											ON BREAK
 										</div>
-									))}
-								{activeLogs.filter((log) => !log.endTime).length === 0 && (
-									<p className="text-sm text-muted-foreground">No active workers</p>
-								)}
-							</div>
-						</div>
+									</div>
+									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+										{calculateDuration(log.startTime)}
+									</div>
+									<div className="text-center">
+										<Badge variant="secondary" className="text-[10px] h-5 px-1">
+											BREAK
+										</Badge>
+									</div>
+								</div>
+							))}
 
-						<div>
-							<h4 className="font-medium mb-3">Employee Distribution</h4>
-							<div className="space-y-2">
-								{stations.map((station) => {
-									const count = getStationOccupancy(station.id);
-									if (count === 0) return null;
-
-									return (
-										<div key={station.id} className="flex justify-between items-center">
-											<span className="text-sm">{station.name}</span>
-											<span className="text-sm font-medium">{count} workers</span>
+							{taskOnlyWorkers.map((worker) => (
+								<div
+									key={worker.id}
+									className="grid grid-cols-4 gap-2 p-2 rounded-[1px] hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 items-center"
+								>
+									<div className="col-span-2">
+										<div className="text-sm font-medium leading-none">{worker.name}</div>
+										<div className="text-[10px] text-muted-foreground font-mono mt-1">
+											{worker.stationName || "Unknown Station"}
+											{worker.taskName ? ` :: ${worker.taskName}` : ""}
 										</div>
-									);
-								})}
-								{workLogs.length === 0 && (
-									<p className="text-sm text-muted-foreground">No station distribution</p>
-								)}
-							</div>
+									</div>
+									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+										{calculateDuration(worker.startTime)}
+									</div>
+									<div className="text-center">
+										<Badge
+											variant="outline"
+											className="text-[10px] h-5 px-1 bg-blue-500/10 text-blue-600 border-blue-200"
+										>
+											ASSIGNED
+										</Badge>
+									</div>
+								</div>
+							))}
+
+							{activeWorkerIds.size === 0 && (
+								<div className="py-12 text-center text-muted-foreground text-sm">
+									No active personnel
+								</div>
+							)}
 						</div>
-					</div>
-				</CardBody>
-			</Card>
+					</Card>
+				</div>
+			</div>
 		</div>
 	);
 }

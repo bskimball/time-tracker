@@ -9,6 +9,7 @@ import {
 	CardTitle,
 	CardBody,
 	Form,
+	SimpleSelect,
 } from "@monorepo/design-system";
 
 interface Station {
@@ -67,7 +68,7 @@ export function TaskTypeForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" aria-live="polite">
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Task Type</CardTitle>
@@ -84,22 +85,14 @@ export function TaskTypeForm({
 							/>
 						</div>
 
-						<div>
-							<label className="block text-sm font-medium mb-1">Station</label>
-							<select
-								className="w-full px-3 py-2 bg-input-background text-foreground border border-input rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-								value={formData.stationId}
-								onChange={(e) => setFormData((prev) => ({ ...prev, stationId: e.target.value }))}
-								required
-							>
-								<option value="">Select a station</option>
-								{stations.map((station) => (
-									<option key={station.id} value={station.id}>
-										{station.name}
-									</option>
-								))}
-							</select>
-						</div>
+						<SimpleSelect
+							label="Station"
+							value={formData.stationId}
+							onChange={(value) => setFormData((prev) => ({ ...prev, stationId: value ?? "" }))}
+							options={stations.map((station) => ({ value: station.id, label: station.name }))}
+							placeholder="Select a station…"
+							isRequired
+						/>
 
 						<div>
 							<Input
@@ -134,7 +127,7 @@ export function TaskTypeForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isPending}>
-								{isPending ? "Creating..." : "Create Task Type"}
+								{isPending ? "Creating…" : "Create Task Type"}
 							</Button>
 						</div>
 					</Form>

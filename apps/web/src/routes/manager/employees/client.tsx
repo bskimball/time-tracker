@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
 	Button,
 	Input,
@@ -56,6 +56,7 @@ export function EmployeeRoster({
 	status: initialStatus,
 	stations,
 }: EmployeeRosterProps) {
+	const navigate = useNavigate();
 	const [employees] = useState(initialEmployees);
 	const [search, setSearch] = useState(initialSearch);
 	const [status, setStatus] = useState<EmployeeStatus | undefined>(initialStatus);
@@ -78,9 +79,7 @@ export function EmployeeRoster({
 			if (newStatus || status) params.set("status", (newStatus || status)?.toString() || "");
 			if (newPage > 1) params.set("page", newPage.toString());
 
-			// In a real app, you'd use React Router's navigation
-			// For now, we'll just reload
-			window.location.href = `/manager/employees?${params.toString()}`;
+			navigate(`/manager/employees?${params.toString()}`);
 		} catch (error) {
 			console.error("Search failed:", error);
 		} finally {
@@ -118,12 +117,15 @@ export function EmployeeRoster({
 			{/* Search and Filters */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Employee Search</CardTitle>
+					<CardTitle className="uppercase tracking-wide text-base">Employee Search</CardTitle>
 				</CardHeader>
 				<CardBody>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<Input
-							placeholder="Search by name, email, or code..."
+							name="search"
+							autoComplete="off"
+							label="Search"
+							placeholder="Search by name, email, or code…"
 							value={search}
 							onChange={(e) => {
 								setSearch(e.target.value);
@@ -136,14 +138,16 @@ export function EmployeeRoster({
 						/>
 
 						<Select
+							name="status"
 							options={statusOptions}
+							label="Status"
 							value={status || ""}
 							onChange={(value: string) => setStatus(value ? (value as EmployeeStatus) : undefined)}
 							placeholder="All Status"
 						/>
 
 						<Button onClick={() => handleSearch()} variant="primary" disabled={loading}>
-							{loading ? "Searching..." : "Search"}
+							{loading ? "Searching…" : "Search"}
 						</Button>
 					</div>
 				</CardBody>
@@ -161,13 +165,13 @@ export function EmployeeRoster({
 				<CardBody className="p-0">
 					{employees.length === 0 ? (
 						<div className="text-center py-6">
-							<p className="text-muted-foreground">No employees found</p>
+							<p className="text-muted-foreground">No employees found.</p>
 						</div>
 					) : (
 						<div className="overflow-x-auto">
 							<table className="w-full">
 								<thead>
-									<tr className="border-b border-border">
+									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
 										<th className="text-left p-4">Name</th>
 										<th className="text-left p-4">Email</th>
 										<th className="text-left p-4">Code</th>
@@ -185,7 +189,7 @@ export function EmployeeRoster({
 											</td>
 											<td className="p-4">{employee.email}</td>
 											<td className="p-4">
-												<code className="px-2 py-1 bg-muted rounded text-sm">
+												<code className="px-2 py-1 bg-muted rounded-[2px] text-sm font-mono tabular-nums">
 													{employee.employeeCode}
 												</code>
 											</td>
