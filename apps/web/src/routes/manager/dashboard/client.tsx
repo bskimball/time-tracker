@@ -53,12 +53,18 @@ export function ManagerDashboard({
 	activeTimeLogs,
 	activeTasksByEmployee,
 	totalEmployees,
+	utilizationRate,
+	taskEfficiencyRate,
+	networkStatus,
 	alerts = [],
 	user,
 }: {
 	activeTimeLogs: TimeLogWithEmployee[];
 	activeTasksByEmployee: ActiveTaskByEmployee;
 	totalEmployees: number;
+	utilizationRate: number;
+	taskEfficiencyRate: number;
+	networkStatus: "ONLINE" | "DEGRADED";
 	alerts?: AlertData[];
 	user: User;
 }) {
@@ -89,9 +95,6 @@ export function ManagerDashboard({
 			: activeTimeLogs.length > 0
 				? activeTimeLogs[0].startTime
 				: null;
-
-	// Utilization calc (mock logic preserved from original, but structured)
-	const utilizationRate = 85;
 
 	return (
 		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none pb-10">
@@ -164,10 +167,11 @@ export function ManagerDashboard({
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{utilizationRate}%
+							{utilizationRate.toFixed(1)}%
 						</span>
 						<span className="text-sm text-muted-foreground font-data">Efficiency</span>
 					</div>
+					<p className="text-[10px] text-muted-foreground mt-2">Active staff / total workforce</p>
 				</div>
 			</section>
 
@@ -368,26 +372,39 @@ export function ManagerDashboard({
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
 									<span className="text-muted-foreground">Floor Capacity</span>
-									<span className="font-data font-medium">85%</span>
+									<span className="font-data font-medium">{utilizationRate.toFixed(1)}%</span>
 								</div>
 								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-									<div className="h-full bg-emerald-500 w-[85%] rounded-full" />
+									<div
+										className="h-full bg-emerald-500 rounded-full"
+										style={{ width: `${Math.min(100, utilizationRate)}%` }}
+									/>
 								</div>
+								<p className="text-[10px] text-muted-foreground mt-1">Current active workers vs total employees</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
 									<span className="text-muted-foreground">Task Efficiency</span>
-									<span className="font-data font-medium">92%</span>
+									<span className="font-data font-medium">{taskEfficiencyRate.toFixed(1)}%</span>
 								</div>
 								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-									<div className="h-full bg-primary w-[92%] rounded-full" />
+									<div
+										className="h-full bg-primary rounded-full"
+										style={{ width: `${Math.min(100, taskEfficiencyRate)}%` }}
+									/>
 								</div>
+								<p className="text-[10px] text-muted-foreground mt-1">Average units/hour efficiency recorded today</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
 									<span className="text-muted-foreground">Network Status</span>
-									<span className="font-data font-medium text-emerald-600">ONLINE</span>
+									<span
+										className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}
+									>
+										{networkStatus}
+									</span>
 								</div>
+								<p className="text-[10px] text-muted-foreground">Derived from same-day manual correction error signals</p>
 							</div>
 						</CardBody>
 					</Card>

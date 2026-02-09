@@ -89,4 +89,3 @@ export function CardBody({ children, className = "" }: CardBodyProps) {
 export function CardFooter({ children, className = "" }: CardFooterProps) {
 	return <div className={cn("p-5 pt-0 flex items-center", className)}>{children}</div>;
 }
-

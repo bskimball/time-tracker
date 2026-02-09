@@ -337,20 +337,54 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 }
 
 export async function getSystemNotifications() {
-	const notifications = [
+	const [recentManualCorrections, recentlyStartedTasks] = await Promise.all([
+		db.timeLog.findMany({
+			where: {
+				clockMethod: "MANUAL",
+				updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+			},
+			orderBy: { updatedAt: "desc" },
+			take: 3,
+			include: { Employee: true },
+		}),
+		db.taskAssignment.findMany({
+			where: {
+				startTime: { gte: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+			},
+			orderBy: { startTime: "desc" },
+			take: 3,
+			include: { Employee: true, TaskType: true },
+		}),
+	]);
+
+	const correctionNotifications = recentManualCorrections.map((log) => ({
+		id: `manual-${log.id}`,
+		type: "INFO",
+		message: `Manual time correction applied for ${log.Employee.name}`,
+		timestamp: log.updatedAt,
+	}));
+
+	const taskNotifications = recentlyStartedTasks.map((assignment) => ({
+		id: `task-${assignment.id}`,
+		type: "INFO",
+		message: `${assignment.Employee.name} started ${assignment.TaskType.name}`,
+		timestamp: assignment.startTime,
+	}));
+
+	const notifications = [...correctionNotifications, ...taskNotifications]
+		.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+		.slice(0, 6);
+
+	if (notifications.length > 0) {
+		return notifications;
+	}
+
+	return [
 		{
-			id: "system-backup",
+			id: "system-no-events",
 			type: "INFO",
-			message: "System backup completed successfully",
-			timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-		},
-		{
-			id: "system-update",
-			type: "INFO",
-			message: "Database optimization completed",
-			timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+			message: "No recent operational events in the selected window",
+			timestamp: new Date(),
 		},
 	];
-
-	return notifications;
 }

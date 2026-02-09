@@ -62,7 +62,7 @@ export function ApiKeyManagement({ apiKeys }: { apiKeys: ApiKey[] }) {
 					) : (
 						<div className="space-y-4">
 							{apiKeys.map((key) => (
-								<div key={key.id} className="panel-shadow border-2 border-border bg-muted p-4">
+							<div key={key.id} className="panel-shadow shadow-industrial border border-border bg-background p-4">
 									<div className="flex justify-between items-start">
 										<div className="space-y-1 overflow-hidden">
 											<p className="font-industrial text-lg font-semibold uppercase tracking-wide">

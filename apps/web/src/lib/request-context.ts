@@ -68,5 +68,35 @@ export function runWithRequest<T>(
 		requestId,
 	};
 
-	return requestContext.run(context, callback);
+	const start = Date.now();
+	logger.info({ query: url.search || undefined }, "Request started");
+
+	return requestContext.run(context, async () => {
+		try {
+			const result = await callback();
+			const durationMs = Date.now() - start;
+
+			if (result instanceof Response) {
+				const metadata = {
+					status: result.status,
+					durationMs,
+				};
+
+				if (result.status >= 500) {
+					logger.error(metadata, "Request completed with server error");
+				} else if (result.status >= 400) {
+					logger.warn(metadata, "Request completed with client error");
+				} else {
+					logger.info(metadata, "Request completed");
+				}
+			} else {
+				logger.info({ durationMs }, "Request completed");
+			}
+
+			return result;
+		} catch (err) {
+			logger.error({ err, durationMs: Date.now() - start }, "Request failed");
+			throw err;
+		}
+	});
 }

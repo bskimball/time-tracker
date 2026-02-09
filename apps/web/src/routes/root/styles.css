@@ -1,5 +1,6 @@
 @import "@monorepo/design-system/styles/fonts";
 @import "tailwindcss";
+@source "../../../../../packages/design-system/src";
 @import "tw-animate-css";
 @import "@monorepo/design-system/styles/full";
 

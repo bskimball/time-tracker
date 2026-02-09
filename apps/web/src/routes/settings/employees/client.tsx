@@ -90,7 +90,7 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 					) : (
 						<div className="space-y-2">
 							{employees.map((employee) => (
-								<div key={employee.id} className="panel-shadow border-2 border-border bg-muted p-4">
+							<div key={employee.id} className="panel-shadow shadow-industrial border border-border bg-background p-4">
 									<div className="flex justify-between items-center">
 										<div>
 											<p className="font-industrial text-lg font-semibold uppercase tracking-wide">

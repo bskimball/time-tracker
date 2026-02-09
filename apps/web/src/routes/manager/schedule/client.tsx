@@ -22,6 +22,7 @@ import type { ScheduleData } from "./actions";
 type Station = {
 	id: string;
 	name: string;
+	capacity?: number | null;
 };
 
 type ActiveEmployee = {
@@ -321,7 +322,8 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												const count = day.entries.filter(
 													(entry) => entry.stationId === station.id
 												).length;
-												const utilization = Math.min((count / 4) * 100, 100);
+												const denominator = Math.max(1, station.capacity ?? 1);
+												const utilization = Math.min((count / denominator) * 100, 100);
 												return (
 													<td key={`${station.id}-${day.date}`} className="p-3 text-center">
 														<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">

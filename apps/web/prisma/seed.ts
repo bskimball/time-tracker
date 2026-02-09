@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { EmployeeStatus, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
@@ -24,6 +24,11 @@ async function main() {
 	// Clear existing data
 	console.log("📦 Clearing existing data...");
 	await prisma.timeLog.deleteMany();
+	await prisma.callOut.deleteMany();
+	await prisma.shiftAssignment.deleteMany();
+	await prisma.shift.deleteMany();
+	await prisma.employeeSkill.deleteMany();
+	await prisma.skill.deleteMany();
 	await prisma.taskAssignment.deleteMany();
 	await prisma.performanceMetric.deleteMany();
 	await prisma.taskType.deleteMany();
@@ -31,6 +36,7 @@ async function main() {
 	await prisma.oAuthAccount.deleteMany();
 	await prisma.user.deleteMany();
 	await prisma.employee.deleteMany();
+	await prisma.breakPolicy.deleteMany();
 	await prisma.station.deleteMany();
 	await prisma.todo.deleteMany();
 
@@ -107,179 +113,96 @@ async function main() {
 	// Create sample PIN hash (for PIN: "1234")
 	const samplePinHash = await bcrypt.hash("1234", 10);
 
-	// Create Employees
+	// Create Employees for a 3-shift operation (roughly 20-30 workers per shift)
 	console.log("👥 Creating employees...");
-	const employees = await Promise.all([
-		// Active employees
-		prisma.employee.create({
-			data: {
-				name: "John Smith",
-				email: "john.smith@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP001",
-				phoneNumber: "555-0101",
-				hireDate: new Date("2023-01-15"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[0].id, // PICKING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Sarah Johnson",
-				email: "sarah.johnson@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP002",
-				phoneNumber: "555-0102",
-				hireDate: new Date("2023-02-20"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[1].id, // PACKING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Michael Chen",
-				email: "michael.chen@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP003",
-				phoneNumber: "555-0103",
-				hireDate: new Date("2023-03-10"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[2].id, // FILLING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Emily Davis",
-				email: "emily.davis@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP004",
-				phoneNumber: "555-0104",
-				hireDate: new Date("2023-04-05"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[3].id, // RECEIVING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "David Martinez",
-				email: "david.martinez@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP005",
-				phoneNumber: "555-0105",
-				hireDate: new Date("2023-05-12"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[4].id, // SHIPPING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Jennifer Wilson",
-				email: "jennifer.wilson@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP006",
-				phoneNumber: "555-0106",
-				hireDate: new Date("2023-06-18"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[5].id, // QUALITY
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Robert Taylor",
-				email: "robert.taylor@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP007",
-				phoneNumber: "555-0107",
-				hireDate: new Date("2023-07-22"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[6].id, // INVENTORY
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Lisa Anderson",
-				email: "lisa.anderson@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP008",
-				phoneNumber: "555-0108",
-				hireDate: new Date("2023-08-14"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[0].id, // PICKING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "James Thompson",
-				email: "james.thompson@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP009",
-				phoneNumber: "555-0109",
-				hireDate: new Date("2023-09-30"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[1].id, // PACKING
-			},
-		}),
-		prisma.employee.create({
-			data: {
-				name: "Maria Garcia",
-				email: "maria.garcia@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP010",
-				phoneNumber: "555-0110",
-				hireDate: new Date("2023-10-25"),
-				status: "ACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[2].id, // FILLING
-			},
-		}),
-		// Employee on leave
-		prisma.employee.create({
-			data: {
-				name: "William Brown",
-				email: "william.brown@warehouse.com",
-				pinHash: samplePinHash,
-				employeeCode: "EMP011",
-				phoneNumber: "555-0111",
-				hireDate: new Date("2022-11-10"),
-				status: "ON_LEAVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-				defaultStationId: stations[3].id, // RECEIVING
-			},
-		}),
-		// Inactive employee
-		prisma.employee.create({
-			data: {
-				name: "Patricia Moore",
-				email: "patricia.moore@warehouse.com",
-				employeeCode: "EMP012",
-				phoneNumber: "555-0112",
-				hireDate: new Date("2022-05-01"),
-				status: "INACTIVE",
-				dailyHoursLimit: 8.0,
-				weeklyHoursLimit: 40.0,
-			},
-		}),
-	]);
+	const activeEmployeesPerShift = 24;
+	const shiftsPerDay = 3;
+	const activeEmployeeCount = activeEmployeesPerShift * shiftsPerDay;
+	const onLeaveCount = 6;
+	const inactiveCount = 4;
+	const totalEmployeeCount = activeEmployeeCount + onLeaveCount + inactiveCount;
+
+	const firstNames = [
+		"Alex",
+		"Jordan",
+		"Taylor",
+		"Morgan",
+		"Casey",
+		"Riley",
+		"Avery",
+		"Quinn",
+		"Skyler",
+		"Reese",
+		"Drew",
+		"Cameron",
+		"Harper",
+		"Logan",
+		"Parker",
+		"Blake",
+		"Rowan",
+		"Dakota",
+		"Sydney",
+		"Kendall",
+	];
+	const lastNames = [
+		"Smith",
+		"Johnson",
+		"Williams",
+		"Brown",
+		"Jones",
+		"Miller",
+		"Davis",
+		"Garcia",
+		"Rodriguez",
+		"Martinez",
+		"Hernandez",
+		"Lopez",
+		"Gonzalez",
+		"Wilson",
+		"Anderson",
+		"Thomas",
+		"Moore",
+		"Jackson",
+		"Martin",
+		"Lee",
+	];
+
+	const seedNow = new Date();
+	const employeeRows = Array.from({ length: totalEmployeeCount }, (_, index) => {
+		const firstName = firstNames[index % firstNames.length];
+		const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
+		const station = stations[index % stations.length];
+		const hireDate = new Date(seedNow);
+		hireDate.setDate(seedNow.getDate() - (index * 17) % (365 * 3));
+
+		const status: EmployeeStatus =
+			index < activeEmployeeCount
+				? "ACTIVE"
+				: index < activeEmployeeCount + onLeaveCount
+					? "ON_LEAVE"
+					: "INACTIVE";
+
+		return {
+			name: `${firstName} ${lastName}`,
+			email: `employee${String(index + 1).padStart(3, "0")}@warehouse.com`,
+			pinHash: samplePinHash,
+			employeeCode: `EMP${String(index + 1).padStart(4, "0")}`,
+			phoneNumber: `555-${String(1000 + index).slice(-4)}`,
+			hireDate,
+			status,
+			dailyHoursLimit: 8.0,
+			weeklyHoursLimit: 40.0,
+			defaultStationId: station.id,
+		};
+	});
+
+	const employees = await Promise.all(
+		employeeRows.map((row) =>
+			prisma.employee.create({
+				data: row,
+			})
+		)
+	);
 
 	console.log(`✅ Created ${employees.length} employees`);
 
@@ -405,9 +328,9 @@ async function main() {
 		notes: string;
 	}> = [];
 
-	for (let dayOffset = 2; dayOffset <= 75; dayOffset++) {
+	for (let dayOffset = 1; dayOffset <= 365 * 3; dayOffset++) {
 		for (const [employeeIndex, employee] of activeEmployees.entries()) {
-			if ((dayOffset + employeeIndex) % 8 === 0) continue;
+			if ((dayOffset + employeeIndex) % 9 === 0) continue;
 
 			const stationTaskType = employee.defaultStationId
 				? taskTypeByStation.get(employee.defaultStationId)
@@ -417,21 +340,17 @@ async function main() {
 
 			const shiftDate = new Date(now);
 			shiftDate.setDate(now.getDate() - dayOffset);
-			shiftDate.setHours(
-				6 + ((employeeIndex + dayOffset) % 3),
-				((employeeIndex * 11) % 4) * 15,
-				0,
-				0
-			);
+			const shiftStartHour = [6, 14, 22][employeeIndex % 3];
+			shiftDate.setHours(shiftStartHour, ((employeeIndex * 7 + dayOffset) % 4) * 15, 0, 0);
 
-			const segmentCount = (dayOffset + employeeIndex) % 3 === 0 ? 2 : 1;
+			const segmentCount = (dayOffset + employeeIndex) % 5 === 0 ? 2 : 1;
 			let segmentStart = new Date(shiftDate);
 
 			for (let segment = 0; segment < segmentCount; segment++) {
 				const durationHours =
-					segmentCount === 2 && segment === 0 ? 3.5 : 3.6 + ((dayOffset + segment) % 4) * 0.4;
+					segmentCount === 2 && segment === 0 ? 4.0 : 6.8 + ((dayOffset + segment) % 3) * 0.35;
 				const endTime = new Date(segmentStart.getTime() + durationHours * 60 * 60 * 1000);
-				const unitsBase = 120 + ((employeeIndex * 17 + dayOffset * 9 + segment * 13) % 210);
+				const unitsBase = 140 + ((employeeIndex * 19 + dayOffset * 11 + segment * 7) % 230);
 
 				assignmentRows.push({
 					employeeId: employee.id,
@@ -447,22 +366,25 @@ async function main() {
 		}
 	}
 
-	const activeAssignmentsToCreate = activeEmployees.slice(0, 7).map((employee, index) => {
+	const activeAssignmentsTarget = Math.min(activeEmployees.length, 26);
+	const activeAssignmentsToCreate = activeEmployees
+		.slice(0, activeAssignmentsTarget)
+		.map((employee, index) => {
 		const stationTaskType = employee.defaultStationId
 			? taskTypeByStation.get(employee.defaultStationId)
 			: null;
 		const selectedTaskType = stationTaskType ?? taskTypes[index % taskTypes.length];
-		const startedMinutesAgo = 45 + index * 22;
+		const startedMinutesAgo = 35 + index * 9;
 
 		return {
 			employeeId: employee.id,
 			taskTypeId: selectedTaskType.id,
 			startTime: new Date(now.getTime() - startedMinutesAgo * 60 * 1000),
 			endTime: null,
-			unitsCompleted: 18 + index * 7,
+			unitsCompleted: 22 + index * 5,
 			notes: `Active assignment in progress at ${selectedTaskType.name}`,
 		};
-	});
+		});
 
 	assignmentRows.push(...activeAssignmentsToCreate);
 
@@ -503,7 +425,7 @@ async function main() {
 		overtimeHours: number;
 	}> = [];
 
-	for (let dayOffset = 0; dayOffset < 45; dayOffset++) {
+	for (let dayOffset = 0; dayOffset < 365 * 3; dayOffset++) {
 		const metricDate = new Date();
 		metricDate.setDate(metricDate.getDate() - dayOffset);
 		metricDate.setHours(0, 0, 0, 0);
@@ -512,14 +434,14 @@ async function main() {
 			if (!employee.defaultStationId) continue;
 
 			// Introduce realistic attendance variability
-			if ((dayOffset + employeeIndex) % 11 === 0) continue;
+			if ((dayOffset + employeeIndex) % 10 === 0) continue;
 
 			const station = stations.find((s) => s.id === employee.defaultStationId);
 			const stationName = station?.name ?? "PICKING";
 			const baselineRate = stationBaselineRate.get(stationName) ?? 24;
 
-			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 9) - 4; // -4..+4
-			const hoursWorked = Number((7.1 + ((dayOffset + employeeIndex) % 4) * 0.45).toFixed(2));
+			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 11) - 5; // -5..+5
+			const hoursWorked = Number((7.3 + ((dayOffset + employeeIndex) % 5) * 0.4).toFixed(2));
 			const overtimeHours = Math.max(0, Number((hoursWorked - 8).toFixed(2)));
 			const unitsProcessed = Math.max(
 				0,
@@ -552,7 +474,9 @@ async function main() {
 	console.log("\n✨ Database seeded successfully!");
 	console.log("\n📊 Summary:");
 	console.log(`   - Stations: ${stations.length}`);
-	console.log(`   - Employees: ${employees.length}`);
+	console.log(
+		`   - Employees: ${employees.length} (${activeEmployeeCount} active, ${onLeaveCount} on leave, ${inactiveCount} inactive)`
+	);
 	console.log(`   - Task Types: ${taskTypes.length}`);
 	console.log(
 		`   - Task Assignments: ${createdAssignments.count} (${activeAssignmentCount} active, ${historicalAssignmentCount} historical)`

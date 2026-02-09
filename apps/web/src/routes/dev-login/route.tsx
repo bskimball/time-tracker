@@ -26,7 +26,7 @@ export default async function Component() {
 				content="Create a new admin user or login as an existing user (development only)"
 			/>
 
-			<main className="min-h-screen flex items-center justify-center bg-grid-pattern p-4">
+			<main className="min-h-screen flex items-center justify-center bg-dot-grid-pattern p-4">
 				<div className="w-full max-w-4xl space-y-6">
 					<SafetyStripes position="top" />
 					<IndustrialPanel>
@@ -55,7 +55,7 @@ export default async function Component() {
 											{plainUsers.map((user) => (
 												<div
 													key={user.id}
-													className="flex items-center justify-between p-3 bg-muted/30 rounded-[2px] border border-border/50 transition-colors hover:border-primary/50"
+													className="panel-shadow shadow-industrial border border-border bg-background p-4 flex items-center justify-between"
 												>
 													<div>
 														<p className="font-medium">{user.name || user.email}</p>

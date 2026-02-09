@@ -41,6 +41,7 @@ import {
 } from "~/lib/domain/time-tracking";
 import type { TimeLogWithRelations } from "~/routes/time-clock/route";
 import { intervalToDuration, formatDuration as formatDurationFn } from "date-fns";
+import { IndustrialSpinner } from "~/components/industrial-spinner";
 
 const createId = () =>
 	typeof crypto !== "undefined" && crypto.randomUUID
@@ -777,7 +778,7 @@ function DeleteSubmitButton({ kioskMode }: { kioskMode: boolean }) {
 			className="text-red-600"
 		>
 			{pending ? (
-				<span className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></span>
+				<IndustrialSpinner size="sm" className="text-red-600" />
 			) : (
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

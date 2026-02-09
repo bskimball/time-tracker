@@ -15,6 +15,7 @@ import {
 	LedIndicator,
 } from "@monorepo/design-system";
 import { pinToggleClock as pinToggleAction } from "../../time-clock/actions";
+import { IndustrialSpinner } from "~/components/industrial-spinner";
 import { useKioskMode, useAutoRefresh } from "~/components/time-tracking/hooks";
 import { useOfflineActionQueue } from "~/components/time-tracking/offline-queue";
 import { KioskContext, type KioskContextValue } from "~/components/time-tracking/context";
@@ -310,7 +311,7 @@ export function KioskTimeClock({
 									>
 										{isPinPending ? (
 											<div className="flex items-center gap-4">
-												<span className="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full"></span>
+												<IndustrialSpinner size="lg" className="text-white" />
 												<span>Processing…</span>
 											</div>
 										) : (

@@ -96,7 +96,7 @@ export function StationManagement({ stations: initialStations }: { stations: Sta
 							{optimisticStations.map((station) => (
 								<div
 									key={station.id}
-									className="panel-shadow flex justify-between items-center border-2 border-border bg-muted p-4 rounded"
+									className="panel-shadow shadow-industrial flex justify-between items-center border border-border bg-background p-4 rounded"
 								>
 									<span className="font-industrial text-lg uppercase tracking-wide">
 										{station.name}

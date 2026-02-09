@@ -19,6 +19,7 @@ import {
 	getPerformanceTrendData,
 	refreshDashboardCache,
 } from "./actions";
+import { getExecutiveKpiThresholds } from "~/lib/operational-config";
 import { format } from "date-fns";
 import { RefreshButton } from "./refresh-button";
 import { TimeRangeTabs } from "../time-range-tabs";
@@ -55,18 +56,19 @@ export default async function Component() {
 
 	const timeRange = getTimeRangeFromRequest();
 
-	const [{ kpis, laborCost }, stationData, alerts, trendData] = await Promise.all([
+	const [{ kpis, laborCost }, stationData, alerts, trendData, kpiThresholds] = await Promise.all([
 		getExecutiveDashboardKPIs(timeRange),
 		getStationPerformanceData(timeRange),
 		getExecutiveAlerts(),
 		getPerformanceTrendData("productivity", timeRange),
+		getExecutiveKpiThresholds(),
 	]);
 
 	// ── Derived chart data ───────────────────────────────────────────────────
 
 	const trendDateFormat = timeRange === "month" ? "MMM d" : "EEE";
 	const trendRangeLabel =
-		timeRange === "today" ? "TODAY" : timeRange === "month" ? "MONTH TO DATE" : "WEEK TO DATE";
+		timeRange === "today" ? "TODAY" : timeRange === "month" ? "LAST 30 DAYS" : "WEEK TO DATE";
 
 	const trendChartData: TrendDataPoint[] = trendData.map((point) => ({
 		date: format(new Date(point.date), trendDateFormat),
@@ -107,20 +109,21 @@ export default async function Component() {
 	const getKPIConfig = (value: number, type: string) => {
 		switch (type) {
 			case "productivity":
-				if (value > 20) return { direction: "up" as const };
-				if (value > 15) return { direction: "neutral" as const };
+				if (value > kpiThresholds.productivityHigh) return { direction: "up" as const };
+				if (value > kpiThresholds.productivityMedium) return { direction: "neutral" as const };
 				return { direction: "down" as const };
 			case "overtime":
-				if (value > 15) return { direction: "up" as const };
-				if (value > 10) return { direction: "neutral" as const };
+				if (value > kpiThresholds.overtimeHigh) return { direction: "up" as const };
+				if (value > kpiThresholds.overtimeMedium) return { direction: "neutral" as const };
 				return { direction: "down" as const };
 			case "occupancy":
-				if (value > 85) return { direction: "up" as const };
-				if (value > 70) return { direction: "neutral" as const };
+				if (value > kpiThresholds.occupancyHigh) return { direction: "up" as const };
+				if (value > kpiThresholds.occupancyMedium) return { direction: "neutral" as const };
 				return { direction: "down" as const };
 			case "variance":
-				if (Math.abs(value) > 10) return { direction: "up" as const };
-				if (Math.abs(value) > 5) return { direction: "neutral" as const };
+				if (Math.abs(value) > kpiThresholds.varianceHigh) return { direction: "up" as const };
+				if (Math.abs(value) > kpiThresholds.varianceMedium)
+					return { direction: "neutral" as const };
 				return { direction: "down" as const };
 			default:
 				return { direction: "neutral" as const };
@@ -207,11 +210,11 @@ export default async function Component() {
 							direction: productivityConfig.direction,
 							value:
 								productivityConfig.direction === "up"
-									? "+8%"
+									? "Above threshold"
 									: productivityConfig.direction === "down"
-										? "-5%"
-										: "0%",
-							label: "vs yesterday",
+										? "Below threshold"
+										: "On threshold",
+							label: "Based on configured KPI bands",
 						}}
 					/>
 					<KPICard
@@ -223,11 +226,11 @@ export default async function Component() {
 							direction: overtimeConfig.direction,
 							value:
 								overtimeConfig.direction === "up"
-									? "+2.3%"
+									? "Above guardrail"
 									: overtimeConfig.direction === "down"
-										? "-1.2%"
-										: "0%",
-							label: "vs last week",
+										? "Within guardrail"
+										: "Near guardrail",
+							label: "Based on overtime policy thresholds",
 						}}
 					/>
 					<KPICard
@@ -239,11 +242,11 @@ export default async function Component() {
 							direction: occupancyConfig.direction,
 							value:
 								occupancyConfig.direction === "up"
-									? "+15%"
+									? "High load"
 									: occupancyConfig.direction === "down"
-										? "-8%"
-										: "0%",
-							label: "vs average",
+										? "Low load"
+										: "Balanced",
+							label: "Active staffing vs station capacity",
 						}}
 					/>
 				</div>

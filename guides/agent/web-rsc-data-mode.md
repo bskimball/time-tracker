@@ -7,6 +7,17 @@ This doc is the “sharp edges” list. If you touch routes, data fetching, redi
 - **No loaders**: don’t add React Router `loader` functions in the web app. Fetch data directly in async Server Components.
 - **Server components fetch data**: `export default async function Route()` and `await` your queries.
 - **Client components are for interactivity**: keep hooks/event handlers/browser APIs in `"use client"` files.
+- **Do not make the route module a client page just to fetch data**: avoid `"use client"` at the top of `route.tsx` when the page's primary work is loading server data.
+
+## Server actions from client modules (easy mistake)
+
+- Do not use a client route (`"use client"` in `route.tsx`) that imports `./actions` and calls many server actions in `useEffect` for initial page data.
+- In this repo/RSC setup, that pattern can fail validation in dev with: `[vite-rsc] invalid server reference '/src/.../actions.ts'`.
+- Preferred pattern:
+  - Keep `route.tsx` as an async Server Component.
+  - Fetch initial data directly in that Server Component.
+  - Render a small `client.tsx` shell only for interactivity, passing server-fetched data as props.
+- Use Server Actions from client code for user-triggered interactions (forms/buttons via `useActionState`), not as the page bootstrapping data loader.
 
 ## Redirects & responses (current project rule)
 

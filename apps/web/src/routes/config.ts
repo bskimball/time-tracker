@@ -191,6 +191,11 @@ export function routes(): RSCRouteConfig {
 							path: "api-keys",
 							lazy: () => import("./settings/api-keys/route.tsx"),
 						},
+						{
+							id: "settings-operational-config",
+							path: "operational-config",
+							lazy: () => import("./settings/operational-config/route.tsx"),
+						},
 					],
 				},
 				{

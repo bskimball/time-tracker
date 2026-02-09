@@ -3,7 +3,7 @@ import { TimeTracking } from "~/routes/time-clock/client";
 import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
 import { PageHeader } from "~/components/page-header";
 import type { Employee, Station, TimeLog } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
@@ -29,36 +29,7 @@ export default async function Component() {
 	let completedLogs: TimeLogWithRelations[] = [];
 	let activeTasksByEmployee: ActiveTaskByEmployee = {};
 
-	// Initialize demo data if needed
-	const stationCount = await db.station.count();
-	if (stationCount === 0) {
-		await db.station.createMany({
-			data: [
-				{ id: crypto.randomUUID(), name: "PICKING" },
-				{ id: crypto.randomUUID(), name: "PACKING" },
-				{ id: crypto.randomUUID(), name: "FILLING" },
-			],
-		});
-	}
-
-	const employeeCount = await db.employee.count();
-	if (employeeCount === 0) {
-		const alicePinHash = await bcrypt.hash("1234", 10);
-
-		await db.employee.createMany({
-			data: [
-				{
-					id: crypto.randomUUID(),
-					name: "Alice Johnson",
-					email: "alice@example.com",
-					pinHash: alicePinHash,
-				},
-				{ id: crypto.randomUUID(), name: "Bob Smith", email: "bob@example.com" },
-				{ id: crypto.randomUUID(), name: "Charlie Brown", email: "charlie@example.com" },
-				{ id: crypto.randomUUID(), name: "Diana Prince", email: "diana@example.com" },
-			],
-		});
-	}
+	await ensureOperationalDataSeeded();
 
 	employees = await db.employee.findMany({ orderBy: { name: "asc" } });
 	stations = await db.station.findMany({ orderBy: { name: "asc" } });

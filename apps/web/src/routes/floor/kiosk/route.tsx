@@ -1,59 +1,14 @@
 import { db } from "../../../lib/db";
 import { KioskTimeClock } from "./client";
-import bcrypt from "bcryptjs";
 import {
 	IndustrialHeader,
 	IndustrialPanel,
 	SafetyStripes,
 } from "@monorepo/design-system";
+import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 
 export default async function Component() {
-	// Initialize data if needed (same logic as main route)
-	try {
-		const stationCount = await db.station.count();
-		if (stationCount === 0) {
-			await db.station.createMany({
-				data: [
-					{ id: crypto.randomUUID(), name: "PICKING" },
-					{ id: crypto.randomUUID(), name: "PACKING" },
-					{ id: crypto.randomUUID(), name: "FILLING" },
-				],
-			});
-		}
-
-		const employeeCount = await db.employee.count();
-		if (employeeCount === 0) {
-			const alicePinHash = await bcrypt.hash("1234", 10);
-
-			await db.employee.createMany({
-				data: [
-					{
-						id: crypto.randomUUID(),
-						name: "Alice Johnson",
-						email: "alice@example.com",
-						pinHash: alicePinHash,
-					},
-					{
-						id: crypto.randomUUID(),
-						name: "Bob Smith",
-						email: "bob@example.com",
-					},
-					{
-						id: crypto.randomUUID(),
-						name: "Charlie Brown",
-						email: "charlie@example.com",
-					},
-					{
-						id: crypto.randomUUID(),
-						name: "Diana Prince",
-						email: "diana@example.com",
-					},
-				],
-			});
-		}
-	} catch {
-		// Database initialization error handled silently
-	}
+	await ensureOperationalDataSeeded();
 
 	// Get required data for kiosk
 	const rawEmployees = await db.employee.findMany({

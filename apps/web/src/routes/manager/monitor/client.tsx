@@ -7,11 +7,16 @@ import {
 	Badge,
 	IndustrialPanel,
 	LedIndicator,
-	Metric,
 	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
+import {
+	LiaUserClockSolid,
+	LiaChartPieSolid,
+	LiaExclamationTriangleSolid,
+	LiaStopwatchSolid,
+} from "react-icons/lia";
 
 type ActiveTimeLog = {
 	id: string;
@@ -140,6 +145,8 @@ export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: Fl
 	const activeStationsCount = stations.filter(
 		(s) => s.isActive && getStationOccupancy(s.id) > 0,
 	).length;
+	const stationLoadPercent =
+		stations.length > 0 ? Math.round((activeStationsCount / stations.length) * 100) : 0;
 	const filteredStations = stations.filter((station) => statusFilters.includes(getStationStatus(station)));
 
 	// Identify workers who are assigned tasks but not in active work logs
@@ -191,40 +198,71 @@ export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: Fl
 			/>
 
 			{/* Metrics Dashboard */}
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
-				<IndustrialPanel className="p-6 bg-card">
-					<Metric
-						label="Active Personnel"
-						value={activeWorkerIds.size}
-						trend={activeWorkerIds.size > 0 ? "ON FLOOR" : "CLEAR"}
-						trendDirection="neutral"
-					/>
-				</IndustrialPanel>
-				<IndustrialPanel className="p-6 bg-card">
-					<Metric
-						label="Station Load"
-						value={`${Math.round((activeStationsCount / stations.length) * 100)}%`}
-						trend={`${activeStationsCount}/${stations.length} ACTIVE`}
-						trendDirection="up"
-					/>
-				</IndustrialPanel>
-				<IndustrialPanel className="p-6 bg-card">
-					<Metric
-						label="Break Status"
-						value={breakLogs.length}
-						trend="PAUSED"
-						trendDirection={breakLogs.length > 0 ? "down" : "neutral"}
-					/>
-				</IndustrialPanel>
-				<IndustrialPanel className="p-6 bg-card">
-					<Metric
-						label="Shift Max"
-						value={longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--:--"}
-						trend="DURATION"
-						trendDirection="neutral"
-					/>
-				</IndustrialPanel>
-			</div>
+			<section
+				aria-label="Key Metrics"
+				className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial"
+			>
+				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
+					<div className="flex items-center gap-2 text-muted-foreground mb-4">
+						<LiaUserClockSolid className="w-5 h-5" />
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Active Personnel
+						</span>
+					</div>
+					<div className="flex items-baseline gap-2">
+						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+							{activeWorkerIds.size}
+						</span>
+						<span className="text-sm text-muted-foreground font-data">
+							{activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
+						</span>
+					</div>
+				</div>
+
+				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
+					<div className="flex items-center gap-2 text-muted-foreground mb-4">
+						<LiaChartPieSolid className="w-5 h-5" />
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Station Load</span>
+					</div>
+					<div className="flex items-baseline gap-2">
+						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+							{stationLoadPercent}%
+						</span>
+						<span className="text-sm text-muted-foreground font-data">
+							{activeStationsCount}/{stations.length} Active
+						</span>
+					</div>
+				</div>
+
+				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
+					<div className="flex items-center gap-2 text-muted-foreground mb-4">
+						<LiaExclamationTriangleSolid className="w-5 h-5" />
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Break Status</span>
+					</div>
+					<div className="flex items-baseline gap-2">
+						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+							{breakLogs.length}
+						</span>
+						<span className="text-sm text-muted-foreground font-data">Paused</span>
+					</div>
+				</div>
+
+				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
+					<div className="flex items-center gap-2 text-muted-foreground mb-4">
+						<LiaStopwatchSolid className="w-5 h-5" />
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Shift Max</span>
+					</div>
+					<div className="flex items-baseline gap-2">
+						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+							{longestCurrentStartTime
+								? calculateDuration(longestCurrentStartTime)
+								: "--"}
+						</span>
+						<span className="text-sm text-muted-foreground font-data">Duration</span>
+					</div>
+					<p className="text-[10px] text-muted-foreground mt-2">Longest active session on floor</p>
+				</div>
+			</section>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				{/* Left Column: Station Map (2/3 width) */}

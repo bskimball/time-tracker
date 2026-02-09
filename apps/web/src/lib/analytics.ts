@@ -1,5 +1,6 @@
-import { addDays, startOfDay, endOfDay } from "date-fns";
+import { addDays, startOfDay, endOfDay, differenceInCalendarDays } from "date-fns";
 import { db } from "./db";
+import { getOperationalNumber } from "~/lib/operational-config";
 
 export interface PerformanceKPIs {
 	totalActiveEmployees: number;
@@ -236,8 +237,9 @@ export async function getLaborCostAnalysis(
 	const regularHours = totalHours - overtimeHours;
 
 	// Average hourly rate (could be enhanced with actual employee rates)
-	const hourlyRate = 18.5; // This should come from employee data
-	const overtimeRate = hourlyRate * 1.5;
+	const hourlyRate = await getOperationalNumber("LABOR_HOURLY_RATE", 18.5);
+	const overtimeMultiplier = await getOperationalNumber("OVERTIME_MULTIPLIER", 1.5);
+	const overtimeRate = hourlyRate * overtimeMultiplier;
 
 	const regularCost = regularHours * hourlyRate;
 	const overtimeCost = overtimeHours * overtimeRate;
@@ -245,7 +247,8 @@ export async function getLaborCostAnalysis(
 
 	// Budget calculation (could be enhanced with actual budget data)
 	const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-	const budgetedHours = 100 * days; // Assume 100 employees * 8 hours
+	const budgetedHoursPerDay = await getOperationalNumber("BUDGETED_HOURS_PER_DAY", 100);
+	const budgetedHours = budgetedHoursPerDay * days;
 	const budgetedCost = budgetedHours * hourlyRate;
 
 	const variance = actualCost - budgetedCost;
@@ -381,7 +384,8 @@ async function getCurrentOccupancy(): Promise<number> {
 		activeEmployeeIds.add(assignment.employeeId);
 	}
 
-	const capacity = totalCapacity._sum.capacity || totalStations * 2; // Default to 2 per station
+	const capacityFallback = await getOperationalNumber("DEFAULT_STATION_CAPACITY_FALLBACK", 2);
+	const capacity = totalCapacity._sum.capacity || totalStations * capacityFallback;
 	return capacity > 0 ? (activeEmployeeIds.size / capacity) * 100 : 0;
 }
 
@@ -407,7 +411,7 @@ async function calculateLaborCostPerUnit(startDate: Date, endDate: Date): Promis
 
 	if (totalUnits === 0) return 0;
 
-	const hourlyRate = 18.5; // Average hourly rate
+	const hourlyRate = await getOperationalNumber("LABOR_HOURLY_RATE", 18.5);
 	const totalLaborCost = totalHours * hourlyRate;
 
 	return totalLaborCost / totalUnits;
@@ -421,8 +425,9 @@ export async function getPerformanceTrends(
 	endDate: Date,
 	metric: "productivity" | "cost" | "occupancy" = "productivity"
 ) {
-	const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+	const days = Math.max(1, differenceInCalendarDays(endDate, startDate) + 1);
 	const trends = [];
+	const hourlyRateForCost = metric === "cost" ? await getOperationalNumber("LABOR_HOURLY_RATE", 18.5) : 0;
 
 	for (let i = 0; i < days; i++) {
 		const date = addDays(startDate, i);
@@ -446,14 +451,14 @@ export async function getPerformanceTrends(
 		});
 
 		let value = 0;
-		switch (metric) {
+			switch (metric) {
 			case "productivity":
 				value = dayMetrics._avg.efficiency || 0;
 				break;
 			case "cost": {
 				const hours = dayMetrics._sum.hoursWorked || 0;
 				const units = dayMetrics._sum.unitsProcessed || 0;
-				value = units > 0 ? (hours * 18.5) / units : 0;
+				value = units > 0 ? (hours * hourlyRateForCost) / units : 0;
 				break;
 			}
 			case "occupancy":

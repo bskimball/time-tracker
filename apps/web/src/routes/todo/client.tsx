@@ -9,6 +9,7 @@ import { SimpleInput } from "@monorepo/design-system";
 import { Alert } from "@monorepo/design-system";
 import { Card, CardBody } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
+import { IndustrialSpinner } from "~/components/industrial-spinner";
 
 function SubmitButton() {
 	const { pending } = useFormStatus();
@@ -17,7 +18,7 @@ function SubmitButton() {
 		<Button type="submit" disabled={pending}>
 			{pending ? (
 				<>
-					<span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+					<IndustrialSpinner size="sm" className="text-white mr-2 inline-grid" />
 					Adding...
 				</>
 			) : (

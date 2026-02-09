@@ -98,7 +98,7 @@ function IndustrialSidebarSidebar({ children, className }: IndustrialSidebarSide
 		<aside
 			data-collapsed={isCollapsed}
 			className={cn(
-				"bg-card relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden bg-gradient-to-b from-muted/30 to-background",
+				"relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden bg-background",
 				isCollapsed ? "w-16" : "w-72",
 				className
 			)}
@@ -176,7 +176,7 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 					"relative flex items-center transition-all duration-200 rounded-[2px] overflow-hidden",
 					isCollapsed ? "justify-center h-10 w-10 mx-auto" : "h-10 px-3",
 					isActive
-						? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)]/70 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+						? "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
 						: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
 				)}
 			>
@@ -294,7 +294,7 @@ function IndustrialSidebarFooter({ children, className }: IndustrialSidebarFoote
 					<div className="h-px w-full bg-gradient-to-r from-transparent via-border/40 to-transparent mb-4" />
 					
 					{content.length > 0 && (
-						<div className="px-4 mb-4 space-y-4">
+						<div className="px-3 mb-4 space-y-4">
 							<div className="flex items-center gap-3 opacity-40 mb-3">
 								<SafetyStripes className="h-1.5 flex-1" />
 							</div>

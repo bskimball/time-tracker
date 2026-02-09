@@ -1,5 +1,6 @@
 import pino from "pino";
 import type { Logger, LoggerOptions } from "pino";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -9,7 +10,26 @@ const isTest = process.env.NODE_ENV === "test";
 // Resolve logs directory path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const logsDir = join(__dirname, "../../logs");
+
+function findAppRoot(startDir: string): string {
+	let current = startDir;
+
+	while (true) {
+		if (existsSync(join(current, "package.json"))) {
+			return current;
+		}
+
+		const parent = dirname(current);
+		if (parent === current) {
+			return process.cwd();
+		}
+
+		current = parent;
+	}
+}
+
+const appRoot = findAppRoot(__dirname);
+const logsDir = process.env.LOG_DIR || join(appRoot, "logs");
 
 // Base logger configuration
 const loggerOptions: LoggerOptions = {
@@ -41,11 +61,6 @@ const loggerOptions: LoggerOptions = {
 
 	// Format timestamps
 	timestamp: pino.stdTimeFunctions.isoTime,
-
-	// Formatter for consistent structure
-	formatters: {
-		level: (label) => ({ level: label }),
-	},
 };
 
 // Create logger with appropriate transport
@@ -70,7 +85,6 @@ if (isTest) {
 						colorize: true,
 						translateTime: "HH:MM:ss Z",
 						ignore: "pid,hostname",
-						messageFormat: "{levelLabel} - {msg}",
 						errorLikeObjectKeys: ["err", "error"],
 					},
 					level: "debug",

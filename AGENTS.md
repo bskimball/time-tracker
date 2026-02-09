@@ -15,9 +15,11 @@ Time Tracker is a monorepo containing a React Router web app (RSC Data mode), an
 
 ## Design System
 
-The project uses a custom **"Precision Industrial"** aesthetic inspired by Dieter Rams and Braun.
-- **Source of Truth**: `packages/design-system` contains all tokens and styles.
+The project uses a custom **"Precision Industrial"** aesthetic inspired by Dieter Rams and Braun, built on **TailwindCSS v4**.
+- **Source of Truth**: `packages/design-system` contains all tokens (via CSS vars) and styles.
+- **Integration**: Apps must use `@source` to point to the design system for JIT compilation.
 - **Tokens**: Zinc neutrals, Signal Orange (`primary`), Tabular numbers.
+- **Configuration**: **No `tailwind.config.*` files**. All configuration is done via CSS `@theme` blocks.
 - **Aesthetic**: Sharp corners (`rounded-[2px]`), hard borders, no soft shadows, data-dense.
 - **Fonts**: `Space Grotesk` (Headings/Industrial), `JetBrains Mono` (Data/Inputs).
 

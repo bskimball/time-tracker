@@ -1,6 +1,6 @@
 "use server";
 
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { subDays } from "date-fns";
 import {
 	getExecutiveKPIs,
 	getLaborCostAnalysis,
@@ -31,17 +31,17 @@ export async function getExecutiveDashboardKPIs(
 	let startDate: Date;
 	let endDate: Date;
 
-	switch (timeRange) {
-		case "week":
-			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
-			break;
-		case "month":
-			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
-			break;
-		case "today":
-		default:
+		switch (timeRange) {
+			case "week":
+				startDate = subDays(now, 6);
+				endDate = now;
+				break;
+			case "month":
+				startDate = subDays(now, 29);
+				endDate = now;
+				break;
+			case "today":
+			default:
 			startDate = new Date(now);
 			startDate.setHours(0, 0, 0, 0);
 			endDate = new Date(now);
@@ -74,17 +74,17 @@ export async function getStationPerformanceData(
 	let startDate: Date;
 	let endDate: Date;
 
-	switch (timeRange) {
-		case "week":
-			startDate = startOfWeek(now);
-			endDate = endOfWeek(now);
-			break;
-		case "month":
-			startDate = startOfMonth(now);
-			endDate = endOfMonth(now);
-			break;
-		case "today":
-		default:
+		switch (timeRange) {
+			case "week":
+				startDate = subDays(now, 6);
+				endDate = now;
+				break;
+			case "month":
+				startDate = subDays(now, 29);
+				endDate = now;
+				break;
+			case "today":
+			default:
 			startDate = new Date(now);
 			startDate.setHours(0, 0, 0, 0);
 			endDate = new Date(now);
@@ -102,7 +102,7 @@ export async function getStationPerformanceData(
 
 /**
  * Get performance trend data for charts.
- * Uses the same calendar windows as the selected dashboard range.
+ * Uses the same time windows as the selected dashboard range.
  */
 export async function getPerformanceTrendData(
 	metric: "productivity" | "cost" | "occupancy" = "productivity",
@@ -117,11 +117,11 @@ export async function getPerformanceTrendData(
 			startDate.setHours(0, 0, 0, 0);
 			break;
 		case "month":
-			startDate = startOfMonth(now);
+			startDate = subDays(now, 29);
 			break;
 		case "week":
 		default:
-			startDate = startOfWeek(now);
+			startDate = subDays(now, 6);
 			break;
 	}
 
@@ -139,8 +139,7 @@ export async function getPerformanceTrendData(
  * Get critical alerts for executive dashboard
  */
 export async function getExecutiveAlerts() {
-	// This could be enhanced with actual alert system
-	// For now, return some sample alerts based on current data
+	// Alert generation based on current KPI thresholds.
 	const alerts = [];
 
 	try {

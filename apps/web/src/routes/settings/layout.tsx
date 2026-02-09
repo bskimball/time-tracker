@@ -8,6 +8,7 @@ const settingsNavLinks = [
 	{ to: "/settings/employees", label: "Employees", icon: "users" as const },
 	{ to: "/settings/users", label: "Users", icon: "users" as const },
 	{ to: "/settings/api-keys", label: "API Keys", icon: "clipboard" as const },
+	{ to: "/settings/operational-config", label: "Ops Config", icon: "settings" as const },
 	{ to: "/executive", label: "Executive", icon: "crown" as const },
 ];
 

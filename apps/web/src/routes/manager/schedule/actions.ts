@@ -1,8 +1,9 @@
 "use server";
 
-import { addDays, startOfWeek } from "date-fns";
+import { addDays, endOfWeek, startOfWeek } from "date-fns";
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
+import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 
 type ShiftType = "MORNING" | "SWING" | "NIGHT";
 
@@ -31,78 +32,92 @@ export interface ScheduleData {
 	days: ScheduleDay[];
 }
 
-const mockEmployees = [
-	{ id: "emp-1", name: "Alex Rivera" },
-	{ id: "emp-2", name: "Jamie Patel" },
-	{ id: "emp-3", name: "Morgan Chen" },
-	{ id: "emp-4", name: "Taylor Brooks" },
-	{ id: "emp-5", name: "Quinn Harper" },
-];
-
-const mockStations = [
-	{ id: "station-1", name: "Picking" },
-	{ id: "station-2", name: "Packing" },
-	{ id: "station-3", name: "Shipping" },
-	{ id: "station-4", name: "Receiving" },
-	{ id: "station-5", name: "Quality" },
-];
-
-const shiftTemplates: Record<ShiftType, { start: string; end: string }> = {
-	MORNING: { start: "06:00", end: "14:00" },
-	SWING: { start: "14:00", end: "22:00" },
-	NIGHT: { start: "22:00", end: "06:00" },
-};
-
-function createMockSchedule(): ScheduleData {
+export async function getScheduleData(): Promise<ScheduleData> {
 	const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
-	const days: ScheduleDay[] = [];
+	const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
 
-	for (let i = 0; i < 7; i++) {
-		const date = addDays(weekStart, i);
-		const dateStr = date.toISOString();
-
-		const entries: ScheduleEntry[] = mockEmployees.map((employee, index) => {
-			const station = mockStations[(index + i) % mockStations.length];
-			const shiftTypes: ShiftType[] = ["MORNING", "SWING", "NIGHT"];
-			const shiftType = shiftTypes[(index + i) % shiftTypes.length];
-			const template = shiftTemplates[shiftType];
-
-			return {
-				id: `${dateStr}-${employee.id}`,
-				employeeId: employee.id,
-				employeeName: employee.name,
-				role: index % 5 === 0 ? "LEAD" : index % 3 === 0 ? "SUPPORT" : "ASSOCIATE",
-				stationId: station.id,
-				stationName: station.name,
-				shiftType,
-				startTime: `${dateStr.split("T")[0]}T${template.start}:00.000Z`,
-				endTime: `${dateStr.split("T")[0]}T${template.end}:00.000Z`,
-				status: index % 4 === 0 ? "PENDING" : "CONFIRMED",
-				notes: index % 4 === 0 ? "Awaiting acknowledgment" : undefined,
-			};
+	const loadScheduleRows = async () => {
+		return db.shiftAssignment.findMany({
+			where: {
+				shift: {
+					startTime: {
+						gte: weekStart,
+						lte: weekEnd,
+					},
+				},
+			},
+			include: {
+				employee: true,
+				shift: {
+					include: {
+						station: true,
+					},
+				},
+			},
+			orderBy: [
+				{ shift: { startTime: "asc" } },
+				{ employee: { name: "asc" } },
+			],
 		});
+	};
 
-		days.push({
-			date: dateStr,
-			entries,
-		});
+	let assignments = await loadScheduleRows();
+	if (assignments.length === 0) {
+		await ensureOperationalDataSeeded();
+		assignments = await loadScheduleRows();
 	}
+
+	const days: ScheduleDay[] = Array.from({ length: 7 }, (_, index) => {
+		const date = addDays(weekStart, index);
+		const dateKey = date.toISOString().split("T")[0];
+
+		const entries: ScheduleEntry[] = assignments
+			.filter((assignment) => assignment.shift.startTime.toISOString().startsWith(dateKey))
+			.map((assignment) => {
+				const shiftTypeRaw = assignment.shift.shiftType.toUpperCase();
+				const shiftType =
+					shiftTypeRaw === "MORNING" || shiftTypeRaw === "SWING" || shiftTypeRaw === "NIGHT"
+						? (shiftTypeRaw as ShiftType)
+						: "MORNING";
+
+				const roleRaw = assignment.role.toUpperCase();
+				const role =
+					roleRaw === "LEAD" || roleRaw === "SUPPORT" || roleRaw === "ASSOCIATE"
+						? (roleRaw as ScheduleEntry["role"])
+						: "ASSOCIATE";
+
+				const statusRaw = assignment.status.toUpperCase();
+				const status =
+					statusRaw === "CONFIRMED" || statusRaw === "PENDING" || statusRaw === "OPEN"
+						? (statusRaw as ScheduleEntry["status"])
+						: "CONFIRMED";
+
+				return {
+					id: assignment.id,
+					employeeId: assignment.employeeId,
+					employeeName: assignment.employee.name,
+					role,
+					stationId: assignment.shift.stationId,
+					stationName: assignment.shift.station.name,
+					shiftType,
+					startTime: assignment.shift.startTime.toISOString(),
+					endTime: assignment.shift.endTime.toISOString(),
+					status,
+					notes: assignment.notes ?? undefined,
+				};
+			});
+
+		return {
+			date: date.toISOString(),
+			entries,
+		};
+	});
 
 	return {
 		weekStart: weekStart.toISOString(),
-		weekEnd: addDays(weekStart, 6).toISOString(),
+		weekEnd: weekEnd.toISOString(),
 		days,
 	};
-}
-
-let cachedSchedule: ScheduleData | null = null;
-
-export async function getScheduleData(): Promise<ScheduleData> {
-	if (!cachedSchedule) {
-		cachedSchedule = createMockSchedule();
-	}
-
-	return cachedSchedule;
 }
 
 export async function bulkReassignShiftAssignments(params: {

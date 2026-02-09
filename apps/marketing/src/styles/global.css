@@ -1,3 +1,4 @@
 @import "@monorepo/design-system/styles/fonts";
 @import "tailwindcss";
+@source "../../../../packages/design-system/src";
 @import "@monorepo/design-system/styles/full";

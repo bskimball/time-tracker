@@ -42,7 +42,7 @@ export function UserManagement({ users }: { users: User[] }) {
 							{users.map((user) => (
 								<div
 									key={user.id}
-									className="panel-shadow border-2 border-border bg-muted p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+									className="panel-shadow shadow-industrial border border-border bg-background p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
 								>
 									<div>
 										<p className="font-industrial text-lg font-semibold">

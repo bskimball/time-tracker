@@ -6,6 +6,7 @@
 	--color-primary-foreground: oklch(18% 0 0);
 	--color-primary-hover: oklch(55% 0.15 42);
 	--color-primary-active: oklch(48% 0.14 42);
+	--color-primary-border: oklch(68% 0.16 42);
 
 	/* Secondary Colors - Aluminum (Secondary Action) */
 	/* Light Mode: Light Grey button, Dark text */

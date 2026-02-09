@@ -1,7 +1,13 @@
 import { Link } from "react-router";
 import { Card, CardBody } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
-import { LiaWarehouseSolid, LiaUsersSolid, LiaUserShieldSolid, LiaKeySolid } from "react-icons/lia";
+import {
+	LiaWarehouseSolid,
+	LiaUsersSolid,
+	LiaUserShieldSolid,
+	LiaKeySolid,
+	LiaSlidersHSolid,
+} from "react-icons/lia";
 
 export default function SettingsIndex() {
 	const settingsOptions = [
@@ -28,6 +34,12 @@ export default function SettingsIndex() {
 			description: "Manage API keys for external integrations.",
 			href: "/settings/api-keys",
 			icon: <LiaKeySolid className="h-6 w-6" />,
+		},
+		{
+			title: "Operational Config",
+			description: "Tune business constants for KPI thresholds and cost calculations.",
+			href: "/settings/operational-config",
+			icon: <LiaSlidersHSolid className="h-6 w-6" />,
 		},
 	];
 

@@ -74,11 +74,45 @@ export default async function Component() {
 		return acc;
 	}, {});
 
+	const activeEmployeeIds = new Set<string>();
+	for (const log of activeTimeLogs) {
+		activeEmployeeIds.add(log.employeeId);
+	}
+	for (const assignment of activeAssignments) {
+		activeEmployeeIds.add(assignment.employeeId);
+	}
+
+	const utilizationRate =
+		totalEmployees > 0 ? Number(((activeEmployeeIds.size / totalEmployees) * 100).toFixed(1)) : 0;
+
+	const todayStart = new Date();
+	todayStart.setHours(0, 0, 0, 0);
+	const [todayEfficiencyAggregate, openSystemErrorCount] = await Promise.all([
+		db.performanceMetric.aggregate({
+			where: { date: { gte: todayStart } },
+			_avg: { efficiency: true },
+		}),
+		db.timeLog.count({
+			where: {
+				deletedAt: null,
+				clockMethod: "MANUAL",
+				note: { contains: "DELETED:" },
+				startTime: { gte: todayStart },
+			},
+		}),
+	]);
+
+	const taskEfficiencyRate = Number(((todayEfficiencyAggregate._avg.efficiency ?? 0) * 100).toFixed(1));
+	const networkStatus = openSystemErrorCount > 0 ? "DEGRADED" : "ONLINE";
+
 	return (
 		<ManagerDashboard
 			activeTimeLogs={activeTimeLogs}
 			activeTasksByEmployee={activeTasksByEmployee}
 			totalEmployees={totalEmployees}
+			utilizationRate={utilizationRate}
+			taskEfficiencyRate={taskEfficiencyRate}
+			networkStatus={networkStatus}
 			alerts={activeAlerts.slice(0, 5)} // Show top 5 alerts
 			user={user}
 		/>
