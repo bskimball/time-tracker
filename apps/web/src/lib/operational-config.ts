@@ -1,4 +1,10 @@
 import { db } from "~/lib/db";
+import {
+	DEFAULT_TASK_ASSIGNMENT_MODE,
+	parseTaskAssignmentMode,
+	TASK_ASSIGNMENT_MODES,
+	type TaskAssignmentMode,
+} from "~/lib/task-assignment-permissions";
 
 type ConfigRow = {
 	key: string;
@@ -12,75 +18,127 @@ export type OperationalConfigEntry = {
 	description: string;
 };
 
-const DEFAULT_CONFIG: Array<{ key: string; value: string; description: string }> = [
+export type OperationalConfigNumericDefinition = {
+	type: "number";
+	min: number;
+	max: number;
+	step: string;
+	unit: string;
+};
+
+export type OperationalConfigEnumDefinition = {
+	type: "enum";
+	options: readonly string[];
+	defaultValue: string;
+	unit: string;
+};
+
+export type OperationalConfigDefinition = {
+	key: string;
+	value: string;
+	description: string;
+	validation: OperationalConfigNumericDefinition | OperationalConfigEnumDefinition;
+};
+
+const DEFAULT_CONFIG: OperationalConfigDefinition[] = [
 	{
 		key: "LABOR_HOURLY_RATE",
 		value: "24",
 		description: "Base hourly labor rate used for labor cost and opportunity impact calculations.",
+		validation: { type: "number", min: 0, max: 200, step: "0.1", unit: "USD/hour" },
 	},
 	{
 		key: "OVERTIME_MULTIPLIER",
 		value: "1.5",
 		description: "Multiplier applied to hourly rate when calculating overtime labor cost.",
+		validation: { type: "number", min: 1, max: 5, step: "0.01", unit: "x" },
 	},
 	{
 		key: "BUDGETED_HOURS_PER_DAY",
 		value: "64",
 		description: "Planned labor hours per day used to compute budget variance in executive views.",
+		validation: { type: "number", min: 0, max: 20000, step: "1", unit: "hours/day" },
 	},
 	{
 		key: "DEFAULT_STATION_CAPACITY_FALLBACK",
 		value: "6",
 		description: "Fallback capacity per station when no station capacity is configured.",
+		validation: { type: "number", min: 1, max: 500, step: "1", unit: "workers/station" },
 	},
 	{
 		key: "OPTIMAL_UTILIZATION_PERCENT",
 		value: "82",
 		description: "Target utilization percentage used for capacity planning benchmarks.",
+		validation: { type: "number", min: 1, max: 100, step: "0.1", unit: "%" },
+	},
+	{
+		key: "TASK_ASSIGNMENT_MODE",
+		value: DEFAULT_TASK_ASSIGNMENT_MODE,
+		description:
+			"Controls whether workers can self-manage task assignment: manager-only, optional self-assign, or required self-assign.",
+		validation: {
+			type: "enum",
+			options: TASK_ASSIGNMENT_MODES,
+			defaultValue: DEFAULT_TASK_ASSIGNMENT_MODE,
+			unit: "mode",
+		},
 	},
 	{
 		key: "KPI_PRODUCTIVITY_HIGH_THRESHOLD",
 		value: "30",
 		description: "Executive productivity KPI high threshold (units/hour).",
+		validation: { type: "number", min: 0, max: 1000, step: "0.1", unit: "units/hour" },
 	},
 	{
 		key: "KPI_PRODUCTIVITY_MEDIUM_THRESHOLD",
 		value: "24",
 		description: "Executive productivity KPI medium threshold (units/hour).",
+		validation: { type: "number", min: 0, max: 1000, step: "0.1", unit: "units/hour" },
 	},
 	{
 		key: "KPI_OVERTIME_HIGH_THRESHOLD",
 		value: "12",
 		description: "Executive overtime KPI high threshold (percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 	{
 		key: "KPI_OVERTIME_MEDIUM_THRESHOLD",
 		value: "6",
 		description: "Executive overtime KPI medium threshold (percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 	{
 		key: "KPI_OCCUPANCY_HIGH_THRESHOLD",
 		value: "90",
 		description: "Executive occupancy KPI high threshold (percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 	{
 		key: "KPI_OCCUPANCY_MEDIUM_THRESHOLD",
 		value: "75",
 		description: "Executive occupancy KPI medium threshold (percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 	{
 		key: "KPI_VARIANCE_HIGH_THRESHOLD",
 		value: "8",
 		description: "Executive cost variance high threshold (absolute percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 	{
 		key: "KPI_VARIANCE_MEDIUM_THRESHOLD",
 		value: "3",
 		description: "Executive cost variance medium threshold (absolute percent).",
+		validation: { type: "number", min: 0, max: 100, step: "0.1", unit: "%" },
 	},
 ];
 
 export const OPERATIONAL_CONFIG_KEYS = DEFAULT_CONFIG.map((item) => item.key);
+const OPERATIONAL_CONFIG_DEFINITION_MAP = new Map(DEFAULT_CONFIG.map((item) => [item.key, item]));
+
+export function getOperationalConfigDefinition(key: string) {
+	return OPERATIONAL_CONFIG_DEFINITION_MAP.get(key);
+}
 
 let ensurePromise: Promise<void> | null = null;
 
@@ -167,6 +225,11 @@ export async function getOperationalNumber(key: string, fallback: number) {
 	const map = await getOperationalConfigMap();
 	const value = Number.parseFloat(map.get(key)?.value ?? "");
 	return Number.isFinite(value) ? value : fallback;
+}
+
+export async function getTaskAssignmentMode(): Promise<TaskAssignmentMode> {
+	const map = await getOperationalConfigMap();
+	return parseTaskAssignmentMode(map.get("TASK_ASSIGNMENT_MODE")?.value);
 }
 
 export async function getExecutiveKpiThresholds() {

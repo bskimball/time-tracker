@@ -12,6 +12,8 @@ export type TaskAssignment = {
 	id: string;
 	employeeId: string;
 	taskTypeId: string;
+	source?: "MANAGER" | "WORKER" | null;
+	assignedByUserId?: string | null;
 	startTime: Date;
 	endTime: Date | null;
 	unitsCompleted: number | null;

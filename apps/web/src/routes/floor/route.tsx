@@ -4,6 +4,8 @@ import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
 import { PageHeader } from "~/components/page-header";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
+import { getTaskAssignmentMode } from "~/lib/operational-config";
+import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
 
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
@@ -19,6 +21,12 @@ type ActiveTaskByEmployee = Record<
 	}
 >;
 
+type TaskOption = {
+	id: string;
+	name: string;
+	stationName: string | null;
+};
+
 export default async function Component() {
 	// Mobile redirect is now handled in entry.rsc.tsx
 
@@ -28,6 +36,8 @@ export default async function Component() {
 	let activeBreaks: TimeLogWithRelations[] = [];
 	let completedLogs: TimeLogWithRelations[] = [];
 	let activeTasksByEmployee: ActiveTaskByEmployee = {};
+	let assignmentMode: TaskAssignmentMode = "MANAGER_ONLY";
+	let taskOptions: TaskOption[] = [];
 
 	await ensureOperationalDataSeeded();
 
@@ -66,6 +76,20 @@ export default async function Component() {
 		include: { Employee: true, Station: true },
 		orderBy: { startTime: "desc" },
 	});
+
+	assignmentMode = await getTaskAssignmentMode();
+
+	const activeTaskTypes = await db.taskType.findMany({
+		where: { isActive: true },
+		include: { Station: true },
+		orderBy: [{ name: "asc" }],
+	});
+
+	taskOptions = activeTaskTypes.map((taskType) => ({
+		id: taskType.id,
+		name: taskType.name,
+		stationName: taskType.Station.name,
+	}));
 
 	const activeAssignments = await db.taskAssignment.findMany({
 		where: { endTime: null },
@@ -107,6 +131,8 @@ export default async function Component() {
 					activeBreaks={activeBreaks as TimeLogWithRelations[]}
 					completedLogs={completedLogs as TimeLogWithRelations[]}
 					activeTasksByEmployee={activeTasksByEmployee}
+					assignmentMode={assignmentMode}
+					taskOptions={taskOptions}
 				/>
 			</main>
 		</>

@@ -131,6 +131,8 @@ export function TaskManager({
 				id: `optimistic-${Math.random().toString(36).slice(2, 9)}`,
 				employeeId: employee.id,
 				taskTypeId: taskType.id,
+				source: "MANAGER",
+				assignedByUserId: null,
 				notes: action.data.notes ?? null,
 				startTime: new Date(),
 				endTime: null,
@@ -164,6 +166,8 @@ export function TaskManager({
 				id: `optimistic-switch-${Math.random().toString(36).slice(2, 9)}`,
 				employeeId: employee.id,
 				taskTypeId: taskType.id,
+				source: "MANAGER",
+				assignedByUserId: null,
 				notes: null,
 				startTime: new Date(),
 				endTime: null,
@@ -197,6 +201,26 @@ export function TaskManager({
 		if (efficiency > 1.0) return "text-green-600";
 		if (efficiency > 0.8) return "text-yellow-600";
 		return "text-red-600";
+	};
+
+	const getAssignmentSource = (assignment: TaskAssignment): "MANAGER" | "WORKER" => {
+		return assignment.source === "WORKER" ? "WORKER" : "MANAGER";
+	};
+
+	const getAssignmentSourceBadge = (assignment: TaskAssignment) => {
+		if (getAssignmentSource(assignment) === "WORKER") {
+			return (
+				<Badge variant="outline" className="font-mono text-[10px] uppercase">
+					Self-assigned
+				</Badge>
+			);
+		}
+
+		return (
+			<Badge variant="secondary" className="font-mono text-[10px] uppercase">
+				Assigned by Manager
+			</Badge>
+		);
 	};
 
 	return (
@@ -324,14 +348,15 @@ export function TaskManager({
 													<span>{assignment.TaskType.Station.name}</span>
 												</div>
 											</div>
-											{!assignment.endTime && (
-												<Badge variant="success" className="font-mono text-[10px] uppercase">
-													Active
-												</Badge>
-											)}
-										</div>
+										{!assignment.endTime && (
+											<Badge variant="success" className="font-mono text-[10px] uppercase">
+												Active
+											</Badge>
+										)}
+									</div>
+									<div className="mb-3">{getAssignmentSourceBadge(assignment)}</div>
 
-										{/* Data Grid */}
+									{/* Data Grid */}
 										<div className="mb-4 grid grid-cols-2 gap-y-3 gap-x-2 border-y border-border/40 py-3 bg-muted/20 px-2 -mx-2">
 											<div>
 												<span className="block text-[10px] uppercase text-muted-foreground font-mono tracking-wider">
@@ -435,6 +460,7 @@ export function TaskManager({
 											<th className="text-left p-4">Duration</th>
 											<th className="text-left p-4">Units</th>
 											<th className="text-left p-4">Efficiency</th>
+											<th className="text-left p-4">Assignment Source</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -462,14 +488,15 @@ export function TaskManager({
 															{formatDuration(assignment.startTime, assignment.endTime)}
 														</td>
 														<td className="p-4 text-center">{assignment.unitsCompleted || "-"}</td>
-														<td className="p-4 text-center">
-															{efficiency > 0 && (
-																<span className={getTaskEfficiencyColor(efficiency)}>
-																	{efficiency.toFixed(2)}/hr
-																</span>
-															)}
-														</td>
-													</tr>
+													<td className="p-4 text-center">
+														{efficiency > 0 && (
+															<span className={getTaskEfficiencyColor(efficiency)}>
+																{efficiency.toFixed(2)}/hr
+															</span>
+														)}
+													</td>
+													<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
+												</tr>
 												);
 											})}
 									</tbody>

@@ -17,12 +17,20 @@ type ConfigEntry = {
 	key: string;
 	value: string;
 	description: string;
-	bounds: {
-		min: number;
-		max: number;
-		step: string;
-		unit: string;
-	};
+	validation:
+		| {
+			type: "number";
+			min: number;
+			max: number;
+			step: string;
+			unit: string;
+		  }
+		| {
+			type: "enum";
+			options: readonly string[];
+			defaultValue: string;
+			unit: string;
+		  };
 };
 
 function SaveButton() {
@@ -42,7 +50,12 @@ export function OperationalConfigManager({ initialEntries }: { initialEntries: C
 		if (!updated) {
 			return entry;
 		}
-		return { ...entry, value: updated.value, description: updated.description };
+		return {
+			...entry,
+			value: updated.value,
+			description: updated.description,
+			validation: updated.validation,
+		};
 	});
 
 	return (
@@ -81,23 +94,43 @@ export function OperationalConfigManager({ initialEntries }: { initialEntries: C
 							</div>
 							<div>
 								<label className="text-xs font-industrial uppercase tracking-wider text-muted-foreground">
-									Value ({entry.bounds.unit || "numeric"})
+									Value ({entry.validation.unit || "configured"})
 								</label>
 								<div className="flex items-center gap-2 mt-1">
-									<SimpleInput
-										name="value"
-										type="number"
-										defaultValue={entry.value}
-										min={entry.bounds.min}
-										max={entry.bounds.max}
-										step={entry.bounds.step}
-										className="flex-1"
-									/>
+									{entry.validation.type === "number" ? (
+										<SimpleInput
+											name="value"
+											type="number"
+											defaultValue={entry.value}
+											min={entry.validation.min}
+											max={entry.validation.max}
+											step={entry.validation.step}
+											className="flex-1"
+										/>
+									) : (
+										<select
+											name="value"
+											defaultValue={entry.value || entry.validation.defaultValue}
+											className="h-10 w-full rounded-[2px] border border-border bg-background px-3 py-2 text-sm"
+										>
+											{entry.validation.options.map((option) => (
+												<option key={option} value={option}>
+													{option}
+												</option>
+											))}
+										</select>
+									)}
 									<SaveButton />
 								</div>
-								<div className="text-[11px] text-muted-foreground mt-1">
-									Allowed range: {entry.bounds.min} - {entry.bounds.max}
-								</div>
+								{entry.validation.type === "number" ? (
+									<div className="text-[11px] text-muted-foreground mt-1">
+										Allowed range: {entry.validation.min} - {entry.validation.max}
+									</div>
+								) : (
+									<div className="text-[11px] text-muted-foreground mt-1">
+										Allowed values: {entry.validation.options.join(", ")}
+									</div>
+								)}
 							</div>
 						</form>
 					))}

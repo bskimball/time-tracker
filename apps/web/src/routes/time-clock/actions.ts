@@ -3,12 +3,224 @@
 import bcrypt from "bcryptjs";
 import { db } from "~/lib/db";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
+import { validateRequest } from "~/lib/auth";
+import { getTaskAssignmentMode } from "~/lib/operational-config";
+import { getWorkerSelfAssignmentAccess } from "~/lib/task-assignment-permissions";
 
 export type ClockActionState = {
 	error?: string;
 	success?: boolean;
 	message?: string;
 } | null;
+
+type WorkerSelfTaskContext =
+	| { ok: true; employeeId: string }
+	| { ok: false; error: string };
+
+async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
+	const { user } = await validateRequest();
+	const mode = await getTaskAssignmentMode();
+	const access = getWorkerSelfAssignmentAccess(user, mode);
+
+	if (!access.ok) {
+		return { ok: false, error: access.error };
+	}
+
+	const employee = await db.employee.findUnique({
+		where: { id: access.employeeId },
+		select: { id: true, status: true },
+	});
+
+	if (!employee || employee.status !== "ACTIVE") {
+		return { ok: false, error: "Linked employee is not active" };
+	}
+
+	return { ok: true, employeeId: employee.id };
+}
+
+async function hasActiveWorkLog(employeeId: string) {
+	const activeWorkLog = await db.timeLog.findFirst({
+		where: { employeeId, type: "WORK", endTime: null, deletedAt: null },
+		select: { id: true },
+	});
+
+	return Boolean(activeWorkLog);
+}
+
+async function getActiveAssignments(employeeId: string) {
+	return db.taskAssignment.findMany({
+		where: { employeeId, endTime: null },
+		orderBy: { startTime: "desc" },
+		select: { id: true, taskTypeId: true },
+	});
+}
+
+export async function startSelfTaskAction(
+	_prevState: ClockActionState,
+	formData: FormData
+): Promise<ClockActionState> {
+	const context = await getWorkerSelfTaskContext();
+	if (!context.ok) {
+		return { success: false, error: context.error };
+	}
+
+	const taskTypeId = String(formData.get("taskTypeId") || "").trim();
+	const notesRaw = formData.get("notes");
+	const notes = notesRaw ? String(notesRaw).trim() : null;
+
+	if (!taskTypeId) {
+		return { success: false, error: "Task type is required" };
+	}
+
+	const [taskType, activeWorkLog, activeAssignments] = await Promise.all([
+		db.taskType.findUnique({
+			where: { id: taskTypeId },
+			select: { id: true, isActive: true, name: true },
+		}),
+		hasActiveWorkLog(context.employeeId),
+		getActiveAssignments(context.employeeId),
+	]);
+
+	if (!taskType || !taskType.isActive) {
+		return { success: false, error: "Task type is not available" };
+	}
+
+	if (!activeWorkLog) {
+		return { success: false, error: "Clock in before starting a task" };
+	}
+
+	if (activeAssignments.length > 0) {
+		return { success: false, error: "End or switch your active task before starting a new one" };
+	}
+
+	await db.taskAssignment.create({
+		data: {
+			employeeId: context.employeeId,
+			taskTypeId,
+			source: "WORKER",
+			notes,
+			startTime: new Date(),
+		},
+	});
+
+	return { success: true, message: `Started task: ${taskType.name}` };
+}
+
+export async function switchSelfTaskAction(
+	_prevState: ClockActionState,
+	formData: FormData
+): Promise<ClockActionState> {
+	const context = await getWorkerSelfTaskContext();
+	if (!context.ok) {
+		return { success: false, error: context.error };
+	}
+
+	const taskTypeId = String(formData.get("newTaskTypeId") || formData.get("taskTypeId") || "").trim();
+	const reasonRaw = formData.get("reason");
+	const reason = reasonRaw ? String(reasonRaw).trim() : null;
+
+	if (!taskTypeId) {
+		return { success: false, error: "New task type is required" };
+	}
+
+	const [taskType, activeWorkLog, activeAssignments] = await Promise.all([
+		db.taskType.findUnique({
+			where: { id: taskTypeId },
+			select: { id: true, isActive: true, name: true },
+		}),
+		hasActiveWorkLog(context.employeeId),
+		getActiveAssignments(context.employeeId),
+	]);
+
+	if (!taskType || !taskType.isActive) {
+		return { success: false, error: "Task type is not available" };
+	}
+
+	if (!activeWorkLog) {
+		return { success: false, error: "Clock in before switching tasks" };
+	}
+
+	if (activeAssignments.length === 0) {
+		return { success: false, error: "No active task to switch" };
+	}
+
+	if (activeAssignments.length > 1) {
+		return {
+			success: false,
+			error: "Multiple active task assignments found; manager intervention required",
+		};
+	}
+
+	const [currentAssignment] = activeAssignments;
+	if (currentAssignment.taskTypeId === taskTypeId) {
+		return { success: false, error: "You are already assigned to this task" };
+	}
+
+	await db.$transaction(async (tx) => {
+		await tx.taskAssignment.update({
+			where: { id: currentAssignment.id },
+			data: { endTime: new Date() },
+		});
+
+		await tx.taskAssignment.create({
+			data: {
+				employeeId: context.employeeId,
+				taskTypeId,
+				source: "WORKER",
+				notes: reason,
+				startTime: new Date(),
+			},
+		});
+	});
+
+	return { success: true, message: `Switched to task: ${taskType.name}` };
+}
+
+export async function endSelfTaskAction(
+	_prevState: ClockActionState,
+	formData: FormData
+): Promise<ClockActionState> {
+	const context = await getWorkerSelfTaskContext();
+	if (!context.ok) {
+		return { success: false, error: context.error };
+	}
+
+	const notesRaw = formData.get("notes");
+	const notes = notesRaw ? String(notesRaw).trim() : "";
+
+	const activeAssignments = await db.taskAssignment.findMany({
+		where: { employeeId: context.employeeId, endTime: null },
+		orderBy: { startTime: "desc" },
+		include: {
+			TaskType: {
+				select: { name: true },
+			},
+		},
+	});
+
+	if (activeAssignments.length === 0) {
+		return { success: false, error: "No active task to end" };
+	}
+
+	if (activeAssignments.length > 1) {
+		return {
+			success: false,
+			error: "Multiple active task assignments found; manager intervention required",
+		};
+	}
+
+	const [activeAssignment] = activeAssignments;
+
+	await db.taskAssignment.update({
+		where: { id: activeAssignment.id },
+		data: {
+			endTime: new Date(),
+			notes: notes ? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim() : activeAssignment.notes,
+		},
+	});
+
+	return { success: true, message: `Ended task: ${activeAssignment.TaskType.name}` };
+}
 
 export async function clockIn(
 	_prevState: ClockActionState,

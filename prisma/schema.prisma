@@ -135,6 +135,8 @@ model TaskAssignment {
   id          String   @id @default(cuid())
   employeeId  String
   taskTypeId  String
+  source      TaskAssignmentSource @default(MANAGER)
+  assignedByUserId String?
   startTime   DateTime @default(now())
   endTime     DateTime?
   unitsCompleted Int?   // For productivity tracking
@@ -143,11 +145,18 @@ model TaskAssignment {
   updatedAt   DateTime @updatedAt
   Employee    Employee @relation(fields: [employeeId], references: [id])
   TaskType    TaskType @relation(fields: [taskTypeId], references: [id])
+  AssignedByUser User? @relation("TaskAssignedByUser", fields: [assignedByUserId], references: [id])
   TimeLogs    TimeLog[]
 
   @@index([employeeId])
   @@index([taskTypeId])
+  @@index([assignedByUserId])
   @@index([startTime])
+}
+
+enum TaskAssignmentSource {
+  MANAGER
+  WORKER
 }
 
 // NEW: Performance metrics for analytics
@@ -283,6 +292,7 @@ model User {
   Session      Session[]
   Employee     Employee?      @relation(fields: [employeeId], references: [id])
   ApiKey       ApiKey[]
+  TaskAssignmentsCreated TaskAssignment[] @relation("TaskAssignedByUser")
 }
 
 model ApiKey {

@@ -33,6 +33,16 @@ import { useAutoRefresh, useKioskMode } from "./hooks";
 import { notify, subscribe } from "./notifications";
 import { useOfflineActionQueue } from "./offline-queue";
 import type { OfflineEndpoint } from "./offline-queue";
+import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
+import {
+	canSelfAssign,
+	endSelfTaskAction,
+	isSelfAssignRequired,
+	startSelfTaskAction,
+	switchSelfTaskAction,
+	type ActiveTaskInfo,
+	type TaskOption,
+} from "./self-task-actions";
 import {
 	calculateNetHours,
 	isOvertime,
@@ -473,10 +483,182 @@ function BreakButton({ employeeId, onBreak }: { employeeId: string; onBreak: boo
 	);
 }
 
+function WorkerTaskControls({
+	employeeId,
+	activeTask,
+	assignmentMode,
+	taskOptions,
+}: {
+	employeeId: string;
+	activeTask?: ActiveTaskInfo;
+	assignmentMode: TaskAssignmentMode;
+	taskOptions: TaskOption[];
+}) {
+	const [selectedTaskId, setSelectedTaskId] = useState("");
+	const [startState, startFormAction, isStartPending] = useActionState<ClockActionState, FormData>(
+		startSelfTaskAction,
+		null
+	);
+	const [switchState, switchFormAction, isSwitchPending] = useActionState<ClockActionState, FormData>(
+		switchSelfTaskAction,
+		null
+	);
+	const [endState, endFormAction, isEndPending] = useActionState<ClockActionState, FormData>(
+		endSelfTaskAction,
+		null
+	);
+
+	const isPending = isStartPending || isSwitchPending || isEndPending;
+	const canAssignTasks = canSelfAssign(assignmentMode);
+	const requiresTask = isSelfAssignRequired(assignmentMode);
+	const resetSelectedTask = useCallback(() => {
+		setSelectedTaskId("");
+	}, []);
+
+	useEffect(() => {
+		if (startState?.success) {
+			notify(startState.message ?? "Task started", "success");
+		}
+		if (startState?.error) {
+			notify(startState.error, "error");
+		}
+	}, [startState]);
+
+	useEffect(() => {
+		if (switchState?.success) {
+			notify(switchState.message ?? "Task switched", "success");
+		}
+		if (switchState?.error) {
+			notify(switchState.error, "error");
+		}
+	}, [switchState]);
+
+	useEffect(() => {
+		if (endState?.success) {
+			notify(endState.message ?? "Task ended", "success");
+		}
+		if (endState?.error) {
+			notify(endState.error, "error");
+		}
+	}, [endState]);
+
+	if (!canAssignTasks) {
+		return null;
+	}
+
+	return (
+		<div className="mt-3 border border-border/60 rounded-[2px] bg-card px-3 py-3 space-y-3">
+			<p className="text-[11px] font-industrial uppercase tracking-[0.16em] text-muted-foreground">
+				Task Controls
+			</p>
+
+			{requiresTask && !activeTask && (
+				<Alert variant="warning" aria-live="assertive" className="relative">
+					Task assignment required while clocked in. Start a task now.
+				</Alert>
+			)}
+
+			{activeTask && (
+				<div className="text-xs text-muted-foreground">
+					Current task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+					{activeTask.stationName ? ` @ ${activeTask.stationName}` : ""}
+				</div>
+			)}
+
+			<div className="flex flex-col gap-2">
+				<Select
+					name="workerTaskType"
+					options={[
+						{ value: "", label: activeTask ? "Select replacement task" : "Select task" },
+						...taskOptions.map((task) => ({
+							value: task.id,
+							label: task.stationName ? `${task.name} (${task.stationName})` : task.name,
+						})),
+					]}
+					value={selectedTaskId}
+					onChange={setSelectedTaskId}
+					isDisabled={isPending || taskOptions.length === 0}
+				/>
+
+				{activeTask ? (
+					<div className="flex flex-wrap gap-2">
+					<form
+						action={switchFormAction}
+						onSubmit={() => {
+							resetSelectedTask();
+						}}
+					>
+							<input type="hidden" name="employeeId" value={employeeId} />
+							<input type="hidden" name="taskTypeId" value={selectedTaskId} />
+							<input type="hidden" name="newTaskTypeId" value={selectedTaskId} />
+							<input type="hidden" name="assignmentId" value={activeTask.assignmentId} />
+							<Button
+								type="submit"
+								variant="outline"
+								size="sm"
+								disabled={isPending || !selectedTaskId}
+							>
+								{isSwitchPending ? "Switching..." : "Switch Task"}
+							</Button>
+						</form>
+
+						<form action={endFormAction}>
+							<input type="hidden" name="employeeId" value={employeeId} />
+							<input type="hidden" name="assignmentId" value={activeTask.assignmentId} />
+							<input type="hidden" name="taskId" value={activeTask.assignmentId} />
+							<Button type="submit" variant="secondary" size="sm" disabled={isPending}>
+								{isEndPending ? "Ending..." : "End Task"}
+							</Button>
+						</form>
+					</div>
+				) : (
+					<form
+						action={startFormAction}
+						onSubmit={() => {
+							resetSelectedTask();
+						}}
+					>
+						<input type="hidden" name="employeeId" value={employeeId} />
+						<input type="hidden" name="taskTypeId" value={selectedTaskId} />
+						<Button
+							type="submit"
+							variant="primary"
+							size="sm"
+							disabled={isPending || !selectedTaskId}
+						>
+							{isStartPending ? "Starting..." : "Start Task"}
+						</Button>
+					</form>
+				)}
+			</div>
+
+			<div aria-live="polite" className="space-y-2">
+				{startState?.error && (
+					<Alert variant="error" className="relative">
+						{startState.error}
+					</Alert>
+				)}
+				{switchState?.error && (
+					<Alert variant="error" className="relative">
+						{switchState.error}
+					</Alert>
+				)}
+				{endState?.error && (
+					<Alert variant="error" className="relative">
+						{endState.error}
+					</Alert>
+				)}
+			</div>
+		</div>
+	);
+}
+
 function ActiveSessions({
 	activeLogs,
 	activeBreaks,
 	activeTasksByEmployee,
+	assignmentMode,
+	taskOptions,
 }: {
 	activeLogs: TimeLogWithRelations[];
 	activeBreaks: TimeLogWithRelations[];
@@ -484,6 +666,8 @@ function ActiveSessions({
 		string,
 		{ assignmentId: string; taskTypeName: string; stationName: string | null }
 	>;
+	assignmentMode: TaskAssignmentMode;
+	taskOptions: TaskOption[];
 }) {
 	const { kioskEnabled, enqueueOfflineAction } = useKioskContext();
 	const [state, formAction] = useActionState<ClockActionState, FormData>(clockOut, null);
@@ -521,43 +705,46 @@ function ActiveSessions({
 						{activeLogs.map((log) => {
 							const employeeOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
 							const activeTask = activeTasksByEmployee?.[log.employeeId];
+
 							return (
-								<div
-									key={log.id}
-									className="flex justify-between items-center p-4 bg-base-200 rounded"
-								>
-									<div className="flex-1">
-										<div className="flex items-center gap-2">
-											<p className="font-semibold">{log.Employee.name}</p>
-											{employeeOnBreak && (
-												<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-													On Break
-												</span>
+								<div key={log.id} className="p-4 bg-base-200 rounded space-y-3">
+									<div className="flex justify-between items-start gap-3">
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2">
+												<p className="font-semibold">{log.Employee.name}</p>
+												{employeeOnBreak && (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+														On Break
+													</span>
+												)}
+											</div>
+											<p className="text-sm text-muted-foreground">{log.Station?.name || "No station"}</p>
+											{activeTask && (
+												<p className="text-xs text-muted-foreground">
+													Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+												</p>
 											)}
+											<p className="text-xs">Started: {new Date(log.startTime).toLocaleTimeString()}</p>
+											<ElapsedTime startTime={log.startTime} />
 										</div>
-										<p className="text-sm text-muted-foreground">
-											{log.Station?.name || "No station"}
-										</p>
-										{activeTask && (
-											<p className="text-xs text-muted-foreground">
-												Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
-											</p>
-										)}
-										<p className="text-xs">
-											Started: {new Date(log.startTime).toLocaleTimeString()}
-										</p>
-										<ElapsedTime startTime={log.startTime} />
+										<div className="flex gap-2">
+											<BreakButton employeeId={log.employeeId} onBreak={employeeOnBreak} />
+											<form
+												action={formAction}
+												onSubmit={(event) => handleClockOutSubmit(event, log.id)}
+											>
+												<input type="hidden" name="logId" value={log.id} />
+												<ClockOutButton kioskMode={kioskEnabled} />
+											</form>
+										</div>
 									</div>
-									<div className="flex gap-2">
-										<BreakButton employeeId={log.employeeId} onBreak={employeeOnBreak} />
-										<form
-											action={formAction}
-											onSubmit={(event) => handleClockOutSubmit(event, log.id)}
-										>
-											<input type="hidden" name="logId" value={log.id} />
-											<ClockOutButton kioskMode={kioskEnabled} />
-										</form>
-									</div>
+
+									<WorkerTaskControls
+										employeeId={log.employeeId}
+										activeTask={activeTask}
+										assignmentMode={assignmentMode}
+										taskOptions={taskOptions}
+									/>
 								</div>
 							);
 						})}
@@ -1102,6 +1289,8 @@ export function TimeTracking({
 	activeBreaks,
 	completedLogs,
 	activeTasksByEmployee,
+	assignmentMode,
+	taskOptions,
 }: {
 	employees: Employee[];
 	stations: Station[];
@@ -1112,6 +1301,8 @@ export function TimeTracking({
 		string,
 		{ assignmentId: string; taskTypeName: string; stationName: string | null }
 	>;
+	assignmentMode: TaskAssignmentMode;
+	taskOptions: TaskOption[];
 }) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
@@ -1196,6 +1387,8 @@ export function TimeTracking({
 					activeLogs={optimisticLogs}
 					activeBreaks={activeBreaks}
 					activeTasksByEmployee={activeTasksByEmployee}
+					assignmentMode={assignmentMode}
+					taskOptions={taskOptions}
 				/>
 			</div>
 			<TimeHistory completedLogs={completedLogs} stations={stations} employees={employees} />

@@ -2,6 +2,7 @@
 
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
+import { getManagerTaskAssignmentAccess } from "~/lib/task-assignment-permissions";
 
 import type { TaskAssignment, TaskType } from "./types";
 import type { Prisma } from "@prisma/client";
@@ -55,8 +56,9 @@ export async function assignTask(data: {
 	notes?: string;
 }) {
 	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Unauthorized");
+	const access = getManagerTaskAssignmentAccess(user);
+	if (!access.ok) {
+		throw new Error(access.error);
 	}
 
 	return await db.$transaction(async (tx) => {
@@ -77,6 +79,8 @@ export async function assignTask(data: {
 			data: {
 				employeeId: data.employeeId,
 				taskTypeId: data.taskTypeId,
+				source: "MANAGER",
+				assignedByUserId: access.userId,
 				startTime: new Date(),
 				notes: data.notes,
 			},
@@ -170,8 +174,9 @@ export async function completeTask(taskId: string, unitsCompleted?: number, note
 
 export async function switchTask(employeeId: string, newTaskTypeId: string, reason?: string) {
 	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Unauthorized");
+	const access = getManagerTaskAssignmentAccess(user);
+	if (!access.ok) {
+		throw new Error(access.error);
 	}
 
 	return await db.$transaction(async (tx) => {
@@ -206,6 +211,8 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 			data: {
 				employeeId: employeeId,
 				taskTypeId: newTaskTypeId,
+				source: "MANAGER",
+				assignedByUserId: access.userId,
 				startTime: new Date(),
 				notes: reason,
 			},

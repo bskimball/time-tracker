@@ -317,7 +317,6 @@ export async function getActiveTimeLogs() {
 	return await db.timeLog.findMany({
 		where: {
 			endTime: null,
-			type: "WORK",
 			deletedAt: null,
 		},
 		include: {
@@ -326,6 +325,123 @@ export async function getActiveTimeLogs() {
 		},
 		orderBy: { startTime: "desc" },
 	});
+}
+
+export async function getActiveEmployeesForTimesheet() {
+	const [activeLogs, activeAssignments] = await Promise.all([
+		db.timeLog.findMany({
+			where: {
+				endTime: null,
+				deletedAt: null,
+			},
+			include: {
+				Employee: true,
+				Station: true,
+			},
+			orderBy: { startTime: "desc" },
+		}),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			select: {
+				employeeId: true,
+				startTime: true,
+				Employee: {
+					select: {
+						name: true,
+						email: true,
+					},
+				},
+				TaskType: {
+					select: {
+						name: true,
+						Station: true,
+					},
+				},
+			},
+			orderBy: { startTime: "desc" },
+		}),
+	]);
+
+	type ActiveEmployeeEntry = {
+		employeeId: string;
+		employeeName: string;
+		employeeEmail: string;
+		startTime: Date;
+		stationName: string | null;
+		type: "WORK" | "BREAK" | "TASK";
+		source: "TIME_LOG" | "TASK_ASSIGNMENT";
+		assignmentSource: "MANAGER" | "WORKER" | null;
+		clockMethod: "PIN" | "CARD" | "BIOMETRIC" | "MANUAL" | null;
+		timeLogId: string | null;
+		taskTypeName: string | null;
+	};
+
+	const clockedInByEmployee = new Map<string, ActiveEmployeeEntry>();
+	const floorActiveByEmployee = new Map<string, ActiveEmployeeEntry>();
+
+	for (const log of activeLogs) {
+		if (!clockedInByEmployee.has(log.employeeId)) {
+			clockedInByEmployee.set(log.employeeId, {
+				employeeId: log.employeeId,
+				employeeName: log.Employee.name,
+				employeeEmail: log.Employee.email,
+				startTime: log.startTime,
+				stationName: log.Station?.name ?? null,
+				type: log.type,
+				source: "TIME_LOG",
+				assignmentSource: null,
+				clockMethod: log.clockMethod,
+				timeLogId: log.id,
+				taskTypeName: null,
+			});
+		}
+
+		if (log.type !== "WORK" || floorActiveByEmployee.has(log.employeeId)) {
+			continue;
+		}
+
+		floorActiveByEmployee.set(log.employeeId, {
+			employeeId: log.employeeId,
+			employeeName: log.Employee.name,
+			employeeEmail: log.Employee.email,
+			startTime: log.startTime,
+			stationName: log.Station?.name ?? null,
+			type: log.type,
+			source: "TIME_LOG",
+			assignmentSource: null,
+			clockMethod: log.clockMethod,
+			timeLogId: log.id,
+			taskTypeName: null,
+		});
+	}
+
+	for (const assignment of activeAssignments) {
+		if (floorActiveByEmployee.has(assignment.employeeId)) {
+			continue;
+		}
+
+		floorActiveByEmployee.set(assignment.employeeId, {
+			employeeId: assignment.employeeId,
+			employeeName: assignment.Employee.name,
+			employeeEmail: assignment.Employee.email,
+			startTime: assignment.startTime,
+			stationName: assignment.TaskType.Station.name,
+			type: "TASK",
+			source: "TASK_ASSIGNMENT",
+			assignmentSource: null,
+			clockMethod: null,
+			timeLogId: null,
+			taskTypeName: assignment.TaskType.name,
+		});
+	}
+
+	const sortByStartDesc = (a: ActiveEmployeeEntry, b: ActiveEmployeeEntry) =>
+		b.startTime.getTime() - a.startTime.getTime();
+
+	return {
+		clockedInEmployees: Array.from(clockedInByEmployee.values()).sort(sortByStartDesc),
+		floorActiveEmployees: Array.from(floorActiveByEmployee.values()).sort(sortByStartDesc),
+	};
 }
 
 export async function closeTimeLog(id: string, endTime: Date = new Date()) {

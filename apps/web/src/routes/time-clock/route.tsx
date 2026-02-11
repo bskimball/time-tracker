@@ -4,6 +4,8 @@
 import { Prisma } from "@prisma/client";
 import { TimeTracking } from "~/routes/time-clock/client";
 import { db } from "~/lib/db";
+import { getTaskAssignmentMode } from "~/lib/operational-config";
+import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
 
 // Define explicit type using Prisma's generated types
 export type TimeLogWithRelations = Prisma.TimeLogGetPayload<{
@@ -18,6 +20,12 @@ type ActiveTaskByEmployee = Record<
 		stationName: string | null;
 	}
 >;
+
+type TaskOption = {
+	id: string;
+	name: string;
+	stationName: string | null;
+};
 
 export default async function Component() {
 	const [employees, stations, activeLogs, activeBreaks, completedLogs, activeAssignments] =
@@ -51,6 +59,21 @@ export default async function Component() {
 		}),
 	]);
 
+	const [assignmentMode, activeTaskTypes] = await Promise.all([
+		getTaskAssignmentMode(),
+		db.taskType.findMany({
+			where: { isActive: true },
+			include: { Station: true },
+			orderBy: [{ name: "asc" }],
+		}),
+	]);
+
+	const taskOptions: TaskOption[] = activeTaskTypes.map((taskType) => ({
+		id: taskType.id,
+		name: taskType.name,
+		stationName: taskType.Station.name,
+	}));
+
 	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
 		if (acc[assignment.employeeId]) {
 			return acc;
@@ -74,6 +97,8 @@ export default async function Component() {
 			activeBreaks={activeBreaks as TimeLogWithRelations[]}
 			completedLogs={completedLogs as TimeLogWithRelations[]}
 			activeTasksByEmployee={activeTasksByEmployee}
+			assignmentMode={assignmentMode as TaskAssignmentMode}
+			taskOptions={taskOptions}
 		/>
 	);
 }

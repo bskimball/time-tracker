@@ -16,6 +16,15 @@ import type { Employee, Station, TimeLog } from "@prisma/client";
 import { clockIn, clockOut, startBreak, endBreak, pinToggleClock } from "../../time-clock/actions";
 import { useOnlineStatus, useOfflineActionQueue } from "~/lib/offline-support";
 import { notify } from "~/components/time-tracking/notifications";
+import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
+import {
+	canSelfAssign,
+	endSelfTaskAction,
+	isSelfAssignRequired,
+	startSelfTaskAction,
+	switchSelfTaskAction,
+	type TaskOption,
+} from "~/components/time-tracking/self-task-actions";
 
 type TimeLogWithRelations = TimeLog & {
 	employee: Employee;
@@ -28,6 +37,8 @@ export function MobileTimeClock({
 	activeLogs,
 	activeBreaks,
 	activeTasksByEmployee,
+	assignmentMode,
+	taskOptions,
 }: {
 	employees: Employee[];
 	stations: Station[];
@@ -37,6 +48,8 @@ export function MobileTimeClock({
 		string,
 		{ assignmentId: string; taskTypeName: string; stationName: string | null }
 	>;
+	assignmentMode: TaskAssignmentMode;
+	taskOptions: TaskOption[];
 }) {
 	const [method, setMethod] = React.useState<"pin" | "select">("pin");
 	const [pin, setPin] = React.useState("");
@@ -45,6 +58,7 @@ export function MobileTimeClock({
 	const [processing, setProcessing] = React.useState(false);
 	const [error, setError] = React.useState("");
 	const [success, setSuccess] = React.useState("");
+	const [selectedTaskByEmployee, setSelectedTaskByEmployee] = React.useState<Record<string, string>>({});
 
 	// Online status management
 	const { isOnline } = useOnlineStatus();
@@ -178,6 +192,65 @@ export function MobileTimeClock({
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "An error occurred");
+		} finally {
+			setProcessing(false);
+		}
+	};
+
+	const selfAssignEnabled = canSelfAssign(assignmentMode);
+	const selfAssignRequired = isSelfAssignRequired(assignmentMode);
+
+	const handleWorkerTaskAction = async (
+		action: "start" | "switch" | "end",
+		employeeId: string,
+		activeTask?: { assignmentId: string }
+	) => {
+		setProcessing(true);
+		setError("");
+
+		try {
+			const selectedTaskId = selectedTaskByEmployee[employeeId] || "";
+			const formData = new FormData();
+			formData.set("employeeId", employeeId);
+
+			if (action !== "end") {
+				formData.set("taskTypeId", selectedTaskId);
+				formData.set("newTaskTypeId", selectedTaskId);
+			}
+
+			if (activeTask?.assignmentId) {
+				formData.set("assignmentId", activeTask.assignmentId);
+				formData.set("taskId", activeTask.assignmentId);
+			}
+
+			const runner =
+				action === "start"
+					? startSelfTaskAction
+					: action === "switch"
+						? switchSelfTaskAction
+						: endSelfTaskAction;
+
+			const result = await runner(null, formData);
+
+			if (result?.error) {
+				setError(result.error);
+				return;
+			}
+
+			if (action !== "end") {
+				setSelectedTaskByEmployee((prev) => ({ ...prev, [employeeId]: "" }));
+			}
+
+			setSuccess(
+				result?.message ||
+					(action === "start"
+						? "Task started"
+						: action === "switch"
+							? "Task switched"
+							: "Task ended")
+			);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Unable to process task action");
 		} finally {
 			setProcessing(false);
 		}
@@ -347,6 +420,7 @@ export function MobileTimeClock({
 							{activeLogs.map((log) => {
 								const isOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
 								const activeTask = activeTasksByEmployee?.[log.employeeId];
+								const selectedTaskId = selectedTaskByEmployee[log.employeeId] || "";
 								return (
 									<MobileCard key={log.id} padding="md">
 										<div className="space-y-3">
@@ -397,6 +471,13 @@ export function MobileTimeClock({
 												</Alert>
 											)}
 
+											{selfAssignEnabled && selfAssignRequired && !activeTask && (
+												<Alert variant="warning" aria-live="assertive">
+													<div className="font-semibold uppercase tracking-wide text-xs">Task assignment required</div>
+													<div className="text-sm">Start a task before continuing floor work.</div>
+												</Alert>
+											)}
+
 											<div className="flex gap-3">
 												<TouchButton
 													onPress={() => handleBreak(log.employeeId, isOnBreak)}
@@ -418,6 +499,65 @@ export function MobileTimeClock({
 													Clock Out
 												</TouchButton>
 											</div>
+
+											{selfAssignEnabled && (
+												<div className="space-y-2 border border-border/60 rounded-[2px] p-3">
+													<TouchSelect
+														label={activeTask ? "Switch To Task" : "Start Task"}
+														value={selectedTaskId}
+														onChange={(value) =>
+															setSelectedTaskByEmployee((prev) => ({
+																...prev,
+																[log.employeeId]: value,
+															}))
+														}
+														options={[
+															{ value: "", label: "Select task" },
+															...taskOptions.map((task) => ({
+																value: task.id,
+																label: task.stationName ? `${task.name} (${task.stationName})` : task.name,
+															})),
+														]}
+													/>
+
+													<div className="flex gap-3 flex-wrap">
+														{activeTask ? (
+															<>
+																<TouchButton
+																	onPress={() =>
+																		handleWorkerTaskAction("switch", log.employeeId, {
+																			assignmentId: activeTask.assignmentId,
+																		})
+																	}
+																	variant="outline"
+																	disabled={processing || !selectedTaskId}
+																>
+																	Switch Task
+																</TouchButton>
+																<TouchButton
+																	onPress={() =>
+																		handleWorkerTaskAction("end", log.employeeId, {
+																			assignmentId: activeTask.assignmentId,
+																		})
+																	}
+																	variant="secondary"
+																	disabled={processing}
+																>
+																	End Task
+																</TouchButton>
+															</>
+														) : (
+															<TouchButton
+																onPress={() => handleWorkerTaskAction("start", log.employeeId)}
+																variant="primary"
+																disabled={processing || !selectedTaskId}
+															>
+																Start Task
+															</TouchButton>
+														)}
+													</div>
+												</div>
+											)}
 										</div>
 									</MobileCard>
 								);
@@ -455,9 +595,17 @@ export function MobileTimeClock({
 				)}
 
 				{/* Messages */}
-				{error && <Alert variant="error">{error}</Alert>}
+				{error && (
+					<Alert variant="error" aria-live="assertive">
+						{error}
+					</Alert>
+				)}
 
-				{success && <Alert variant="success">{success}</Alert>}
+				{success && (
+					<Alert variant="success" aria-live="polite">
+						{success}
+					</Alert>
+				)}
 
 				{/* Quick Actions */}
 				{method === "pin" && (

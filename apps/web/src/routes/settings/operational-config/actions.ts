@@ -5,30 +5,32 @@ import { db } from "~/lib/db";
 import {
 	getOperationalConfigEntries,
 	ensureOperationalConfigSeeded,
+	getOperationalConfigDefinition,
 	OPERATIONAL_CONFIG_KEYS,
 	type OperationalConfigEntry,
 } from "~/lib/operational-config";
 
-const CONFIG_BOUNDS: Record<string, { min: number; max: number; step: string; unit: string }> = {
-	LABOR_HOURLY_RATE: { min: 0, max: 200, step: "0.1", unit: "USD/hour" },
-	OVERTIME_MULTIPLIER: { min: 1, max: 5, step: "0.01", unit: "x" },
-	BUDGETED_HOURS_PER_DAY: { min: 0, max: 20000, step: "1", unit: "hours/day" },
-	DEFAULT_STATION_CAPACITY_FALLBACK: { min: 1, max: 500, step: "1", unit: "workers/station" },
-	OPTIMAL_UTILIZATION_PERCENT: { min: 1, max: 100, step: "0.1", unit: "%" },
-	KPI_PRODUCTIVITY_HIGH_THRESHOLD: { min: 0, max: 1000, step: "0.1", unit: "units/hour" },
-	KPI_PRODUCTIVITY_MEDIUM_THRESHOLD: { min: 0, max: 1000, step: "0.1", unit: "units/hour" },
-	KPI_OVERTIME_HIGH_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
-	KPI_OVERTIME_MEDIUM_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
-	KPI_OCCUPANCY_HIGH_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
-	KPI_OCCUPANCY_MEDIUM_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
-	KPI_VARIANCE_HIGH_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
-	KPI_VARIANCE_MEDIUM_THRESHOLD: { min: 0, max: 100, step: "0.1", unit: "%" },
+export type EditableOperationalConfigEntry = OperationalConfigEntry & {
+	validation:
+		| {
+				type: "number";
+				min: number;
+				max: number;
+				step: string;
+				unit: string;
+		  }
+		| {
+				type: "enum";
+				options: readonly string[];
+				defaultValue: string;
+				unit: string;
+		  };
 };
 
 export type OperationalConfigState = {
 	error?: string;
 	success?: boolean;
-	entries?: OperationalConfigEntry[];
+	entries?: EditableOperationalConfigEntry[];
 } | null;
 
 export async function getEditableOperationalConfigEntries() {
@@ -36,7 +38,13 @@ export async function getEditableOperationalConfigEntries() {
 	const entries = await getOperationalConfigEntries();
 	return entries.map((entry) => ({
 		...entry,
-		bounds: CONFIG_BOUNDS[entry.key] ?? { min: -1000000, max: 1000000, step: "0.1", unit: "" },
+		validation: getOperationalConfigDefinition(entry.key)?.validation ?? {
+			type: "number",
+			min: -1000000,
+			max: 1000000,
+			step: "0.1",
+			unit: "",
+		},
 	}));
 }
 
@@ -64,23 +72,40 @@ export async function updateOperationalConfig(
 		return { error: "Unknown config key" };
 	}
 
-	const value = Number.parseFloat(valueRaw);
-	if (!Number.isFinite(value)) {
-		return { error: "Value must be a valid number" };
+	const definition = getOperationalConfigDefinition(key);
+	if (!definition) {
+		return { error: "Unknown config key" };
 	}
 
-	const bounds = CONFIG_BOUNDS[key];
-	if (bounds && (value < bounds.min || value > bounds.max)) {
-		return { error: `Value must be between ${bounds.min} and ${bounds.max} ${bounds.unit}` };
+	let sanitizedValue = valueRaw;
+	if (definition.validation.type === "number") {
+		const value = Number.parseFloat(valueRaw);
+		if (!Number.isFinite(value)) {
+			return { error: "Value must be a valid number" };
+		}
+
+		if (value < definition.validation.min || value > definition.validation.max) {
+			return {
+				error: `Value must be between ${definition.validation.min} and ${definition.validation.max} ${definition.validation.unit}`,
+			};
+		}
+
+		sanitizedValue = String(value);
+	} else {
+		if (!definition.validation.options.includes(valueRaw)) {
+			return {
+				error: `Value must be one of: ${definition.validation.options.join(", ")}`,
+			};
+		}
 	}
 
 	await ensureOperationalConfigSeeded();
 	await db.$executeRaw`
 		UPDATE operational_config
-		SET value = ${String(value)}, updated_at = NOW()
+		SET value = ${sanitizedValue}, updated_at = NOW()
 		WHERE key = ${key}
 	`;
 
-	const entries = await getOperationalConfigEntries();
+	const entries = await getEditableOperationalConfigEntries();
 	return { success: true, entries };
 }

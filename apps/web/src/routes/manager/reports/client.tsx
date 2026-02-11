@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
-import { Button, Input, Card, CardHeader, CardTitle, CardBody, Badge } from "@monorepo/design-system";
+import { useState } from "react";
+import { Button, SimpleInput, Card, CardHeader, CardTitle, CardBody, Badge } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { cn } from "~/lib/cn";
+import {
+	LiaFileAltSolid,
+	LiaDownloadSolid,
+	LiaSyncSolid,
+	LiaCalendarAltSolid,
+	LiaChartBarSolid,
+	LiaIndustrySolid,
+	LiaClipboardListSolid,
+	LiaClockSolid
+} from "react-icons/lia";
 import type {
 	ProductivityData,
 	TaskPerformanceData,
@@ -29,6 +40,45 @@ interface ReportsProps {
 	initialData: ReportDataType;
 }
 
+// KPI Card Component matching Dashboard style
+const KpiCard = ({ 
+	label, 
+	value, 
+	subValue, 
+	icon: Icon,
+	variant = "default"
+}: { 
+	label: string; 
+	value: string | number; 
+	subValue?: string;
+	icon?: React.ComponentType<{ className?: string }>;
+	variant?: "default" | "success" | "warning" | "destructive";
+}) => {
+	const colors = {
+		default: "text-foreground",
+		success: "text-emerald-600",
+		warning: "text-orange-600",
+		destructive: "text-red-600",
+	};
+
+	return (
+		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border border-border rounded-[2px] shadow-sm group hover:border-primary/50 transition-colors">
+			<div className="flex items-center gap-2 text-muted-foreground mb-4">
+				{Icon && <Icon className="w-5 h-5" />}
+				<span className="text-xs font-heading uppercase tracking-wider font-semibold">{label}</span>
+			</div>
+			<div className="flex items-baseline gap-2">
+				<span className={cn("text-3xl font-data font-medium tracking-tight transition-colors", colors[variant])}>
+					{value}
+				</span>
+				{subValue && (
+					<span className="text-sm text-muted-foreground font-data">{subValue}</span>
+				)}
+			</div>
+		</div>
+	);
+};
+
 export function ReportsManager({ initialData }: ReportsProps) {
 	const [reportType, setReportType] = useState("productivity");
 	const [dateRange, setDateRange] = useState({
@@ -39,17 +89,16 @@ export function ReportsManager({ initialData }: ReportsProps) {
 	const [data, setData] = useState(initialData);
 
 	const reportTypes = [
-		{ value: "productivity", label: "Employee Productivity" },
-		{ value: "tasks", label: "Task Performance" },
-		{ value: "stations", label: "Station Efficiency" },
-		{ value: "overtime", label: "Overtime Analysis" },
-		{ value: "summary", label: "Executive Summary" },
+		{ value: "productivity", label: "Productivity", icon: LiaChartBarSolid },
+		{ value: "tasks", label: "Task Performance", icon: LiaClipboardListSolid },
+		{ value: "stations", label: "Station Efficiency", icon: LiaIndustrySolid },
+		{ value: "overtime", label: "Overtime Analysis", icon: LiaClockSolid },
+		{ value: "summary", label: "Executive Summary", icon: LiaFileAltSolid },
 	];
 
 	const handleRefresh = async () => {
 		setLoading(true);
 		try {
-			// Fetch fresh data based on date range and report type
 			const params = new URLSearchParams({
 				startDate: dateRange.startDate,
 				endDate: dateRange.endDate,
@@ -57,6 +106,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 			});
 
 			const response = await fetch(`/manager/reports/data?${params.toString()}`);
+			if (!response.ok) throw new Error("Failed to fetch");
 			const freshData = (await response.json()) as ReportDataType;
 			setData(freshData);
 		} catch (error) {
@@ -79,7 +129,6 @@ export function ReportsManager({ initialData }: ReportsProps) {
 			const response = await fetch(`/manager/reports/export?${params.toString()}`);
 
 			if (response.ok) {
-				// Download the file
 				const blob = await response.blob();
 				const url = window.URL.createObjectURL(blob);
 				const a = document.createElement("a");
@@ -97,107 +146,182 @@ export function ReportsManager({ initialData }: ReportsProps) {
 		}
 	};
 
-	const renderProductivityReport = () => (
-		<div className="space-y-6">
+	const renderSummaryReport = () => (
+		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+				<KpiCard 
+					label="Workforce Total" 
+					value={data.summaryStats.totalEmployees} 
+					subValue={`${data.summaryStats.activeEmployees} Active`}
+					icon={LiaChartBarSolid}
+				/>
+				<KpiCard 
+					label="Total Hours" 
+					value={data.summaryStats.totalHoursWorked.toFixed(1)} 
+					subValue="Cumulative"
+					variant="success"
+					icon={LiaClockSolid}
+				/>
+				<KpiCard 
+					label="Peak Occupancy" 
+					value={data.summaryStats.peakDayOccupancy} 
+					subValue="Max Daily"
+					icon={LiaIndustrySolid}
+				/>
+				<KpiCard 
+					label="Overtime Impact" 
+					value={data.summaryStats.totalOvertimeHours.toFixed(1)} 
+					subValue="Total Hours"
+					variant={data.summaryStats.totalOvertimeHours > 0 ? "destructive" : "default"}
+					icon={LiaClockSolid}
+				/>
+			</div>
+
 			<Card>
 				<CardHeader>
-					<CardTitle>Employee Productivity Report</CardTitle>
+					<CardTitle className="uppercase tracking-wider">System Overview</CardTitle>
 				</CardHeader>
 				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-						<div className="text-center">
-							<p className="text-sm text-muted-foreground">Total Hours</p>
-							<p className="text-2xl font-bold">{data.summaryStats.totalHoursWorked.toFixed(1)}h</p>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+						<div className="space-y-6">
+							<h3 className="font-heading font-bold uppercase text-muted-foreground text-xs tracking-wider">Performance Metrics</h3>
+							<div className="space-y-4">
+								<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
+									<span className="text-sm">Avg Hours / Employee</span>
+									<span className="font-data font-bold text-lg">{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h</span>
+								</div>
+								<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
+									<span className="text-sm">Active Ratio</span>
+									<span className="font-data font-bold text-lg">
+										{data.summaryStats.totalEmployees > 0 
+											? `${Math.round((data.summaryStats.activeEmployees / data.summaryStats.totalEmployees) * 100)}%` 
+											: "0%"}
+									</span>
+								</div>
+							</div>
 						</div>
-						<div className="text-center">
-							<p className="text-sm text-muted-foreground">Average Hours/Employee</p>
-							<p className="text-2xl font-bold">
-								{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
-							</p>
-						</div>
-						<div className="text-center">
-							<p className="text-sm text-muted-foreground">Active Employees</p>
-							<p className="text-2xl font-bold">{data.summaryStats.activeEmployees}</p>
+						
+						<div className="flex items-center justify-center border border-dashed border-border rounded-[2px] bg-muted/5 min-h-[200px]">
+							<div className="text-center space-y-2">
+								<p className="font-heading uppercase text-xs text-muted-foreground tracking-widest">Efficiency Index</p>
+								<p className="font-data text-4xl font-bold text-primary">--.--</p>
+								<p className="text-xs text-muted-foreground">Calibration Required</p>
+							</div>
 						</div>
 					</div>
+				</CardBody>
+			</Card>
+		</div>
+	);
 
+	const renderProductivityReport = () => (
+		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<Card>
+				<CardHeader>
+					<div className="flex justify-between items-center">
+						<CardTitle className="uppercase tracking-wider">Employee Productivity</CardTitle>
+						<span className="text-xs text-muted-foreground font-mono">
+							{data.productivityData.length} RECORDS
+						</span>
+					</div>
+				</CardHeader>
+				<CardBody className="p-0">
 					<div className="overflow-x-auto">
-						<table className="w-full">
+						<table className="w-full text-sm">
 							<thead>
-								<tr className="border-b border-border">
-									<th className="text-left p-4">Date</th>
-									<th className="text-left p-4">Employee</th>
-									<th className="text-left p-4">Station</th>
-									<th className="text-left p-4">Hours Worked</th>
-									<th className="text-left p-4">Units Processed</th>
-									<th className="text-left p-4">Efficiency</th>
-									<th className="text-left p-4">Overtime</th>
+								<tr className="bg-muted/50 border-b border-border">
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Employee</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Station</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Hours</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Units</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Efficiency</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Overtime</th>
 								</tr>
 							</thead>
-							<tbody>
+							<tbody className="divide-y divide-border/50">
 								{data.productivityData.map((row, index) => (
-									<tr key={index} className="border-b border-border hover:bg-muted/50">
-										<td className="p-4">{row.date}</td>
+									<tr key={index} className="hover:bg-muted/30 transition-colors">
+										<td className="p-4 font-data text-xs">{row.date}</td>
 										<td className="p-4 font-medium">{row.employeeName}</td>
-										<td className="p-4">{row.stationName || "-"}</td>
-										<td className="p-4">{row.hoursWorked.toFixed(2)}h</td>
-										<td className="p-4">{row.unitsProcessed || "-"}</td>
-										<td className="p-4">
-											{row.efficiency ? `${(row.efficiency * 100).toFixed(1)}%` : "-"}
+										<td className="p-4 text-xs text-muted-foreground">{row.stationName || "—"}</td>
+										<td className="p-4 font-data text-right">{row.hoursWorked.toFixed(2)}</td>
+										<td className="p-4 font-data text-right">{row.unitsProcessed || "—"}</td>
+										<td className="p-4 font-data text-right">
+											{row.efficiency ? (
+												<span className={cn(
+													row.efficiency >= 1.0 ? "text-emerald-600" : "text-orange-600"
+												)}>
+													{(row.efficiency * 100).toFixed(1)}%
+												</span>
+											) : "—"}
 										</td>
-										<td className="p-4">
-											{row.overtimeHours ? `${row.overtimeHours.toFixed(2)}h` : "-"}
+										<td className="p-4 font-data text-right">
+											{row.overtimeHours ? (
+												<span className="text-red-600 font-bold">{row.overtimeHours.toFixed(2)}</span>
+											) : "—"}
 										</td>
 									</tr>
 								))}
+								{data.productivityData.length === 0 && (
+									<tr>
+										<td colSpan={7} className="p-12 text-center text-muted-foreground font-heading text-sm">
+											No data found for the selected period.
+										</td>
+									</tr>
+								)}
 							</tbody>
 						</table>
 					</div>
-
-					{data.productivityData.length === 0 && (
-						<div className="text-center py-6">
-							<p className="text-muted-foreground">
-								No productivity data found for selected period
-							</p>
-						</div>
-					)}
 				</CardBody>
 			</Card>
 		</div>
 	);
 
 	const renderTaskReport = () => (
-		<div className="space-y-6">
+		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 			<Card>
 				<CardHeader>
-					<CardTitle>Task Performance Report</CardTitle>
+					<div className="flex justify-between items-center">
+						<CardTitle className="uppercase tracking-wider">Task Performance</CardTitle>
+						<span className="text-xs text-muted-foreground font-mono">
+							{data.taskPerformanceData.length} RECORDS
+						</span>
+					</div>
 				</CardHeader>
-				<CardBody>
+				<CardBody className="p-0">
 					<div className="overflow-x-auto">
-						<table className="w-full">
+						<table className="w-full text-sm">
 							<thead>
-								<tr className="border-b border-border">
-									<th className="text-left p-4">Date</th>
-									<th className="text-left p-4">Task Type</th>
-									<th className="text-left p-4">Tasks Completed</th>
-									<th className="text-left p-4">Total Units</th>
-									<th className="text-left p-4">Avg Units/Task</th>
-									<th className="text-left p-4">Total Hours</th>
-									<th className="text-left p-4">Hours/Unit</th>
+								<tr className="bg-muted/50 border-b border-border">
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Task Type</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Count</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Units</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Avg/Task</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Total Hours</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Hrs/Unit</th>
 								</tr>
 							</thead>
-							<tbody>
+							<tbody className="divide-y divide-border/50">
 								{data.taskPerformanceData.map((row, index) => (
-									<tr key={index} className="border-b border-border hover:bg-muted/50">
-										<td className="p-4">{row.date}</td>
+									<tr key={index} className="hover:bg-muted/30 transition-colors">
+										<td className="p-4 font-data text-xs">{row.date}</td>
 										<td className="p-4 font-medium">{row.taskTypeName}</td>
-										<td className="p-4 text-center">{row.taskCount}</td>
-										<td className="p-4 text-center">{row.totalUnits}</td>
-										<td className="p-4 text-center">{row.averageUnitsPerTask.toFixed(2)}</td>
-										<td className="p-4 text-center">{row.totalHours.toFixed(2)}h</td>
-										<td className="p-4 text-center">{row.hoursPerUnit.toFixed(3)}h</td>
+										<td className="p-4 font-data text-right">{row.taskCount}</td>
+										<td className="p-4 font-data text-right">{row.totalUnits}</td>
+										<td className="p-4 font-data text-right">{row.averageUnitsPerTask.toFixed(2)}</td>
+										<td className="p-4 font-data text-right">{row.totalHours.toFixed(2)}</td>
+										<td className="p-4 font-data text-right text-muted-foreground">{row.hoursPerUnit.toFixed(3)}</td>
 									</tr>
 								))}
+								{data.taskPerformanceData.length === 0 && (
+									<tr>
+										<td colSpan={7} className="p-12 text-center text-muted-foreground font-heading text-sm">
+											No task data found.
+										</td>
+									</tr>
+								)}
 							</tbody>
 						</table>
 					</div>
@@ -207,82 +331,104 @@ export function ReportsManager({ initialData }: ReportsProps) {
 	);
 
 	const renderStationReport = () => (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle>Station Efficiency Report</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{data.stationEfficiencyData.map((station, index) => (
-							<div key={index} className="border border-border/50 rounded-[2px] p-4 bg-card/50">
-								<h3 className="font-bold font-heading text-sm uppercase tracking-tight mb-3">{station.stationName}</h3>
-								<div className="space-y-2 text-sm">
-									<div className="flex justify-between items-baseline">
-										<span className="text-xs text-muted-foreground font-mono uppercase tracking-tighter">Total Hours:</span>
-										<span className="font-bold font-data">{station.totalHours.toFixed(1)}h</span>
-									</div>
-									<div className="flex justify-between items-baseline">
-										<span className="text-xs text-muted-foreground font-mono uppercase tracking-tighter">Employees:</span>
-										<span className="font-bold font-data">{station.totalEmployees}</span>
-									</div>
-									<div className="flex justify-between items-baseline">
-										<span className="text-xs text-muted-foreground font-mono uppercase tracking-tighter">Peak Occupancy:</span>
-										<span className="font-bold font-data">{station.peakOccupancy}</span>
-									</div>
-									{station.averageEfficiency && (
-										<div className="flex justify-between items-center pt-2 mt-2 border-t border-border/30">
-											<span className="text-xs text-muted-foreground font-mono uppercase tracking-tighter">Avg Efficiency:</span>
-											<Badge variant={station.averageEfficiency > 0.8 ? "success" : "primary"}>
-												{(station.averageEfficiency * 100).toFixed(1)}%
-											</Badge>
-										</div>
-									)}
+		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			{data.stationEfficiencyData.map((station, index) => (
+				<Card key={index} className="group hover:border-primary/50 transition-colors">
+					<CardHeader className="pb-2 border-b border-border/50">
+						<CardTitle className="uppercase tracking-tight text-sm flex justify-between">
+							{station.stationName}
+							<Badge variant="outline" className="font-mono text-[10px]">#{index + 1}</Badge>
+						</CardTitle>
+					</CardHeader>
+					<CardBody className="space-y-4 pt-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div>
+								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">Total Hours</p>
+								<p className="font-data font-bold text-lg">{station.totalHours.toFixed(1)}h</p>
+							</div>
+							<div>
+								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">Peak Occupancy</p>
+								<p className="font-data font-bold text-lg">{station.peakOccupancy}</p>
+							</div>
+						</div>
+						
+						{station.averageEfficiency !== null && (
+							<div className="space-y-2 pt-2 border-t border-border/30">
+								<div className="flex justify-between text-xs">
+									<span className="text-muted-foreground uppercase font-heading tracking-wider">Efficiency</span>
+									<span className="font-data font-bold">{(station.averageEfficiency * 100).toFixed(1)}%</span>
+								</div>
+								<div className="h-1.5 w-full bg-muted overflow-hidden rounded-[1px]">
+									<div 
+										className={cn("h-full transition-all duration-500", 
+											station.averageEfficiency >= 0.9 ? "bg-emerald-500" : 
+											station.averageEfficiency >= 0.7 ? "bg-primary" : "bg-yellow-500"
+										)}
+										style={{ width: `${Math.min(station.averageEfficiency * 100, 100)}%` }}
+									/>
 								</div>
 							</div>
-						))}
-					</div>
-				</CardBody>
-			</Card>
+						)}
+					</CardBody>
+				</Card>
+			))}
+			{data.stationEfficiencyData.length === 0 && (
+				<div className="col-span-full p-12 border border-dashed border-border rounded-[2px] text-center">
+					<p className="font-heading uppercase tracking-widest text-muted-foreground text-sm">No Station Data Available</p>
+				</div>
+			)}
 		</div>
 	);
 
 	const renderOvertimeReport = () => (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle>Overtime Analysis</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<div className="text-center mb-6">
-						<p className="text-lg font-semibold">
-							Total Overtime: {data.summaryStats.totalOvertimeHours.toFixed(1)} hours
+		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			{data.summaryStats.totalOvertimeHours > 0 && (
+				<div className="flex items-center space-x-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-[2px]">
+					<div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-full text-red-600 dark:text-red-400">
+						<LiaClockSolid className="w-5 h-5" />
+					</div>
+					<div>
+						<p className="font-heading uppercase text-xs text-red-700 dark:text-red-300 tracking-wider font-bold">Overtime Alert</p>
+						<p className="text-sm text-foreground">
+							Total accumulated overtime: <span className="font-data font-bold">{data.summaryStats.totalOvertimeHours.toFixed(1)}h</span>
 						</p>
 					</div>
+				</div>
+			)}
 
+			<Card>
+				<CardHeader>
+					<CardTitle className="uppercase tracking-wider">Overtime Records</CardTitle>
+				</CardHeader>
+				<CardBody className="p-0">
 					<div className="overflow-x-auto">
-						<table className="w-full">
+						<table className="w-full text-sm">
 							<thead>
-								<tr className="border-b border-border">
-									<th className="text-left p-4">Date</th>
-									<th className="text-left p-4">Employee</th>
-									<th className="text-left p-4">Regular Hours</th>
-									<th className="text-left p-4">Overtime Hours</th>
-									<th className="text-left p-4">Station</th>
+								<tr className="bg-muted/50 border-b border-border">
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Employee</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Station</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Reg. Hours</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">O.T. Hours</th>
 								</tr>
 							</thead>
-							<tbody>
+							<tbody className="divide-y divide-border/50">
 								{data.overtimeData.map((row, index) => (
-									<tr key={index} className="border-b border-border hover:bg-muted/50">
-										<td className="p-4">{row.date}</td>
+									<tr key={index} className="hover:bg-muted/30 transition-colors">
+										<td className="p-4 font-data text-xs">{row.date}</td>
 										<td className="p-4 font-medium">{row.employeeName}</td>
-										<td className="p-4">{row.regularHoursWorked.toFixed(2)}h</td>
-										<td className="p-4 text-orange-600 font-medium">
-											{row.overtimeHoursWorked.toFixed(2)}h
-										</td>
-										<td className="p-4">{row.stationName || "-"}</td>
+										<td className="p-4 text-xs text-muted-foreground">{row.stationName || "—"}</td>
+										<td className="p-4 font-data text-right">{row.regularHoursWorked.toFixed(2)}</td>
+										<td className="p-4 font-data text-right text-red-600 font-bold">{row.overtimeHoursWorked.toFixed(2)}</td>
 									</tr>
 								))}
+								{data.overtimeData.length === 0 && (
+									<tr>
+										<td colSpan={5} className="p-12 text-center text-muted-foreground font-heading text-sm">
+											No overtime recorded for this period.
+										</td>
+									</tr>
+								)}
 							</tbody>
 						</table>
 					</div>
@@ -291,149 +437,91 @@ export function ReportsManager({ initialData }: ReportsProps) {
 		</div>
 	);
 
-	const renderSummaryReport = () => (
-		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle>Executive Summary</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						<div className="text-center">
-							<h3 className="text-lg font-medium mb-2">Workforce</h3>
-							<div className="space-y-2">
-								<p className="text-3xl font-bold text-primary">
-									{data.summaryStats.totalEmployees}
-								</p>
-								<p className="text-sm text-muted-foreground">Total Employees</p>
-								<div className="pt-2 border-t border-border">
-									<p className="text-xl font-semibold text-green-600">
-										{data.summaryStats.activeEmployees}
-									</p>
-									<p className="text-sm text-muted-foreground">Active This Period</p>
-								</div>
-							</div>
-						</div>
-
-						<div className="text-center">
-							<h3 className="text-lg font-medium mb-2">Hours Worked</h3>
-							<div className="space-y-2">
-								<p className="text-3xl font-bold text-primary">
-									{data.summaryStats.totalHoursWorked.toFixed(1)}h
-								</p>
-								<p className="text-sm text-muted-foreground">Total Hours</p>
-								<div className="pt-2 border-t border-border">
-									<p className="text-xl font-semibold text-foreground">
-										{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
-									</p>
-									<p className="text-sm text-muted-foreground">Avg per Employee</p>
-								</div>
-							</div>
-						</div>
-
-						<div className="text-center">
-							<h3 className="text-lg font-medium mb-2">Peak Activity</h3>
-							<div className="space-y-2">
-								<p className="text-3xl font-bold text-orange-600">
-									{data.summaryStats.peakDayOccupancy}
-								</p>
-								<p className="text-sm text-muted-foreground">Peak Daily Count</p>
-								<div className="pt-2 border-t border-border">
-									<p className="text-xl font-semibold text-red-600">
-										{data.summaryStats.totalOvertimeHours.toFixed(1)}h
-									</p>
-									<p className="text-sm text-muted-foreground">Total Overtime</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</CardBody>
-			</Card>
-		</div>
-	);
-
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 pb-12">
 			<PageHeader
 				title="Reports & Analytics"
-				subtitle="Comprehensive workforce and productivity insights"
-			/>
-
-			{/* Header and Controls */}
-			<div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-
-				<div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-					<div className="flex space-x-2">
-						<Input
-							name="startDate"
-							label="Start Date"
-							type="date"
-							value={dateRange.startDate}
-							onChange={(event: ChangeEvent<HTMLInputElement>) =>
-								setDateRange((prev) => ({ ...prev, startDate: event.target.value }))
-							}
-							className="max-w-[150px]"
-						/>
-						<Input
-							name="endDate"
-							label="End Date"
-							type="date"
-							value={dateRange.endDate}
-							onChange={(event: ChangeEvent<HTMLInputElement>) =>
-								setDateRange((prev) => ({ ...prev, endDate: event.target.value }))
-							}
-							className="max-w-[150px]"
-						/>
-					</div>
-
-					<div className="flex space-x-2">
-						<Button onClick={handleRefresh} variant="outline" disabled={loading}>
-							Refresh
+				subtitle="Operational intelligence and workforce metrics"
+				actions={
+					<div className="flex items-center gap-2">
+						<Button 
+							onClick={handleRefresh} 
+							variant="outline" 
+							disabled={loading}
+							className="gap-2"
+						>
+							<LiaSyncSolid className={cn(loading && "animate-spin")} />
+							{loading ? "Syncing..." : "Refresh"}
 						</Button>
-						<Button onClick={() => handleExport("csv")} variant="outline" disabled={loading}>
+						<Button 
+							onClick={() => handleExport("csv")} 
+							variant="outline" 
+							disabled={loading}
+							className="gap-2"
+						>
+							<LiaDownloadSolid />
 							Export CSV
 						</Button>
-						<Button onClick={() => handleExport("excel")} variant="outline" disabled={loading}>
-							Export Excel
-						</Button>
 					</div>
-				</div>
-			</div>
+				}
+			/>
 
-			{/* Report Type Selector */}
-			<Card>
-				<CardBody>
-					<div className="flex flex-wrap gap-2">
-						{reportTypes.map((type) => (
-							<Button
-								key={type.value}
-								onClick={() => setReportType(type.value)}
-								variant={reportType === type.value ? "primary" : "outline"}
-								size="sm"
-							>
-								{type.label}
-							</Button>
-						))}
+			{/* Filter & Controls Card */}
+			<Card className="border-border shadow-sm">
+				<CardBody className="p-4">
+					<div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+						{/* Report Type Selector */}
+						<div className="flex flex-wrap gap-2">
+							{reportTypes.map((type) => (
+								<Button
+									key={type.value}
+									onClick={() => setReportType(type.value)}
+									variant={reportType === type.value ? "primary" : "outline"}
+									size="sm"
+									className={cn(
+										"gap-2",
+										reportType !== type.value && "text-muted-foreground border-transparent bg-muted/30 hover:bg-muted hover:text-foreground"
+									)}
+								>
+									{type.icon && <type.icon />}
+									{type.label}
+								</Button>
+							))}
+						</div>
+
+						{/* Date Range Picker */}
+						<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-[2px] border border-border/50">
+							<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
+							<div className="flex items-center gap-2">
+								<SimpleInput
+									name="startDate"
+									type="date"
+									value={dateRange.startDate}
+									onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+									className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+								/>
+								<span className="text-muted-foreground text-xs">—</span>
+								<SimpleInput
+									name="endDate"
+									type="date"
+									value={dateRange.endDate}
+									onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+									className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+								/>
+							</div>
+						</div>
 					</div>
 				</CardBody>
 			</Card>
 
-			{/* Report Content */}
-			{reportType === "productivity" && renderProductivityReport()}
-			{reportType === "tasks" && renderTaskReport()}
-			{reportType === "stations" && renderStationReport()}
-			{reportType === "overtime" && renderOvertimeReport()}
-			{reportType === "summary" && renderSummaryReport()}
-
-			{loading && (
-				<div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50" aria-live="polite">
-					<Card className="max-w-xs w-full shadow-industrial animate-pulse">
-						<CardBody className="py-6 text-center">
-							<p className="font-industrial font-bold uppercase tracking-widest">Processing_Data…</p>
-						</CardBody>
-					</Card>
-				</div>
-			)}
+			{/* Main Content Area */}
+			<div className={cn("transition-opacity duration-200", loading ? "opacity-60 pointer-events-none" : "opacity-100")}>
+				{reportType === "summary" && renderSummaryReport()}
+				{reportType === "productivity" && renderProductivityReport()}
+				{reportType === "tasks" && renderTaskReport()}
+				{reportType === "stations" && renderStationReport()}
+				{reportType === "overtime" && renderOvertimeReport()}
+			</div>
 		</div>
 	);
 }

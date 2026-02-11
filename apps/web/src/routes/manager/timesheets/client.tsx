@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type React from "react";
+import { useNavigate } from "react-router";
 import {
 	Button,
 	Input,
@@ -17,7 +18,9 @@ import {
 	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { cn } from "~/lib/cn";
 import type { Employee } from "@prisma/client";
+import { createTimeCorrection, editTimeCorrection, closeTimeLog } from "./actions";
 
 type TimeLogWithDetails = {
 	id: string;
@@ -47,14 +50,63 @@ type TimeCorrectionPayload = {
 
 interface TimesheetProps {
 	initialLogs: TimeLogWithDetails[];
+	correctionHistory: TimeLogWithDetails[];
+	clockedInEmployees: {
+		employeeId: string;
+		employeeName: string;
+		employeeEmail: string;
+		startTime: Date;
+		stationName: string | null;
+		type: "WORK" | "BREAK" | "TASK";
+		source: "TIME_LOG" | "TASK_ASSIGNMENT";
+		assignmentSource: "MANAGER" | "WORKER" | null;
+		clockMethod: "PIN" | "CARD" | "BIOMETRIC" | "MANUAL" | null;
+		timeLogId: string | null;
+		taskTypeName: string | null;
+	}[];
+	floorActiveEmployees: {
+		employeeId: string;
+		employeeName: string;
+		employeeEmail: string;
+		startTime: Date;
+		stationName: string | null;
+		type: "WORK" | "BREAK" | "TASK";
+		source: "TIME_LOG" | "TASK_ASSIGNMENT";
+		assignmentSource: "MANAGER" | "WORKER" | null;
+		clockMethod: "PIN" | "CARD" | "BIOMETRIC" | "MANUAL" | null;
+		timeLogId: string | null;
+		taskTypeName: string | null;
+	}[];
 	employees: Employee[];
 	stations: { id: string; name: string }[];
 }
 
-export function TimesheetManager({ initialLogs, employees, stations }: TimesheetProps) {
+const formatDateTimeLocal = (value: Date | string | null) => {
+	if (!value) return "";
+	const date = value instanceof Date ? value : new Date(value);
+	if (Number.isNaN(date.getTime())) return "";
+
+	const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+	return local.toISOString().slice(0, 16);
+};
+
+export function TimesheetManager({
+	initialLogs,
+	correctionHistory,
+	clockedInEmployees,
+	floorActiveEmployees,
+	employees,
+	stations,
+}: TimesheetProps) {
+	const navigate = useNavigate();
 	const logs = initialLogs;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
+	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
 	const [activeTab, setActiveTab] = useState<"logs" | "corrections" | "active">("logs");
+
+	const refreshLogs = () => {
+		navigate(0);
+	};
 
 	const formatDuration = (start: Date, end: Date | null) => {
 		if (!end) return "In Progress";
@@ -75,13 +127,70 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 		return <Badge variant={variants[method] || "outline"}>{method}</Badge>;
 	};
 
+	const getTaskSourceBadge = (
+		source: "TIME_LOG" | "TASK_ASSIGNMENT",
+		assignmentSource: "MANAGER" | "WORKER" | null,
+	) => {
+		if (source === "TASK_ASSIGNMENT" && assignmentSource === "WORKER") {
+			return (
+				<Badge variant="outline" className="font-mono text-[10px] uppercase">
+					Self-assigned
+				</Badge>
+			);
+		}
+
+		if (source === "TASK_ASSIGNMENT") {
+			return (
+				<Badge variant="secondary" className="font-mono text-[10px] uppercase">
+					Assigned by Manager
+				</Badge>
+			);
+		}
+
+		return (
+			<Badge variant="outline" className="font-mono text-[10px] uppercase">
+				Time Log
+			</Badge>
+		);
+	};
+
+	const handleEndShift = async (logId: string) => {
+		await closeTimeLog(logId);
+		refreshLogs();
+	};
+
+	const handleCorrectionSubmit = async (data: TimeCorrectionPayload) => {
+		if (editingLog) {
+			await editTimeCorrection(editingLog.id, {
+				startTime: data.startTime,
+				endTime: data.endTime,
+				stationId: data.stationId,
+				type: data.type,
+				note: data.note,
+				reason: data.reason,
+			});
+		} else {
+			await createTimeCorrection(data);
+		}
+
+		setShowCorrectionForm(false);
+		setEditingLog(null);
+		refreshLogs();
+	};
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
 				title="Timesheet Management"
 				subtitle="View and manage employee time entries and corrections"
 				actions={
-					<Button onClick={() => setShowCorrectionForm(true)} variant="primary">
+					<Button
+						onClick={() => {
+							setEditingLog(null);
+							setShowCorrectionForm(true);
+						}}
+						variant="primary"
+					>
 						Add Time Entry
 					</Button>
 				}
@@ -91,10 +200,49 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 				selectedKey={activeTab}
 				onSelectionChange={(key: React.Key) => setActiveTab(key as typeof activeTab)}
 			>
-				<TabList aria-label="Timesheet sections">
-					<Tab id="logs">Current Time Logs</Tab>
-					<Tab id="corrections">Corrections History</Tab>
-					<Tab id="active">Active Employees</Tab>
+				<TabList
+					aria-label="Timesheet sections"
+					className="mb-4 inline-flex w-auto justify-start gap-1 rounded-[2px] border border-border/40 bg-card p-0.5"
+				>
+					<Tab
+						id="logs"
+						className={({ isSelected }) =>
+							cn(
+								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								isSelected
+									? "bg-primary text-primary-foreground shadow-sm"
+									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+							)
+						}
+					>
+						Current Time Logs
+					</Tab>
+					<Tab
+						id="corrections"
+						className={({ isSelected }) =>
+							cn(
+								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								isSelected
+									? "bg-primary text-primary-foreground shadow-sm"
+									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+							)
+						}
+					>
+						Corrections History
+					</Tab>
+					<Tab
+						id="active"
+						className={({ isSelected }) =>
+							cn(
+								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								isSelected
+									? "bg-primary text-primary-foreground shadow-sm"
+									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+							)
+						}
+					>
+						Active Employees
+					</Tab>
 				</TabList>
 
 				<TabPanel id="logs">
@@ -157,11 +305,18 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 												<td className="p-4">
 													<div className="flex space-x-2">
 														{!log.endTime && (
-															<Button size="sm" variant="outline">
+															<Button size="sm" variant="outline" onClick={() => handleEndShift(log.id)}>
 																End Shift
 															</Button>
 														)}
-														<Button size="sm" variant="outline">
+														<Button
+															size="sm"
+															variant="outline"
+															onClick={() => {
+																setEditingLog(log);
+																setShowCorrectionForm(true);
+															}}
+														>
 															Edit
 														</Button>
 													</div>
@@ -191,9 +346,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 								<p className="text-sm text-muted-foreground">
 									Showing manual corrections and modifications made by managers
 								</p>
-								{logs
-									.filter((log) => log.clockMethod === "MANUAL")
-									.map((log) => (
+								{correctionHistory.map((log) => (
 											<div key={log.id} className="border border-border rounded-[2px] p-4 bg-muted/30">
 											<div className="flex justify-between items-start">
 												<div>
@@ -210,7 +363,7 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 											</div>
 										</div>
 									))}
-								{logs.filter((log) => log.clockMethod === "MANUAL").length === 0 && (
+								{correctionHistory.length === 0 && (
 									<p className="text-center text-muted-foreground py-6">No corrections found</p>
 								)}
 							</div>
@@ -219,40 +372,142 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 				</TabPanel>
 
 				<TabPanel id="active">
-					<Card>
-						<CardHeader>
-							<CardTitle>Currently Clocked In</CardTitle>
-						</CardHeader>
-						<CardBody>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{logs
-									.filter((log) => !log.endTime && log.type === "WORK")
-									.map((log) => (
-										<div key={log.id} className="border rounded p-4">
-											<h4 className="font-medium">{log.Employee.name}</h4>
-											<p className="text-sm text-muted-foreground">Station: {log.Station?.name}</p>
-											<p className="text-sm text-muted-foreground">
-												Started: {new Date(log.startTime).toLocaleTimeString()}
-											</p>
-											<p className="text-sm font-medium mt-2">
-												Duration: {formatDuration(log.startTime, null)}
-											</p>
-											<div className="mt-3 space-x-2">
-												<Button size="sm" variant="outline">
-													End Shift
-												</Button>
-											</div>
-										</div>
-									))}
-							</div>
+					<div className="space-y-4">
+						<div className="grid gap-4 md:grid-cols-2">
+							<Card>
+								<CardBody>
+									<p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
+										Clocked In
+									</p>
+									<p className="mt-2 text-2xl font-mono tabular-nums">{clockedInEmployees.length}</p>
+									<p className="text-xs text-muted-foreground">Employees with an active WORK/BREAK log</p>
+								</CardBody>
+							</Card>
+							<Card>
+								<CardBody>
+									<p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
+										Floor Active
+									</p>
+									<p className="mt-2 text-2xl font-mono tabular-nums">{floorActiveEmployees.length}</p>
+									<p className="text-xs text-muted-foreground">
+										Union of WORK logs and active task assignments (monitor semantics)
+									</p>
+								</CardBody>
+							</Card>
+						</div>
 
-							{logs.filter((log) => !log.endTime && log.type === "WORK").length === 0 && (
-								<p className="text-center text-muted-foreground py-6">
-									No employees currently clocked in
-								</p>
-							)}
-						</CardBody>
-					</Card>
+						<Card>
+							<CardHeader>
+								<CardTitle>Clocked In</CardTitle>
+							</CardHeader>
+							<CardBody>
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+												<th className="p-4 text-left">Employee</th>
+												<th className="p-4 text-left">Type</th>
+												<th className="p-4 text-left">Station</th>
+												<th className="p-4 text-left">Started</th>
+												<th className="p-4 text-left">Duration</th>
+												<th className="p-4 text-left">Method</th>
+												<th className="p-4 text-left">Actions</th>
+											</tr>
+										</thead>
+										<tbody>
+											{clockedInEmployees.map((entry) => {
+												const logId = entry.timeLogId;
+
+												return (
+													<tr key={entry.employeeId} className="border-b border-border hover:bg-muted/50">
+														<td className="p-4">
+															<div>
+																<p className="font-medium">{entry.employeeName}</p>
+																<p className="text-sm text-muted-foreground">{entry.employeeEmail}</p>
+															</div>
+														</td>
+														<td className="p-4">
+															<Badge variant={entry.type === "WORK" ? "success" : "secondary"}>
+																{entry.type}
+															</Badge>
+														</td>
+														<td className="p-4">{entry.stationName || "None"}</td>
+														<td className="p-4">{new Date(entry.startTime).toLocaleTimeString()}</td>
+														<td className="p-4 font-mono">{formatDuration(entry.startTime, null)}</td>
+														<td className="p-4">{entry.clockMethod ? getMethodBadge(entry.clockMethod) : "-"}</td>
+														<td className="p-4">
+															{logId ? (
+																<Button
+																	size="sm"
+																	variant="outline"
+																	onClick={() => handleEndShift(logId)}
+																>
+																	End Shift
+																</Button>
+															) : (
+																<span className="text-xs text-muted-foreground">-</span>
+															)}
+														</td>
+													</tr>
+												);
+											})}
+										</tbody>
+									</table>
+								</div>
+
+								{clockedInEmployees.length === 0 && (
+									<p className="py-6 text-center text-muted-foreground">No employees currently clocked in</p>
+								)}
+							</CardBody>
+						</Card>
+
+						<Card>
+							<CardHeader>
+								<CardTitle>Floor Active</CardTitle>
+							</CardHeader>
+							<CardBody>
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+												<th className="p-4 text-left">Employee</th>
+												<th className="p-4 text-left">Status</th>
+												<th className="p-4 text-left">Station/Task</th>
+												<th className="p-4 text-left">Started</th>
+												<th className="p-4 text-left">Duration</th>
+												<th className="p-4 text-left">Source</th>
+											</tr>
+										</thead>
+										<tbody>
+											{floorActiveEmployees.map((entry) => (
+												<tr key={entry.employeeId} className="border-b border-border hover:bg-muted/50">
+													<td className="p-4">
+														<div>
+															<p className="font-medium">{entry.employeeName}</p>
+															<p className="text-sm text-muted-foreground">{entry.employeeEmail}</p>
+														</div>
+													</td>
+													<td className="p-4">
+														<Badge variant={entry.type === "WORK" ? "success" : "outline"}>
+															{entry.type === "WORK" ? "WORK" : "ASSIGNED"}
+														</Badge>
+													</td>
+													<td className="p-4">{entry.stationName || entry.taskTypeName || "None"}</td>
+													<td className="p-4">{new Date(entry.startTime).toLocaleTimeString()}</td>
+													<td className="p-4 font-mono">{formatDuration(entry.startTime, null)}</td>
+													<td className="p-4">{getTaskSourceBadge(entry.source, entry.assignmentSource)}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+
+								{floorActiveEmployees.length === 0 && (
+									<p className="py-6 text-center text-muted-foreground">No employees currently floor active</p>
+								)}
+							</CardBody>
+						</Card>
+					</div>
 				</TabPanel>
 			</Tabs>
 
@@ -260,11 +515,12 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 				<TimeCorrectionForm
 					employees={employees}
 					stations={stations}
-					onClose={() => setShowCorrectionForm(false)}
-					onSubmit={async (data) => {
-						console.log("Submitting correction:", data);
+					initialLog={editingLog}
+					onClose={() => {
 						setShowCorrectionForm(false);
+						setEditingLog(null);
 					}}
+					onSubmit={handleCorrectionSubmit}
 				/>
 			)}
 		</div>
@@ -275,25 +531,52 @@ export function TimesheetManager({ initialLogs, employees, stations }: Timesheet
 function TimeCorrectionForm({
 	employees,
 	stations,
+	initialLog,
 	onClose,
 	onSubmit,
 }: {
 	employees: Employee[];
 	stations: { id: string; name: string }[];
+	initialLog: TimeLogWithDetails | null;
 	onClose: () => void;
 	onSubmit: (data: TimeCorrectionPayload) => Promise<void>;
 }) {
 	const [formData, setFormData] = useState({
-		employeeId: "",
+		employeeId: initialLog?.Employee.id ?? "",
 		startTime: "",
 		endTime: "",
-		stationId: "",
-		type: "WORK" as "WORK" | "BREAK",
-		note: "",
+		stationId: initialLog?.Station?.id ?? "",
+		type: (initialLog?.type ?? "WORK") as "WORK" | "BREAK",
+		note: initialLog?.note ?? "",
 		reason: "",
 	});
 
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	useEffect(() => {
+		if (!initialLog) {
+			setFormData({
+				employeeId: "",
+				startTime: "",
+				endTime: "",
+				stationId: "",
+				type: "WORK",
+				note: "",
+				reason: "",
+			});
+			return;
+		}
+
+		setFormData({
+			employeeId: initialLog.Employee.id,
+			startTime: formatDateTimeLocal(initialLog.startTime),
+			endTime: formatDateTimeLocal(initialLog.endTime),
+			stationId: initialLog.Station?.id ?? "",
+			type: initialLog.type,
+			note: initialLog.note ?? "",
+			reason: "",
+		});
+	}, [initialLog]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -313,10 +596,31 @@ function TimeCorrectionForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain" aria-live="polite">
+		<div
+			className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overscroll-behavior-contain"
+			onClick={(event) => {
+				if (event.target === event.currentTarget) {
+					onClose();
+				}
+			}}
+			aria-live="polite"
+			role="dialog"
+			aria-modal="true"
+		>
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overscroll-contain">
 				<CardHeader>
-					<CardTitle>Add Time Entry</CardTitle>
+					<div className="flex items-center justify-between gap-3">
+						<CardTitle>{initialLog ? "Edit Time Entry" : "Add Time Entry"}</CardTitle>
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onClick={onClose}
+							aria-label="Close dialog"
+						>
+							Close
+						</Button>
+					</div>
 				</CardHeader>
 				<CardBody>
 					<form onSubmit={handleSubmit} className="space-y-4">
@@ -332,6 +636,7 @@ function TimeCorrectionForm({
 							}
 							placeholder="Select an employee…"
 							isRequired
+							isDisabled={Boolean(initialLog)}
 						/>
 
 						<SimpleSelect
@@ -402,7 +707,7 @@ function TimeCorrectionForm({
 								Cancel
 							</Button>
 							<Button type="submit" variant="primary" disabled={isSubmitting}>
-								{isSubmitting ? "Adding…" : "Add Entry"}
+								{isSubmitting ? (initialLog ? "Saving…" : "Adding…") : initialLog ? "Save" : "Add Entry"}
 							</Button>
 						</div>
 					</form>

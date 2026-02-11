@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import {
 	Button,
@@ -57,11 +57,14 @@ export function EmployeeRoster({
 	stations,
 }: EmployeeRosterProps) {
 	const navigate = useNavigate();
-	const [employees] = useState(initialEmployees);
 	const [search, setSearch] = useState(initialSearch);
 	const [status, setStatus] = useState<EmployeeStatus | undefined>(initialStatus);
-	const [page, setPage] = useState(currentPage);
 	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		setSearch(initialSearch);
+		setStatus(initialStatus);
+	}, [initialSearch, initialStatus]);
 
 	const statusOptions = [
 		{ value: "", label: "All Status" },
@@ -146,9 +149,11 @@ export function EmployeeRoster({
 							placeholder="All Status"
 						/>
 
-						<Button onClick={() => handleSearch()} variant="primary" disabled={loading}>
-							{loading ? "Searching…" : "Search"}
-						</Button>
+						<div className="flex items-end">
+							<Button onClick={() => handleSearch()} variant="primary" disabled={loading}>
+								{loading ? "Searching…" : "Search"}
+							</Button>
+						</div>
 					</div>
 				</CardBody>
 			</Card>
@@ -156,14 +161,14 @@ export function EmployeeRoster({
 			{/* Results Summary */}
 			<div className="flex justify-end items-center">
 				<p className="text-sm text-muted-foreground">
-					Showing {employees.length} of {total} employees
+					Showing {initialEmployees.length} of {total} employees
 				</p>
 			</div>
 
 			{/* Employee List */}
 			<Card>
 				<CardBody className="p-0">
-					{employees.length === 0 ? (
+					{initialEmployees.length === 0 ? (
 						<div className="text-center py-6">
 							<p className="text-muted-foreground">No employees found.</p>
 						</div>
@@ -182,7 +187,7 @@ export function EmployeeRoster({
 									</tr>
 								</thead>
 								<tbody>
-									{employees.map((employee) => (
+									{initialEmployees.map((employee) => (
 										<tr key={employee.id} className="border-b border-border hover:bg-muted/50">
 											<td className="p-4">
 												<div className="font-medium">{employee.name}</div>
@@ -229,10 +234,9 @@ export function EmployeeRoster({
 					{Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
 						<Button
 							key={pageNum}
-							variant={pageNum === page ? "primary" : "outline"}
+							variant={pageNum === currentPage ? "primary" : "outline"}
 							size="sm"
 							onClick={() => {
-								setPage(pageNum);
 								handleSearch(search, status, pageNum);
 							}}
 						>

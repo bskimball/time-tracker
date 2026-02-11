@@ -1,7 +1,12 @@
 import { validateRequest } from "~/lib/auth";
 import { getRequest } from "~/lib/request-context";
 import { TimesheetManager } from "./client";
-import { getTimeLogsWithCorrections, getEmployeesForCorrection } from "./actions";
+import {
+	getActiveEmployeesForTimesheet,
+	getCorrectionHistory,
+	getEmployeesForCorrection,
+	getTimeLogsWithCorrections,
+} from "./actions";
 import { getStations } from "../employees/actions";
 
 export default async function Component() {
@@ -17,11 +22,22 @@ export default async function Component() {
 	const limit = 50;
 
 	// Fetch data in parallel
-	const [logsData, employees, stations] = await Promise.all([
+	const [logsData, corrections, activeEmployeeData, employees, stations] = await Promise.all([
 		getTimeLogsWithCorrections(undefined, undefined, undefined, true, page, limit),
+		getCorrectionHistory(),
+		getActiveEmployeesForTimesheet(),
 		getEmployeesForCorrection(),
 		getStations(),
 	]);
 
-	return <TimesheetManager initialLogs={logsData.logs} employees={employees} stations={stations} />;
+	return (
+		<TimesheetManager
+			initialLogs={logsData.logs}
+			correctionHistory={corrections}
+			clockedInEmployees={activeEmployeeData.clockedInEmployees}
+			floorActiveEmployees={activeEmployeeData.floorActiveEmployees}
+			employees={employees}
+			stations={stations}
+		/>
+	);
 }
