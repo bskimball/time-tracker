@@ -129,6 +129,11 @@ export function routes(): RSCRouteConfig {
 						path: "schedule",
 						lazy: () => import("./manager/schedule/route.tsx"),
 					},
+					{
+						id: "manager-exceptions",
+						path: "exceptions",
+						lazy: () => import("./manager/exceptions/route.tsx"),
+					},
 						{
 							id: "manager-tasks",
 							path: "tasks",
