@@ -10,13 +10,17 @@ import {
 import { getStations } from "../employees/actions";
 
 export default async function Component() {
-	const authPromise = validateRequest();
+	const { user } = await validateRequest();
+	if (!user) {
+		throw new Error("Not authenticated");
+	}
 
 	const request = getRequest();
 	const pageParam = request ? new URL(request.url).searchParams.get("page") : null;
 	const parsedPage = pageParam ? parseInt(pageParam, 10) : NaN;
 	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 	const limit = 50;
+
 	const correctionHistoryPromise = getCorrectionHistory();
 	const logsDataPromise = getTimeLogsWithCorrections(
 		undefined,
@@ -29,11 +33,6 @@ export default async function Component() {
 	const activeEmployeeDataPromise = getActiveEmployeesForTimesheet();
 	const employeesPromise = getEmployeesForCorrection();
 	const stationsPromise = getStations();
-
-	const { user } = await authPromise;
-	if (!user) {
-		throw new Error("Not authenticated");
-	}
 
 	// Fetch data in parallel
 	const [logsData, activeEmployeeData, employees, stations] = await Promise.all([

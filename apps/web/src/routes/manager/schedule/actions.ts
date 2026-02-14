@@ -44,6 +44,7 @@ export interface ScheduleData {
 export interface StaffingRecommendation {
 	employeeId: string;
 	employeeName: string;
+	currentStationId: string | null;
 	currentStationName: string;
 	reason: string;
 	dailyHoursWorked: number;
@@ -95,6 +96,10 @@ function hoursInRange(
 	rangeEnd: Date,
 	now: Date
 ) {
+	if (startTime >= rangeEnd || rangeStart >= rangeEnd) {
+		return 0;
+	}
+
 	const effectiveEnd = endTime ?? now;
 	const boundedStart = new Date(Math.max(startTime.getTime(), rangeStart.getTime()));
 	const boundedEnd = new Date(Math.min(effectiveEnd.getTime(), rangeEnd.getTime()));
@@ -425,6 +430,7 @@ export async function getScheduleData(
 								return {
 									employeeId: active.employeeId,
 									employeeName: active.employeeName,
+									currentStationId: active.currentStationId,
 									currentStationName: active.currentStationName,
 									reason,
 									dailyHoursWorked,
@@ -439,10 +445,10 @@ export async function getScheduleData(
 								if (aOverLimit !== bOverLimit) {
 									return aOverLimit ? 1 : -1;
 								}
-								if (a.currentStationName === "Unassigned" && b.currentStationName !== "Unassigned") {
+								if (!a.currentStationId && b.currentStationId) {
 									return -1;
 								}
-								if (a.currentStationName !== "Unassigned" && b.currentStationName === "Unassigned") {
+								if (a.currentStationId && !b.currentStationId) {
 									return 1;
 								}
 								return a.weeklyHoursWorked - b.weeklyHoursWorked;

@@ -99,6 +99,23 @@ export function FloorMonitor({
 		return () => clearInterval(interval);
 	}, [autoRefresh, refreshInterval, navigate, isRefreshing]);
 
+	useEffect(() => {
+		if (!autoRefresh) {
+			return;
+		}
+
+		const handleVisibilityChange = () => {
+			if (!document.hidden && !isRefreshing) {
+				navigate(0);
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => {
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, [autoRefresh, isRefreshing, navigate]);
+
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
 	const secondsSinceRefresh = Math.max(
 		0,

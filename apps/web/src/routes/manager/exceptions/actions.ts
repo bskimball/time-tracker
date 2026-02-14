@@ -300,6 +300,10 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 			continue;
 		}
 
+		if (breakLog.startTime > now) {
+			continue;
+		}
+
 		const breakHours = hoursBetween(breakLog.startTime, now);
 		if (breakHours < 0.75) {
 			continue;
@@ -411,7 +415,7 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 
 	const shiftDemandByStation = new Map<string, { demand: number; staffed: number; stationName: string }>();
 	for (const shift of shiftsToday) {
-		if (shift.startTime > now || shift.endTime <= now) {
+		if (shift.startTime > now || shift.endTime < now) {
 			continue;
 		}
 

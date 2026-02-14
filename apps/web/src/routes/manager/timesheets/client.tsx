@@ -113,8 +113,9 @@ export function TimesheetManager({
 
 	const navigate = useNavigate();
 	const logs = initialLogs;
+	const totalPages = Math.max(pagination.totalPages, 1);
 	const hasPreviousPage = pagination.page > 1;
-	const hasNextPage = pagination.page < pagination.totalPages;
+	const hasNextPage = pagination.page < totalPages;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
 	const [activeTab, setActiveTab] = useQueryState(
@@ -127,7 +128,7 @@ export function TimesheetManager({
 	};
 
 	const goToPage = (nextPage: number) => {
-		const safePage = Math.max(1, Math.min(nextPage, Math.max(pagination.totalPages, 1)));
+		const safePage = Math.max(1, Math.min(nextPage, totalPages));
 		const params = new URLSearchParams();
 		params.set("page", String(safePage));
 		params.set("tab", activeTab);
@@ -277,7 +278,7 @@ export function TimesheetManager({
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<CardTitle>Time Logs</CardTitle>
 								<div className="text-xs text-muted-foreground font-mono uppercase tracking-widest">
-									Page {pagination.page} of {Math.max(pagination.totalPages, 1)} -{" "}
+									Page {pagination.page} of {totalPages} -{" "}
 									{pagination.total} records
 								</div>
 							</div>
@@ -369,7 +370,7 @@ export function TimesheetManager({
 								</div>
 							)}
 
-							{pagination.totalPages > 1 && (
+							{totalPages > 1 && (
 								<div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
 									<p className="text-xs text-muted-foreground">
 										Showing up to {pagination.limit} logs per page
@@ -384,7 +385,7 @@ export function TimesheetManager({
 											Previous
 										</Button>
 										<span className="font-mono text-xs text-muted-foreground px-2">
-											{pagination.page} / {pagination.totalPages}
+											{pagination.page} / {totalPages}
 										</span>
 										<Button
 											variant="outline"

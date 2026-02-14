@@ -112,8 +112,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 	const getStartOfWeek = (now: Date) => {
 		const weekStart = new Date(now);
 		const day = weekStart.getDay();
-		const diffToMonday = (day + 6) % 7;
-		weekStart.setDate(weekStart.getDate() - diffToMonday);
+		weekStart.setDate(weekStart.getDate() - day);
 		weekStart.setHours(0, 0, 0, 0);
 		return weekStart;
 	};

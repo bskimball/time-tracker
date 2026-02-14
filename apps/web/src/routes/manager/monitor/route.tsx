@@ -2,7 +2,6 @@ import { validateRequest } from "~/lib/auth";
 import { db } from "~/lib/db";
 import { getStations } from "../employees/actions";
 import { FloorMonitor } from "./client";
-import { Suspense } from "react";
 
 type ActiveTaskByEmployee = Record<
 	string,
@@ -16,11 +15,12 @@ type ActiveTaskByEmployee = Record<
 	}
 >;
 
-type FloorMonitorProps = Parameters<typeof FloorMonitor>[0];
-
 export default async function Component() {
 	const snapshotAt = new Date();
-	const authPromise = validateRequest();
+	const { user } = await validateRequest();
+	if (!user) {
+		throw new Error("Not authenticated");
+	}
 
 	const activeTasksByEmployeePromise = db.taskAssignment
 		.findMany({
@@ -69,47 +69,12 @@ export default async function Component() {
 		});
 	const stationsPromise = getStations();
 
-	const { user } = await authPromise;
-	if (!user) {
-		throw new Error("Not authenticated");
-	}
-
 	// Fetch real-time monitoring data
-	const [activeLogs, stations] = await Promise.all([activeLogsPromise, stationsPromise]);
-
-	return (
-		<Suspense
-			fallback={
-				<FloorMonitor
-					activeLogs={activeLogs}
-					stations={stations}
-					activeTasksByEmployee={{}}
-					snapshotAt={snapshotAt}
-				/>
-			}
-		>
-			<FloorMonitorWithTasks
-				activeLogs={activeLogs}
-				stations={stations}
-				activeTasksByEmployeePromise={activeTasksByEmployeePromise}
-				snapshotAt={snapshotAt}
-			/>
-		</Suspense>
-	);
-}
-
-async function FloorMonitorWithTasks({
-	activeLogs,
-	stations,
-	activeTasksByEmployeePromise,
-	snapshotAt,
-}: {
-	activeLogs: FloorMonitorProps["activeLogs"];
-	stations: FloorMonitorProps["stations"];
-	activeTasksByEmployeePromise: Promise<ActiveTaskByEmployee>;
-	snapshotAt: Date;
-}) {
-	const activeTasksByEmployee = await activeTasksByEmployeePromise;
+	const [activeLogs, stations, activeTasksByEmployee] = await Promise.all([
+		activeLogsPromise,
+		stationsPromise,
+		activeTasksByEmployeePromise,
+	]);
 
 	return (
 		<FloorMonitor
