@@ -18,6 +18,7 @@ import {
 	SafetyStripes,
 	Button,
 } from "@monorepo/design-system";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { LiaCheckSolid, LiaCopySolid } from "react-icons/lia";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -41,7 +42,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					>
 						Skip to main content
 					</a>
-					<ThemeProvider defaultTheme="system">{children}</ThemeProvider>
+					<ThemeProvider defaultTheme="system">
+						<NuqsAdapter>{children}</NuqsAdapter>
+					</ThemeProvider>
 					<ScrollRestoration />
 				</div>
 			</body>

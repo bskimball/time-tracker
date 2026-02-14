@@ -1,32 +1,42 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { IndustrialSidebar } from "~/components/industrial-sidebar";
 import { ThemeProvider } from "~/components/theme-provider";
 import { ThemeToggle } from "~/components/theme-toggle";
 
 const renderSidebar = () => {
+	const router = createMemoryRouter(
+		[
+			{
+				path: "*",
+				element: (
+					<IndustrialSidebar>
+						<IndustrialSidebar.Sidebar>
+							<IndustrialSidebar.Header title="Manager Portal" />
+							<IndustrialSidebar.Nav>
+								<IndustrialSidebar.Item to="/manager" label="Dashboard" />
+								<IndustrialSidebar.Item to="/manager/employees" label="Employees" />
+							</IndustrialSidebar.Nav>
+							<IndustrialSidebar.Footer>
+								<div>user</div>
+								<IndustrialSidebar.CollapseButton />
+							</IndustrialSidebar.Footer>
+						</IndustrialSidebar.Sidebar>
+						<IndustrialSidebar.Main>
+							<IndustrialSidebar.StatusBar />
+							<div>content</div>
+						</IndustrialSidebar.Main>
+					</IndustrialSidebar>
+				),
+			},
+		],
+		{ initialEntries: ["/manager"] }
+	);
+
 	return render(
-		<MemoryRouter initialEntries={["/manager"]}>
-			<IndustrialSidebar>
-				<IndustrialSidebar.Sidebar>
-					<IndustrialSidebar.Header title="Manager Portal" />
-					<IndustrialSidebar.Nav>
-						<IndustrialSidebar.Item to="/manager" label="Dashboard" />
-						<IndustrialSidebar.Item to="/manager/employees" label="Employees" />
-					</IndustrialSidebar.Nav>
-					<IndustrialSidebar.Footer>
-						<div>user</div>
-						<IndustrialSidebar.CollapseButton />
-					</IndustrialSidebar.Footer>
-				</IndustrialSidebar.Sidebar>
-				<IndustrialSidebar.Main>
-					<IndustrialSidebar.StatusBar />
-					<div>content</div>
-				</IndustrialSidebar.Main>
-			</IndustrialSidebar>
-		</MemoryRouter>
+		<RouterProvider router={router} />
 	);
 };
 

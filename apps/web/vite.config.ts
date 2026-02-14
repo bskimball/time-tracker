@@ -56,8 +56,6 @@ export default defineConfig(({ mode }) => {
 			external: ["@prisma/client", ".prisma/client"],
 		},
 		define: {
-
-
 			"import.meta.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
 		},
 	};

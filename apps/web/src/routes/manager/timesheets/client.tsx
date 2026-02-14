@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type React from "react";
 import { useNavigate } from "react-router";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import {
 	Button,
 	Input,
@@ -98,11 +99,17 @@ export function TimesheetManager({
 	employees,
 	stations,
 }: TimesheetProps) {
+	const tabValues = ["logs", "corrections", "active"] as const;
+	type TimesheetTab = (typeof tabValues)[number];
+
 	const navigate = useNavigate();
 	const logs = initialLogs;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
-	const [activeTab, setActiveTab] = useState<"logs" | "corrections" | "active">("logs");
+	const [activeTab, setActiveTab] = useQueryState(
+		"tab",
+		parseAsStringEnum([...tabValues]).withDefault("logs")
+	);
 
 	const refreshLogs = () => {
 		navigate(0);
@@ -198,7 +205,7 @@ export function TimesheetManager({
 
 			<Tabs
 				selectedKey={activeTab}
-				onSelectionChange={(key: React.Key) => setActiveTab(key as typeof activeTab)}
+				onSelectionChange={(key: React.Key) => void setActiveTab(key.toString() as TimesheetTab)}
 			>
 				<TabList
 					aria-label="Timesheet sections"

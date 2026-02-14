@@ -62,19 +62,18 @@ export function Select({
 	const selectedValue = value ?? defaultValue ?? null;
 
 	// React Aria Select now uses value/defaultValue/onChange instead of selectedKey/onSelectionChange
-	const handleSelectionChange = (key: React.Key | React.Key[] | null) => {
+	const handleSelectionChange = (key: React.Key | null) => {
 		// Normalize possible array of keys to a single string value for our simpler API
-		const normalizedKey = Array.isArray(key) ? (key[0] ?? null) : key;
-		const sanitizedValue = normalizedKey != null ? normalizedKey.toString() : "";
+		const sanitizedValue = key != null ? key.toString() : "";
 		onChange?.(sanitizedValue);
 	};
 
 	return (
 		<AriaSelect
 			{...props} // `name` and other AriaSelect props flow through
-			value={value}
-			defaultValue={value === undefined ? defaultValue : undefined}
-			onChange={handleSelectionChange}
+			selectedKey={value}
+			defaultSelectedKey={value === undefined ? defaultValue : undefined}
+			onSelectionChange={handleSelectionChange}
 			isDisabled={isDisabled}
 			className={cn("flex flex-col gap-1.5", containerClassName)}
 		>

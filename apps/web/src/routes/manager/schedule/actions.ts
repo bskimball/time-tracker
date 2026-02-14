@@ -1,6 +1,6 @@
 "use server";
 
-import { addDays, endOfWeek, startOfWeek } from "date-fns";
+import { addDays, endOfWeek, isValid, parseISO, startOfWeek } from "date-fns";
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
@@ -32,8 +32,10 @@ export interface ScheduleData {
 	days: ScheduleDay[];
 }
 
-export async function getScheduleData(): Promise<ScheduleData> {
-	const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
+export async function getScheduleData(weekStartInput?: string): Promise<ScheduleData> {
+	const parsedWeekStart = weekStartInput ? parseISO(weekStartInput) : null;
+	const baseDate = parsedWeekStart && isValid(parsedWeekStart) ? parsedWeekStart : new Date();
+	const weekStart = startOfWeek(baseDate, { weekStartsOn: 0 });
 	const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
 
 	const loadScheduleRows = async () => {

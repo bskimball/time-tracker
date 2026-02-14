@@ -19,6 +19,24 @@ export const createMockDb = () => ({
 		delete: vi.fn(),
 		count: vi.fn(),
 	},
+	taskType: {
+		findMany: vi.fn(),
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn(),
+		count: vi.fn(),
+	},
+	taskAssignment: {
+		findMany: vi.fn(),
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn(),
+		count: vi.fn(),
+	},
 	timeLog: {
 		findMany: vi.fn(),
 		findUnique: vi.fn(),
@@ -59,6 +77,9 @@ export const createMockDb = () => ({
 		const mockDb = createMockDb();
 		return callback(mockDb);
 	}),
+	$executeRaw: vi.fn(),
+	$executeRawUnsafe: vi.fn(),
+	$queryRaw: vi.fn(),
 	$connect: vi.fn(),
 	$disconnect: vi.fn(),
 });

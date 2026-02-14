@@ -22,6 +22,12 @@ vi.mock("~/components/time-tracking/offline-queue", () => ({
 }));
 
 vi.mock("~/routes/time-clock/actions", () => ({
+	startSelfTask: vi.fn(),
+	startSelfTaskAction: vi.fn(),
+	switchSelfTask: vi.fn(),
+	switchSelfTaskAction: vi.fn(),
+	endSelfTask: vi.fn(),
+	endSelfTaskAction: vi.fn(),
 	clockIn: vi.fn(),
 	clockOut: vi.fn(),
 	startBreak: vi.fn(),
@@ -29,6 +35,10 @@ vi.mock("~/routes/time-clock/actions", () => ({
 	updateTimeLog: vi.fn(),
 	deleteTimeLog: vi.fn(),
 	pinToggleClock: vi.fn(),
+}));
+
+vi.mock("~/lib/operational-config", () => ({
+	getTaskAssignmentMode: vi.fn(() => Promise.resolve("MANAGER_ONLY")),
 }));
 
 vi.mock("~/lib/domain/time-tracking", () => ({
@@ -65,6 +75,9 @@ describe("Time clock route", () => {
 	});
 
 	it("renders with fetched data", async () => {
+		mockDb.taskAssignment.findMany.mockResolvedValue([]);
+		mockDb.taskType.findMany.mockResolvedValue([]);
+
 		const node = await TimeClockRoute();
 
 		expect(node).toBeDefined();

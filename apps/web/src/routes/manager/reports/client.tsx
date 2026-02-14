@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Button, SimpleInput, Card, CardHeader, CardTitle, CardBody, Badge } from "@monorepo/design-system";
+import {
+	Button,
+	SimpleInput,
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+	Badge,
+	Tab,
+	TabList,
+	Tabs,
+} from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import {
@@ -12,8 +23,9 @@ import {
 	LiaChartBarSolid,
 	LiaIndustrySolid,
 	LiaClipboardListSolid,
-	LiaClockSolid
+	LiaClockSolid,
 } from "react-icons/lia";
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 import type {
 	ProductivityData,
 	TaskPerformanceData,
@@ -38,18 +50,20 @@ interface ReportDataType {
 
 interface ReportsProps {
 	initialData: ReportDataType;
+	initialStartDate: string;
+	initialEndDate: string;
 }
 
 // KPI Card Component matching Dashboard style
-const KpiCard = ({ 
-	label, 
-	value, 
-	subValue, 
+const KpiCard = ({
+	label,
+	value,
+	subValue,
 	icon: Icon,
-	variant = "default"
-}: { 
-	label: string; 
-	value: string | number; 
+	variant = "default",
+}: {
+	label: string;
+	value: string | number;
 	subValue?: string;
 	icon?: React.ComponentType<{ className?: string }>;
 	variant?: "default" | "success" | "warning" | "destructive";
@@ -68,25 +82,23 @@ const KpiCard = ({
 				<span className="text-xs font-heading uppercase tracking-wider font-semibold">{label}</span>
 			</div>
 			<div className="flex items-baseline gap-2">
-				<span className={cn("text-3xl font-data font-medium tracking-tight transition-colors", colors[variant])}>
+				<span
+					className={cn(
+						"text-3xl font-data font-medium tracking-tight transition-colors",
+						colors[variant]
+					)}
+				>
 					{value}
 				</span>
-				{subValue && (
-					<span className="text-sm text-muted-foreground font-data">{subValue}</span>
-				)}
+				{subValue && <span className="text-sm text-muted-foreground font-data">{subValue}</span>}
 			</div>
 		</div>
 	);
 };
 
-export function ReportsManager({ initialData }: ReportsProps) {
-	const [reportType, setReportType] = useState("productivity");
-	const [dateRange, setDateRange] = useState({
-		startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-		endDate: new Date().toISOString().split("T")[0],
-	});
-	const [loading, setLoading] = useState(false);
-	const [data, setData] = useState(initialData);
+export function ReportsManager({ initialData, initialStartDate, initialEndDate }: ReportsProps) {
+	const reportTypeValues = ["productivity", "tasks", "stations", "overtime", "summary"] as const;
+	type ReportType = (typeof reportTypeValues)[number];
 
 	const reportTypes = [
 		{ value: "productivity", label: "Productivity", icon: LiaChartBarSolid },
@@ -94,14 +106,27 @@ export function ReportsManager({ initialData }: ReportsProps) {
 		{ value: "stations", label: "Station Efficiency", icon: LiaIndustrySolid },
 		{ value: "overtime", label: "Overtime Analysis", icon: LiaClockSolid },
 		{ value: "summary", label: "Executive Summary", icon: LiaFileAltSolid },
-	];
+	] as const;
+
+	const [reportType, setReportType] = useQueryState(
+		"tab",
+		parseAsStringEnum([...reportTypeValues]).withDefault("productivity")
+	);
+
+	const [startDate, setStartDate] = useQueryState(
+		"startDate",
+		parseAsString.withDefault(initialStartDate)
+	);
+	const [endDate, setEndDate] = useQueryState("endDate", parseAsString.withDefault(initialEndDate));
+	const [loading, setLoading] = useState(false);
+	const [data, setData] = useState(initialData);
 
 	const handleRefresh = async () => {
 		setLoading(true);
 		try {
 			const params = new URLSearchParams({
-				startDate: dateRange.startDate,
-				endDate: dateRange.endDate,
+				startDate,
+				endDate,
 				type: reportType,
 			});
 
@@ -120,8 +145,8 @@ export function ReportsManager({ initialData }: ReportsProps) {
 		setLoading(true);
 		try {
 			const params = new URLSearchParams({
-				startDate: dateRange.startDate,
-				endDate: dateRange.endDate,
+				startDate,
+				endDate,
 				type: reportType,
 				format,
 			});
@@ -134,7 +159,7 @@ export function ReportsManager({ initialData }: ReportsProps) {
 				const a = document.createElement("a");
 				a.style.display = "none";
 				a.href = url;
-				a.download = `${reportType}-report-${dateRange.startDate}-${dateRange.endDate}.${format}`;
+				a.download = `${reportType}-report-${startDate}-${endDate}.${format}`;
 				document.body.appendChild(a);
 				a.click();
 				window.URL.revokeObjectURL(url);
@@ -149,28 +174,28 @@ export function ReportsManager({ initialData }: ReportsProps) {
 	const renderSummaryReport = () => (
 		<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-				<KpiCard 
-					label="Workforce Total" 
-					value={data.summaryStats.totalEmployees} 
+				<KpiCard
+					label="Workforce Total"
+					value={data.summaryStats.totalEmployees}
 					subValue={`${data.summaryStats.activeEmployees} Active`}
 					icon={LiaChartBarSolid}
 				/>
-				<KpiCard 
-					label="Total Hours" 
-					value={data.summaryStats.totalHoursWorked.toFixed(1)} 
+				<KpiCard
+					label="Total Hours"
+					value={data.summaryStats.totalHoursWorked.toFixed(1)}
 					subValue="Cumulative"
 					variant="success"
 					icon={LiaClockSolid}
 				/>
-				<KpiCard 
-					label="Peak Occupancy" 
-					value={data.summaryStats.peakDayOccupancy} 
+				<KpiCard
+					label="Peak Occupancy"
+					value={data.summaryStats.peakDayOccupancy}
 					subValue="Max Daily"
 					icon={LiaIndustrySolid}
 				/>
-				<KpiCard 
-					label="Overtime Impact" 
-					value={data.summaryStats.totalOvertimeHours.toFixed(1)} 
+				<KpiCard
+					label="Overtime Impact"
+					value={data.summaryStats.totalOvertimeHours.toFixed(1)}
 					subValue="Total Hours"
 					variant={data.summaryStats.totalOvertimeHours > 0 ? "destructive" : "default"}
 					icon={LiaClockSolid}
@@ -184,26 +209,32 @@ export function ReportsManager({ initialData }: ReportsProps) {
 				<CardBody>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div className="space-y-6">
-							<h3 className="font-heading font-bold uppercase text-muted-foreground text-xs tracking-wider">Performance Metrics</h3>
+							<h3 className="font-heading font-bold uppercase text-muted-foreground text-xs tracking-wider">
+								Performance Metrics
+							</h3>
 							<div className="space-y-4">
 								<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
 									<span className="text-sm">Avg Hours / Employee</span>
-									<span className="font-data font-bold text-lg">{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h</span>
+									<span className="font-data font-bold text-lg">
+										{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
+									</span>
 								</div>
 								<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
 									<span className="text-sm">Active Ratio</span>
 									<span className="font-data font-bold text-lg">
-										{data.summaryStats.totalEmployees > 0 
-											? `${Math.round((data.summaryStats.activeEmployees / data.summaryStats.totalEmployees) * 100)}%` 
+										{data.summaryStats.totalEmployees > 0
+											? `${Math.round((data.summaryStats.activeEmployees / data.summaryStats.totalEmployees) * 100)}%`
 											: "0%"}
 									</span>
 								</div>
 							</div>
 						</div>
-						
+
 						<div className="flex items-center justify-center border border-dashed border-border rounded-[2px] bg-muted/5 min-h-[200px]">
 							<div className="text-center space-y-2">
-								<p className="font-heading uppercase text-xs text-muted-foreground tracking-widest">Efficiency Index</p>
+								<p className="font-heading uppercase text-xs text-muted-foreground tracking-widest">
+									Efficiency Index
+								</p>
 								<p className="font-data text-4xl font-bold text-primary">--.--</p>
 								<p className="text-xs text-muted-foreground">Calibration Required</p>
 							</div>
@@ -230,13 +261,27 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<table className="w-full text-sm">
 							<thead>
 								<tr className="bg-muted/50 border-b border-border">
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Employee</th>
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Station</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Hours</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Units</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Efficiency</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Overtime</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Date
+									</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Employee
+									</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Station
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Hours
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Units
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Efficiency
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Overtime
+									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-border/50">
@@ -249,23 +294,34 @@ export function ReportsManager({ initialData }: ReportsProps) {
 										<td className="p-4 font-data text-right">{row.unitsProcessed || "—"}</td>
 										<td className="p-4 font-data text-right">
 											{row.efficiency ? (
-												<span className={cn(
-													row.efficiency >= 1.0 ? "text-emerald-600" : "text-orange-600"
-												)}>
+												<span
+													className={cn(
+														row.efficiency >= 1.0 ? "text-emerald-600" : "text-orange-600"
+													)}
+												>
 													{(row.efficiency * 100).toFixed(1)}%
 												</span>
-											) : "—"}
+											) : (
+												"—"
+											)}
 										</td>
 										<td className="p-4 font-data text-right">
 											{row.overtimeHours ? (
-												<span className="text-red-600 font-bold">{row.overtimeHours.toFixed(2)}</span>
-											) : "—"}
+												<span className="text-red-600 font-bold">
+													{row.overtimeHours.toFixed(2)}
+												</span>
+											) : (
+												"—"
+											)}
 										</td>
 									</tr>
 								))}
 								{data.productivityData.length === 0 && (
 									<tr>
-										<td colSpan={7} className="p-12 text-center text-muted-foreground font-heading text-sm">
+										<td
+											colSpan={7}
+											className="p-12 text-center text-muted-foreground font-heading text-sm"
+										>
 											No data found for the selected period.
 										</td>
 									</tr>
@@ -294,13 +350,27 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<table className="w-full text-sm">
 							<thead>
 								<tr className="bg-muted/50 border-b border-border">
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Task Type</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Count</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Units</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Avg/Task</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Total Hours</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Hrs/Unit</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Date
+									</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Task Type
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Count
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Units
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Avg/Task
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Total Hours
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Hrs/Unit
+									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-border/50">
@@ -310,14 +380,21 @@ export function ReportsManager({ initialData }: ReportsProps) {
 										<td className="p-4 font-medium">{row.taskTypeName}</td>
 										<td className="p-4 font-data text-right">{row.taskCount}</td>
 										<td className="p-4 font-data text-right">{row.totalUnits}</td>
-										<td className="p-4 font-data text-right">{row.averageUnitsPerTask.toFixed(2)}</td>
+										<td className="p-4 font-data text-right">
+											{row.averageUnitsPerTask.toFixed(2)}
+										</td>
 										<td className="p-4 font-data text-right">{row.totalHours.toFixed(2)}</td>
-										<td className="p-4 font-data text-right text-muted-foreground">{row.hoursPerUnit.toFixed(3)}</td>
+										<td className="p-4 font-data text-right text-muted-foreground">
+											{row.hoursPerUnit.toFixed(3)}
+										</td>
 									</tr>
 								))}
 								{data.taskPerformanceData.length === 0 && (
 									<tr>
-										<td colSpan={7} className="p-12 text-center text-muted-foreground font-heading text-sm">
+										<td
+											colSpan={7}
+											className="p-12 text-center text-muted-foreground font-heading text-sm"
+										>
 											No task data found.
 										</td>
 									</tr>
@@ -337,32 +414,46 @@ export function ReportsManager({ initialData }: ReportsProps) {
 					<CardHeader className="pb-2 border-b border-border/50">
 						<CardTitle className="uppercase tracking-tight text-sm flex justify-between">
 							{station.stationName}
-							<Badge variant="outline" className="font-mono text-[10px]">#{index + 1}</Badge>
+							<Badge variant="outline" className="font-mono text-[10px]">
+								#{index + 1}
+							</Badge>
 						</CardTitle>
 					</CardHeader>
 					<CardBody className="space-y-4 pt-4">
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">Total Hours</p>
+								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
+									Total Hours
+								</p>
 								<p className="font-data font-bold text-lg">{station.totalHours.toFixed(1)}h</p>
 							</div>
 							<div>
-								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">Peak Occupancy</p>
+								<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
+									Peak Occupancy
+								</p>
 								<p className="font-data font-bold text-lg">{station.peakOccupancy}</p>
 							</div>
 						</div>
-						
+
 						{station.averageEfficiency !== null && (
 							<div className="space-y-2 pt-2 border-t border-border/30">
 								<div className="flex justify-between text-xs">
-									<span className="text-muted-foreground uppercase font-heading tracking-wider">Efficiency</span>
-									<span className="font-data font-bold">{(station.averageEfficiency * 100).toFixed(1)}%</span>
+									<span className="text-muted-foreground uppercase font-heading tracking-wider">
+										Efficiency
+									</span>
+									<span className="font-data font-bold">
+										{(station.averageEfficiency * 100).toFixed(1)}%
+									</span>
 								</div>
 								<div className="h-1.5 w-full bg-muted overflow-hidden rounded-[1px]">
-									<div 
-										className={cn("h-full transition-all duration-500", 
-											station.averageEfficiency >= 0.9 ? "bg-emerald-500" : 
-											station.averageEfficiency >= 0.7 ? "bg-primary" : "bg-yellow-500"
+									<div
+										className={cn(
+											"h-full transition-all duration-500",
+											station.averageEfficiency >= 0.9
+												? "bg-emerald-500"
+												: station.averageEfficiency >= 0.7
+													? "bg-primary"
+													: "bg-yellow-500"
 										)}
 										style={{ width: `${Math.min(station.averageEfficiency * 100, 100)}%` }}
 									/>
@@ -374,7 +465,9 @@ export function ReportsManager({ initialData }: ReportsProps) {
 			))}
 			{data.stationEfficiencyData.length === 0 && (
 				<div className="col-span-full p-12 border border-dashed border-border rounded-[2px] text-center">
-					<p className="font-heading uppercase tracking-widest text-muted-foreground text-sm">No Station Data Available</p>
+					<p className="font-heading uppercase tracking-widest text-muted-foreground text-sm">
+						No Station Data Available
+					</p>
 				</div>
 			)}
 		</div>
@@ -388,9 +481,14 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<LiaClockSolid className="w-5 h-5" />
 					</div>
 					<div>
-						<p className="font-heading uppercase text-xs text-red-700 dark:text-red-300 tracking-wider font-bold">Overtime Alert</p>
+						<p className="font-heading uppercase text-xs text-red-700 dark:text-red-300 tracking-wider font-bold">
+							Overtime Alert
+						</p>
 						<p className="text-sm text-foreground">
-							Total accumulated overtime: <span className="font-data font-bold">{data.summaryStats.totalOvertimeHours.toFixed(1)}h</span>
+							Total accumulated overtime:{" "}
+							<span className="font-data font-bold">
+								{data.summaryStats.totalOvertimeHours.toFixed(1)}h
+							</span>
 						</p>
 					</div>
 				</div>
@@ -405,11 +503,21 @@ export function ReportsManager({ initialData }: ReportsProps) {
 						<table className="w-full text-sm">
 							<thead>
 								<tr className="bg-muted/50 border-b border-border">
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Date</th>
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Employee</th>
-									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Station</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">Reg. Hours</th>
-									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">O.T. Hours</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Date
+									</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Employee
+									</th>
+									<th className="text-left p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Station
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										Reg. Hours
+									</th>
+									<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
+										O.T. Hours
+									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-border/50">
@@ -418,13 +526,20 @@ export function ReportsManager({ initialData }: ReportsProps) {
 										<td className="p-4 font-data text-xs">{row.date}</td>
 										<td className="p-4 font-medium">{row.employeeName}</td>
 										<td className="p-4 text-xs text-muted-foreground">{row.stationName || "—"}</td>
-										<td className="p-4 font-data text-right">{row.regularHoursWorked.toFixed(2)}</td>
-										<td className="p-4 font-data text-right text-red-600 font-bold">{row.overtimeHoursWorked.toFixed(2)}</td>
+										<td className="p-4 font-data text-right">
+											{row.regularHoursWorked.toFixed(2)}
+										</td>
+										<td className="p-4 font-data text-right text-red-600 font-bold">
+											{row.overtimeHoursWorked.toFixed(2)}
+										</td>
 									</tr>
 								))}
 								{data.overtimeData.length === 0 && (
 									<tr>
-										<td colSpan={5} className="p-12 text-center text-muted-foreground font-heading text-sm">
+										<td
+											colSpan={5}
+											className="p-12 text-center text-muted-foreground font-heading text-sm"
+										>
 											No overtime recorded for this period.
 										</td>
 									</tr>
@@ -444,18 +559,13 @@ export function ReportsManager({ initialData }: ReportsProps) {
 				subtitle="Operational intelligence and workforce metrics"
 				actions={
 					<div className="flex items-center gap-2">
-						<Button 
-							onClick={handleRefresh} 
-							variant="outline" 
-							disabled={loading}
-							className="gap-2"
-						>
+						<Button onClick={handleRefresh} variant="outline" disabled={loading} className="gap-2">
 							<LiaSyncSolid className={cn(loading && "animate-spin")} />
 							{loading ? "Syncing..." : "Refresh"}
 						</Button>
-						<Button 
-							onClick={() => handleExport("csv")} 
-							variant="outline" 
+						<Button
+							onClick={() => handleExport("csv")}
+							variant="outline"
 							disabled={loading}
 							className="gap-2"
 						>
@@ -467,55 +577,68 @@ export function ReportsManager({ initialData }: ReportsProps) {
 			/>
 
 			{/* Filter & Controls Card */}
-			<Card className="border-border shadow-sm">
-				<CardBody className="p-4">
-					<div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-						{/* Report Type Selector */}
-						<div className="flex flex-wrap gap-2">
-							{reportTypes.map((type) => (
-								<Button
-									key={type.value}
-									onClick={() => setReportType(type.value)}
-									variant={reportType === type.value ? "primary" : "outline"}
-									size="sm"
-									className={cn(
-										"gap-2",
-										reportType !== type.value && "text-muted-foreground border-transparent bg-muted/30 hover:bg-muted hover:text-foreground"
-									)}
-								>
-									{type.icon && <type.icon />}
-									{type.label}
-								</Button>
-							))}
-						</div>
+			<div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+			{/* Report Type Selector */}
+				<Tabs
+					selectedKey={reportType}
+					onSelectionChange={(k) => void setReportType(k.toString() as ReportType)}
+				>
+					<TabList
+						className={cn(
+							"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
+							"flex-wrap" // Handle wrapping if needed for small screens
+						)}
+					>
+						{reportTypes.map((type) => (
+							<Tab
+								id={type.value}
+								key={type.value}
+								className={({ isSelected }) =>
+									cn(
+										"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center gap-2 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer",
+										isSelected
+											? "bg-primary text-primary-foreground shadow-sm"
+											: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+									)
+								}
+							>
+								{type.icon && <type.icon className="w-3.5 h-3.5" />}
+								{type.label}
+							</Tab>
+						))}
+					</TabList>
+				</Tabs>
 
-						{/* Date Range Picker */}
-						<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-[2px] border border-border/50">
-							<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
-							<div className="flex items-center gap-2">
-								<SimpleInput
-									name="startDate"
-									type="date"
-									value={dateRange.startDate}
-									onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-									className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
-								/>
-								<span className="text-muted-foreground text-xs">—</span>
-								<SimpleInput
-									name="endDate"
-									type="date"
-									value={dateRange.endDate}
-									onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-									className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
-								/>
-							</div>
-						</div>
+				{/* Date Range Picker */}
+				<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-[2px] border border-border/50">
+					<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
+					<div className="flex items-center gap-2">
+						<SimpleInput
+							name="startDate"
+							type="date"
+							value={startDate}
+							onChange={(e) => void setStartDate(e.target.value)}
+							className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+						/>
+						<span className="text-muted-foreground text-xs">—</span>
+						<SimpleInput
+							name="endDate"
+							type="date"
+							value={endDate}
+							onChange={(e) => void setEndDate(e.target.value)}
+							className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+						/>
 					</div>
-				</CardBody>
-			</Card>
+				</div>
+			</div>
 
 			{/* Main Content Area */}
-			<div className={cn("transition-opacity duration-200", loading ? "opacity-60 pointer-events-none" : "opacity-100")}>
+			<div
+				className={cn(
+					"transition-opacity duration-200",
+					loading ? "opacity-60 pointer-events-none" : "opacity-100"
+				)}
+			>
 				{reportType === "summary" && renderSummaryReport()}
 				{reportType === "productivity" && renderProductivityReport()}
 				{reportType === "tasks" && renderTaskReport()}

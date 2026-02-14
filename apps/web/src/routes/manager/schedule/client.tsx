@@ -1,21 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { format, parseISO, isToday } from "date-fns";
+import { addWeeks, format, isToday, parseISO, startOfWeek } from "date-fns";
+import { useNavigate, useSearchParams } from "react-router";
 import {
 	Card,
 	CardBody,
 	CardHeader,
 	CardTitle,
 	Button,
-	Tabs,
-	TabList,
-	Tab,
-	TabPanel,
 	Select,
 	Input,
 	Badge,
 } from "@monorepo/design-system";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "~/components/page-header";
 import type { ScheduleData } from "./actions";
 
@@ -51,10 +49,47 @@ const shiftColors: Record<string, string> = {
 };
 
 export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleViewProps) {
-	const [selectedDate, setSelectedDate] = useState(() => schedule.days[0]?.date ?? "");
+	const [searchParams] = useSearchParams();
+	const navigate = useNavigate();
+	const selectedDateParam = searchParams.get("day");
+	const selectedDate = useMemo(() => {
+		if (schedule.days.length === 0) return "";
+		if (!selectedDateParam) return schedule.days[0].date;
+
+		const matchingDay = schedule.days.find((day) => day.date.startsWith(selectedDateParam));
+		return matchingDay?.date ?? schedule.days[0].date;
+	}, [schedule.days, selectedDateParam]);
 	const [selectedStation, setSelectedStation] = useState<string>("all");
 	const [view, setView] = useState<"grid" | "list">("grid");
 	const [search, setSearch] = useState("");
+
+	const handleDayChange = (date: string) => {
+		const nextSearchParams = new URLSearchParams(searchParams);
+		nextSearchParams.set("day", date.slice(0, 10));
+		navigate(`?${nextSearchParams.toString()}`, { replace: false });
+	};
+
+	const handleWeekChange = (offset: number) => {
+		const nextSearchParams = new URLSearchParams(searchParams);
+		const currentWeekStart = startOfWeek(parseISO(schedule.weekStart), { weekStartsOn: 0 });
+		const nextWeekStart = addWeeks(currentWeekStart, offset);
+
+		nextSearchParams.set("week", format(nextWeekStart, "yyyy-MM-dd"));
+
+		if (selectedDate) {
+			const selectedDateShifted = addWeeks(parseISO(selectedDate), offset);
+			nextSearchParams.set("day", format(selectedDateShifted, "yyyy-MM-dd"));
+		}
+
+		navigate(`?${nextSearchParams.toString()}`, { replace: false });
+	};
+
+	const handleGoToCurrentWeek = () => {
+		const nextSearchParams = new URLSearchParams(searchParams);
+		nextSearchParams.set("week", format(startOfWeek(new Date(), { weekStartsOn: 0 }), "yyyy-MM-dd"));
+		nextSearchParams.set("day", format(new Date(), "yyyy-MM-dd"));
+		navigate(`?${nextSearchParams.toString()}`, { replace: false });
+	};
 
 	const filteredEntries = useMemo(() => {
 		const day = schedule.days.find((day) => day.date === selectedDate);
@@ -75,11 +110,25 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 		count: day.entries.length,
 	}));
 
+	const selectedDay = schedule.days.find((day) => day.date === selectedDate) ?? null;
+	const selectedDayLabel = selectedDay ? format(parseISO(selectedDay.date), "EEEE, MMM d") : "No day selected";
+	const selectedDayStats = selectedDay
+		? {
+			total: selectedDay.entries.length,
+			confirmed: selectedDay.entries.filter((entry) => entry.status === "CONFIRMED").length,
+			pending: selectedDay.entries.filter((entry) => entry.status === "PENDING").length,
+			open: selectedDay.entries.filter((entry) => entry.status === "OPEN").length,
+		}
+		: { total: 0, confirmed: 0, pending: 0, open: 0 };
+
+	const weekShiftTotal = schedule.days.reduce((sum, day) => sum + day.entries.length, 0);
+	const activeNowCount = activeEmployees.filter((log) => log.endTime === null).length;
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
 				title="Weekly Schedule"
-				subtitle={weekRangeLabel}
+				subtitle={`${weekRangeLabel} · ${weekShiftTotal} scheduled shifts`}
 				actions={
 					<div className="flex flex-wrap gap-2">
 						<Button variant="outline">Share Schedule</Button>
@@ -92,19 +141,41 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 				<CardHeader>
 					<CardTitle>Day Overview</CardTitle>
 				</CardHeader>
-				<CardBody>
+				<CardBody className="space-y-4">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div className="flex flex-col">
+							<span className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground font-medium">
+								Current Week
+							</span>
+							<span className="text-base font-semibold tracking-tight">{weekRangeLabel}</span>
+						</div>
+						<div className="flex flex-wrap items-center gap-1">
+							<Button variant="outline" size="sm" onClick={() => handleWeekChange(-1)}>
+								<ChevronLeft className="w-4 h-4 mr-1" />
+								Prev
+							</Button>
+							<Button variant="outline" size="sm" onClick={handleGoToCurrentWeek}>
+								Today
+							</Button>
+							<Button variant="outline" size="sm" onClick={() => handleWeekChange(1)}>
+								Next
+								<ChevronRight className="w-4 h-4 ml-1" />
+							</Button>
+						</div>
+					</div>
+
 					<div className="grid grid-cols-2 md:grid-cols-7 gap-3">
 						{currentDayEntries.map((day) => (
 							<button
 								type="button"
 								key={day.date}
-								onClick={() => setSelectedDate(day.date)}
-								className={`rounded-[2px] border p-3 text-left transition-all ${
+								onClick={() => handleDayChange(day.date)}
+								className={`rounded-[2px] border p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
 									selectedDate === day.date
 										? "border-primary bg-primary/10"
 										: day.isToday
-											? "border-border/50 bg-muted/30"
-											: "border-border/30 bg-muted/10"
+											? "border-border/60 bg-muted dark:bg-background hover:bg-muted/80 dark:hover:bg-accent/20"
+											: "border-border/50 bg-muted/60 dark:bg-background/80 hover:bg-muted/80 dark:hover:bg-accent/20 hover:border-primary/50"
 								}`}
 							>
 								<div className="text-sm text-muted-foreground">
@@ -115,63 +186,99 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							</button>
 						))}
 					</div>
+
+					<div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/50 border border-border/50 rounded-[2px] overflow-hidden">
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Selected Day
+							</p>
+							<p className="text-sm font-semibold truncate">{selectedDayLabel}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Total Shifts
+							</p>
+							<p className="text-sm font-semibold font-mono">{selectedDayStats.total}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Confirmed
+							</p>
+							<p className="text-sm font-semibold text-emerald-600 font-mono">{selectedDayStats.confirmed}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Pending
+							</p>
+							<p className="text-sm font-semibold text-amber-600 font-mono">{selectedDayStats.pending}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Open
+							</p>
+							<p className="text-sm font-semibold text-muted-foreground font-mono">{selectedDayStats.open}</p>
+						</div>
+					</div>
 				</CardBody>
 			</Card>
 
 			<Card>
+				<CardHeader className="pb-0">
+					<CardTitle>Shift Board</CardTitle>
+				</CardHeader>
 				<CardBody className="space-y-4">
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-						<Select
-							name="stationFilter"
-							label="Station"
-							options={[
-								{ value: "all", label: "All Stations" },
-								...stations.map((s) => ({ value: s.id, label: s.name })),
-							]}
-							value={selectedStation}
-							onChange={(value: string) => setSelectedStation(value || "all")}
-						/>
-						<Input
-							name="employeeSearch"
-							label="Search"
-							placeholder="Search employees…"
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-							autoComplete="off"
-						/>
-						<div className="flex flex-col gap-1">
-							<label className="text-sm font-medium">View</label>
-							<div className="flex gap-2">
-								<Button
-									variant={view === "grid" ? "primary" : "outline"}
-									size="sm"
-									onClick={() => setView("grid")}
-								>
-									Grid
-								</Button>
-								<Button
-									variant={view === "list" ? "primary" : "outline"}
-									size="sm"
-									onClick={() => setView("list")}
-								>
-									List
-								</Button>
-							</div>
+					<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+						<div className="flex items-end gap-2">
+							<Select
+								name="stationFilter"
+								label="Station"
+								options={[
+									{ value: "all", label: "All Stations" },
+									...stations.map((s) => ({ value: s.id, label: s.name })),
+								]}
+								value={selectedStation}
+								onChange={(value: string) => setSelectedStation(value || "all")}
+								className="h-8 w-[180px] text-xs"
+								containerClassName="gap-1"
+								labelClassName="text-[10px]"
+							/>
+							<Input
+								name="employeeSearch"
+								label="Search"
+								placeholder="Search employees…"
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+								autoComplete="off"
+								className="h-8 w-[180px] text-xs"
+								containerClassName="gap-1"
+								labelClassName="text-[10px]"
+							/>
+						</div>
+
+						<div className="inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-muted/40 border border-border/50 self-end">
+							<Button
+								variant={view === "grid" ? "primary" : "ghost"}
+								size="xs"
+								onClick={() => setView("grid")}
+							>
+								Grid View
+							</Button>
+							<Button
+								variant={view === "list" ? "primary" : "ghost"}
+								size="xs"
+								onClick={() => setView("list")}
+							>
+								List View
+							</Button>
 						</div>
 					</div>
 
-					<Tabs selectedKey={view} onSelectionChange={(key) => setView(key as "grid" | "list")}>
-						<TabList>
-							<Tab id="grid">Grid View</Tab>
-							<Tab id="list">List View</Tab>
-						</TabList>
-
-						<TabPanel id="grid">
+					{view === "grid" ? (
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 								{filteredEntries.map((entry) => (
 									<div
 										key={entry.id}
-										className={`rounded-[2px] border bg-card p-4 shadow-sm ${shiftColors[entry.shiftType]}`}
+										className={`rounded-[2px] border border-border/50 bg-muted/40 p-4 transition-colors hover:bg-muted/60 ${shiftColors[entry.shiftType]}`}
 									>
 										<div className="flex justify-between items-start">
 											<div>
@@ -184,12 +291,15 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 														? "success"
 														: entry.status === "PENDING"
 															? "primary"
-															: "secondary"
+														: "secondary"
 												}
 											>
 												{entry.status}
 											</Badge>
 										</div>
+										<p className="mt-1 text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground">
+											{entry.shiftType} Shift
+										</p>
 										<div className="mt-3 text-sm">
 											<p className="font-medium">{entry.stationName}</p>
 											<p className="text-muted-foreground">
@@ -211,18 +321,16 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 									</div>
 								))}
 								{filteredEntries.length === 0 && (
-									<p className="text-center text-muted-foreground py-6">
-										No shifts match your filters.
-									</p>
+									<div className="col-span-full py-12 text-center">
+										<p className="text-muted-foreground">No shifts match your filters.</p>
+									</div>
 								)}
 							</div>
-						</TabPanel>
-
-						<TabPanel id="list">
-							<div className="overflow-x-auto">
+					) : (
+							<div className="overflow-x-auto rounded-[2px] border border-border/60">
 								<table className="w-full text-sm">
 									<thead>
-										<tr className="border-b border-border">
+										<tr className="border-b border-border bg-muted/20 text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
 											<th className="p-3 text-left">Employee</th>
 											<th className="p-3 text-left">Station</th>
 											<th className="p-3 text-left">Shift</th>
@@ -291,8 +399,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 									</tbody>
 								</table>
 							</div>
-						</TabPanel>
-					</Tabs>
+					)}
 				</CardBody>
 			</Card>
 
@@ -301,11 +408,14 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					<CardHeader>
 						<CardTitle>Coverage Heatmap</CardTitle>
 					</CardHeader>
-					<CardBody>
+					<CardBody className="space-y-2">
+						<p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
+							Station utilization vs configured capacity
+						</p>
 						<div className="overflow-x-auto">
 							<table className="w-full text-sm">
 								<thead>
-									<tr className="border-b border-border">
+									<tr className="border-b border-border/50 bg-muted/20 text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
 										<th className="p-3 text-left">Station</th>
 										{schedule.days.map((day) => (
 											<th key={day.date} className="p-3 text-center text-xs text-muted-foreground">
@@ -316,7 +426,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								</thead>
 								<tbody>
 									{stations.map((station) => (
-										<tr key={station.id} className="border-b border-border">
+										<tr key={station.id} className="border-b border-border/50 hover:bg-muted/5 transition-colors">
 											<td className="p-3 font-medium">{station.name}</td>
 											{schedule.days.map((day) => {
 												const count = day.entries.filter(
@@ -324,20 +434,22 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												).length;
 												const denominator = Math.max(1, station.capacity ?? 1);
 												const utilization = Math.min((count / denominator) * 100, 100);
-												return (
-													<td key={`${station.id}-${day.date}`} className="p-3 text-center">
-														<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">
-															<div
-																className="h-full transition-all duration-500"
-																style={{
-																	width: `${utilization}%`,
-																	backgroundColor: utilization > 80 ? "var(--color-primary)" : "var(--color-chart-3)",
-																}}
-															/>
-														</div>
-														<p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">{count} SHIFTS</p>
-													</td>
-												);
+														return (
+															<td key={`${station.id}-${day.date}`} className="p-3 text-center">
+																<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">
+																	<div
+																		className="h-full transition-all duration-500"
+																		style={{
+																			width: `${utilization}%`,
+																			backgroundColor: utilization > 80 ? "var(--color-primary)" : "var(--color-chart-3)",
+																		}}
+																	/>
+																</div>
+																<p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase tracking-[0.12em]">
+																	{count} shifts
+																</p>
+															</td>
+														);
 											})}
 										</tr>
 									))}
@@ -351,11 +463,17 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 						<CardTitle>Active Today</CardTitle>
 					</CardHeader>
 					<CardBody className="space-y-3">
+						<div className="rounded-[2px] border border-border/50 bg-muted/20 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
+								Clocked In Now
+							</p>
+							<p className="text-lg font-semibold leading-none mt-1">{activeNowCount}</p>
+						</div>
 						{activeEmployees.length === 0 ? (
-							<p className="text-sm text-muted-foreground">No active shifts right now.</p>
+							<p className="text-sm text-muted-foreground py-2">No active shifts right now.</p>
 						) : (
 							activeEmployees.slice(0, 5).map((log) => (
-								<div key={log.id} className="rounded border p-3">
+								<div key={log.id} className="rounded-[2px] border border-border/50 bg-muted/40 p-3">
 									<div className="flex justify-between">
 										<div>
 											<p className="font-medium">{log.Employee.name}</p>

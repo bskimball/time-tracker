@@ -108,6 +108,8 @@ export default async function Component() {
 
 	return (
 		<ReportsManager
+			initialStartDate={startDate.toISOString().split("T")[0]}
+			initialEndDate={endDate.toISOString().split("T")[0]}
 			initialData={{
 				productivityData,
 				taskPerformanceData: taskData,

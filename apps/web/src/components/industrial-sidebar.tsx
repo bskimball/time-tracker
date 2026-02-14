@@ -208,9 +208,20 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 				)}
 
 				{!isCollapsed && !isActive && (
-					<span className="ml-auto opacity-0 group-hover:opacity-30 text-[8px] font-mono transition-opacity">
-						→
-					</span>
+					<div className="ml-auto opacity-0 group-hover:opacity-100 flex items-center -space-x-[2px] transition-opacity duration-200 pr-1">
+						{[0, 1].map((i) => (
+							<span
+								key={i}
+								className="text-xs font-mono font-bold text-primary animate-sequence-pulse"
+								style={{
+									animationDelay: `${i * 100}ms`,
+									animationDuration: "1.5s",
+								}}
+							>
+								›
+							</span>
+						))}
+					</div>
 				)}
 			</div>
 		</Link>

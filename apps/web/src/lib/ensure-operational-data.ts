@@ -157,13 +157,15 @@ async function seedOperationalData() {
 		}
 	}
 
-	const [taskTypeCount, shiftCount, assignmentCount, metricCount, timeLogCount] = await Promise.all([
+	const [taskTypeCount, shiftCount, shiftAssignmentCount, taskAssignmentCount, metricCount, timeLogCount] =
+		await Promise.all([
 		db.taskType.count(),
 		db.shift.count(),
+		db.shiftAssignment.count(),
 		db.taskAssignment.count(),
 		db.performanceMetric.count(),
 		db.timeLog.count(),
-	]);
+		]);
 
 	const stations = await db.station.findMany({ where: { isActive: true }, orderBy: { name: "asc" } });
 	const activeEmployees = await db.employee.findMany({
@@ -222,7 +224,7 @@ async function seedOperationalData() {
 		}
 	}
 
-	if (assignmentCount === 0 && activeEmployees.length > 0) {
+	if ((shiftAssignmentCount === 0 || taskAssignmentCount === 0) && activeEmployees.length > 0) {
 		const taskTypes = await db.taskType.findMany({ orderBy: { name: "asc" } });
 		const shifts = await db.shift.findMany({
 			orderBy: [{ startTime: "asc" }],
@@ -231,21 +233,24 @@ async function seedOperationalData() {
 
 		for (const [index, shift] of shifts.entries()) {
 			const headcount = Math.min(shift.requiredHeadcount, activeEmployees.length);
-			for (let slot = 0; slot < headcount; slot++) {
-				const employee = activeEmployees[(index + slot) % activeEmployees.length];
-				await db.shiftAssignment.create({
-					data: {
-						shiftId: shift.id,
-						employeeId: employee.id,
-						role: slot === 0 ? "LEAD" : "ASSOCIATE",
-						status: "CONFIRMED",
-						notes: "Auto-seeded baseline schedule",
-					},
-				});
+
+			if (shiftAssignmentCount === 0) {
+				for (let slot = 0; slot < headcount; slot++) {
+					const employee = activeEmployees[(index + slot) % activeEmployees.length];
+					await db.shiftAssignment.create({
+						data: {
+							shiftId: shift.id,
+							employeeId: employee.id,
+							role: slot === 0 ? "LEAD" : "ASSOCIATE",
+							status: "CONFIRMED",
+							notes: "Auto-seeded baseline schedule",
+						},
+					});
+				}
 			}
 
 			const stationTaskType = taskTypes.find((taskType) => taskType.stationId === shift.stationId);
-			if (stationTaskType) {
+			if (taskAssignmentCount === 0 && stationTaskType) {
 				const isCurrentShift = shift.startTime <= new Date() && shift.endTime > new Date();
 				for (let slot = 0; slot < headcount; slot++) {
 					const employee = activeEmployees[(index + slot) % activeEmployees.length];

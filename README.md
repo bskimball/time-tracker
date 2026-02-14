@@ -107,10 +107,12 @@ export POSTGRES_DB=time_tracker
 ```
 
 **For Local Development:**
+
 - `apps/web/.env`: Contains `DATABASE_URL` for local database connection
 - `apps/marketing/.env`: Contains marketing-specific variables (if any)
 
 **Defaults (if not set):**
+
 - POSTGRES_USER: postgres
 - POSTGRES_PASSWORD: password
 - POSTGRES_DB: time_tracker
@@ -127,4 +129,5 @@ export POSTGRES_DB=time_tracker
 - [AGENTS.md](AGENTS.md) - Quick agent entrypoint
 - [guides/agent/](guides/agent/) - Progressive-disclosure monorepo + agent docs
 - [apps/web/guides/](apps/web/guides/) - Web app specific guides
+- [apps/web/guides/RELEASE_NOTES.md](apps/web/guides/RELEASE_NOTES.md) - Web app rollout summaries
 - Key agent guides: [RSC data mode](guides/agent/web-rsc-data-mode.md), [Auth/request context](guides/agent/auth.md), [Testing](guides/agent/testing.md)

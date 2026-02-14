@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useActionState, useOptimistic } from "react";
-import type React from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import {
 	Button,
 	Card,
@@ -15,11 +15,19 @@ import {
 	Badge,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { cn } from "~/lib/cn";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
 import { TaskAssignmentForm } from "./task-assignment-form";
 import { TaskCompletionForm } from "./task-completion-form";
 import { TaskSwitchForm } from "./task-switch-form";
 import { TaskTypeForm } from "./task-type-form";
+
+type TaskManagerTab = "assignments" | "history" | "types";
+type TaskDisplayMode = "grid" | "list";
+
+function isTaskManagerTab(value: string | null): value is TaskManagerTab {
+	return value === "assignments" || value === "history" || value === "types";
+}
 
 interface TaskManagerProps {
 	taskTypes: TaskType[];
@@ -66,9 +74,23 @@ export function TaskManager({
 	switchTaskAction,
 	taskHistory,
 }: TaskManagerProps) {
-	const [activeTab, setActiveTab] = useState<"assignments" | "history" | "types">("assignments");
+	const [searchParams] = useSearchParams();
+	const navigate = useNavigate();
+	const tabParam = searchParams.get("tab");
+	const activeTab: TaskManagerTab = isTaskManagerTab(tabParam) ? tabParam : "assignments";
+
+	const handleTabChange = (tab: string | number) => {
+		const nextTab = tab.toString();
+		if (!isTaskManagerTab(nextTab)) return;
+
+		const nextSearchParams = new URLSearchParams(searchParams);
+		nextSearchParams.set("tab", nextTab);
+		navigate(`?${nextSearchParams.toString()}`, { replace: false });
+	};
+
 	const [showAssignForm, setShowAssignForm] = useState(false);
 	const [showTaskTypeForm, setShowTaskTypeForm] = useState(false);
+	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("grid");
 	
 	// State for Complete/Switch Modals
 	const [selectedAssignment, setSelectedAssignment] = useState<TaskAssignment | null>(null);
@@ -301,13 +323,73 @@ export function TaskManager({
 			{/* Tabs */}
 			<Tabs
 				selectedKey={activeTab}
-				onSelectionChange={(key: React.Key) => setActiveTab(key as typeof activeTab)}
+				onSelectionChange={handleTabChange}
 			>
-				<TabList aria-label="Task manager sections">
-					<Tab id="assignments">Active Assignments</Tab>
-					<Tab id="history">Task History</Tab>
-					<Tab id="types">Task Types</Tab>
-				</TabList>
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<TabList
+						aria-label="Task manager sections"
+						className={cn(
+							"inline-flex w-auto justify-start gap-1 rounded-[2px] border border-border/40 bg-card p-0.5"
+						)}
+					>
+						<Tab
+							id="assignments"
+							className={({ isSelected }) =>
+								cn(
+									"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+									isSelected
+										? "bg-primary text-primary-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+								)
+							}
+						>
+							Active Assignments
+						</Tab>
+						<Tab
+							id="history"
+							className={({ isSelected }) =>
+								cn(
+									"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+									isSelected
+										? "bg-primary text-primary-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+								)
+							}
+						>
+							Task History
+						</Tab>
+						<Tab
+							id="types"
+							className={({ isSelected }) =>
+								cn(
+									"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+									isSelected
+										? "bg-primary text-primary-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+								)
+							}
+						>
+							Task Types
+						</Tab>
+					</TabList>
+
+					<div className="inline-flex w-auto justify-start gap-1 rounded-[2px] border border-border/40 bg-card p-0.5">
+						<Button
+							variant={displayMode === "grid" ? "primary" : "ghost"}
+							size="xs"
+							onClick={() => setDisplayMode("grid")}
+						>
+							Grid View
+						</Button>
+						<Button
+							variant={displayMode === "list" ? "primary" : "ghost"}
+							size="xs"
+							onClick={() => setDisplayMode("list")}
+						>
+							List View
+						</Button>
+					</div>
+				</div>
 
 				<TabPanel id="assignments">
 					<Card>
@@ -320,110 +402,7 @@ export function TaskManager({
 							)}
 						</CardHeader>
 						<CardBody>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{optimisticAssignments.map((assignment: TaskAssignment) => (
-									<div
-										key={assignment.id}
-										className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
-									>
-										{/* Header */}
-										<div className="mb-4 flex items-start justify-between">
-											<div className="space-y-1">
-												<div className="flex items-center gap-2">
-													<h4 className="font-heading text-sm font-bold uppercase tracking-tight text-foreground">
-														{assignment.TaskType.name}
-													</h4>
-													{!assignment.endTime && (
-														<span className="relative flex h-2 w-2">
-															<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-															<span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-														</span>
-													)}
-												</div>
-												<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-													<span className="font-bold text-foreground">
-														{assignment.Employee.name}
-													</span>
-													<span className="text-border">|</span>
-													<span>{assignment.TaskType.Station.name}</span>
-												</div>
-											</div>
-										{!assignment.endTime && (
-											<Badge variant="success" className="font-mono text-[10px] uppercase">
-												Active
-											</Badge>
-										)}
-									</div>
-									<div className="mb-3">{getAssignmentSourceBadge(assignment)}</div>
-
-									{/* Data Grid */}
-										<div className="mb-4 grid grid-cols-2 gap-y-3 gap-x-2 border-y border-border/40 py-3 bg-muted/20 px-2 -mx-2">
-											<div>
-												<span className="block text-[10px] uppercase text-muted-foreground font-mono tracking-wider">
-													Started
-												</span>
-												<span className="font-mono text-sm tabular-nums text-foreground">
-													{new Date(assignment.startTime).toLocaleTimeString([], {
-														hour: "2-digit",
-														minute: "2-digit",
-													})}
-												</span>
-											</div>
-											<div>
-												<span className="block text-[10px] uppercase text-muted-foreground font-mono tracking-wider">
-													Duration
-												</span>
-												<span className="font-mono text-sm tabular-nums text-foreground">
-													{formatDuration(assignment.startTime, assignment.endTime)}
-												</span>
-											</div>
-											{assignment.unitsCompleted !== null && (
-												<div className="col-span-2 pt-1 border-t border-border/40">
-													<span className="block text-[10px] uppercase text-muted-foreground font-mono tracking-wider">
-														Units Completed
-													</span>
-													<span className="font-mono text-sm tabular-nums text-foreground">
-														{assignment.unitsCompleted}
-													</span>
-												</div>
-											)}
-										</div>
-
-										{/* Actions */}
-										<div className="mt-auto grid grid-cols-2 gap-2">
-											{!assignment.endTime && (
-												<>
-													<Button
-														size="sm"
-														variant="outline"
-														className="w-full text-xs"
-														onClick={() => {
-															setSelectedAssignment(assignment);
-															setActiveModal("switch");
-														}}
-													>
-														Switch
-													</Button>
-													<Button
-														size="sm"
-														variant="primary"
-														className="w-full text-xs"
-														onClick={() => {
-															setSelectedAssignment(assignment);
-															setActiveModal("complete");
-														}}
-													>
-														Complete
-													</Button>
-												</>
-											)}
-										</div>
-									</div>
-								))}
-
-							</div>
-
-							{optimisticAssignments.length === 0 && (
+							{optimisticAssignments.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
 									<div className="mb-3 rounded-full bg-muted/50 p-4">
 										<div className="h-6 w-6 rounded-sm bg-foreground/20" />
@@ -438,6 +417,166 @@ export function TaskManager({
 										Assign New Task
 									</Button>
 								</div>
+							) : displayMode === "grid" ? (
+								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+									{optimisticAssignments.map((assignment: TaskAssignment) => (
+										<div
+											key={assignment.id}
+											className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
+										>
+											<div className="mb-4 flex items-start justify-between">
+												<div className="space-y-1">
+													<div className="flex items-center gap-2">
+														<h4 className="font-heading text-sm font-bold uppercase tracking-tight text-foreground">
+															{assignment.TaskType.name}
+														</h4>
+														{!assignment.endTime && (
+															<span className="relative flex h-2 w-2">
+																<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+																<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+															</span>
+														)}
+													</div>
+													<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+														<span className="font-bold text-foreground">{assignment.Employee.name}</span>
+														<span className="text-border">|</span>
+														<span>{assignment.TaskType.Station.name}</span>
+													</div>
+												</div>
+												{!assignment.endTime && (
+													<Badge variant="success" className="font-mono text-[10px] uppercase">
+														Active
+													</Badge>
+												)}
+											</div>
+											<div className="mb-3">{getAssignmentSourceBadge(assignment)}</div>
+
+											<div className="-mx-2 mb-4 grid grid-cols-2 gap-x-2 gap-y-3 border-y border-border/40 bg-muted/20 px-2 py-3">
+												<div>
+													<span className="block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+														Started
+													</span>
+													<span className="font-mono text-sm tabular-nums text-foreground">
+														{new Date(assignment.startTime).toLocaleTimeString([], {
+															hour: "2-digit",
+															minute: "2-digit",
+														})}
+													</span>
+												</div>
+												<div>
+													<span className="block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+														Duration
+													</span>
+													<span className="font-mono text-sm tabular-nums text-foreground">
+														{formatDuration(assignment.startTime, assignment.endTime)}
+													</span>
+												</div>
+												{assignment.unitsCompleted !== null && (
+													<div className="col-span-2 border-t border-border/40 pt-1">
+														<span className="block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+															Units Completed
+														</span>
+														<span className="font-mono text-sm tabular-nums text-foreground">
+															{assignment.unitsCompleted}
+														</span>
+													</div>
+												)}
+											</div>
+
+											<div className="mt-auto grid grid-cols-2 gap-2">
+												{!assignment.endTime && (
+													<>
+														<Button
+															size="sm"
+															variant="outline"
+															className="w-full text-xs"
+															onClick={() => {
+																setSelectedAssignment(assignment);
+																setActiveModal("switch");
+															}}
+														>
+															Switch
+														</Button>
+														<Button
+															size="sm"
+															variant="primary"
+															className="w-full text-xs"
+															onClick={() => {
+																setSelectedAssignment(assignment);
+																setActiveModal("complete");
+															}}
+														>
+															Complete
+														</Button>
+													</>
+												)}
+											</div>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+												<th className="p-4 text-left">Task</th>
+												<th className="p-4 text-left">Employee</th>
+												<th className="p-4 text-left">Station</th>
+												<th className="p-4 text-left">Start Time</th>
+												<th className="p-4 text-left">Duration</th>
+												<th className="p-4 text-left">Assignment Source</th>
+												<th className="p-4 text-left">Actions</th>
+											</tr>
+										</thead>
+										<tbody>
+											{optimisticAssignments.map((assignment) => (
+												<tr key={assignment.id} className="border-b border-border hover:bg-muted/50">
+													<td className="p-4">{assignment.TaskType.name}</td>
+													<td className="p-4">{assignment.Employee.name}</td>
+													<td className="p-4">{assignment.TaskType.Station.name}</td>
+													<td className="p-4">
+														{new Date(assignment.startTime).toLocaleTimeString([], {
+															hour: "2-digit",
+															minute: "2-digit",
+														})}
+													</td>
+													<td className="p-4">
+														{formatDuration(assignment.startTime, assignment.endTime)}
+													</td>
+													<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
+													<td className="p-4">
+														<div className="flex gap-2">
+															{!assignment.endTime && (
+																<>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		onClick={() => {
+																			setSelectedAssignment(assignment);
+																			setActiveModal("switch");
+																		}}
+																	>
+																		Switch
+																	</Button>
+																	<Button
+																		size="sm"
+																		variant="primary"
+																		onClick={() => {
+																			setSelectedAssignment(assignment);
+																			setActiveModal("complete");
+																		}}
+																	>
+																		Complete
+																	</Button>
+																</>
+															)}
+														</div>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
 							)}
 						</CardBody>
 					</Card>
@@ -449,22 +588,86 @@ export function TaskManager({
 							<CardTitle>Task History</CardTitle>
 						</CardHeader>
 						<CardBody>
-							<div className="overflow-x-auto">
-								<table className="w-full">
-									<thead>
-									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
-											<th className="text-left p-4">Employee</th>
-											<th className="text-left p-4">Task</th>
-											<th className="text-left p-4">Station</th>
-											<th className="text-left p-4">Start Time</th>
-											<th className="text-left p-4">Duration</th>
-											<th className="text-left p-4">Units</th>
-											<th className="text-left p-4">Efficiency</th>
-											<th className="text-left p-4">Assignment Source</th>
-										</tr>
-									</thead>
-									<tbody>
-										{taskHistory.map((assignment: TaskAssignment) => {
+							{taskHistory.length === 0 ? (
+								<div className="text-center py-6">
+									<p className="text-muted-foreground">No task history found</p>
+								</div>
+							) : displayMode === "grid" ? (
+								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+									{taskHistory.map((assignment: TaskAssignment) => {
+										const duration =
+											((assignment.endTime
+												? new Date(assignment.endTime).getTime()
+												: new Date().getTime()) -
+												new Date(assignment.startTime).getTime()) /
+											(1000 * 60);
+										const efficiency =
+											assignment.unitsCompleted && duration > 0
+												? assignment.unitsCompleted / (duration / 60)
+												: 0;
+
+										return (
+											<div
+												key={assignment.id}
+												className="rounded-[2px] border border-border bg-card p-4"
+											>
+												<div className="mb-2 flex items-start justify-between gap-2">
+													<h4 className="font-heading text-sm font-bold uppercase tracking-tight">
+														{assignment.TaskType.name}
+													</h4>
+													{getAssignmentSourceBadge(assignment)}
+												</div>
+												<div className="space-y-1 text-sm">
+													<p>
+														<span className="text-muted-foreground">Employee:</span> {assignment.Employee.name}
+													</p>
+													<p>
+														<span className="text-muted-foreground">Station:</span>{" "}
+														{assignment.TaskType.Station.name}
+													</p>
+													<p className="font-mono text-xs">
+														{new Date(assignment.startTime).toLocaleString()}
+													</p>
+												</div>
+												<div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/50 pt-3">
+													<div>
+														<p className="text-[10px] uppercase text-muted-foreground">Duration</p>
+														<p className="font-mono text-xs">
+															{formatDuration(assignment.startTime, assignment.endTime)}
+														</p>
+													</div>
+													<div>
+														<p className="text-[10px] uppercase text-muted-foreground">Units</p>
+														<p className="font-mono text-xs">{assignment.unitsCompleted || "-"}</p>
+													</div>
+													<div>
+														<p className="text-[10px] uppercase text-muted-foreground">Efficiency</p>
+														<p className={cn("font-mono text-xs", getTaskEfficiencyColor(efficiency))}>
+															{efficiency > 0 ? `${efficiency.toFixed(2)}/hr` : "-"}
+														</p>
+													</div>
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							) : (
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+												<th className="p-4 text-left">Employee</th>
+												<th className="p-4 text-left">Task</th>
+												<th className="p-4 text-left">Station</th>
+												<th className="p-4 text-left">Start Time</th>
+												<th className="p-4 text-left">Duration</th>
+												<th className="p-4 text-left">Units</th>
+												<th className="p-4 text-left">Efficiency</th>
+												<th className="p-4 text-left">Assignment Source</th>
+											</tr>
+										</thead>
+										<tbody>
+											{taskHistory.map((assignment: TaskAssignment) => {
 												const duration =
 													((assignment.endTime
 														? new Date(assignment.endTime).getTime()
@@ -481,31 +684,22 @@ export function TaskManager({
 														<td className="p-4">{assignment.Employee.name}</td>
 														<td className="p-4">{assignment.TaskType.name}</td>
 														<td className="p-4">{assignment.TaskType.Station.name}</td>
-														<td className="p-4">
-															{new Date(assignment.startTime).toLocaleString()}
-														</td>
-														<td className="p-4">
-															{formatDuration(assignment.startTime, assignment.endTime)}
-														</td>
+														<td className="p-4">{new Date(assignment.startTime).toLocaleString()}</td>
+														<td className="p-4">{formatDuration(assignment.startTime, assignment.endTime)}</td>
 														<td className="p-4 text-center">{assignment.unitsCompleted || "-"}</td>
-													<td className="p-4 text-center">
-														{efficiency > 0 && (
-															<span className={getTaskEfficiencyColor(efficiency)}>
-																{efficiency.toFixed(2)}/hr
-															</span>
-														)}
-													</td>
-													<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
-												</tr>
+														<td className="p-4 text-center">
+															{efficiency > 0 && (
+																<span className={getTaskEfficiencyColor(efficiency)}>
+																	{efficiency.toFixed(2)}/hr
+																</span>
+															)}
+														</td>
+														<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
+													</tr>
 												);
 											})}
-									</tbody>
-								</table>
-							</div>
-
-							{taskHistory.length === 0 && (
-								<div className="text-center py-6">
-									<p className="text-muted-foreground">No task history found</p>
+										</tbody>
+									</table>
 								</div>
 							)}
 						</CardBody>
@@ -518,66 +712,101 @@ export function TaskManager({
 							<CardTitle>Task Types</CardTitle>
 						</CardHeader>
 						<CardBody>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{taskTypes.map((taskType) => (
-									<div
-										key={taskType.id}
-										className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
-									>
-										{/* Header */}
-										<div className="mb-4 flex items-start justify-between">
-											<div className="space-y-1">
-												<h4 className="font-heading text-sm font-bold uppercase tracking-tight text-foreground">
-													{taskType.name}
-												</h4>
-												<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-													<span>Station:</span>
-													<span className="font-bold text-foreground">
-														{taskType.Station.name}
-													</span>
+							{displayMode === "grid" ? (
+								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+									{taskTypes.map((taskType) => (
+										<div
+											key={taskType.id}
+											className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
+										>
+											<div className="mb-4 flex items-start justify-between">
+												<div className="space-y-1">
+													<h4 className="font-heading text-sm font-bold uppercase tracking-tight text-foreground">
+														{taskType.name}
+													</h4>
+													<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+														<span>Station:</span>
+														<span className="font-bold text-foreground">{taskType.Station.name}</span>
+													</div>
 												</div>
+												<Badge
+													variant={taskType.isActive ? "success" : "secondary"}
+													className="font-mono text-[10px] uppercase"
+												>
+													{taskType.isActive ? "Active" : "Inactive"}
+												</Badge>
 											</div>
-											<Badge
-												variant={taskType.isActive ? "success" : "secondary"}
-												className="font-mono text-[10px] uppercase"
-											>
-												{taskType.isActive ? "Active" : "Inactive"}
-											</Badge>
-										</div>
 
-										{/* Data/Details */}
-										<div className="mb-4 min-h-[3rem] space-y-3 border-y border-border/40 bg-muted/20 py-3 px-2 -mx-2">
-											{taskType.description ? (
-												<p className="line-clamp-2 text-xs text-muted-foreground">
-													{taskType.description}
-												</p>
-											) : (
-												<p className="text-xs text-muted-foreground/50 italic">
-													No description provided.
-												</p>
-											)}
-											
-											{taskType.estimatedMinutesPerUnit && (
-												<div className="flex items-center justify-between border-t border-border/40 pt-2">
-													<span className="text-[10px] uppercase text-muted-foreground font-mono tracking-wider">
-														Est. Time / Unit
-													</span>
-													<span className="font-mono text-sm tabular-nums text-foreground">
-														{taskType.estimatedMinutesPerUnit}m
-													</span>
-												</div>
-											)}
-										</div>
+											<div className="-mx-2 mb-4 min-h-[3rem] space-y-3 border-y border-border/40 bg-muted/20 px-2 py-3">
+												{taskType.description ? (
+													<p className="line-clamp-2 text-xs text-muted-foreground">{taskType.description}</p>
+												) : (
+													<p className="text-xs italic text-muted-foreground/50">No description provided.</p>
+												)}
 
-										{/* Actions */}
-										<div className="mt-auto">
-											<Button size="sm" variant="outline" className="w-full text-xs">
-												Edit Configuration
-											</Button>
+												{taskType.estimatedMinutesPerUnit && (
+													<div className="flex items-center justify-between border-t border-border/40 pt-2">
+														<span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+															Est. Time / Unit
+														</span>
+														<span className="font-mono text-sm tabular-nums text-foreground">
+															{taskType.estimatedMinutesPerUnit}m
+														</span>
+													</div>
+												)}
+											</div>
+
+											<div className="mt-auto">
+												<Button size="sm" variant="outline" className="w-full text-xs">
+													Edit Configuration
+												</Button>
+											</div>
 										</div>
-									</div>
-								))}
-							</div>
+									))}
+								</div>
+							) : (
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead>
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+												<th className="p-4 text-left">Task Type</th>
+												<th className="p-4 text-left">Station</th>
+												<th className="p-4 text-left">Description</th>
+												<th className="p-4 text-left">Est. Time / Unit</th>
+												<th className="p-4 text-left">Status</th>
+												<th className="p-4 text-left">Actions</th>
+											</tr>
+										</thead>
+										<tbody>
+											{taskTypes.map((taskType) => (
+												<tr key={taskType.id} className="border-b border-border hover:bg-muted/50">
+													<td className="p-4">{taskType.name}</td>
+													<td className="p-4">{taskType.Station.name}</td>
+													<td className="p-4 text-muted-foreground">
+														{taskType.description || "No description provided."}
+													</td>
+													<td className="p-4">
+														{taskType.estimatedMinutesPerUnit ? `${taskType.estimatedMinutesPerUnit}m` : "-"}
+													</td>
+													<td className="p-4">
+														<Badge
+															variant={taskType.isActive ? "success" : "secondary"}
+															className="font-mono text-[10px] uppercase"
+														>
+															{taskType.isActive ? "Active" : "Inactive"}
+														</Badge>
+													</td>
+													<td className="p-4">
+														<Button size="sm" variant="outline">
+															Edit Configuration
+														</Button>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							)}
 						</CardBody>
 					</Card>
 				</TabPanel>

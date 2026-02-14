@@ -320,8 +320,26 @@ See `apps/web/guides/ROUTING_GUIDE.md` for detailed time clock routing informati
 #### TaskAssignment
 
 - Links employees to task types
+- Assignment source metadata (`MANAGER` or `WORKER`) is stored in `source`
+- Manager-created assignments store `assignedByUserId`; worker self-assignments leave it null
 - Tracks units completed
 - Performance calculations
+
+### Task Assignment Policy (Operational Config)
+
+`TASK_ASSIGNMENT_MODE` controls worker self-task actions from the floor UI and APIs.
+
+| Mode                   | Worker behavior                                                            | Manager behavior                                                        |
+| ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `MANAGER_ONLY`         | Workers cannot start/switch/end their own tasks.                           | Managers/admins can assign/switch/complete tasks from `/manager/tasks`. |
+| `SELF_ASSIGN_ALLOWED`  | Workers can start/switch/end their own tasks after clock-in.               | Managers/admins can still assign/switch/complete tasks.                 |
+| `SELF_ASSIGN_REQUIRED` | Workers can self-assign and are prompted to start a task while clocked in. | Managers/admins can still assign/switch/complete tasks for overrides.   |
+
+### Activity Terminology (Manager Surfaces)
+
+- **Clocked-in**: employee has an active `WORK` time log (`TimeLog.type = WORK` and `endTime = null`).
+- **Floor-active**: employee is either clocked-in, has an active task assignment, or both.
+- Use **floor-active** for manager operational visibility (`/manager/monitor`, `/manager/timesheets`), so task-only workers are still visible.
 
 #### PerformanceMetric
 
