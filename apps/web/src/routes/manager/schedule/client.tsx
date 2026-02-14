@@ -13,9 +13,9 @@ import {
 	Input,
 	Badge,
 } from "@monorepo/design-system";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "~/components/page-header";
-import type { ScheduleData } from "./actions";
+import type { ScheduleData, StationGapInsight } from "./actions";
 
 type Station = {
 	id: string;
@@ -48,6 +48,12 @@ const shiftColors: Record<string, string> = {
 	NIGHT: "border-l-4 border-l-zinc-600",
 };
 
+const severityClasses: Record<StationGapInsight["severity"], string> = {
+	ok: "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
+	watch: "border-amber-500/50 bg-amber-500/10 text-amber-700",
+	critical: "border-destructive/60 bg-destructive/10 text-destructive",
+};
+
 export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleViewProps) {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
@@ -62,6 +68,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 	const [selectedStation, setSelectedStation] = useState<string>("all");
 	const [view, setView] = useState<"grid" | "list">("grid");
 	const [search, setSearch] = useState("");
+	const [expandedStations, setExpandedStations] = useState<Record<string, boolean>>({});
 
 	const handleDayChange = (date: string) => {
 		const nextSearchParams = new URLSearchParams(searchParams);
@@ -123,6 +130,30 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 
 	const weekShiftTotal = schedule.days.reduce((sum, day) => sum + day.entries.length, 0);
 	const activeNowCount = activeEmployees.filter((log) => log.endTime === null).length;
+	const staffingRows = useMemo(() => {
+		const rows = schedule.staffing.stationGaps;
+		if (selectedStation === "all") {
+			return rows;
+		}
+		return rows.filter((row) => row.stationId === selectedStation);
+	}, [schedule.staffing.stationGaps, selectedStation]);
+
+	const selectedDayGapSummary = staffingRows.reduce(
+		(acc, row) => {
+			acc.planned += row.plannedHeadcount;
+			acc.actual += row.actualHeadcount;
+			acc.gap += row.gap;
+			return acc;
+		},
+		{ planned: 0, actual: 0, gap: 0 }
+	);
+
+	const toggleStationRecommendations = (stationId: string) => {
+		setExpandedStations((prev) => ({
+			...prev,
+			[stationId]: !prev[stationId],
+		}));
+	};
 
 	return (
 		<div className="space-y-6">
@@ -130,9 +161,18 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 				title="Weekly Schedule"
 				subtitle={`${weekRangeLabel} · ${weekShiftTotal} scheduled shifts`}
 				actions={
-					<div className="flex flex-wrap gap-2">
-						<Button variant="outline">Share Schedule</Button>
-						<Button variant="primary">Publish Changes</Button>
+					<div className="flex flex-wrap items-end gap-2">
+						<div className="flex flex-wrap gap-2">
+							<Button variant="outline" disabled>
+								Share Schedule (Unavailable)
+							</Button>
+							<Button variant="primary" disabled>
+								Publish Changes (Unavailable)
+							</Button>
+						</div>
+						<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
+							Controls disabled until publish pipeline is wired.
+						</p>
 					</div>
 				}
 			/>
@@ -218,6 +258,127 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							</p>
 							<p className="text-sm font-semibold text-muted-foreground font-mono">{selectedDayStats.open}</p>
 						</div>
+					</div>
+				</CardBody>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Planned vs Actual</CardTitle>
+				</CardHeader>
+				<CardBody className="space-y-4">
+					<div className="grid grid-cols-1 sm:grid-cols-3 gap-px border border-border/50 rounded-[2px] overflow-hidden bg-border/50">
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Planned ({format(parseISO(schedule.staffing.selectedDate), "EEE")})
+							</p>
+							<p className="text-sm font-semibold font-mono">{selectedDayGapSummary.planned}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Actual Active Now
+							</p>
+							<p className="text-sm font-semibold font-mono">{selectedDayGapSummary.actual}</p>
+						</div>
+						<div className="bg-muted/5 px-3 py-2">
+							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+								Gap
+							</p>
+							<p
+								className={`text-sm font-semibold font-mono ${
+									selectedDayGapSummary.gap > 0 ? "text-destructive" : "text-emerald-600"
+								}`}
+							>
+								{selectedDayGapSummary.gap > 0 ? `+${selectedDayGapSummary.gap}` : selectedDayGapSummary.gap}
+							</p>
+						</div>
+					</div>
+
+					<div className="space-y-2">
+						{staffingRows.map((row) => {
+							const isExpanded = expandedStations[row.stationId] ?? false;
+							return (
+								<div key={row.stationId} className="rounded-[2px] border border-border/50">
+									<div className="grid grid-cols-1 md:grid-cols-12 gap-2 p-3 items-center bg-muted/20">
+										<div className="md:col-span-4">
+											<p className="text-sm font-semibold">{row.stationName}</p>
+											<p className="text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+												Week Planned {row.weekPlannedHeadcount}
+											</p>
+										</div>
+										<div className="md:col-span-5 grid grid-cols-3 gap-2 text-center">
+											<div className="rounded-[2px] border border-border/50 px-2 py-1">
+												<p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+													Planned
+												</p>
+												<p className="font-mono font-semibold">{row.plannedHeadcount}</p>
+											</div>
+											<div className="rounded-[2px] border border-border/50 px-2 py-1">
+												<p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+													Actual
+												</p>
+												<p className="font-mono font-semibold">{row.actualHeadcount}</p>
+											</div>
+											<div className="rounded-[2px] border border-border/50 px-2 py-1">
+												<p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+													Gap
+												</p>
+												<p className="font-mono font-semibold">{row.gap > 0 ? `+${row.gap}` : row.gap}</p>
+											</div>
+										</div>
+										<div className="md:col-span-3 flex md:justify-end gap-2">
+											<Badge className={`border font-mono uppercase ${severityClasses[row.severity]}`}>
+												{row.severity === "ok" ? (
+													<CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+												) : (
+													<AlertTriangle className="h-3.5 w-3.5 mr-1" />
+												)}
+												{row.severity}
+											</Badge>
+											<Button
+												variant="outline"
+												size="xs"
+												onClick={() => toggleStationRecommendations(row.stationId)}
+												disabled={row.gap <= 0}
+											>
+												{isExpanded ? "Hide" : "Show"} Recs
+											</Button>
+										</div>
+									</div>
+
+									{isExpanded && row.gap > 0 && (
+										<div className="border-t border-border/50 bg-background p-3 space-y-2">
+											{row.recommendations.length === 0 ? (
+												<p className="text-xs text-muted-foreground">
+													No low-risk active candidates available right now.
+												</p>
+											) : (
+												row.recommendations.map((candidate) => (
+													<div
+														key={`${row.stationId}-${candidate.employeeId}`}
+														className="rounded-[2px] border border-border/50 p-2"
+													>
+														<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+															<div>
+																<p className="text-sm font-semibold">{candidate.employeeName}</p>
+																<p className="text-xs text-muted-foreground">{candidate.reason}</p>
+															</div>
+															<div className="text-[10px] uppercase tracking-[0.14em] font-mono text-muted-foreground">
+																{candidate.currentStationName}
+																{` · Day ${candidate.dailyHoursWorked.toFixed(1)}h / Week ${candidate.weeklyHoursWorked.toFixed(1)}h`}
+															</div>
+														</div>
+													</div>
+												))
+											)}
+										</div>
+									)}
+								</div>
+							);
+						})}
+						{staffingRows.length === 0 && (
+							<p className="text-sm text-muted-foreground">No staffing rows for current filters.</p>
+						)}
 					</div>
 				</CardBody>
 			</Card>

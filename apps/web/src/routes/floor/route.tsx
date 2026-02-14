@@ -5,7 +5,6 @@ import { PageHeader } from "~/components/page-header";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
-import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
 
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
@@ -30,44 +29,12 @@ type TaskOption = {
 export default async function Component() {
 	// Mobile redirect is now handled in entry.rsc.tsx
 
-	let employees: Employee[] = [];
-	let stations: Station[] = [];
-	let activeLogs: TimeLogWithRelations[] = [];
-	let activeBreaks: TimeLogWithRelations[] = [];
-	let completedLogs: TimeLogWithRelations[] = [];
-	let activeTasksByEmployee: ActiveTaskByEmployee = {};
-	let assignmentMode: TaskAssignmentMode = "MANAGER_ONLY";
-	let taskOptions: TaskOption[] = [];
-
 	await ensureOperationalDataSeeded();
-
-	employees = await db.employee.findMany({ orderBy: { name: "asc" } });
-	stations = await db.station.findMany({ orderBy: { name: "asc" } });
-
-	activeLogs = await db.timeLog.findMany({
-		where: {
-			endTime: null,
-			type: "WORK",
-			deletedAt: null,
-		},
-		include: { Employee: true, Station: true },
-		orderBy: { startTime: "desc" },
-	});
-
-	activeBreaks = await db.timeLog.findMany({
-		where: {
-			endTime: null,
-			type: "BREAK",
-			deletedAt: null,
-		},
-		include: { Employee: true, Station: true },
-		orderBy: { startTime: "desc" },
-	});
 
 	const thirtyDaysAgo = new Date();
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-	completedLogs = await db.timeLog.findMany({
+	const completedLogsPromise = db.timeLog.findMany({
 		where: {
 			endTime: { not: null },
 			startTime: { gte: thirtyDaysAgo },
@@ -77,31 +44,51 @@ export default async function Component() {
 		orderBy: { startTime: "desc" },
 	});
 
-	assignmentMode = await getTaskAssignmentMode();
+	const [employees, stations, activeLogs, activeBreaks, assignmentMode, activeTaskTypes, activeAssignments] = await Promise.all([
+		db.employee.findMany({ orderBy: { name: "asc" } }),
+		db.station.findMany({ orderBy: { name: "asc" } }),
+		db.timeLog.findMany({
+		where: {
+			endTime: null,
+			type: "WORK",
+			deletedAt: null,
+		},
+		include: { Employee: true, Station: true },
+		orderBy: { startTime: "desc" },
+		}),
+		db.timeLog.findMany({
+		where: {
+			endTime: null,
+			type: "BREAK",
+			deletedAt: null,
+		},
+		include: { Employee: true, Station: true },
+		orderBy: { startTime: "desc" },
+		}),
+		getTaskAssignmentMode(),
+		db.taskType.findMany({
+			where: { isActive: true },
+			include: { Station: true },
+			orderBy: [{ name: "asc" }],
+		}),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			include: {
+				TaskType: {
+					include: { Station: true },
+				},
+			},
+			orderBy: { startTime: "desc" },
+		}),
+	]);
 
-	const activeTaskTypes = await db.taskType.findMany({
-		where: { isActive: true },
-		include: { Station: true },
-		orderBy: [{ name: "asc" }],
-	});
-
-	taskOptions = activeTaskTypes.map((taskType) => ({
+	const taskOptions: TaskOption[] = activeTaskTypes.map((taskType) => ({
 		id: taskType.id,
 		name: taskType.name,
 		stationName: taskType.Station.name,
 	}));
 
-	const activeAssignments = await db.taskAssignment.findMany({
-		where: { endTime: null },
-		include: {
-			TaskType: {
-				include: { Station: true },
-			},
-		},
-		orderBy: { startTime: "desc" },
-	});
-
-	activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
 		if (acc[assignment.employeeId]) {
 			return acc;
 		}
@@ -129,7 +116,7 @@ export default async function Component() {
 					stations={stations}
 					activeLogs={activeLogs as TimeLogWithRelations[]}
 					activeBreaks={activeBreaks as TimeLogWithRelations[]}
-					completedLogs={completedLogs as TimeLogWithRelations[]}
+					completedLogsPromise={completedLogsPromise as Promise<TimeLogWithRelations[]>}
 					activeTasksByEmployee={activeTasksByEmployee}
 					assignmentMode={assignmentMode}
 					taskOptions={taskOptions}

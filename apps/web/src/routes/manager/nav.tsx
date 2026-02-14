@@ -9,6 +9,7 @@ export function getManagerNavLinks(user: User) {
 		{ to: "/manager/timesheets", label: "Timesheets", icon: "timesheets" as const },
 		{ to: "/manager/reports", label: "Reports", icon: "reports" as const },
 		{ to: "/manager/schedule", label: "Schedule", icon: "schedule" as const },
+		{ to: "/manager/exceptions", label: "Exceptions", icon: "clipboard" as const },
 		{ to: "/manager/tasks", label: "Tasks", icon: "tasks" as const },
 	];
 

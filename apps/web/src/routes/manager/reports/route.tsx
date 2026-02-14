@@ -1,6 +1,8 @@
 import { validateRequest } from "~/lib/auth";
 import { getRequest } from "~/lib/request-context";
 import { ReportsManager } from "./client";
+import { PageHeader } from "~/components/page-header";
+import { IndustrialSpinner } from "~/components/industrial-spinner";
 import {
 	getProductivityReport,
 	getTaskPerformanceReport,
@@ -9,8 +11,45 @@ import {
 	getEmployeeSummaryStats,
 } from "./actions";
 
+type ReportType = "productivity" | "tasks" | "stations" | "overtime" | "summary";
+
+function toIsoDate(date: Date): string {
+	return date.toISOString().split("T")[0];
+}
+
+function parseDateParam(value: unknown): Date | null {
+	if (typeof value !== "string" || value.length === 0) {
+		return null;
+	}
+
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return null;
+	}
+
+	return parsed;
+}
+
+function parseReportType(value: unknown): ReportType | null {
+	if (typeof value !== "string") {
+		return null;
+	}
+
+	if (
+		value === "productivity" ||
+		value === "tasks" ||
+		value === "stations" ||
+		value === "overtime" ||
+		value === "summary"
+	) {
+		return value;
+	}
+
+	return null;
+}
+
 // Create export route
-async function handleExport(reportStartDate: Date, reportEndDate: Date, reportType: string) {
+async function handleExport(reportStartDate: Date, reportEndDate: Date, reportType: ReportType) {
 	"use server";
 
 	let csv: string;
@@ -35,6 +74,13 @@ async function handleExport(reportStartDate: Date, reportEndDate: Date, reportTy
 			csv = convertToCSV(data);
 			break;
 		}
+		case "summary": {
+			const data = await getEmployeeSummaryStats(reportStartDate, reportEndDate);
+			csv = convertToCSV([
+				{ ...data, startDate: toIsoDate(reportStartDate), endDate: toIsoDate(reportEndDate) },
+			]);
+			break;
+		}
 		default:
 			throw new Response("Invalid report type", { status: 400 });
 	}
@@ -42,7 +88,7 @@ async function handleExport(reportStartDate: Date, reportEndDate: Date, reportTy
 	return new Response(csv, {
 		headers: {
 			"Content-Type": "text/csv",
-			"Content-Disposition": `attachment; filename="${reportType}-report-${reportStartDate.toISOString().split("T")[0]}-${reportEndDate.toISOString().split("T")[0]}.csv"`,
+			"Content-Disposition": `attachment; filename="${reportType}-report-${toIsoDate(reportStartDate)}-${toIsoDate(reportEndDate)}.csv"`,
 		},
 	});
 }
@@ -78,11 +124,7 @@ function formatCsvValue(value: unknown): string {
 }
 
 export default async function Component() {
-	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Not authenticated");
-	}
-
+	const authPromise = validateRequest();
 	const request = getRequest();
 	const query = request ? new URL(request.url).searchParams : new URLSearchParams();
 
@@ -90,34 +132,49 @@ export default async function Component() {
 	const endDateParam = query.get("endDate");
 	const startDateParam = query.get("startDate");
 	const parsedEndDate = endDateParam ? new Date(endDateParam) : null;
-	const endDate = parsedEndDate && !Number.isNaN(parsedEndDate.getTime()) ? parsedEndDate : new Date();
+	const endDate =
+		parsedEndDate && !Number.isNaN(parsedEndDate.getTime()) ? parsedEndDate : new Date();
 	const parsedStartDate = startDateParam ? new Date(startDateParam) : null;
 	const startDate =
 		parsedStartDate && !Number.isNaN(parsedStartDate.getTime())
 			? parsedStartDate
 			: new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-	// Fetch all data in parallel
-	const [productivityData, taskData, stationData, overtimeData, summaryStats] = await Promise.all([
-		getProductivityReport(startDate, endDate),
-		getTaskPerformanceReport(startDate, endDate),
-		getStationEfficiencyReport(startDate, endDate),
-		getOvertimeReport(startDate, endDate),
-		getEmployeeSummaryStats(startDate, endDate),
-	]);
+	const productivityDataPromise = getProductivityReport(startDate, endDate);
+	const taskPerformanceDataPromise = getTaskPerformanceReport(startDate, endDate);
+	const stationEfficiencyDataPromise = getStationEfficiencyReport(startDate, endDate);
+	const overtimeDataPromise = getOvertimeReport(startDate, endDate);
+	const summaryStatsPromise = getEmployeeSummaryStats(startDate, endDate);
+
+	const { user } = await authPromise;
+	if (!user) {
+		throw new Error("Not authenticated");
+	}
 
 	return (
-		<ReportsManager
-			initialStartDate={startDate.toISOString().split("T")[0]}
-			initialEndDate={endDate.toISOString().split("T")[0]}
-			initialData={{
-				productivityData,
-				taskPerformanceData: taskData,
-				stationEfficiencyData: stationData,
-				overtimeData: overtimeData,
-				summaryStats,
-			}}
-		/>
+		<div className="space-y-6 pb-12">
+			<PageHeader
+				title="Reports & Analytics"
+				subtitle="Operational intelligence and workforce metrics"
+				actions={
+					<div className="flex items-center gap-2 rounded-[2px] border border-border/50 bg-muted/20 px-3 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+						<IndustrialSpinner size="sm" />
+						Loading reports
+					</div>
+				}
+			/>
+
+			<ReportsManager
+				initialStartDate={startDate.toISOString().split("T")[0]}
+				initialEndDate={endDate.toISOString().split("T")[0]}
+				hideHeader={true}
+				productivityDataPromise={productivityDataPromise}
+				taskPerformanceDataPromise={taskPerformanceDataPromise}
+				stationEfficiencyDataPromise={stationEfficiencyDataPromise}
+				overtimeDataPromise={overtimeDataPromise}
+				summaryStatsPromise={summaryStatsPromise}
+			/>
+		</div>
 	);
 }
 
@@ -128,9 +185,21 @@ export async function action({ request }: { request: Request }) {
 	}
 
 	const formData = await request.formData();
-	const startDate = new Date(formData.get("startDate") as string);
-	const endDate = new Date(formData.get("endDate") as string);
-	const reportType = formData.get("type") as string;
+	const startDate = parseDateParam(formData.get("startDate"));
+	const endDate = parseDateParam(formData.get("endDate"));
+	const reportType = parseReportType(formData.get("type"));
+
+	if (!startDate || !endDate) {
+		return new Response("Invalid date range", { status: 400 });
+	}
+
+	if (startDate.getTime() > endDate.getTime()) {
+		return new Response("Start date must be before end date", { status: 400 });
+	}
+
+	if (!reportType) {
+		return new Response("Invalid report type", { status: 400 });
+	}
 
 	return handleExport(startDate, endDate, reportType);
 }

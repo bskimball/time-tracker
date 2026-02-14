@@ -366,7 +366,7 @@ This project uses **Pino** for high-performance structured logging:
 - **Request-scoped logging** - Automatic request ID correlation via AsyncLocalStorage
 - **Dual output in development** - Pretty console output + JSON file (`logs/dev.log`)
 - **Log rotation in production** - Daily rotation and 10MB size limits
-- **Database query logging** - Automatic Prisma query logging (debug level, dev only)
+- **Database query logging** - Optional Prisma query logging (debug level, enabled with `LOG_DB_QUERIES=true`)
 - **Security** - Automatic redaction of sensitive fields (passwords, tokens, cookies)
 - **Performance helpers** - Built-in timing and performance measurement utilities
 
@@ -415,7 +415,7 @@ app.get("/users", async (c) => {
 ### Environment Variables
 
 - `LOG_LEVEL` - Logging level: `debug`, `info`, `warn`, `error` (default: `debug` in dev, `info` in prod)
-- `LOG_DB_QUERIES` - Enable database query logging: `true`/`false` (default: `true` in dev, `false` in prod)
+- `LOG_DB_QUERIES` - Enable database query logging: `true`/`false` (default: `false` unless explicitly `true`)
 
 ### Helper Functions
 
@@ -437,6 +437,8 @@ Monorepo-wide progressive-disclosure agent docs live in `guides/agent/`.
 - **`apps/web/guides/LOGGING_GUIDE.md`** - Comprehensive logging patterns, best practices, and examples
 - **`apps/web/guides/ROUTING_GUIDE.md`** - Time clock routing, navigation, and route configuration
 - **`apps/web/guides/AUTHENTICATION_GUIDE.md`** - Authentication patterns and middleware in RSC Data mode
+- **`apps/web/guides/DATA_LOADING_STREAMING_GUIDE.md`** - Required staged Suspense streaming and shell-first loading patterns
+- **`apps/web/guides/DATA_LOADING_AUDIT.md`** - Current route-by-route compliance inventory for data loading
 - **`apps/web/guides/TESTING_GUIDE.md`** - Testing strategies, patterns, and examples
 - **`apps/web/guides/LINTING_GUIDE.md`** - Code quality, formatting standards, and ESLint configuration
 - **`apps/web/guides/examples/`** - Code examples and usage patterns
@@ -454,7 +456,7 @@ Agent entry point: `guides/agent/README.md`
 - Push schema changes without migrations: `npx prisma db push`
 - Open Prisma Studio: `npx prisma studio`
 - Import Prisma Client: `import { PrismaClient } from "@prisma/client"`
-- **Database queries are automatically logged** in development (see Logging section)
+- **Database query logging is opt-in** via `LOG_DB_QUERIES=true` (see Logging section)
 
 ## Design System (TailwindCSS + React Aria Components)
 

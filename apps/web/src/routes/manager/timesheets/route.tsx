@@ -21,19 +21,37 @@ export default async function Component() {
 	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 	const limit = 50;
 
+	const correctionHistoryPromise = getCorrectionHistory();
+	const logsDataPromise = getTimeLogsWithCorrections(
+		undefined,
+		undefined,
+		undefined,
+		true,
+		page,
+		limit
+	);
+	const activeEmployeeDataPromise = getActiveEmployeesForTimesheet();
+	const employeesPromise = getEmployeesForCorrection();
+	const stationsPromise = getStations();
+
 	// Fetch data in parallel
-	const [logsData, corrections, activeEmployeeData, employees, stations] = await Promise.all([
-		getTimeLogsWithCorrections(undefined, undefined, undefined, true, page, limit),
-		getCorrectionHistory(),
-		getActiveEmployeesForTimesheet(),
-		getEmployeesForCorrection(),
-		getStations(),
+	const [logsData, activeEmployeeData, employees, stations] = await Promise.all([
+		logsDataPromise,
+		activeEmployeeDataPromise,
+		employeesPromise,
+		stationsPromise,
 	]);
 
 	return (
 		<TimesheetManager
 			initialLogs={logsData.logs}
-			correctionHistory={corrections}
+			pagination={{
+				page,
+				limit,
+				total: logsData.total,
+				totalPages: logsData.totalPages,
+			}}
+			correctionHistoryPromise={correctionHistoryPromise}
 			clockedInEmployees={activeEmployeeData.clockedInEmployees}
 			floorActiveEmployees={activeEmployeeData.floorActiveEmployees}
 			employees={employees}

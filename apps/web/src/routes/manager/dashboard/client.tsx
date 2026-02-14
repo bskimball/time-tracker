@@ -1,6 +1,7 @@
 "use client";
 
-import { Link } from "react-router";
+import { Suspense, use, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useNavigation } from "react-router";
 import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
@@ -15,6 +16,7 @@ import {
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
+	LiaSyncSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -54,35 +56,58 @@ export function ManagerDashboard({
 	activeTasksByEmployee,
 	totalEmployees,
 	utilizationRate,
-	taskEfficiencyRate,
-	networkStatus,
-	alerts = [],
+	snapshotAt,
+	taskEfficiencyRatePromise,
+	networkStatusPromise,
+	alertsPromise,
 	user,
 }: {
 	activeTimeLogs: TimeLogWithEmployee[];
 	activeTasksByEmployee: ActiveTaskByEmployee;
 	totalEmployees: number;
 	utilizationRate: number;
-	taskEfficiencyRate: number;
-	networkStatus: "ONLINE" | "DEGRADED";
-	alerts?: AlertData[];
+	snapshotAt: Date;
+	taskEfficiencyRatePromise: Promise<number>;
+	networkStatusPromise: Promise<"ONLINE" | "DEGRADED">;
+	alertsPromise: Promise<AlertData[]>;
 	user: User;
 }) {
+	const navigate = useNavigate();
+	const navigation = useNavigation();
+	const isRefreshing = navigation.state !== "idle";
+	const [now, setNow] = useState(() => new Date());
+
+	useEffect(() => {
+		const interval = window.setInterval(() => {
+			setNow(new Date());
+		}, 30000);
+
+		return () => window.clearInterval(interval);
+	}, []);
+
+	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
+	const secondsSinceRefresh = Math.max(
+		0,
+		Math.floor((now.getTime() - snapshotDate.getTime()) / 1000),
+	);
+	const freshnessState = secondsSinceRefresh >= 120 ? "STALE" : "FRESH";
+
 	const formatDuration = (startTime: Date): string => {
-		const now = new Date();
 		const diff = now.getTime() - new Date(startTime).getTime();
 		const hours = Math.floor(diff / (1000 * 60 * 60));
 		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 		return `${hours}h ${minutes}m`;
 	};
 
-	const criticalAlerts = alerts.filter(
-		(a) => a.severity === "CRITICAL" || a.severity === "HIGH",
-	);
-	const warningAlerts = alerts.filter((a) => a.severity === "MEDIUM");
-	const activeAlertCount = alerts.filter((a) => a.severity !== "LOW").length;
 	const assignmentRows = Object.values(activeTasksByEmployee);
-	const activeSessionCount = assignmentRows.length > 0 ? assignmentRows.length : activeTimeLogs.length;
+	const activePersonnelIds = new Set<string>();
+	for (const log of activeTimeLogs) {
+		activePersonnelIds.add(log.employeeId);
+	}
+	for (const employeeId of Object.keys(activeTasksByEmployee)) {
+		activePersonnelIds.add(employeeId);
+	}
+	const activeSessionCount = activePersonnelIds.size;
 	const longestSessionStart =
 		assignmentRows.length > 0
 			? assignmentRows.reduce(
@@ -106,12 +131,36 @@ export function ManagerDashboard({
 					day: "numeric",
 				})}`}
 				actions={
-					<Link to="/manager/monitor">
-						<Button variant="outline" className="gap-2">
-							<LiaStopwatchSolid />
-							Floor Monitor
+					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
+						<div className="px-3 py-2 rounded-[2px] border border-border bg-card">
+							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+								Data Snapshot
+							</div>
+							<div className="font-data text-xs tabular-nums">
+								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+							</div>
+							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
+								{freshnessState === "STALE"
+									? "Data may be stale. Refresh recommended."
+									: "Data is current within the last 2 minutes."}
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							className="gap-2"
+							onPress={() => navigate(0)}
+							disabled={isRefreshing}
+						>
+							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
+							{isRefreshing ? "Refreshing" : "Refresh"}
 						</Button>
-					</Link>
+						<Link to="/manager/monitor">
+							<Button variant="outline" className="gap-2">
+								<LiaStopwatchSolid />
+								Floor Monitor
+							</Button>
+						</Link>
+					</div>
 				}
 			/>
 
@@ -120,7 +169,7 @@ export function ManagerDashboard({
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaUserClockSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Staff</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Personnel</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -130,23 +179,9 @@ export function ManagerDashboard({
 					</div>
 				</div>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaExclamationTriangleSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Alerts</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span
-							className={cn(
-								"text-3xl font-data font-medium tracking-tight transition-colors",
-								activeAlertCount > 0 ? "text-orange-600" : "text-emerald-600",
-							)}
-						>
-							{activeAlertCount}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Requires Action</span>
-					</div>
-				</div>
+				<Suspense fallback={<ActiveAlertsMetricFallback />}>
+					<ActiveAlertsMetric alertsPromise={alertsPromise} />
+				</Suspense>
 
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
@@ -171,7 +206,7 @@ export function ManagerDashboard({
 						</span>
 						<span className="text-sm text-muted-foreground font-data">Efficiency</span>
 					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Active staff / total workforce</p>
+					<p className="text-[10px] text-muted-foreground mt-2">Clocked in (WORK) or assigned task / total employees</p>
 				</div>
 			</section>
 
@@ -179,41 +214,17 @@ export function ManagerDashboard({
 				{/* Primary Column: Live Operations */}
 				<div className="xl:col-span-2 space-y-6">
 					{/* Critical Alerts Banner (Only shows if critical) */}
-					{criticalAlerts.length > 0 && (
-						<div className="space-y-2">
-							{criticalAlerts.map((alert) => (
-								<Alert
-									key={alert.id}
-									variant="error"
-									className="border-l-4 border-l-red-600 shadow-sm animate-pulse-slow"
-								>
-									<div className="flex justify-between items-start gap-4">
-										<div>
-											<h4 className="font-heading font-bold text-red-900 dark:text-red-100 flex items-center gap-2">
-												<LiaExclamationTriangleSolid /> {alert.title}
-											</h4>
-											<p className="mt-1 text-sm font-medium opacity-90">{alert.description}</p>
-										</div>
-										{alert.actionUrl && (
-											<Link to={alert.actionUrl}>
-												<Button size="xs" variant="outline" className="bg-background/50 hover:bg-background border-red-200 text-red-900">
-													Resolve
-												</Button>
-											</Link>
-										)}
-									</div>
-								</Alert>
-							))}
-						</div>
-					)}
+					<Suspense fallback={<CriticalAlertsFallback />}>
+						<CriticalAlertsBanner alertsPromise={alertsPromise} />
+					</Suspense>
 
 					<IndustrialPanel>
 						<div className="p-4 border-b border-border flex justify-between items-center bg-muted/20">
 							<h3 className="font-heading text-lg font-bold uppercase tracking-wide">
-								Active Sessions
+								Active Task Sessions
 							</h3>
 							<span className="text-xs font-data text-muted-foreground tabular-nums">
-								LIVE UPDATE • {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+								LAST UPDATED • {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
 							</span>
 						</div>
 						<div className="divide-y divide-border">
@@ -302,67 +313,9 @@ export function ManagerDashboard({
 
 				{/* Sidebar Column: Feed & Secondary Metrics */}
 				<div className="space-y-6">
-					<Card className="border-t-4 border-t-orange-500 shadow-sm">
-						<CardHeader className="pb-3 border-b border-border/50">
-							<div className="flex justify-between items-center">
-								<CardTitle className="text-base uppercase tracking-wider text-orange-700 dark:text-orange-400">
-									Operational Feed
-								</CardTitle>
-								<span className="text-xs font-data bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400 px-1.5 py-0.5 rounded-sm">
-									{activeAlertCount} ISSUES
-								</span>
-							</div>
-						</CardHeader>
-						<CardBody className="p-0">
-							{warningAlerts.length === 0 && criticalAlerts.length === 0 ? (
-								<div className="p-6 text-center text-muted-foreground">
-									<div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mb-2">
-										<LiaStopwatchSolid />
-									</div>
-									<p className="text-sm">All systems nominal.</p>
-								</div>
-							) : (
-								<div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
-									{[...criticalAlerts, ...warningAlerts].map((alert) => (
-										<div key={alert.id} className="p-4 hover:bg-muted/10 transition-colors">
-											<div className="flex justify-between items-start mb-1">
-												<span
-													className={cn(
-														"text-[10px] font-heading font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border",
-														alert.severity === "HIGH" || alert.severity === "CRITICAL"
-															? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900"
-															: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-900",
-													)}
-												>
-													{alert.type.replace("_", " ")}
-												</span>
-												<span className="text-[10px] text-muted-foreground font-data">
-													{new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-												</span>
-											</div>
-											<h5 className="text-sm font-medium mt-2 leading-tight">{alert.title}</h5>
-											<p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-												{alert.description}
-											</p>
-											{alert.actionUrl && (
-												<Link
-													to={alert.actionUrl}
-													className="inline-flex items-center text-xs font-medium text-primary mt-2 hover:underline"
-												>
-													Review <LiaArrowRightSolid className="ml-1" />
-												</Link>
-											)}
-										</div>
-									))}
-								</div>
-							)}
-							<div className="p-3 border-t border-border/50 bg-muted/20 text-center">
-								<Link to="/manager/reports" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-									View Full Alert History
-								</Link>
-							</div>
-						</CardBody>
-					</Card>
+					<Suspense fallback={<OperationalFeedFallback />}>
+						<OperationalFeedCard alertsPromise={alertsPromise} />
+					</Suspense>
 
 					<Card>
 						<CardHeader>
@@ -380,29 +333,28 @@ export function ManagerDashboard({
 										style={{ width: `${Math.min(100, utilizationRate)}%` }}
 									/>
 								</div>
-								<p className="text-[10px] text-muted-foreground mt-1">Current active workers vs total employees</p>
+								<p className="text-[10px] text-muted-foreground mt-1">Clocked in (WORK) or assigned task vs total employees</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
 									<span className="text-muted-foreground">Task Efficiency</span>
-									<span className="font-data font-medium">{taskEfficiencyRate.toFixed(1)}%</span>
+									<Suspense fallback={<InlineMetricFallback />}>
+										<TaskEfficiencyValue taskEfficiencyRatePromise={taskEfficiencyRatePromise} />
+									</Suspense>
 								</div>
 								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-									<div
-										className="h-full bg-primary rounded-full"
-										style={{ width: `${Math.min(100, taskEfficiencyRate)}%` }}
-									/>
+									<Suspense fallback={<ProgressFallback />}>
+										<TaskEfficiencyBar taskEfficiencyRatePromise={taskEfficiencyRatePromise} />
+									</Suspense>
 								</div>
 								<p className="text-[10px] text-muted-foreground mt-1">Average units/hour efficiency recorded today</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
 									<span className="text-muted-foreground">Network Status</span>
-									<span
-										className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}
-									>
-										{networkStatus}
-									</span>
+									<Suspense fallback={<InlineMetricFallback />}>
+										<NetworkStatusValue networkStatusPromise={networkStatusPromise} />
+									</Suspense>
 								</div>
 								<p className="text-[10px] text-muted-foreground">Derived from same-day manual correction error signals</p>
 							</div>
@@ -411,5 +363,220 @@ export function ManagerDashboard({
 				</div>
 			</div>
 		</div>
+	);
+}
+
+function TaskEfficiencyValue({ taskEfficiencyRatePromise }: { taskEfficiencyRatePromise: Promise<number> }) {
+	const taskEfficiencyRate = use(taskEfficiencyRatePromise);
+	return <span className="font-data font-medium">{taskEfficiencyRate.toFixed(1)}%</span>;
+}
+
+function TaskEfficiencyBar({ taskEfficiencyRatePromise }: { taskEfficiencyRatePromise: Promise<number> }) {
+	const taskEfficiencyRate = use(taskEfficiencyRatePromise);
+	return (
+		<div
+			className="h-full bg-primary rounded-full"
+			style={{ width: `${Math.min(100, taskEfficiencyRate)}%` }}
+		/>
+	);
+}
+
+function NetworkStatusValue({
+	networkStatusPromise,
+}: {
+	networkStatusPromise: Promise<"ONLINE" | "DEGRADED">;
+}) {
+	const networkStatus = use(networkStatusPromise);
+	return (
+		<span className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}>
+			{networkStatus}
+		</span>
+	);
+}
+
+function InlineMetricFallback() {
+	return <span className="h-4 w-16 rounded-[2px] bg-muted/60 animate-pulse" aria-hidden="true" />;
+}
+
+function ProgressFallback() {
+	return <div className="h-full w-1/2 bg-muted animate-pulse" aria-hidden="true" />;
+}
+
+function getAlertGroups(alerts: AlertData[]) {
+	const criticalAlerts = alerts.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH");
+	const warningAlerts = alerts.filter((alert) => alert.severity === "MEDIUM");
+	const activeAlertCount = alerts.filter((alert) => alert.severity !== "LOW").length;
+
+	return { criticalAlerts, warningAlerts, activeAlertCount };
+}
+
+function ActiveAlertsMetric({ alertsPromise }: { alertsPromise: Promise<AlertData[]> }) {
+	const alerts = use(alertsPromise);
+	const { activeAlertCount } = getAlertGroups(alerts);
+
+	return (
+		<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
+			<div className="flex items-center gap-2 text-muted-foreground mb-4">
+				<LiaExclamationTriangleSolid className="w-5 h-5" />
+				<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Alerts</span>
+			</div>
+			<div className="flex items-baseline gap-2">
+				<span
+					className={cn(
+						"text-3xl font-data font-medium tracking-tight transition-colors",
+						activeAlertCount > 0 ? "text-orange-600" : "text-emerald-600",
+					)}
+				>
+					{activeAlertCount}
+				</span>
+				<span className="text-sm text-muted-foreground font-data">Requires Action</span>
+			</div>
+		</div>
+	);
+}
+
+function ActiveAlertsMetricFallback() {
+	return (
+		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border-l-2 border-l-border/70 animate-pulse">
+			<div className="flex items-center gap-2 text-muted-foreground mb-4">
+				<LiaExclamationTriangleSolid className="w-5 h-5 opacity-70" />
+				<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Alerts</span>
+			</div>
+			<div className="h-8 w-24 bg-muted rounded-[2px]" />
+		</div>
+	);
+}
+
+function CriticalAlertsBanner({ alertsPromise }: { alertsPromise: Promise<AlertData[]> }) {
+	const alerts = use(alertsPromise);
+	const { criticalAlerts } = getAlertGroups(alerts);
+
+	if (criticalAlerts.length === 0) {
+		return null;
+	}
+
+	return (
+		<div className="space-y-2">
+			{criticalAlerts.map((alert) => (
+				<Alert key={alert.id} variant="error" className="border-l-4 border-l-red-600 shadow-sm animate-pulse-slow">
+					<div className="flex justify-between items-start gap-4">
+						<div>
+							<h4 className="font-heading font-bold text-red-900 dark:text-red-100 flex items-center gap-2">
+								<LiaExclamationTriangleSolid /> {alert.title}
+							</h4>
+							<p className="mt-1 text-sm font-medium opacity-90">{alert.description}</p>
+						</div>
+						{alert.actionUrl && (
+							<Link to={alert.actionUrl}>
+								<Button size="xs" variant="outline" className="bg-background/50 hover:bg-background border-red-200 text-red-900">
+									Resolve
+								</Button>
+							</Link>
+						)}
+					</div>
+				</Alert>
+			))}
+		</div>
+	);
+}
+
+function CriticalAlertsFallback() {
+	return (
+		<Alert variant="warning" className="border-l-4 border-l-primary/60">
+			<div className="flex items-center justify-between gap-3">
+				<p className="text-sm font-medium">Loading operational alerts...</p>
+				<span className="font-data text-xs text-muted-foreground">ANALYZING</span>
+			</div>
+		</Alert>
+	);
+}
+
+function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertData[]> }) {
+	const alerts = use(alertsPromise);
+	const { criticalAlerts, warningAlerts, activeAlertCount } = getAlertGroups(alerts);
+
+	return (
+		<Card className="border-t-4 border-t-orange-500 shadow-sm">
+			<CardHeader className="pb-3 border-b border-border/50">
+				<div className="flex justify-between items-center">
+					<CardTitle className="text-base uppercase tracking-wider text-orange-700 dark:text-orange-400">
+						Operational Feed
+					</CardTitle>
+					<span className="text-xs font-data bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400 px-1.5 py-0.5 rounded-sm">
+						{activeAlertCount} ISSUES
+					</span>
+				</div>
+			</CardHeader>
+			<CardBody className="p-0">
+				{warningAlerts.length === 0 && criticalAlerts.length === 0 ? (
+					<div className="p-6 text-center text-muted-foreground">
+						<div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mb-2">
+							<LiaStopwatchSolid />
+						</div>
+						<p className="text-sm">All systems nominal.</p>
+					</div>
+				) : (
+					<div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
+						{[...criticalAlerts, ...warningAlerts].map((alert) => (
+							<div key={alert.id} className="p-4 hover:bg-muted/10 transition-colors">
+								<div className="flex justify-between items-start mb-1">
+									<span
+										className={cn(
+											"text-[10px] font-heading font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border",
+											alert.severity === "HIGH" || alert.severity === "CRITICAL"
+												? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900"
+												: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-900",
+										)}
+									>
+										{alert.type.replace("_", " ")}
+									</span>
+									<span className="text-[10px] text-muted-foreground font-data">
+										{new Date(alert.createdAt).toLocaleTimeString([], {
+											hour: "2-digit",
+											minute: "2-digit",
+										})}
+									</span>
+								</div>
+								<h5 className="text-sm font-medium mt-2 leading-tight">{alert.title}</h5>
+								<p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.description}</p>
+								{alert.actionUrl && (
+									<Link
+										to={alert.actionUrl}
+										className="inline-flex items-center text-xs font-medium text-primary mt-2 hover:underline"
+									>
+										Review <LiaArrowRightSolid className="ml-1" />
+									</Link>
+								)}
+							</div>
+						))}
+					</div>
+				)}
+				<div className="p-3 border-t border-border/50 bg-muted/20 text-center">
+					<Link to="/manager/reports" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+						View Full Alert History
+					</Link>
+				</div>
+			</CardBody>
+		</Card>
+	);
+}
+
+function OperationalFeedFallback() {
+	return (
+		<Card className="border-t-4 border-t-orange-500 shadow-sm">
+			<CardHeader className="pb-3 border-b border-border/50">
+				<div className="flex justify-between items-center">
+					<CardTitle className="text-base uppercase tracking-wider text-orange-700 dark:text-orange-400">
+						Operational Feed
+					</CardTitle>
+					<span className="text-xs font-data bg-muted px-1.5 py-0.5 rounded-sm">...</span>
+				</div>
+			</CardHeader>
+			<CardBody className="p-4 space-y-3">
+				<div className="h-3 w-2/3 bg-muted rounded-[2px] animate-pulse" />
+				<div className="h-3 w-full bg-muted rounded-[2px] animate-pulse" />
+				<div className="h-3 w-5/6 bg-muted rounded-[2px] animate-pulse" />
+			</CardBody>
+		</Card>
 	);
 }

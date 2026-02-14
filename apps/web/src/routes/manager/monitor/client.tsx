@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useNavigation } from "react-router";
 import {
 	Card,
 	Checkbox,
@@ -16,6 +17,7 @@ import {
 	LiaChartPieSolid,
 	LiaExclamationTriangleSolid,
 	LiaStopwatchSolid,
+	LiaSyncSolid,
 } from "react-icons/lia";
 
 type ActiveTimeLog = {
@@ -47,6 +49,7 @@ type Station = {
 interface FloorMonitorProps {
 	activeLogs: ActiveTimeLog[];
 	stations: Station[];
+	snapshotAt: Date;
 	activeTasksByEmployee: Record<
 		string,
 		{
@@ -60,7 +63,15 @@ interface FloorMonitorProps {
 	>;
 }
 
-export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: FloorMonitorProps) {
+export function FloorMonitor({
+	activeLogs,
+	stations,
+	activeTasksByEmployee,
+	snapshotAt,
+}: FloorMonitorProps) {
+	const navigate = useNavigate();
+	const navigation = useNavigation();
+	const isRefreshing = navigation.state !== "idle";
 	const [currentTime, setCurrentTime] = useState(new Date());
 	const [autoRefresh, setAutoRefresh] = useState(true);
 	const [refreshInterval, setRefreshInterval] = useState(30); // seconds
@@ -74,14 +85,44 @@ export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: Fl
 		return () => clearInterval(interval);
 	}, []);
 
-	// Auto-refresh simulation
 	useEffect(() => {
 		if (!autoRefresh) return;
-		const interval = setInterval(() => {
-			// In production this can trigger route revalidation.
-		}, refreshInterval * 1000);
+
+		const intervalInMs = Math.max(10, refreshInterval) * 1000;
+		const interval = window.setInterval(() => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+			navigate(0);
+		}, intervalInMs);
+
 		return () => clearInterval(interval);
-	}, [autoRefresh, refreshInterval]);
+	}, [autoRefresh, refreshInterval, navigate, isRefreshing]);
+
+	useEffect(() => {
+		if (!autoRefresh) {
+			return;
+		}
+
+		const handleVisibilityChange = () => {
+			if (!document.hidden && !isRefreshing) {
+				navigate(0);
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => {
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, [autoRefresh, isRefreshing, navigate]);
+
+	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
+	const secondsSinceRefresh = Math.max(
+		0,
+		Math.floor((currentTime.getTime() - snapshotDate.getTime()) / 1000),
+	);
+	const staleThresholdSeconds = autoRefresh ? Math.max(refreshInterval * 2, 20) : 120;
+	const freshnessState = secondsSinceRefresh >= staleThresholdSeconds ? "STALE" : "FRESH";
 
 	const calculateDuration = (startTime: Date): string => {
 		const diff = currentTime.getTime() - new Date(startTime).getTime();
@@ -165,19 +206,41 @@ export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: Fl
 			{/* Header */}
 			<PageHeader
 				title="Floor Monitor"
-				subtitle="Live Operations Control"
+				subtitle="Operations Monitor"
 				actions={
 					<div className="flex items-center gap-4">
+						<div className="px-3 py-2 rounded-[2px] border border-border bg-card" aria-live="polite">
+							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+								Data Snapshot
+							</div>
+							<div className="font-mono text-xs tabular-nums">
+								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+							</div>
+							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
+								{freshnessState === "STALE"
+									? "Data is stale for selected cadence."
+									: "Data is within expected refresh window."}
+							</p>
+						</div>
 						<div className="text-right mr-4" aria-live="polite">
 							<div className="font-mono text-xl font-bold tracking-tighter tabular-nums">
 								{currentTime.toLocaleTimeString([], { hour12: false })}
 							</div>
 						</div>
+						<button
+							type="button"
+							onClick={() => navigate(0)}
+							disabled={isRefreshing}
+							className="inline-flex h-10 items-center gap-2 rounded-[2px] border border-border bg-card px-3 text-xs font-heading uppercase tracking-wider hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+							{isRefreshing ? "Refreshing" : "Refresh"}
+						</button>
 						<div className="flex items-center gap-3 bg-muted/50 p-1.5 rounded-[2px] border border-border">
 							<Checkbox
 								isSelected={autoRefresh}
 								onChange={setAutoRefresh}
-								label="Live"
+								label="Auto refresh"
 							/>
 							<div className="h-4 w-px bg-border" />
 							<Select
@@ -217,6 +280,7 @@ export function FloorMonitor({ activeLogs, stations, activeTasksByEmployee }: Fl
 							{activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
 						</span>
 					</div>
+					<p className="text-[10px] text-muted-foreground mt-2">Clocked in (WORK) or assigned task</p>
 				</div>
 
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
