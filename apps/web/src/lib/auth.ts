@@ -3,10 +3,17 @@ import { redirect } from "react-router";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 import type { Session, User, User_role } from "@prisma/client";
-import { getRequest } from "./request-context";
+import {
+	deleteRequestCacheValue,
+	getRequest,
+	getRequestCacheValue,
+	setRequestCacheValue,
+} from "./request-context";
 
 const SESSION_COOKIE_NAME = "session";
 const SESSION_EXPIRY_DAYS = 30;
+const VALIDATE_REQUEST_CACHE_KEY = "auth:validate-request";
+const requestValidationCache = new WeakMap<Request, Promise<SessionValidationResult>>();
 
 export function generateSessionToken(): string {
 	const bytes = new Uint8Array(20);
@@ -117,12 +124,47 @@ export async function validateRequest(request?: Request): Promise<SessionValidat
 }
 
 export async function validateRequestWithRequest(req?: Request): Promise<SessionValidationResult> {
-	const token = getSessionToken(req);
-	if (!token) {
+	if (!req) {
 		return { session: null, user: null };
 	}
 
-	return validateSessionToken(token);
+	const contextRequest = getRequest();
+	const canUseContextCache = contextRequest !== undefined && contextRequest === req;
+
+	if (canUseContextCache) {
+		const cached = getRequestCacheValue<Promise<SessionValidationResult>>(VALIDATE_REQUEST_CACHE_KEY);
+		if (cached) {
+			return cached;
+		}
+	} else {
+		const cached = requestValidationCache.get(req);
+		if (cached) {
+			return cached;
+		}
+	}
+
+	const validationPromise = (async (): Promise<SessionValidationResult> => {
+		const token = getSessionToken(req);
+		if (!token) {
+			return { session: null, user: null };
+		}
+
+		return validateSessionToken(token);
+	})();
+
+	if (canUseContextCache) {
+		setRequestCacheValue(VALIDATE_REQUEST_CACHE_KEY, validationPromise);
+		validationPromise.catch(() => {
+			deleteRequestCacheValue(VALIDATE_REQUEST_CACHE_KEY);
+		});
+	} else {
+		requestValidationCache.set(req, validationPromise);
+		validationPromise.catch(() => {
+			requestValidationCache.delete(req);
+		});
+	}
+
+	return validationPromise;
 }
 
 export async function requireUser(request?: Request): Promise<User> {

@@ -8,15 +8,15 @@ import { validateRequest } from "../../lib/auth";
 // Fetch data directly in Server Component instead of using loader
 // This is the correct pattern for React Server Components
 export default async function Component() {
-	// Get authenticated user from middleware
-	// Middleware ensures user is authenticated before this component renders
-	const { user } = await validateRequest();
+	const [{ user }, todos] = await Promise.all([
+		validateRequest(),
+		db.todo.findMany({
+			orderBy: { createdAt: "desc" },
+		}),
+	]);
+
 	const headerName = user?.name ?? user?.email ?? null;
 	const headerRole = user?.role ?? "USER";
-
-	const todos = await db.todo.findMany({
-		orderBy: { createdAt: "desc" },
-	});
 
 	return (
 		<>

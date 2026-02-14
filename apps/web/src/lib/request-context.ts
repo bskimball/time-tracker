@@ -7,6 +7,7 @@ interface RequestContext {
 	request: Request;
 	logger: Logger;
 	requestId: string;
+	cache: Map<string, unknown>;
 }
 
 const requestContext = new AsyncLocalStorage<RequestContext>();
@@ -41,6 +42,32 @@ export function getRequestId(): string | undefined {
 }
 
 /**
+ * Read request-scoped memoized data
+ * @param key - Cache key
+ * @returns Cached value or undefined when missing/outside request context
+ */
+export function getRequestCacheValue<T>(key: string): T | undefined {
+	return requestContext.getStore()?.cache.get(key) as T | undefined;
+}
+
+/**
+ * Write request-scoped memoized data
+ * @param key - Cache key
+ * @param value - Value to cache for this request only
+ */
+export function setRequestCacheValue<T>(key: string, value: T): void {
+	requestContext.getStore()?.cache.set(key, value);
+}
+
+/**
+ * Delete request-scoped memoized data
+ * @param key - Cache key
+ */
+export function deleteRequestCacheValue(key: string): void {
+	requestContext.getStore()?.cache.delete(key);
+}
+
+/**
  * Run a callback within request context with automatic logging setup
  * @param request - The incoming request
  * @param callback - The function to execute within the request context
@@ -66,6 +93,7 @@ export function runWithRequest<T>(
 		request,
 		logger,
 		requestId,
+		cache: new Map(),
 	};
 
 	const start = Date.now();

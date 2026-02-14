@@ -28,7 +28,14 @@ type TaskOption = {
 };
 
 export default async function Component() {
-	const [employees, stations, activeLogs, activeBreaks, completedLogs, activeAssignments] =
+	const completedLogsPromise = db.timeLog.findMany({
+		where: { endTime: { not: null }, deletedAt: null },
+		include: { Employee: true, Station: true },
+		orderBy: { startTime: "desc" },
+		take: 50,
+	});
+
+	const [employees, stations, activeLogs, activeBreaks, activeAssignments, assignmentMode, activeTaskTypes] =
 		await Promise.all([
 		db.employee.findMany({ orderBy: { name: "asc" } }),
 		db.station.findMany({ orderBy: { name: "asc" } }),
@@ -42,12 +49,6 @@ export default async function Component() {
 			include: { Employee: true, Station: true },
 			orderBy: { startTime: "desc" },
 		}),
-		db.timeLog.findMany({
-			where: { endTime: { not: null }, deletedAt: null },
-			include: { Employee: true, Station: true },
-			orderBy: { startTime: "desc" },
-			take: 50,
-		}),
 		db.taskAssignment.findMany({
 			where: { endTime: null },
 			include: {
@@ -57,9 +58,6 @@ export default async function Component() {
 			},
 			orderBy: { startTime: "desc" },
 		}),
-	]);
-
-	const [assignmentMode, activeTaskTypes] = await Promise.all([
 		getTaskAssignmentMode(),
 		db.taskType.findMany({
 			where: { isActive: true },
@@ -95,7 +93,7 @@ export default async function Component() {
 			stations={stations}
 			activeLogs={activeLogs as TimeLogWithRelations[]}
 			activeBreaks={activeBreaks as TimeLogWithRelations[]}
-			completedLogs={completedLogs as TimeLogWithRelations[]}
+			completedLogsPromise={completedLogsPromise as Promise<TimeLogWithRelations[]>}
 			activeTasksByEmployee={activeTasksByEmployee}
 			assignmentMode={assignmentMode as TaskAssignmentMode}
 			taskOptions={taskOptions}

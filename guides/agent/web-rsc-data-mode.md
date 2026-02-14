@@ -39,6 +39,24 @@ Prefer this route structure:
 - `apps/web/src/routes/<route>/client.tsx` — Client Components (`"use client"`)
 - `apps/web/src/routes/<route>/actions.ts` — Server Actions (`"use server"`)
 
+## Data loading standard (shell first + staged streaming)
+
+When a route is data-heavy, use this default approach:
+
+- Render `PageHeader` and controls immediately.
+- Start independent promises early.
+- Split content into multiple `Suspense` boundaries by display block.
+- Resolve deferred data per block (server async components or client `use(promise)` blocks).
+- Use localized fallback/error states so one failed block does not blank the whole page.
+
+Avoid this anti-pattern:
+
+- One large route-level `await Promise.all([...])` that blocks the entire page render.
+
+Reference guide:
+
+- `apps/web/guides/DATA_LOADING_STREAMING_GUIDE.md`
+
 ## Legacy notes
 
 - If you encounter an existing `loader` in older code, treat it as legacy and migrate toward async Server Component patterns when you’re already working in that area.

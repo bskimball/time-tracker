@@ -24,9 +24,8 @@ const globalForPrisma = globalThis as unknown as {
 // Create a dedicated logger for database operations
 const dbLogger = createLogger({ component: "prisma" });
 
-// Determine log levels based on environment
-const isDevelopment = process.env.NODE_ENV === "development";
-const logQuery = process.env.LOG_DB_QUERIES === "true" || isDevelopment;
+// Query logging is opt-in to reduce startup overhead/noise in development
+const logQuery = process.env.LOG_DB_QUERIES === "true";
 
 // Create connection pool for the adapter
 // Use DATABASE_URL if provided, otherwise construct from individual POSTGRES_* variables
@@ -63,7 +62,7 @@ export const db =
 		],
 	});
 
-// Log database queries (only in development or when explicitly enabled)
+// Log database queries only when explicitly enabled
 if (logQuery) {
 	// @ts-expect-error - Prisma event types are not fully exposed
 	db.$on("query", (e: PrismaQueryEvent) => {

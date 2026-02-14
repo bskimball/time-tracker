@@ -10,80 +10,78 @@ import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 export default async function Component() {
 	await ensureOperationalDataSeeded();
 
-	// Get required data for kiosk
-	const rawEmployees = await db.employee.findMany({
-		select: {
-			id: true,
-			name: true,
-			email: true,
-			pinHash: true,
-			lastStationId: true,
-			dailyHoursLimit: true,
-			weeklyHoursLimit: true,
-			createdAt: true,
-		},
-		orderBy: { name: "asc" },
-	});
-
-	const rawStations = await db.station.findMany({
-		select: {
-			id: true,
-			name: true,
-			createdAt: true,
-		},
-		orderBy: { name: "asc" },
-	});
-
-	const rawActiveLogs = await db.timeLog.findMany({
-		where: {
-			endTime: null,
-			type: "WORK",
-			deletedAt: null,
-		},
-		select: {
-			id: true,
-			employeeId: true,
-			stationId: true,
-			type: true,
-			startTime: true,
-			endTime: true,
-			note: true,
-			deletedAt: true,
-			createdAt: true,
-			updatedAt: true,
-			Employee: {
-				select: {
-					id: true,
-					name: true,
-					email: true,
-					pinHash: true,
-					lastStationId: true,
-					dailyHoursLimit: true,
-					weeklyHoursLimit: true,
-					createdAt: true,
+	const [rawEmployees, rawStations, rawActiveLogs, activeAssignments] = await Promise.all([
+		db.employee.findMany({
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				pinHash: true,
+				lastStationId: true,
+				dailyHoursLimit: true,
+				weeklyHoursLimit: true,
+				createdAt: true,
+			},
+			orderBy: { name: "asc" },
+		}),
+		db.station.findMany({
+			select: {
+				id: true,
+				name: true,
+				createdAt: true,
+			},
+			orderBy: { name: "asc" },
+		}),
+		db.timeLog.findMany({
+			where: {
+				endTime: null,
+				type: "WORK",
+				deletedAt: null,
+			},
+			select: {
+				id: true,
+				employeeId: true,
+				stationId: true,
+				type: true,
+				startTime: true,
+				endTime: true,
+				note: true,
+				deletedAt: true,
+				createdAt: true,
+				updatedAt: true,
+				Employee: {
+					select: {
+						id: true,
+						name: true,
+						email: true,
+						pinHash: true,
+						lastStationId: true,
+						dailyHoursLimit: true,
+						weeklyHoursLimit: true,
+						createdAt: true,
+					},
+				},
+				Station: {
+					select: {
+						id: true,
+						name: true,
+						createdAt: true,
+					},
 				},
 			},
-			Station: {
-				select: {
-					id: true,
-					name: true,
-					createdAt: true,
+			orderBy: { startTime: "desc" },
+		}),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			include: {
+				Employee: true,
+				TaskType: {
+					include: { Station: true },
 				},
 			},
-		},
-		orderBy: { startTime: "desc" },
-	});
-
-	const activeAssignments = await db.taskAssignment.findMany({
-		where: { endTime: null },
-		include: {
-			Employee: true,
-			TaskType: {
-				include: { Station: true },
-			},
-		},
-		orderBy: { startTime: "desc" },
-	});
+			orderBy: { startTime: "desc" },
+		}),
+	]);
 
 	const activeTasksByEmployee = activeAssignments.reduce<
 		Record<string, { assignmentId: string; taskTypeName: string; stationName: string | null }>

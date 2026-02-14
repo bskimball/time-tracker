@@ -36,6 +36,7 @@ import {
 	LiaChartLineSolid,
 	LiaCalendarAltSolid,
 } from "react-icons/lia";
+import { Suspense } from "react";
 
 type TimeRange = "today" | "week" | "month";
 
@@ -52,14 +53,20 @@ function getTimeRangeFromRequest(): TimeRange {
 }
 
 export default async function Component() {
-	await validateRequest();
-
+	const authPromise = validateRequest();
 	const timeRange = getTimeRangeFromRequest();
+	const alertsPromise = getExecutiveAlerts();
 
-	const [{ kpis, laborCost }, stationData, alerts, trendData, kpiThresholds] = await Promise.all([
+	const [
+		,
+		{ kpis, laborCost },
+		stationData,
+		trendData,
+		kpiThresholds,
+	] = await Promise.all([
+		authPromise,
 		getExecutiveDashboardKPIs(timeRange),
 		getStationPerformanceData(timeRange),
-		getExecutiveAlerts(),
 		getPerformanceTrendData("productivity", timeRange),
 		getExecutiveKpiThresholds(),
 	]);
@@ -144,7 +151,9 @@ export default async function Component() {
 					subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
 					actions={
 						<div className="flex items-center gap-3">
-							<AlertsPopover alerts={alerts} />
+							<Suspense fallback={<AlertsPopoverFallback />}>
+								<ExecutiveAlertsPopover alertsPromise={alertsPromise} />
+							</Suspense>
 							<RefreshButton action={refreshDashboardCache} />
 						</div>
 					}
@@ -456,6 +465,24 @@ export default async function Component() {
 					))}
 				</div>
 			</section>
+		</div>
+	);
+}
+
+async function ExecutiveAlertsPopover({
+	alertsPromise,
+}: {
+	alertsPromise: Promise<Awaited<ReturnType<typeof getExecutiveAlerts>>>;
+}) {
+	const alerts = await alertsPromise;
+	return <AlertsPopover alerts={alerts} />;
+}
+
+function AlertsPopoverFallback() {
+	return (
+		<div className="flex items-center gap-2 px-3 py-1.5 rounded-[2px] border border-border bg-muted/20 text-xs font-mono text-muted-foreground uppercase tracking-wide">
+			<span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-pulse" />
+			Analyzing alerts
 		</div>
 	);
 }

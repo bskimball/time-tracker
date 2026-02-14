@@ -1,12 +1,14 @@
 "use client";
 
 import React, {
+	Suspense,
 	useActionState,
 	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
+	use,
 	useOptimistic,
 } from "react";
 import { useFormStatus } from "react-dom";
@@ -1288,6 +1290,7 @@ export function TimeTracking({
 	activeLogs,
 	activeBreaks,
 	completedLogs,
+	completedLogsPromise,
 	activeTasksByEmployee,
 	assignmentMode,
 	taskOptions,
@@ -1296,7 +1299,8 @@ export function TimeTracking({
 	stations: Station[];
 	activeLogs: TimeLogWithRelations[];
 	activeBreaks: TimeLogWithRelations[];
-	completedLogs: TimeLogWithRelations[];
+	completedLogs?: TimeLogWithRelations[];
+	completedLogsPromise?: Promise<TimeLogWithRelations[]>;
 	activeTasksByEmployee?: Record<
 		string,
 		{ assignmentId: string; taskTypeName: string; stationName: string | null }
@@ -1391,7 +1395,14 @@ export function TimeTracking({
 					taskOptions={taskOptions}
 				/>
 			</div>
-			<TimeHistory completedLogs={completedLogs} stations={stations} employees={employees} />
+			<Suspense fallback={<TimeHistoryFallback />}>
+				<DeferredTimeHistory
+					completedLogs={completedLogs}
+					completedLogsPromise={completedLogsPromise}
+					stations={stations}
+					employees={employees}
+				/>
+			</Suspense>
 			{notifications.length > 0 && (
 				<div className="fixed bottom-4 right-4 space-y-2 z-50">
 					{notifications.map((note) => (
@@ -1408,5 +1419,40 @@ export function TimeTracking({
 				</div>
 			)}
 		</KioskContext.Provider>
+	);
+}
+
+function DeferredTimeHistory({
+	completedLogs,
+	completedLogsPromise,
+	stations,
+	employees,
+}: {
+	completedLogs?: TimeLogWithRelations[];
+	completedLogsPromise?: Promise<TimeLogWithRelations[]>;
+	stations: Station[];
+	employees: Employee[];
+}) {
+	const resolvedCompletedLogs = completedLogsPromise
+		? use(completedLogsPromise)
+		: (completedLogs ?? []);
+
+	return <TimeHistory completedLogs={resolvedCompletedLogs} stations={stations} employees={employees} />;
+}
+
+function TimeHistoryFallback() {
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Time History</CardTitle>
+			</CardHeader>
+			<CardBody>
+				<div className="space-y-3">
+					<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+					<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+					<div className="h-48 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+				</div>
+			</CardBody>
+		</Card>
 	);
 }

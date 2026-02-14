@@ -61,7 +61,7 @@ Server Components / API Handlers
     ├─ logError() → Log errors with context
     ↓
 Database (Prisma)
-    └─ Automatic query logging (debug level)
+    └─ Optional query logging (debug level, when enabled)
 ```
 
 ## Configuration
@@ -90,7 +90,7 @@ LOG_DB_QUERIES=true          # Enable database query logging
 
 | Environment | Console Output | File Output               | Query Logging |
 | ----------- | -------------- | ------------------------- | ------------- |
-| Development | Pretty print   | `logs/dev.log` (JSON)     | Enabled       |
+| Development | Pretty print   | `logs/dev.log` (JSON)     | Disabled (opt-in) |
 | Production  | Warnings only  | `logs/app.log` + rotation | Disabled      |
 | Test        | Silent         | None                      | Disabled      |
 
@@ -309,10 +309,10 @@ export async function runBackgroundJob() {
 
 ### 8. Database Query Logging
 
-Database queries are automatically logged in development (configured in `apps/web/src/lib/db.ts`):
+Database query logging is disabled by default and can be enabled with `LOG_DB_QUERIES=true` (configured in `apps/web/src/lib/db.ts`):
 
 ```typescript
-// Queries are automatically logged at debug level
+// When LOG_DB_QUERIES=true, queries are logged at debug level
 const employees = await db.employee.findMany();
 ```
 
@@ -334,7 +334,8 @@ const employees = await db.employee.findMany();
 
 ```bash
 # In .env
-LOG_DB_QUERIES=true   # Enable in production (usually false)
+LOG_DB_QUERIES=true    # Enable query logging (all environments)
+LOG_DB_QUERIES=false   # Disable query logging (default)
 ```
 
 ## Log Rotation
@@ -784,7 +785,7 @@ Use CloudWatch agent:
 | Multi-step timing       | `createTimer(operation)`        |
 | Background jobs         | `createLogger({ component })`   |
 | API routes              | `c.var.logger` (Hono context)   |
-| Database queries        | Automatic (configured in db.ts) |
+| Database queries        | Opt-in via `LOG_DB_QUERIES=true` |
 
 ### Key Files
 
