@@ -13,18 +13,29 @@ import {
 } from "./actions";
 
 export default async function Component() {
-	const { user } = await validateRequest();
+	const HISTORY_WINDOW_DAYS = 30;
+	const historyStartDate = new Date();
+	historyStartDate.setDate(historyStartDate.getDate() - HISTORY_WINDOW_DAYS);
+
+	const authPromise = validateRequest();
+
+	const taskHistoryPromise = getTaskHistory(historyStartDate);
+	const taskTypesPromise = getTaskTypes();
+	const activeAssignmentsPromise = getActiveTaskAssignments();
+	const employeesPromise = getEmployees();
+	const stationsPromise = getStations();
+
+	const { user } = await authPromise;
 	if (!user) {
 		throw new Error("Not authenticated");
 	}
 
 	// Fetch all necessary data
-	const [taskTypes, activeAssignments, employees, stations, taskHistory] = await Promise.all([
-		getTaskTypes(),
-		getActiveTaskAssignments(),
-		getEmployees(),
-		getStations(),
-		getTaskHistory(),
+	const [taskTypes, activeAssignments, employees, stations] = await Promise.all([
+		taskTypesPromise,
+		activeAssignmentsPromise,
+		employeesPromise,
+		stationsPromise,
 	]);
 
 	return (
@@ -36,13 +47,13 @@ export default async function Component() {
 			assignTaskAction={assignTaskAction}
 			completeTaskAction={completeTaskAction}
 			switchTaskAction={switchTaskAction}
-			taskHistory={taskHistory}
+			taskHistoryPromise={taskHistoryPromise}
+			historyWindowDays={HISTORY_WINDOW_DAYS}
 		/>
 	);
 }
 
 export async function action({ request }: { request: Request }) {
-
 	const { user } = await validateRequest();
 	if (!user) {
 		return new Response("Unauthorized", { status: 401 });
@@ -73,8 +84,8 @@ export async function action({ request }: { request: Request }) {
 		return new Response(
 			JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
 			{
-			status: 400,
-			headers: { "Content-Type": "application/json" },
+				status: 400,
+				headers: { "Content-Type": "application/json" },
 			}
 		);
 	}

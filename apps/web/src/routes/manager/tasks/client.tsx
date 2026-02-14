@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useState, useActionState, useOptimistic } from "react";
+import {
+	Component as ReactComponent,
+	Suspense,
+	use,
+	useActionState,
+	useEffect,
+	useOptimistic,
+	useState,
+} from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
 	Button,
@@ -24,6 +33,42 @@ import { TaskTypeForm } from "./task-type-form";
 
 type TaskManagerTab = "assignments" | "history" | "types";
 type TaskDisplayMode = "grid" | "list";
+const DEFAULT_HISTORY_WINDOW_DAYS = 30;
+
+type TaskHistorySummaryMetrics = {
+	totalInWindow: number;
+	completedInWindow: number;
+	completionRatePct: number;
+	averageDurationHours: number;
+};
+
+function computeTaskHistorySummaryMetrics(
+	taskHistory: TaskAssignment[]
+): TaskHistorySummaryMetrics {
+	const totalInWindow = taskHistory.length;
+	const completedAssignments = taskHistory.filter((assignment) => assignment.endTime);
+	const completedInWindow = completedAssignments.length;
+
+	const completionRatePct =
+		totalInWindow > 0 ? Math.round((completedInWindow / totalInWindow) * 100) : 0;
+
+	const totalDurationMs = completedAssignments.reduce((total, assignment) => {
+		if (!assignment.endTime) return total;
+		const durationMs =
+			new Date(assignment.endTime).getTime() - new Date(assignment.startTime).getTime();
+		return durationMs > 0 ? total + durationMs : total;
+	}, 0);
+
+	const averageDurationHours =
+		completedInWindow > 0 ? totalDurationMs / (1000 * 60 * 60 * completedInWindow) : 0;
+
+	return {
+		totalInWindow,
+		completedInWindow,
+		completionRatePct,
+		averageDurationHours,
+	};
+}
 
 function isTaskManagerTab(value: string | null): value is TaskManagerTab {
 	return value === "assignments" || value === "history" || value === "types";
@@ -34,7 +79,9 @@ interface TaskManagerProps {
 	activeAssignments: TaskAssignment[];
 	employees: Employee[];
 	stations: Station[];
-	taskHistory: TaskAssignment[];
+	historyWindowDays?: number;
+	taskHistory?: TaskAssignment[];
+	taskHistoryPromise?: Promise<TaskAssignment[]>;
 	assignTaskAction: (
 		prevState: { error?: string | null; success?: boolean } | null,
 		formData: FormData
@@ -69,11 +116,14 @@ export function TaskManager({
 	activeAssignments,
 	employees,
 	stations,
+	historyWindowDays,
 	assignTaskAction,
 	completeTaskAction,
 	switchTaskAction,
 	taskHistory,
+	taskHistoryPromise,
 }: TaskManagerProps) {
+	const metricsWindowDays = historyWindowDays ?? DEFAULT_HISTORY_WINDOW_DAYS;
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const tabParam = searchParams.get("tab");
@@ -91,14 +141,17 @@ export function TaskManager({
 	const [showAssignForm, setShowAssignForm] = useState(false);
 	const [showTaskTypeForm, setShowTaskTypeForm] = useState(false);
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("grid");
-	
+
 	// State for Complete/Switch Modals
 	const [selectedAssignment, setSelectedAssignment] = useState<TaskAssignment | null>(null);
 	const [activeModal, setActiveModal] = useState<"none" | "complete" | "switch">("none");
 
 	const [assignState, assignAction, isAssignPending] = useActionState(assignTaskAction, null);
-	
-	const [completeState, completeAction, isCompletePending] = useActionState(completeTaskAction, null);
+
+	const [completeState, completeAction, isCompletePending] = useActionState(
+		completeTaskAction,
+		null
+	);
 	const [switchState, switchAction, isSwitchPending] = useActionState(switchTaskAction, null);
 
 	const [createTypeState, createTypeAction, isCreateTypePending] = useActionState(
@@ -136,7 +189,7 @@ export function TaskManager({
 			setLocalAssignments(switchState.activeAssignments);
 		}
 	}, [switchState]);
-	
+
 	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
 		TaskAssignment[],
 		| { type: "add"; data: { employeeId: string; taskTypeId: string; notes?: string } }
@@ -168,17 +221,17 @@ export function TaskManager({
 
 		if (action.type === "complete") {
 			// Optimistically remove the completed assignment from the active list
-			return current.filter(a => a.id !== action.data.assignmentId);
+			return current.filter((a) => a.id !== action.data.assignmentId);
 		}
 
 		if (action.type === "switch") {
 			// Remove old assignment for this employee
-			// We MUST filter out the assignment by employeeId because the user might have clicked "Switch" 
+			// We MUST filter out the assignment by employeeId because the user might have clicked "Switch"
 			// on an assignment that was already optimistically updated (so ID matches) OR from server data (so ID matches)
 			// But critically, a switch REPLACES the active task for that employee.
 			// So we should remove ANY active task for this employee before adding the new one.
-			const filtered = current.filter(a => a.employeeId !== action.data.employeeId);
-			
+			const filtered = current.filter((a) => a.employeeId !== action.data.employeeId);
+
 			const employee = employees.find((e) => e.id === action.data.employeeId);
 			const taskType = taskTypes.find((t) => t.id === action.data.newTaskTypeId);
 
@@ -197,13 +250,12 @@ export function TaskManager({
 				Employee: employee,
 				TaskType: taskType,
 			};
-			
+
 			return [optimisticAssignment, ...filtered];
 		}
 
 		return current;
 	});
-
 
 	const formatDuration = (startTime: Date, endTime: Date | null): string => {
 		if (!endTime) {
@@ -245,6 +297,8 @@ export function TaskManager({
 		);
 	};
 
+	const latestActionError = assignState?.error || completeState?.error || switchState?.error;
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
@@ -266,65 +320,41 @@ export function TaskManager({
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<Card>
 					<CardBody>
-						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Active Tasks</h3>
-						<p className="text-2xl font-mono tabular-nums">{optimisticAssignments.filter((a) => !a.endTime).length}</p>
-						<p className="text-sm text-muted-foreground">In progress</p>
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+							Active Tasks
+						</h3>
+						<p className="text-2xl font-mono tabular-nums">
+							{optimisticAssignments.filter((a) => !a.endTime).length}
+						</p>
+						<p className="text-sm text-muted-foreground">Currently active assignments</p>
 					</CardBody>
 				</Card>
 
 				<Card>
 					<CardBody>
-						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Task Types</h3>
+						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+							Task Types
+						</h3>
 						<p className="text-2xl font-mono tabular-nums">{taskTypes.length}</p>
 						<p className="text-sm text-muted-foreground">Available</p>
 					</CardBody>
 				</Card>
 
-				<Card>
-					<CardBody>
-						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Avg Duration</h3>
-						<p className="text-2xl font-mono tabular-nums">
-							{optimisticAssignments.length > 0
-								? Math.round(
-										optimisticAssignments
-											.filter((a) => a.endTime)
-											.reduce((total, a) => {
-												const duration =
-													new Date(a.endTime!).getTime() - new Date(a.startTime).getTime();
-												return total + duration;
-											}, 0) /
-											(1000 * 60 * 60 * optimisticAssignments.filter((a) => a.endTime).length)
-									)
-								: 0}
-							h
-						</p>
-						<p className="text-sm text-muted-foreground">Average task time</p>
-					</CardBody>
-				</Card>
-
-				<Card>
-					<CardBody>
-						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">Completion Rate</h3>
-						<p className="text-2xl font-mono tabular-nums">
-							{optimisticAssignments.length > 0
-								? Math.round(
-										(optimisticAssignments.filter((a) => a.endTime).length /
-											optimisticAssignments.length) *
-											100
-									)
-								: 0}
-							%
-						</p>
-						<p className="text-sm text-muted-foreground">Tasks completed</p>
-					</CardBody>
-				</Card>
+				<TaskHistoryErrorBoundary
+					fallback={<TaskHistorySummaryErrorCards windowDays={metricsWindowDays} />}
+				>
+					<Suspense fallback={<TaskHistorySummaryFallbackCards windowDays={metricsWindowDays} />}>
+						<DeferredTaskHistorySummaryCards
+							taskHistory={taskHistory}
+							taskHistoryPromise={taskHistoryPromise}
+							windowDays={metricsWindowDays}
+						/>
+					</Suspense>
+				</TaskHistoryErrorBoundary>
 			</div>
 
 			{/* Tabs */}
-			<Tabs
-				selectedKey={activeTab}
-				onSelectionChange={handleTabChange}
-			>
+			<Tabs selectedKey={activeTab} onSelectionChange={handleTabChange}>
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<TabList
 						aria-label="Task manager sections"
@@ -402,6 +432,11 @@ export function TaskManager({
 							)}
 						</CardHeader>
 						<CardBody>
+							{latestActionError && (
+								<div className="mb-4 rounded-[2px] border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+									{latestActionError}
+								</div>
+							)}
 							{optimisticAssignments.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
 									<div className="mb-3 rounded-full bg-muted/50 p-4">
@@ -438,7 +473,9 @@ export function TaskManager({
 														)}
 													</div>
 													<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-														<span className="font-bold text-foreground">{assignment.Employee.name}</span>
+														<span className="font-bold text-foreground">
+															{assignment.Employee.name}
+														</span>
 														<span className="text-border">|</span>
 														<span>{assignment.TaskType.Station.name}</span>
 													</div>
@@ -530,7 +567,10 @@ export function TaskManager({
 										</thead>
 										<tbody>
 											{optimisticAssignments.map((assignment) => (
-												<tr key={assignment.id} className="border-b border-border hover:bg-muted/50">
+												<tr
+													key={assignment.id}
+													className="border-b border-border hover:bg-muted/50"
+												>
 													<td className="p-4">{assignment.TaskType.name}</td>
 													<td className="p-4">{assignment.Employee.name}</td>
 													<td className="p-4">{assignment.TaskType.Station.name}</td>
@@ -588,120 +628,21 @@ export function TaskManager({
 							<CardTitle>Task History</CardTitle>
 						</CardHeader>
 						<CardBody>
-							{taskHistory.length === 0 ? (
-								<div className="text-center py-6">
-									<p className="text-muted-foreground">No task history found</p>
-								</div>
-							) : displayMode === "grid" ? (
-								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-									{taskHistory.map((assignment: TaskAssignment) => {
-										const duration =
-											((assignment.endTime
-												? new Date(assignment.endTime).getTime()
-												: new Date().getTime()) -
-												new Date(assignment.startTime).getTime()) /
-											(1000 * 60);
-										const efficiency =
-											assignment.unitsCompleted && duration > 0
-												? assignment.unitsCompleted / (duration / 60)
-												: 0;
-
-										return (
-											<div
-												key={assignment.id}
-												className="rounded-[2px] border border-border bg-card p-4"
-											>
-												<div className="mb-2 flex items-start justify-between gap-2">
-													<h4 className="font-heading text-sm font-bold uppercase tracking-tight">
-														{assignment.TaskType.name}
-													</h4>
-													{getAssignmentSourceBadge(assignment)}
-												</div>
-												<div className="space-y-1 text-sm">
-													<p>
-														<span className="text-muted-foreground">Employee:</span> {assignment.Employee.name}
-													</p>
-													<p>
-														<span className="text-muted-foreground">Station:</span>{" "}
-														{assignment.TaskType.Station.name}
-													</p>
-													<p className="font-mono text-xs">
-														{new Date(assignment.startTime).toLocaleString()}
-													</p>
-												</div>
-												<div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/50 pt-3">
-													<div>
-														<p className="text-[10px] uppercase text-muted-foreground">Duration</p>
-														<p className="font-mono text-xs">
-															{formatDuration(assignment.startTime, assignment.endTime)}
-														</p>
-													</div>
-													<div>
-														<p className="text-[10px] uppercase text-muted-foreground">Units</p>
-														<p className="font-mono text-xs">{assignment.unitsCompleted || "-"}</p>
-													</div>
-													<div>
-														<p className="text-[10px] uppercase text-muted-foreground">Efficiency</p>
-														<p className={cn("font-mono text-xs", getTaskEfficiencyColor(efficiency))}>
-															{efficiency > 0 ? `${efficiency.toFixed(2)}/hr` : "-"}
-														</p>
-													</div>
-												</div>
-											</div>
-										);
-									})}
-								</div>
-							) : (
-								<div className="overflow-x-auto">
-									<table className="w-full">
-										<thead>
-											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
-												<th className="p-4 text-left">Employee</th>
-												<th className="p-4 text-left">Task</th>
-												<th className="p-4 text-left">Station</th>
-												<th className="p-4 text-left">Start Time</th>
-												<th className="p-4 text-left">Duration</th>
-												<th className="p-4 text-left">Units</th>
-												<th className="p-4 text-left">Efficiency</th>
-												<th className="p-4 text-left">Assignment Source</th>
-											</tr>
-										</thead>
-										<tbody>
-											{taskHistory.map((assignment: TaskAssignment) => {
-												const duration =
-													((assignment.endTime
-														? new Date(assignment.endTime).getTime()
-														: new Date().getTime()) -
-														new Date(assignment.startTime).getTime()) /
-													(1000 * 60);
-												const efficiency =
-													assignment.unitsCompleted && duration > 0
-														? assignment.unitsCompleted / (duration / 60)
-														: 0;
-
-												return (
-													<tr key={assignment.id} className="border-b border-border hover:bg-muted/50">
-														<td className="p-4">{assignment.Employee.name}</td>
-														<td className="p-4">{assignment.TaskType.name}</td>
-														<td className="p-4">{assignment.TaskType.Station.name}</td>
-														<td className="p-4">{new Date(assignment.startTime).toLocaleString()}</td>
-														<td className="p-4">{formatDuration(assignment.startTime, assignment.endTime)}</td>
-														<td className="p-4 text-center">{assignment.unitsCompleted || "-"}</td>
-														<td className="p-4 text-center">
-															{efficiency > 0 && (
-																<span className={getTaskEfficiencyColor(efficiency)}>
-																	{efficiency.toFixed(2)}/hr
-																</span>
-															)}
-														</td>
-														<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
-													</tr>
-												);
-											})}
-										</tbody>
-									</table>
-								</div>
-							)}
+							<TaskHistoryErrorBoundary
+								fallback={<TaskHistoryErrorState windowDays={metricsWindowDays} />}
+							>
+								<Suspense fallback={<TaskHistoryFallback />}>
+									<DeferredTaskHistory
+										taskHistory={taskHistory}
+										taskHistoryPromise={taskHistoryPromise}
+										displayMode={displayMode}
+										formatDuration={formatDuration}
+										getTaskEfficiencyColor={getTaskEfficiencyColor}
+										getAssignmentSourceBadge={getAssignmentSourceBadge}
+										windowDays={metricsWindowDays}
+									/>
+								</Suspense>
+							</TaskHistoryErrorBoundary>
 						</CardBody>
 					</Card>
 				</TabPanel>
@@ -712,7 +653,22 @@ export function TaskManager({
 							<CardTitle>Task Types</CardTitle>
 						</CardHeader>
 						<CardBody>
-							{displayMode === "grid" ? (
+							{taskTypes.length === 0 ? (
+								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
+									<div className="mb-3 rounded-full bg-muted/50 p-4">
+										<div className="h-6 w-6 rounded-sm bg-foreground/20" />
+									</div>
+									<h3 className="mb-1 font-heading text-lg font-bold uppercase tracking-tight">
+										No Task Types
+									</h3>
+									<p className="mb-6 font-mono text-sm text-muted-foreground">
+										Create a task type to start assigning work.
+									</p>
+									<Button onClick={() => setShowTaskTypeForm(true)} variant="primary">
+										Create Task Type
+									</Button>
+								</div>
+							) : displayMode === "grid" ? (
 								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 									{taskTypes.map((taskType) => (
 										<div
@@ -726,7 +682,9 @@ export function TaskManager({
 													</h4>
 													<div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
 														<span>Station:</span>
-														<span className="font-bold text-foreground">{taskType.Station.name}</span>
+														<span className="font-bold text-foreground">
+															{taskType.Station.name}
+														</span>
 													</div>
 												</div>
 												<Badge
@@ -739,9 +697,13 @@ export function TaskManager({
 
 											<div className="-mx-2 mb-4 min-h-[3rem] space-y-3 border-y border-border/40 bg-muted/20 px-2 py-3">
 												{taskType.description ? (
-													<p className="line-clamp-2 text-xs text-muted-foreground">{taskType.description}</p>
+													<p className="line-clamp-2 text-xs text-muted-foreground">
+														{taskType.description}
+													</p>
 												) : (
-													<p className="text-xs italic text-muted-foreground/50">No description provided.</p>
+													<p className="text-xs italic text-muted-foreground/50">
+														No description provided.
+													</p>
 												)}
 
 												{taskType.estimatedMinutesPerUnit && (
@@ -756,10 +718,16 @@ export function TaskManager({
 												)}
 											</div>
 
-											<div className="mt-auto">
-												<Button size="sm" variant="outline" className="w-full text-xs">
-													Edit Configuration
-												</Button>
+											<div className="mt-auto space-y-2">
+												<Badge
+													variant="secondary"
+													className="w-full justify-center font-mono text-[10px] uppercase"
+												>
+													Edit Workflow Pending
+												</Badge>
+												<p className="text-center text-xs text-muted-foreground">
+													Configuration updates are not available yet.
+												</p>
 											</div>
 										</div>
 									))}
@@ -774,7 +742,7 @@ export function TaskManager({
 												<th className="p-4 text-left">Description</th>
 												<th className="p-4 text-left">Est. Time / Unit</th>
 												<th className="p-4 text-left">Status</th>
-												<th className="p-4 text-left">Actions</th>
+												<th className="p-4 text-left">Configuration</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -786,7 +754,9 @@ export function TaskManager({
 														{taskType.description || "No description provided."}
 													</td>
 													<td className="p-4">
-														{taskType.estimatedMinutesPerUnit ? `${taskType.estimatedMinutesPerUnit}m` : "-"}
+														{taskType.estimatedMinutesPerUnit
+															? `${taskType.estimatedMinutesPerUnit}m`
+															: "-"}
 													</td>
 													<td className="p-4">
 														<Badge
@@ -796,10 +766,8 @@ export function TaskManager({
 															{taskType.isActive ? "Active" : "Inactive"}
 														</Badge>
 													</td>
-													<td className="p-4">
-														<Button size="sm" variant="outline">
-															Edit Configuration
-														</Button>
+													<td className="p-4 text-xs text-muted-foreground">
+														Edit workflow pending
 													</td>
 												</tr>
 											))}
@@ -857,7 +825,6 @@ export function TaskManager({
 				/>
 			)}
 
-
 			{/* Task Type Form Modal */}
 			{showTaskTypeForm && (
 				<TaskTypeForm
@@ -868,6 +835,289 @@ export function TaskManager({
 					state={createTypeState}
 				/>
 			)}
+		</div>
+	);
+}
+
+class TaskHistoryErrorBoundary extends ReactComponent<
+	{ children: ReactNode; fallback: ReactNode },
+	{ hasError: boolean }
+> {
+	constructor(props: { children: ReactNode; fallback: ReactNode }) {
+		super(props);
+		this.state = { hasError: false };
+	}
+
+	static getDerivedStateFromError() {
+		return { hasError: true };
+	}
+
+	componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
+		// Local fallback is intentionally quiet; route-level logging handles details.
+	}
+
+	render() {
+		if (this.state.hasError) {
+			return this.props.fallback;
+		}
+
+		return this.props.children;
+	}
+}
+
+function DeferredTaskHistorySummaryCards({
+	taskHistory,
+	taskHistoryPromise,
+	windowDays,
+}: {
+	taskHistory?: TaskAssignment[];
+	taskHistoryPromise?: Promise<TaskAssignment[]>;
+	windowDays: number;
+}) {
+	const resolvedTaskHistory = taskHistoryPromise ? use(taskHistoryPromise) : (taskHistory ?? []);
+	const metrics = computeTaskHistorySummaryMetrics(resolvedTaskHistory);
+
+	return (
+		<>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Avg Duration ({windowDays}d)
+					</h3>
+					<p className="text-2xl font-mono tabular-nums">
+						{metrics.completedInWindow > 0 ? `${metrics.averageDurationHours.toFixed(1)}h` : "--"}
+					</p>
+					<p className="text-sm text-muted-foreground">
+						From {metrics.completedInWindow} completed tasks in history window
+					</p>
+				</CardBody>
+			</Card>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Completion Rate ({windowDays}d)
+					</h3>
+					<p className="text-2xl font-mono tabular-nums">{metrics.completionRatePct}%</p>
+					<p className="text-sm text-muted-foreground">
+						{metrics.completedInWindow}/{metrics.totalInWindow} tasks completed in history window
+					</p>
+				</CardBody>
+			</Card>
+		</>
+	);
+}
+
+function TaskHistorySummaryFallbackCards({ windowDays }: { windowDays: number }) {
+	return (
+		<>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Avg Duration ({windowDays}d)
+					</h3>
+					<div className="h-8 w-24 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+					<p className="mt-2 text-sm text-muted-foreground">Loading history metrics...</p>
+				</CardBody>
+			</Card>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Completion Rate ({windowDays}d)
+					</h3>
+					<div className="h-8 w-20 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+					<p className="mt-2 text-sm text-muted-foreground">Loading history metrics...</p>
+				</CardBody>
+			</Card>
+		</>
+	);
+}
+
+function TaskHistorySummaryErrorCards({ windowDays }: { windowDays: number }) {
+	return (
+		<>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Avg Duration ({windowDays}d)
+					</h3>
+					<p className="text-2xl font-mono tabular-nums">--</p>
+					<p className="text-sm text-muted-foreground">History metrics unavailable</p>
+				</CardBody>
+			</Card>
+			<Card>
+				<CardBody>
+					<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
+						Completion Rate ({windowDays}d)
+					</h3>
+					<p className="text-2xl font-mono tabular-nums">--</p>
+					<p className="text-sm text-muted-foreground">History metrics unavailable</p>
+				</CardBody>
+			</Card>
+		</>
+	);
+}
+
+function TaskHistoryErrorState({ windowDays }: { windowDays: number }) {
+	return (
+		<div className="rounded-[2px] border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+			Unable to load task history for the last {windowDays} days. Please refresh and try again.
+		</div>
+	);
+}
+
+function DeferredTaskHistory({
+	taskHistory,
+	taskHistoryPromise,
+	displayMode,
+	formatDuration,
+	getTaskEfficiencyColor,
+	getAssignmentSourceBadge,
+	windowDays,
+}: {
+	taskHistory?: TaskAssignment[];
+	taskHistoryPromise?: Promise<TaskAssignment[]>;
+	displayMode: TaskDisplayMode;
+	formatDuration: (startTime: Date, endTime: Date | null) => string;
+	getTaskEfficiencyColor: (efficiency: number) => string;
+	getAssignmentSourceBadge: (assignment: TaskAssignment) => ReactNode;
+	windowDays: number;
+}) {
+	const resolvedTaskHistory = taskHistoryPromise ? use(taskHistoryPromise) : (taskHistory ?? []);
+
+	if (resolvedTaskHistory.length === 0) {
+		return (
+			<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
+				<div className="mb-3 rounded-full bg-muted/50 p-4">
+					<div className="h-6 w-6 rounded-sm bg-foreground/20" />
+				</div>
+				<h3 className="mb-1 font-heading text-lg font-bold uppercase tracking-tight">
+					No Task History
+				</h3>
+				<p className="font-mono text-sm text-muted-foreground">
+					No assignments found in the last {windowDays} days.
+				</p>
+			</div>
+		);
+	}
+
+	if (displayMode === "grid") {
+		return (
+			<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+				{resolvedTaskHistory.map((assignment: TaskAssignment) => {
+					const duration =
+						((assignment.endTime ? new Date(assignment.endTime).getTime() : new Date().getTime()) -
+							new Date(assignment.startTime).getTime()) /
+						(1000 * 60);
+					const efficiency =
+						assignment.unitsCompleted && duration > 0
+							? assignment.unitsCompleted / (duration / 60)
+							: 0;
+
+					return (
+						<div key={assignment.id} className="rounded-[2px] border border-border bg-card p-4">
+							<div className="mb-2 flex items-start justify-between gap-2">
+								<h4 className="font-heading text-sm font-bold uppercase tracking-tight">
+									{assignment.TaskType.name}
+								</h4>
+								{getAssignmentSourceBadge(assignment)}
+							</div>
+							<div className="space-y-1 text-sm">
+								<p>
+									<span className="text-muted-foreground">Employee:</span>{" "}
+									{assignment.Employee.name}
+								</p>
+								<p>
+									<span className="text-muted-foreground">Station:</span>{" "}
+									{assignment.TaskType.Station.name}
+								</p>
+								<p className="font-mono text-xs">
+									{new Date(assignment.startTime).toLocaleString()}
+								</p>
+							</div>
+							<div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/50 pt-3">
+								<div>
+									<p className="text-[10px] uppercase text-muted-foreground">Duration</p>
+									<p className="font-mono text-xs">
+										{formatDuration(assignment.startTime, assignment.endTime)}
+									</p>
+								</div>
+								<div>
+									<p className="text-[10px] uppercase text-muted-foreground">Units</p>
+									<p className="font-mono text-xs">{assignment.unitsCompleted || "-"}</p>
+								</div>
+								<div>
+									<p className="text-[10px] uppercase text-muted-foreground">Efficiency</p>
+									<p className={cn("font-mono text-xs", getTaskEfficiencyColor(efficiency))}>
+										{efficiency > 0 ? `${efficiency.toFixed(2)}/hr` : "-"}
+									</p>
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		);
+	}
+
+	return (
+		<div className="overflow-x-auto">
+			<table className="w-full">
+				<thead>
+					<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+						<th className="p-4 text-left">Employee</th>
+						<th className="p-4 text-left">Task</th>
+						<th className="p-4 text-left">Station</th>
+						<th className="p-4 text-left">Start Time</th>
+						<th className="p-4 text-left">Duration</th>
+						<th className="p-4 text-left">Units</th>
+						<th className="p-4 text-left">Efficiency</th>
+						<th className="p-4 text-left">Assignment Source</th>
+					</tr>
+				</thead>
+				<tbody>
+					{resolvedTaskHistory.map((assignment: TaskAssignment) => {
+						const duration =
+							((assignment.endTime
+								? new Date(assignment.endTime).getTime()
+								: new Date().getTime()) -
+								new Date(assignment.startTime).getTime()) /
+							(1000 * 60);
+						const efficiency =
+							assignment.unitsCompleted && duration > 0
+								? assignment.unitsCompleted / (duration / 60)
+								: 0;
+
+						return (
+							<tr key={assignment.id} className="border-b border-border hover:bg-muted/50">
+								<td className="p-4">{assignment.Employee.name}</td>
+								<td className="p-4">{assignment.TaskType.name}</td>
+								<td className="p-4">{assignment.TaskType.Station.name}</td>
+								<td className="p-4">{new Date(assignment.startTime).toLocaleString()}</td>
+								<td className="p-4">{formatDuration(assignment.startTime, assignment.endTime)}</td>
+								<td className="p-4 text-center">{assignment.unitsCompleted || "-"}</td>
+								<td className="p-4 text-center">
+									{efficiency > 0 && (
+										<span className={getTaskEfficiencyColor(efficiency)}>
+											{efficiency.toFixed(2)}/hr
+										</span>
+									)}
+								</td>
+								<td className="p-4">{getAssignmentSourceBadge(assignment)}</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		</div>
+	);
+}
+
+function TaskHistoryFallback() {
+	return (
+		<div className="space-y-2">
+			<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+			<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+			<div className="h-32 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
 		</div>
 	);
 }
