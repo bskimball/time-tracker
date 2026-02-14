@@ -73,7 +73,9 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 			TERMINATED: "destructive",
 		};
 
-		return <Badge variant={variantByStatus[status] ?? "secondary"}>{status.replace("_", " ")}</Badge>;
+		return (
+			<Badge variant={variantByStatus[status] ?? "secondary"}>{status.replace("_", " ")}</Badge>
+		);
 	};
 
 	const formatDuration = (start: Date, end: Date | null) => {
@@ -101,6 +103,133 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 		}, 0);
 	};
 
+	const toDate = (value: Date | string | null | undefined): Date | null => {
+		if (!value) return null;
+		const parsed = value instanceof Date ? value : new Date(value);
+		return Number.isNaN(parsed.getTime()) ? null : parsed;
+	};
+
+	const getStartOfWeek = (now: Date) => {
+		const weekStart = new Date(now);
+		const day = weekStart.getDay();
+		const diffToMonday = (day + 6) % 7;
+		weekStart.setDate(weekStart.getDate() - diffToMonday);
+		weekStart.setHours(0, 0, 0, 0);
+		return weekStart;
+	};
+
+	const calculateOverlapHours = (start: Date, end: Date, windowStart: Date, windowEnd: Date) => {
+		const overlapStart = Math.max(start.getTime(), windowStart.getTime());
+		const overlapEnd = Math.min(end.getTime(), windowEnd.getTime());
+		if (overlapEnd <= overlapStart) {
+			return 0;
+		}
+
+		return (overlapEnd - overlapStart) / (1000 * 60 * 60);
+	};
+
+	const now = new Date();
+	const currentWindowStart = getStartOfWeek(now);
+	const currentWindowEnd = now;
+	const windowDurationMs = currentWindowEnd.getTime() - currentWindowStart.getTime();
+	const previousWindowStart = new Date(currentWindowStart.getTime() - windowDurationMs);
+	const previousWindowEnd = currentWindowStart;
+
+	const timeLogs = employee.TimeLog ?? [];
+	const taskAssignments = employee.TaskAssignment ?? [];
+
+	const hoursThisWeek = timeLogs.reduce((total, log) => {
+		if (log.type !== "WORK") {
+			return total;
+		}
+
+		const start = toDate(log.startTime);
+		if (!start) {
+			return total;
+		}
+
+		const resolvedEnd = toDate(log.endTime) ?? now;
+		return total + calculateOverlapHours(start, resolvedEnd, currentWindowStart, currentWindowEnd);
+	}, 0);
+
+	const hoursPreviousWindow = timeLogs.reduce((total, log) => {
+		if (log.type !== "WORK") {
+			return total;
+		}
+
+		const start = toDate(log.startTime);
+		if (!start) {
+			return total;
+		}
+
+		const end = toDate(log.endTime);
+		if (!end) {
+			return total;
+		}
+
+		return total + calculateOverlapHours(start, end, previousWindowStart, previousWindowEnd);
+	}, 0);
+
+	const completedTasksThisWindow = taskAssignments.filter((task) => {
+		const end = toDate(task.endTime);
+		if (!end) {
+			return false;
+		}
+
+		return end >= currentWindowStart && end <= currentWindowEnd;
+	});
+
+	const completedTasksPreviousWindow = taskAssignments.filter((task) => {
+		const end = toDate(task.endTime);
+		if (!end) {
+			return false;
+		}
+
+		return end >= previousWindowStart && end < previousWindowEnd;
+	});
+
+	const averageTaskDurationMinutes = (() => {
+		const durations = completedTasksThisWindow
+			.map((task) => {
+				const start = toDate(task.startTime);
+				const end = toDate(task.endTime);
+				if (!start || !end || end.getTime() <= start.getTime()) {
+					return null;
+				}
+
+				return (end.getTime() - start.getTime()) / (1000 * 60);
+			})
+			.filter((duration): duration is number => duration !== null);
+
+		if (durations.length === 0) {
+			return null;
+		}
+
+		return durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+	})();
+
+	const hoursTrend = hoursThisWeek - hoursPreviousWindow;
+	const tasksTrend = completedTasksThisWindow.length - completedTasksPreviousWindow.length;
+
+	const formatTrend = (value: number, unit: string) => {
+		if (!Number.isFinite(value)) {
+			return { label: "Unavailable", className: "text-muted-foreground" };
+		}
+
+		if (Math.abs(value) < 0.05) {
+			return { label: `No change (${unit})`, className: "text-muted-foreground" };
+		}
+
+		const sign = value > 0 ? "+" : "";
+		return {
+			label: `${sign}${value.toFixed(1)} ${unit}`,
+			className: value > 0 ? "text-emerald-600" : "text-red-600",
+		};
+	};
+
+	const hoursTrendDisplay = formatTrend(hoursTrend, "h");
+	const tasksTrendDisplay = formatTrend(tasksTrend, "tasks");
+
 	const tabs = [
 		{ id: "overview" as const, label: "Overview" },
 		{ id: "time-logs" as const, label: "Time Logs" },
@@ -124,7 +253,8 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 			/>
 
 			<div className="text-sm text-muted-foreground -mt-4">
-				Employee Code: <code className="font-mono tabular-nums">{employee.employeeCode || "-"}</code>
+				Employee Code:{" "}
+				<code className="font-mono tabular-nums">{employee.employeeCode || "-"}</code>
 			</div>
 
 			{/* Summary Cards */}
@@ -230,7 +360,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 								<div className="overflow-x-auto">
 									<table className="w-full">
 										<thead>
-									<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
+											<tr className="border-b border-border bg-muted/20 text-xs font-heading uppercase tracking-wider text-muted-foreground">
 												<th className="text-left p-4">Date</th>
 												<th className="text-left p-4">Type</th>
 												<th className="text-left p-4">Station</th>
@@ -283,7 +413,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 							) : (
 								<div className="space-y-3">
 									{employee.TaskAssignment.map((task) => (
-											<div key={task.id} className="border border-border rounded-[2px] p-4">
+										<div key={task.id} className="border border-border rounded-[2px] p-4">
 											<div className="flex justify-between items-start">
 												<div>
 													<h4 className="font-medium">{task.TaskType.name}</h4>
@@ -325,41 +455,69 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 						<CardBody>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
-									<h3 className="font-semibold mb-4">Weekly Summary</h3>
+									<h3 className="font-semibold mb-4">Current Week</h3>
 									<div className="space-y-2">
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Total Hours This Week:</span>
-											<span className="font-medium">32.5h</span>
+											<span className="text-muted-foreground">Hours this week:</span>
+											<span className="font-medium font-mono tabular-nums">
+												{hoursThisWeek.toFixed(1)}h
+											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Tasks Completed:</span>
-											<span className="font-medium">24</span>
+											<span className="text-muted-foreground">Tasks completed:</span>
+											<span className="font-medium font-mono tabular-nums">
+												{completedTasksThisWindow.length}
+											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Average Task Time:</span>
-											<span className="font-medium">18.5 min</span>
+											<span className="text-muted-foreground">Avg task duration:</span>
+											<span className="font-medium font-mono tabular-nums">
+												{averageTaskDurationMinutes === null
+													? "Unavailable"
+													: `${averageTaskDurationMinutes.toFixed(1)} min`}
+											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Efficiency:</span>
-											<span className="font-medium">92%</span>
+											<span className="text-muted-foreground">Window coverage:</span>
+											<span className="font-medium font-mono tabular-nums">
+												{(
+													(hoursThisWeek / Math.max(windowDurationMs / (1000 * 60 * 60), 1)) *
+													100
+												).toFixed(1)}
+												%
+											</span>
 										</div>
 									</div>
 								</div>
 								<div>
-									<h3 className="font-semibold mb-4">Trends</h3>
+									<h3 className="font-semibold mb-4">Trend vs Previous Window</h3>
 									<div className="space-y-2">
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Hours vs. Last Week:</span>
-											<span className="font-medium text-green-600">+2.3h</span>
+											<span className="text-muted-foreground">Hours delta:</span>
+											<span
+												className={`font-medium font-mono tabular-nums ${hoursTrendDisplay.className}`}
+											>
+												{hoursTrendDisplay.label}
+											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Efficiency Trend:</span>
-											<span className="font-medium text-green-600">+5%</span>
+											<span className="text-muted-foreground">Completed tasks delta:</span>
+											<span
+												className={`font-medium font-mono tabular-nums ${tasksTrendDisplay.className}`}
+											>
+												{tasksTrendDisplay.label}
+											</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Attendance Rate:</span>
-											<span className="font-medium">98.5%</span>
+											<span className="text-muted-foreground">Previous window hours:</span>
+											<span className="font-medium font-mono tabular-nums">
+												{hoursPreviousWindow.toFixed(1)}h
+											</span>
 										</div>
+										<p className="pt-2 text-xs text-muted-foreground">
+											Metrics are computed from the last 30 days of loaded time logs and task
+											assignments.
+										</p>
 									</div>
 								</div>
 							</div>
