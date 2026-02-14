@@ -2,6 +2,7 @@ import { validateRequest } from "~/lib/auth";
 import { db } from "~/lib/db";
 import { getStations } from "../employees/actions";
 import { FloorMonitor } from "./client";
+import { Suspense } from "react";
 
 type ActiveTaskByEmployee = Record<
 	string,
@@ -15,15 +16,43 @@ type ActiveTaskByEmployee = Record<
 	}
 >;
 
-export default async function Component() {
-	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Not authenticated");
-	}
+type FloorMonitorProps = Parameters<typeof FloorMonitor>[0];
 
-	// Fetch real-time monitoring data
-	const [activeLogs, stations, activeAssignments] = await Promise.all([
-		db.timeLog.findMany({
+export default async function Component() {
+	const snapshotAt = new Date();
+	const authPromise = validateRequest();
+
+	const activeTasksByEmployeePromise = db.taskAssignment
+		.findMany({
+			where: { endTime: null },
+			include: {
+				Employee: true,
+				TaskType: {
+					include: { Station: true },
+				},
+			},
+			orderBy: { startTime: "desc" },
+		})
+		.then((activeAssignments) =>
+			activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
+				if (acc[assignment.employeeId]) {
+					return acc;
+				}
+
+				acc[assignment.employeeId] = {
+					assignmentId: assignment.id,
+					taskTypeName: assignment.TaskType.name,
+					employeeName: assignment.Employee.name,
+					startTime: assignment.startTime,
+					stationId: assignment.TaskType.stationId,
+					stationName: assignment.TaskType.Station.name,
+				};
+
+				return acc;
+			}, {})
+		);
+
+	const activeLogsPromise = db.timeLog.findMany({
 			where: {
 				endTime: null,
 				deletedAt: null,
@@ -37,42 +66,57 @@ export default async function Component() {
 				Station: true,
 			},
 			orderBy: { startTime: "desc" },
-		}),
-		getStations(),
-		db.taskAssignment.findMany({
-			where: { endTime: null },
-			include: {
-				Employee: true,
-				TaskType: {
-					include: { Station: true },
-				},
-			},
-			orderBy: { startTime: "desc" },
-		}),
-	]);
+		});
+	const stationsPromise = getStations();
 
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
-		if (acc[assignment.employeeId]) {
-			return acc;
-		}
+	const { user } = await authPromise;
+	if (!user) {
+		throw new Error("Not authenticated");
+	}
 
-		acc[assignment.employeeId] = {
-			assignmentId: assignment.id,
-			taskTypeName: assignment.TaskType.name,
-			employeeName: assignment.Employee.name,
-			startTime: assignment.startTime,
-			stationId: assignment.TaskType.stationId,
-			stationName: assignment.TaskType.Station.name,
-		};
+	// Fetch real-time monitoring data
+	const [activeLogs, stations] = await Promise.all([activeLogsPromise, stationsPromise]);
 
-		return acc;
-	}, {});
+	return (
+		<Suspense
+			fallback={
+				<FloorMonitor
+					activeLogs={activeLogs}
+					stations={stations}
+					activeTasksByEmployee={{}}
+					snapshotAt={snapshotAt}
+				/>
+			}
+		>
+			<FloorMonitorWithTasks
+				activeLogs={activeLogs}
+				stations={stations}
+				activeTasksByEmployeePromise={activeTasksByEmployeePromise}
+				snapshotAt={snapshotAt}
+			/>
+		</Suspense>
+	);
+}
+
+async function FloorMonitorWithTasks({
+	activeLogs,
+	stations,
+	activeTasksByEmployeePromise,
+	snapshotAt,
+}: {
+	activeLogs: FloorMonitorProps["activeLogs"];
+	stations: FloorMonitorProps["stations"];
+	activeTasksByEmployeePromise: Promise<ActiveTaskByEmployee>;
+	snapshotAt: Date;
+}) {
+	const activeTasksByEmployee = await activeTasksByEmployeePromise;
 
 	return (
 		<FloorMonitor
 			activeLogs={activeLogs}
 			stations={stations}
 			activeTasksByEmployee={activeTasksByEmployee}
+			snapshotAt={snapshotAt}
 		/>
 	);
 }

@@ -40,12 +40,31 @@ export default async function Component() {
 		throw new Error("Not authenticated");
 	}
 	// Middleware ensures MANAGER or ADMIN role
+	const snapshotAt = new Date();
 
-	// Fetch all data in parallel
-	const [activeTimeLogs, totalEmployees, activeAlerts, activeAssignments] = await Promise.all([
+	const activeAlertsPromise = getActiveAlerts();
+	const todayStart = new Date();
+	todayStart.setHours(0, 0, 0, 0);
+	const taskEfficiencyRatePromise = db.performanceMetric
+		.aggregate({
+			where: { date: { gte: todayStart } },
+			_avg: { efficiency: true },
+		})
+		.then((result) => Number(((result._avg.efficiency ?? 0) * 100).toFixed(1)));
+	const networkStatusPromise = db.timeLog
+		.count({
+			where: {
+				deletedAt: null,
+				clockMethod: "MANUAL",
+				note: { contains: "DELETED:" },
+				startTime: { gte: todayStart },
+			},
+		})
+		.then((openSystemErrorCount) => (openSystemErrorCount > 0 ? "DEGRADED" : "ONLINE" as const));
+
+	const [activeTimeLogs, totalEmployees, activeAssignments] = await Promise.all([
 		getActiveTimeLogs(),
 		db.employee.count(),
-		getActiveAlerts(),
 		db.taskAssignment.findMany({
 			where: { endTime: null },
 			include: {
@@ -85,35 +104,16 @@ export default async function Component() {
 	const utilizationRate =
 		totalEmployees > 0 ? Number(((activeEmployeeIds.size / totalEmployees) * 100).toFixed(1)) : 0;
 
-	const todayStart = new Date();
-	todayStart.setHours(0, 0, 0, 0);
-	const [todayEfficiencyAggregate, openSystemErrorCount] = await Promise.all([
-		db.performanceMetric.aggregate({
-			where: { date: { gte: todayStart } },
-			_avg: { efficiency: true },
-		}),
-		db.timeLog.count({
-			where: {
-				deletedAt: null,
-				clockMethod: "MANUAL",
-				note: { contains: "DELETED:" },
-				startTime: { gte: todayStart },
-			},
-		}),
-	]);
-
-	const taskEfficiencyRate = Number(((todayEfficiencyAggregate._avg.efficiency ?? 0) * 100).toFixed(1));
-	const networkStatus = openSystemErrorCount > 0 ? "DEGRADED" : "ONLINE";
-
 	return (
 		<ManagerDashboard
 			activeTimeLogs={activeTimeLogs}
 			activeTasksByEmployee={activeTasksByEmployee}
 			totalEmployees={totalEmployees}
 			utilizationRate={utilizationRate}
-			taskEfficiencyRate={taskEfficiencyRate}
-			networkStatus={networkStatus}
-			alerts={activeAlerts.slice(0, 5)} // Show top 5 alerts
+			snapshotAt={snapshotAt}
+			taskEfficiencyRatePromise={taskEfficiencyRatePromise}
+			networkStatusPromise={networkStatusPromise}
+			alertsPromise={activeAlertsPromise}
 			user={user}
 		/>
 	);
