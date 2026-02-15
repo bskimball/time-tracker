@@ -368,10 +368,10 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 					className="opacity-60" 
 					isAnimated={isAnimating}
 				/>
-				{children}
 			</div>
 
 			<div className="flex items-center gap-3">
+				{children ? <div className="flex items-center">{children}</div> : null}
 				<div className="font-mono text-xs text-muted-foreground tabular-nums tracking-wide">
 					{now
 						? now.toLocaleString("en-US", {

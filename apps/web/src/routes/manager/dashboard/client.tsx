@@ -157,12 +157,6 @@ export function ManagerDashboard({
 							onRefresh={() => navigate(0)}
 							isRefreshing={isRefreshing}
 						/>
-						<Link to="/manager/monitor">
-							<Button variant="outline" className="gap-2">
-								<LiaStopwatchSolid />
-								Floor Monitor
-							</Button>
-						</Link>
 					</div>
 				}
 			/>

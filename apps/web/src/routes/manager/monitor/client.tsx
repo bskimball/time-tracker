@@ -436,13 +436,13 @@ export function FloorMonitor({
 						</Badge>
 					</div>
 
-					<Card className="h-[calc(100vh-300px)] overflow-hidden flex flex-col">
+					<Card className="h-[calc(100vh-300px)] overflow-hidden [&>div]:h-full [&>div]:flex [&>div]:flex-col">
 						<div className="bg-muted/30 p-2 grid grid-cols-4 gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider border-b border-border">
 							<div className="col-span-2">Employee</div>
 							<div className="text-right">Time</div>
 							<div className="text-center">Status</div>
 						</div>
-						<div className="overflow-y-auto flex-1 p-2 space-y-1">
+						<div className="overflow-y-auto flex-1 min-h-0 p-2 space-y-1">
 							{workLogs.map((log) => (
 								<div
 									key={log.id}
