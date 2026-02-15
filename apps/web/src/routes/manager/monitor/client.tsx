@@ -211,21 +211,26 @@ actions={
 					<div className="flex items-center p-1 bg-card border border-border rounded-[2px] shadow-sm">
 						{/* Data Snapshot Readout */}
 						<div
-							className="flex items-center gap-2 px-3 border-r border-border mr-1 select-none"
+							className="flex flex-col justify-center px-3 border-r border-border mr-1 select-none min-w-[90px]"
 							title={`Last snapshot at ${snapshotDate.toLocaleTimeString()}`}
 						>
-							<div
-								className={cn(
-									"w-1.5 h-1.5 rounded-full",
-									freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
-								)}
-							/>
-							<div className="font-mono text-xs tabular-nums text-muted-foreground">
-								{snapshotDate.toLocaleTimeString([], {
-									hour: "2-digit",
-									minute: "2-digit",
-									second: "2-digit",
-								})}
+							<div className="flex items-center gap-1.5">
+								<div
+									className={cn(
+										"w-1.5 h-1.5 rounded-full",
+										freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
+									)}
+								/>
+								<div className="font-mono text-xs font-medium leading-none text-foreground tabular-nums">
+									{snapshotDate.toLocaleTimeString([], {
+										hour: "2-digit",
+										minute: "2-digit",
+										second: "2-digit",
+									})}
+								</div>
+							</div>
+							<div className="text-[9px] text-muted-foreground font-heading uppercase tracking-wider leading-none mt-1 ml-3">
+								Data Snapshot
 							</div>
 						</div>
 
