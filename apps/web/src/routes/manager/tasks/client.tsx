@@ -298,11 +298,12 @@ export function TaskManager({
 
 		const interval = window.setInterval(() => {
 			if (document.hidden) return;
+			if (navigation.state !== "idle") return;
 			navigate(0);
 		}, Math.max(60, autoRefreshInterval) * 1000);
 
 		return () => window.clearInterval(interval);
-	}, [autoRefreshEnabled, autoRefreshInterval, navigate]);
+	}, [autoRefreshEnabled, autoRefreshInterval, navigate, navigation.state]);
 
 	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
 		TaskAssignment[],

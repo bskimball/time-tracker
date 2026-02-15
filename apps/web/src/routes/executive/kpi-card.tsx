@@ -22,7 +22,24 @@ const iconMap = {
 	award: LiaAwardSolid,
 };
 
+const MAX_ANIMATION_CACHE_KEYS = 200;
 const seenAnimationKeys = new Set<string>();
+
+function markAnimationSeen(cacheKey: string) {
+	if (seenAnimationKeys.has(cacheKey)) {
+		return;
+	}
+
+	seenAnimationKeys.add(cacheKey);
+	if (seenAnimationKeys.size <= MAX_ANIMATION_CACHE_KEYS) {
+		return;
+	}
+
+	const oldestKey = seenAnimationKeys.values().next().value;
+	if (typeof oldestKey === "string") {
+		seenAnimationKeys.delete(oldestKey);
+	}
+}
 
 function useCountUp(end: string | number, duration = 1000, enabled = true) {
 	const [count, setCount] = useState<string | number>(() =>
@@ -120,7 +137,7 @@ export function KPICard({
 
 	useEffect(() => {
 		if (animationCacheKey) {
-			seenAnimationKeys.add(animationCacheKey);
+			markAnimationSeen(animationCacheKey);
 		}
 	}, [animationCacheKey]);
 

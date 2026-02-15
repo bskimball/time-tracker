@@ -474,6 +474,12 @@ export async function setTaskTypeActiveStateAction(
 			return { error: "Task type and target state are required", success: false };
 		}
 
+		const { user } = await validateRequest();
+		const access = getManagerTaskAssignmentAccess(user);
+		if (!access.ok) {
+			return { error: access.error, success: false };
+		}
+
 		const nextIsActive = nextIsActiveRaw === "true";
 
 		if (!nextIsActive) {

@@ -47,7 +47,6 @@ app.doc("/doc", apiDocConfig);
 
 // Register route modules with proper prefixes
 app.route("/", healthRoutes);
-app.route("/realtime", realtimeRoutes);
 
 // Protect API documentation routes with API key auth
 app.use("/doc", requiredApiKey());
@@ -68,6 +67,7 @@ app.use("/*", async (c, next) => {
 app.get("/ui", swaggerUI({ url: "/api/doc" }));
 
 // Register other routes
+app.route("/realtime", realtimeRoutes);
 app.route("/time-clock", timeClockRoutes);
 app.route("/employees", employeeRoutes);
 app.route("/stations", stationRoutes);

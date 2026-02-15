@@ -208,7 +208,7 @@ export default async function Component() {
 						value={kpis.totalActiveEmployees}
 						subtitle="Current workforce"
 						icon="users"
-						animationCacheKey={`dashboard:${timeRange}:active-employees:${kpis.totalActiveEmployees}`}
+						animationCacheKey={`dashboard:${timeRange}:active-employees`}
 						trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
 					/>
 					<KPICard
@@ -216,7 +216,7 @@ export default async function Component() {
 						value={`${kpis.productivityRate} u/hr`}
 						subtitle={`${format(new Date(), "EEEE")}'s average`}
 						icon="chart"
-						animationCacheKey={`dashboard:${timeRange}:productivity-rate:${kpis.productivityRate}`}
+						animationCacheKey={`dashboard:${timeRange}:productivity-rate`}
 						trend={{
 							direction: productivityConfig.direction,
 							value:
@@ -233,7 +233,7 @@ export default async function Component() {
 						value={`${kpis.overtimePercentage}%`}
 						subtitle="Of total hours"
 						icon="clock"
-						animationCacheKey={`dashboard:${timeRange}:overtime:${kpis.overtimePercentage}`}
+						animationCacheKey={`dashboard:${timeRange}:overtime`}
 						trend={{
 							direction: overtimeConfig.direction,
 							value:
@@ -250,7 +250,7 @@ export default async function Component() {
 						value={`${kpis.occupancyLevel.toFixed(1)}%`}
 						subtitle="Station utilization"
 						icon="industry"
-						animationCacheKey={`dashboard:${timeRange}:occupancy:${kpis.occupancyLevel.toFixed(1)}`}
+						animationCacheKey={`dashboard:${timeRange}:occupancy`}
 						trend={{
 							direction: occupancyConfig.direction,
 							value:

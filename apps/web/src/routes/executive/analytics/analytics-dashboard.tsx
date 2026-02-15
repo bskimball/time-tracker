@@ -1011,7 +1011,6 @@ function BenchmarkCharts({
 					benchmarkData.costPerUnit.target,
 					benchmarkData.costPerUnit.current,
 					benchmarkData.costPerUnit.industryAvg,
-					benchmarkData.costPerUnit.industryAvg,
 				],
 				color: "#ef4444",
 			},

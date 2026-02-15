@@ -89,10 +89,10 @@ export function TaskTypeEditForm({
 
 						<div>
 							<Input
-								label="Estimated Minutes Per Unit"
-								type="number"
-								step="0.1"
-								min="0"
+							label="Estimated Minutes Per Unit"
+							type="number"
+							step="0.1"
+							min="0.1"
 								value={formData.estimatedMinutesPerUnit}
 								onChange={(e) =>
 									setFormData((prev) => ({
