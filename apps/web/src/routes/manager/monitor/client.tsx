@@ -208,21 +208,19 @@ export function FloorMonitor({
 				title="Floor Monitor"
 				subtitle="Operations Monitor"
 actions={
-					<div className="flex items-center gap-6">
+					<div className="flex items-center p-1 bg-card border border-border rounded-[2px] shadow-sm">
 						{/* Data Snapshot Readout */}
-						<div className="flex flex-col items-end">
-							<div className="flex items-center gap-2 mb-0.5">
-								<span className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-									Data Snapshot
-								</span>
-								<div
-									className={cn(
-										"w-1.5 h-1.5 rounded-full",
-										freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
-									)}
-								/>
-							</div>
-							<div className="font-mono text-xl tabular-nums leading-none tracking-tight text-foreground">
+						<div
+							className="flex items-center gap-2 px-3 border-r border-border mr-1 select-none"
+							title={`Last snapshot at ${snapshotDate.toLocaleTimeString()}`}
+						>
+							<div
+								className={cn(
+									"w-1.5 h-1.5 rounded-full",
+									freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
+								)}
+							/>
+							<div className="font-mono text-xs tabular-nums text-muted-foreground">
 								{snapshotDate.toLocaleTimeString([], {
 									hour: "2-digit",
 									minute: "2-digit",
@@ -231,45 +229,44 @@ actions={
 							</div>
 						</div>
 
-						{/* Control Toolbar */}
-						<div className="flex items-center gap-1 p-1 bg-card border border-border rounded-[2px] shadow-sm">
-							<button
-								type="button"
-								onClick={() => navigate(0)}
-								disabled={isRefreshing}
-								className={cn(
-									"h-8 w-8 flex items-center justify-center rounded-[1px] transition-colors",
-									"hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-									isRefreshing ? "opacity-50 cursor-not-allowed" : "text-foreground",
-								)}
-								title="Refresh Now"
-							>
-								<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-							</button>
+						{/* Refresh Button */}
+						<button
+							type="button"
+							onClick={() => navigate(0)}
+							disabled={isRefreshing}
+							className={cn(
+								"h-8 w-8 flex items-center justify-center rounded-[1px] transition-colors ml-1",
+								"hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+								isRefreshing ? "opacity-50 cursor-not-allowed" : "text-foreground",
+							)}
+							title="Refresh Now"
+						>
+							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+						</button>
 
-							<div className="w-px h-5 bg-border mx-1" />
+						<div className="w-px h-5 bg-border mx-1" />
 
-							<div className="flex items-center gap-3 px-2">
-								<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} className="gap-2">
-									<span className="text-[10px] font-heading uppercase tracking-wider font-semibold">
-										Auto
-									</span>
-								</Checkbox>
+						{/* Auto Refresh Controls */}
+						<div className="flex items-center gap-3 px-2">
+							<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} className="gap-2">
+								<span className="text-[10px] font-heading uppercase tracking-wider font-semibold">
+									Auto
+								</span>
+							</Checkbox>
 
-								<Select
-									value={refreshInterval.toString()}
-									onChange={(val: string) => setRefreshInterval(Number(val))}
-									isDisabled={!autoRefresh}
-									containerClassName="w-[70px]"
-									className="h-8 min-h-0 text-xs py-0 px-2"
-									options={[
-										{ value: "10", label: "10s" },
-										{ value: "30", label: "30s" },
-										{ value: "60", label: "1m" },
-										{ value: "300", label: "5m" },
-									]}
-								/>
-							</div>
+							<Select
+								value={refreshInterval.toString()}
+								onChange={(val: string) => setRefreshInterval(Number(val))}
+								isDisabled={!autoRefresh}
+								containerClassName="w-[70px]"
+								className="h-8 min-h-0 text-xs py-0 px-2"
+								options={[
+									{ value: "10", label: "10s" },
+									{ value: "30", label: "30s" },
+									{ value: "60", label: "1m" },
+									{ value: "300", label: "5m" },
+								]}
+							/>
 						</div>
 					</div>
 				}
