@@ -230,7 +230,7 @@ actions={
 								</div>
 							</div>
 							<div className="text-[9px] text-muted-foreground font-heading uppercase tracking-wider leading-none mt-1 ml-3">
-								Data Snapshot
+Last Refresh
 							</div>
 						</div>
 
