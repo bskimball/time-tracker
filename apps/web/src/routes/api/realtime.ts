@@ -96,15 +96,6 @@ app.get("/manager-stream", async (c) => {
 
 				controller.enqueue(encoder.encode(formatSseEvent(event)));
 			});
-
-			c.req.raw.signal.addEventListener(
-				"abort",
-				() => {
-					cleanup();
-					controller.close();
-				},
-				{ once: true }
-			);
 		},
 		cancel() {
 			cleanup();
