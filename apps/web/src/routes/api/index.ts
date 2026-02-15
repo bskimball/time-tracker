@@ -53,10 +53,7 @@ app.use("/doc", requiredApiKey());
 
 // Apply API key authentication to all routes except health
 app.use("/*", async (c, next) => {
-	if (
-		c.req.path === "/api/realtime/manager-stream" ||
-		c.req.path === "/realtime/manager-stream"
-	) {
+	if (c.req.path.includes("/realtime/manager-stream")) {
 		return next();
 	}
 
