@@ -7,6 +7,7 @@ import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
 import {
 	LiaUserClockSolid,
 	LiaExclamationTriangleSolid,
@@ -17,7 +18,6 @@ import {
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
-	LiaSyncSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -107,6 +107,7 @@ export function ManagerDashboard({
 	}, []);
 
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
+	const staleAfterSeconds = 120;
 
 	const formatDuration = (startTime: Date): string => {
 		const diff = now.getTime() - new Date(startTime).getTime();
@@ -148,23 +149,14 @@ export function ManagerDashboard({
 				})}`}
 				actions={
 					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
-						<div className="px-3 py-2 rounded-[2px] border border-border/60 bg-card">
-							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-								Data Snapshot
-							</div>
-							<div className="font-data text-xs tabular-nums">
-								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-							</div>
-						</div>
-						<Button
-							variant="outline"
-							className="gap-2"
-							onPress={() => navigate(0)}
-							disabled={isRefreshing}
-						>
-							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
-							{isRefreshing ? "Refreshing" : "Refresh"}
-						</Button>
+						<ManagerSnapshotControl
+							label="Data"
+							snapshotAt={snapshotDate}
+							now={now}
+							staleAfterSeconds={staleAfterSeconds}
+							onRefresh={() => navigate(0)}
+							isRefreshing={isRefreshing}
+						/>
 						<Link to="/manager/monitor">
 							<Button variant="outline" className="gap-2">
 								<LiaStopwatchSolid />

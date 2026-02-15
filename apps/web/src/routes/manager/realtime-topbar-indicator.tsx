@@ -4,11 +4,12 @@ import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
 
 const TOPBAR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
+const TOPBAR_INVALIDATION_EVENTS = ["heartbeat"] as const;
 
-export function ManagerRealtimeTopbarIndicator({ className }: { className?: string }) {
+	export function ManagerRealtimeTopbarIndicator({ className }: { className?: string }) {
 	const realtime = useManagerRealtime({
 		scopes: TOPBAR_REALTIME_SCOPES,
-		invalidateOn: ["heartbeat"],
+		invalidateOn: TOPBAR_INVALIDATION_EVENTS,
 		pollingIntervalSeconds: 60,
 		onInvalidate: () => {
 			// Top bar indicator does not trigger route reloads.
