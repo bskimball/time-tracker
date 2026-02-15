@@ -47,7 +47,10 @@ type ManagedEventSource = {
 	addEventListener: (name: string, listener: (event: unknown) => void) => void;
 };
 
-const SSE_ENDPOINT = "/api/realtime/manager-stream";
+const SSE_ENDPOINT_CANDIDATES = [
+	"/api/realtime/manager-stream",
+	"/realtime/manager-stream",
+] as const;
 
 function clampPollingSeconds(value: number | undefined) {
 	if (typeof value !== "number" || Number.isNaN(value)) {
@@ -68,6 +71,7 @@ export function useManagerRealtime(options: ManagerRealtimeOptions): ManagerReal
 	const fallbackPollTimerRef = useRef<number | null>(null);
 	const fallbackSseRetryTimerRef = useRef<number | null>(null);
 	const reconnectAttemptsRef = useRef(0);
+	const endpointIndexRef = useRef(0);
 	const fallbackRetryAttemptsRef = useRef(0);
 	const invalidateQueuedRef = useRef(false);
 	const onInvalidateRef = useRef(options.onInvalidate);
@@ -173,13 +177,18 @@ export function useManagerRealtime(options: ManagerRealtimeOptions): ManagerReal
 
 			setConnectionState("reconnecting");
 			const scopesParam = options.scopes.join(",");
+			const endpoint = SSE_ENDPOINT_CANDIDATES[endpointIndexRef.current] ?? SSE_ENDPOINT_CANDIDATES[0];
 			const source = new window.EventSource(
-				`${SSE_ENDPOINT}?scopes=${encodeURIComponent(scopesParam)}`
+				`${endpoint}?scopes=${encodeURIComponent(scopesParam)}`
 			) as unknown as ManagedEventSource;
 			eventSourceRef.current = source;
 
 			source.onopen = () => {
 				reconnectAttemptsRef.current = 0;
+				endpointIndexRef.current = Math.min(
+					endpointIndexRef.current,
+					SSE_ENDPOINT_CANDIDATES.length - 1
+				);
 				stopPollingFallback();
 				setConnectionState("connected");
 			};
@@ -209,6 +218,17 @@ export function useManagerRealtime(options: ManagerRealtimeOptions): ManagerReal
 
 			source.onerror = () => {
 				closeEventSource();
+
+				if (endpointIndexRef.current < SSE_ENDPOINT_CANDIDATES.length - 1) {
+					endpointIndexRef.current += 1;
+					reconnectAttemptsRef.current = 0;
+					reconnectTimerRef.current = window.setTimeout(() => {
+						reconnectTimerRef.current = null;
+						connect();
+					}, 150);
+					return;
+				}
+
 				reconnectAttemptsRef.current += 1;
 
 				if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
