@@ -43,7 +43,7 @@ export function AlertsPopover({ alerts }: AlertsPopoverProps) {
 
 			<Popover
 				placement="bottom end"
-				className="rounded-[2px] border border-border bg-card shadow-industrial w-[360px] max-h-[420px] overflow-hidden entering:animate-scale-in exiting:animate-fade-in exiting:direction-reverse"
+				className="rounded-[2px] border border-border bg-card shadow-industrial w-[360px] max-h-[420px] overflow-hidden"
 			>
 				<Dialog className="outline-none">
 					<div className="border-b border-border px-4 py-3 flex items-center justify-between bg-muted/30">

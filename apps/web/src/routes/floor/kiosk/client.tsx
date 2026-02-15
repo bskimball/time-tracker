@@ -253,7 +253,7 @@ export function KioskTimeClock({
 								)}
 
 								{pinState?.success && (
-									<Alert variant="success" className="mb-8 animate-fade-in">
+<Alert variant="success" className="mb-8">
 										{pinState.message}
 									</Alert>
 								)}
@@ -325,7 +325,7 @@ export function KioskTimeClock({
 
 					{/* Side Column: Active Sessions */}
 					{activeLogs.length > 0 && (
-						<div className="lg:col-span-5 space-y-6 animate-slide-in-right">
+<div className="lg:col-span-5 space-y-6">
 							<div className="flex items-center justify-between px-2">
 								<div className="flex flex-col">
 									<span className="font-mono text-[10px] text-secondary/50 tracking-widest uppercase mb-1">
@@ -413,7 +413,7 @@ export function KioskTimeClock({
 							</span>
 						</div>
 						{showApiKey && (
-							<div className="flex items-center gap-2 animate-fade-in">
+<div className="flex items-center gap-2">
 								<SimpleInput
 									type="password"
 									value={apiKey}
@@ -451,7 +451,7 @@ export function KioskTimeClock({
 
 				{/* Notifications */}
 				{notifications.map((notification) => (
-					<div key={notification.id} className={`fixed bottom-8 right-8 z-50 animate-slide-up`}>
+<div key={notification.id} className={`fixed bottom-8 right-8 z-50`}>
 						<Alert
 							variant={
 								notification.type === "success"

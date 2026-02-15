@@ -205,6 +205,10 @@ export function TimesheetManager({
 		refreshLogs();
 	};
 
+	const assignedNotClockedInCount = floorActiveEmployees.filter(
+		(entry) => entry.source === "TASK_ASSIGNMENT"
+	).length;
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
@@ -420,7 +424,7 @@ export function TimesheetManager({
 
 				<TabPanel id="active">
 					<div className="space-y-4">
-						<div className="grid gap-4 md:grid-cols-2">
+						<div className="grid gap-4 md:grid-cols-3">
 							<Card>
 								<CardBody>
 									<p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
@@ -437,13 +441,26 @@ export function TimesheetManager({
 							<Card>
 								<CardBody>
 									<p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
-										Floor Active
+										Assigned/On Floor
 									</p>
 									<p className="mt-2 text-2xl font-mono tabular-nums">
 										{floorActiveEmployees.length}
 									</p>
 									<p className="text-xs text-muted-foreground">
-										Union of WORK logs and active task assignments (monitor semantics)
+										Clocked-in workers plus employees with active task assignments
+									</p>
+								</CardBody>
+							</Card>
+							<Card>
+								<CardBody>
+									<p className="text-xs font-heading uppercase tracking-wider text-muted-foreground">
+										Assigned Not Clocked In
+									</p>
+									<p className="mt-2 text-2xl font-mono tabular-nums">
+										{assignedNotClockedInCount}
+									</p>
+									<p className="text-xs text-muted-foreground">
+										Employees with open task assignments but no active WORK/BREAK log
 									</p>
 								</CardBody>
 							</Card>
@@ -529,7 +546,7 @@ export function TimesheetManager({
 
 						<Card>
 							<CardHeader>
-								<CardTitle>Floor Active</CardTitle>
+								<CardTitle>Assigned/On Floor</CardTitle>
 							</CardHeader>
 							<CardBody>
 								<div className="overflow-x-auto">

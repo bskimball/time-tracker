@@ -3,6 +3,7 @@
 import { db } from "~/lib/db";
 import type { Prisma } from "@prisma/client";
 import { validateRequest } from "~/lib/auth";
+import { publishManagerRealtimeEvent } from "~/lib/manager-realtime";
 
 export async function getTimeLogsWithCorrections(
 	employeeId?: string,
@@ -105,6 +106,16 @@ export async function createTimeCorrection(data: {
 		},
 	});
 
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "manager_time_correction_created",
+		employeeId: data.employeeId,
+		timeLogId: timeLog.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "manager_time_correction_created",
+		employeeId: data.employeeId,
+	});
+
 	return timeLog;
 }
 
@@ -165,6 +176,16 @@ export async function editTimeCorrection(
 		},
 	});
 
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "manager_time_correction_edited",
+		employeeId: updatedLog.employeeId,
+		timeLogId: updatedLog.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "manager_time_correction_edited",
+		employeeId: updatedLog.employeeId,
+	});
+
 	return updatedLog;
 }
 
@@ -186,6 +207,16 @@ export async function deleteTimeCorrection(id: string, reason: string) {
 			Employee: true,
 			Station: true,
 		},
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "manager_time_correction_deleted",
+		employeeId: deletedLog.employeeId,
+		timeLogId: deletedLog.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "manager_time_correction_deleted",
+		employeeId: deletedLog.employeeId,
 	});
 
 	return deletedLog;
@@ -296,6 +327,15 @@ export async function bulkCreateCorrections(
 		}
 
 		return results;
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "manager_time_corrections_bulk_created",
+		affectedCount: createdCorrections.length,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "manager_time_corrections_bulk_created",
+		affectedCount: createdCorrections.length,
 	});
 
 	return createdCorrections;
@@ -460,6 +500,16 @@ export async function closeTimeLog(id: string, endTime: Date = new Date()) {
 			Employee: true,
 			Station: true,
 		},
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "manager_closed_time_log",
+		employeeId: updatedLog.employeeId,
+		timeLogId: updatedLog.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "manager_closed_time_log",
+		employeeId: updatedLog.employeeId,
 	});
 
 	return updatedLog;

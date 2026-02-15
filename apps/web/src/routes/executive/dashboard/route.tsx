@@ -145,7 +145,7 @@ export default async function Component() {
 	return (
 		<div className="space-y-8 pb-8">
 			{/* ── Header ──────────────────────────────────────────────────── */}
-			<div className="animate-fade-in">
+			<div>
 				<PageHeader
 					title="Executive Dashboard"
 					subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
@@ -161,12 +161,12 @@ export default async function Component() {
 			</div>
 
 			{/* ── Time Range ──────────────────────────────────────────────── */}
-			<div className="animate-fade-in-up animate-delay-100">
+			<div>
 				<TimeRangeTabs ranges={["today", "week", "month"]} defaultRange="today" />
 			</div>
 
 			{/* ── Hero: Productivity Trend ─────────────────────────────────── */}
-			<section className="animate-fade-in-up animate-delay-200">
+			<section>
 				<Card className="overflow-hidden">
 					<CardHeader className="bg-muted/30 border-b border-border/50">
 						<div className="flex items-center justify-between">
@@ -208,6 +208,7 @@ export default async function Component() {
 						value={kpis.totalActiveEmployees}
 						subtitle="Current workforce"
 						icon="users"
+						animationCacheKey={`dashboard:${timeRange}:active-employees:${kpis.totalActiveEmployees}`}
 						trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
 					/>
 					<KPICard
@@ -215,6 +216,7 @@ export default async function Component() {
 						value={`${kpis.productivityRate} u/hr`}
 						subtitle={`${format(new Date(), "EEEE")}'s average`}
 						icon="chart"
+						animationCacheKey={`dashboard:${timeRange}:productivity-rate:${kpis.productivityRate}`}
 						trend={{
 							direction: productivityConfig.direction,
 							value:
@@ -231,6 +233,7 @@ export default async function Component() {
 						value={`${kpis.overtimePercentage}%`}
 						subtitle="Of total hours"
 						icon="clock"
+						animationCacheKey={`dashboard:${timeRange}:overtime:${kpis.overtimePercentage}`}
 						trend={{
 							direction: overtimeConfig.direction,
 							value:
@@ -247,6 +250,7 @@ export default async function Component() {
 						value={`${kpis.occupancyLevel.toFixed(1)}%`}
 						subtitle="Station utilization"
 						icon="industry"
+						animationCacheKey={`dashboard:${timeRange}:occupancy:${kpis.occupancyLevel.toFixed(1)}`}
 						trend={{
 							direction: occupancyConfig.direction,
 							value:
@@ -269,7 +273,7 @@ export default async function Component() {
 
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					{/* ── Station Performance ────────────────────────────── */}
-					<div className="animate-fade-in-up animate-delay-100">
+					<div>
 						<Card className="h-full flex flex-col overflow-hidden">
 							<CardHeader className="bg-muted/30 border-b border-border/50">
 								<div className="flex items-center justify-between">
@@ -339,7 +343,7 @@ export default async function Component() {
 					</div>
 
 					{/* ── Financial Health ────────────────────────────────── */}
-					<div className="animate-fade-in-up animate-delay-200">
+					<div>
 						<Card className="h-full flex flex-col overflow-hidden">
 							<CardHeader className="bg-muted/30 border-b border-border/50">
 								<div className="flex items-center justify-between">

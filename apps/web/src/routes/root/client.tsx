@@ -98,7 +98,7 @@ export function ErrorBoundary() {
 
 	return (
 		<main className="min-h-screen bg-grid-pattern flex items-center justify-center p-4">
-			<div className="w-full max-w-4xl animate-scale-in">
+			<div className="w-full max-w-4xl">
 				{/* Industrial Warning Header */}
 				<SafetyStripes position="top" />
 				
@@ -113,7 +113,7 @@ export function ErrorBoundary() {
 					{/* Error Message */}
 					<IndustrialSection title="Error Message">
 						<div className="flex justify-between items-start gap-4">
-							<p className="text-xl text-foreground font-medium leading-relaxed animate-slide-up">
+							<p className="text-xl text-foreground font-medium leading-relaxed">
 								{message}
 							</p>
 							<Button
@@ -144,7 +144,7 @@ export function ErrorBoundary() {
 									</span>
 									Stack Trace
 								</summary>
-								<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto animate-slide-down">
+								<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto">
 									<pre className="font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap">
 										{errorStack}
 									</pre>
@@ -163,7 +163,7 @@ export function ErrorBoundary() {
 									</span>
 									Additional Details
 								</summary>
-								<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto animate-slide-down">
+								<div className="bg-card border border-border rounded-sm p-6 overflow-x-auto">
 									<pre className="font-mono text-xs text-foreground leading-relaxed">
 										{JSON.stringify(errorDetails, null, 2)}
 									</pre>
@@ -173,7 +173,7 @@ export function ErrorBoundary() {
 					)}
 					
 					{/* Action Footer */}
-					<div className="p-8 bg-accent/50 flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-up">
+					<div className="p-8 bg-accent/50 flex flex-col sm:flex-row items-center justify-between gap-4">
 						<div className="flex items-center gap-3">
 							<div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
 							<span className="font-data text-xs text-muted-foreground">

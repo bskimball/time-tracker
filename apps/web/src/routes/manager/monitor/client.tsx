@@ -12,6 +12,7 @@ import {
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
+import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import {
 	LiaUserClockSolid,
 	LiaChartPieSolid,
@@ -19,6 +20,14 @@ import {
 	LiaStopwatchSolid,
 	LiaSyncSolid,
 } from "react-icons/lia";
+
+const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
+const MONITOR_INVALIDATION_EVENTS = [
+	"task_assignment_changed",
+	"time_log_changed",
+	"break_changed",
+	"worker_status_changed",
+] as const;
 
 type ActiveTimeLog = {
 	id: string;
@@ -73,8 +82,20 @@ export function FloorMonitor({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const [autoRefresh, setAutoRefresh] = useState(true);
-	const [refreshInterval, setRefreshInterval] = useState(30); // seconds
+	const [autoRefresh, setAutoRefresh] = useState(false);
+	const [refreshInterval, setRefreshInterval] = useState(60); // seconds
+	const realtime = useManagerRealtime({
+		scopes: MONITOR_REALTIME_SCOPES,
+		invalidateOn: MONITOR_INVALIDATION_EVENTS,
+		pollingIntervalSeconds: 30,
+		onInvalidate: () => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+
+			navigate(0);
+		},
+	});
 	const stationStatusOptions = ["ACTIVE", "BUSY", "FULL", "IDLE", "INACTIVE"] as const;
 	const [statusFilters, setStatusFilters] = useState<string[]>([...stationStatusOptions]);
 
@@ -88,7 +109,7 @@ export function FloorMonitor({
 	useEffect(() => {
 		if (!autoRefresh) return;
 
-		const intervalInMs = Math.max(10, refreshInterval) * 1000;
+		const intervalInMs = Math.max(30, refreshInterval) * 1000;
 		const interval = window.setInterval(() => {
 			if (document.hidden || isRefreshing) {
 				return;
@@ -123,6 +144,15 @@ export function FloorMonitor({
 	);
 	const staleThresholdSeconds = autoRefresh ? Math.max(refreshInterval * 2, 20) : 120;
 	const freshnessState = secondsSinceRefresh >= staleThresholdSeconds ? "STALE" : "FRESH";
+	const realtimeStatusLabel =
+		realtime.connectionState === "connected"
+			? "Connected"
+			: realtime.connectionState === "reconnecting"
+				? "Reconnecting"
+				: "Offline fallback";
+	const nextAutoRefreshIn = autoRefresh
+		? Math.max(0, refreshInterval - (secondsSinceRefresh % refreshInterval))
+		: null;
 
 	const calculateDuration = (startTime: Date): string => {
 		const diff = currentTime.getTime() - new Date(startTime).getTime();
@@ -232,6 +262,23 @@ actions={
 							<div className="text-[9px] text-muted-foreground font-heading uppercase tracking-wider leading-none mt-1 ml-3">
 Last Refresh
 							</div>
+							<div
+								className={cn(
+									"text-[9px] font-mono uppercase tracking-wide mt-1 ml-3",
+									freshnessState === "STALE" ? "text-warning" : "text-emerald-600"
+								)}
+							>
+								{freshnessState === "STALE"
+									? `STALE ${secondsSinceRefresh}s`
+									: `FRESH ${secondsSinceRefresh}s`}
+							</div>
+							<div className="text-[9px] font-mono uppercase tracking-wide mt-1 ml-3 text-muted-foreground">
+								{realtimeStatusLabel}
+								{realtime.lastEventAt
+									? ` • ${realtime.lastEventAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+									: ""}
+								{realtime.usingPollingFallback ? " • Polling" : ""}
+							</div>
 						</div>
 
 						{/* Refresh Button */}
@@ -266,12 +313,17 @@ Last Refresh
 								containerClassName="w-[70px]"
 								className="h-8 min-h-0 text-xs py-0 px-2"
 								options={[
-									{ value: "10", label: "10s" },
 									{ value: "30", label: "30s" },
 									{ value: "60", label: "1m" },
 									{ value: "300", label: "5m" },
 								]}
 							/>
+
+							{autoRefresh && nextAutoRefreshIn !== null && (
+								<span className="text-[10px] font-mono text-muted-foreground">
+									Next {nextAutoRefreshIn}s
+								</span>
+							)}
 						</div>
 					</div>
 				}

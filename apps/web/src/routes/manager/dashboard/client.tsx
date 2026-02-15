@@ -2,7 +2,7 @@
 
 import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useNavigation } from "react-router";
-import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-system";
+import { Card, CardHeader, CardTitle, CardBody, Alert, Checkbox, Select } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
@@ -76,6 +76,8 @@ export function ManagerDashboard({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [now, setNow] = useState(() => new Date());
+	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+	const [autoRefreshInterval, setAutoRefreshInterval] = useState(180);
 
 	useEffect(() => {
 		const interval = window.setInterval(() => {
@@ -85,12 +87,30 @@ export function ManagerDashboard({
 		return () => window.clearInterval(interval);
 	}, []);
 
+	useEffect(() => {
+		if (!autoRefreshEnabled) {
+			return;
+		}
+
+		const interval = window.setInterval(() => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+			navigate(0);
+		}, Math.max(120, autoRefreshInterval) * 1000);
+
+		return () => window.clearInterval(interval);
+	}, [autoRefreshEnabled, autoRefreshInterval, isRefreshing, navigate]);
+
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
 	const secondsSinceRefresh = Math.max(
 		0,
 		Math.floor((now.getTime() - snapshotDate.getTime()) / 1000),
 	);
 	const freshnessState = secondsSinceRefresh >= 120 ? "STALE" : "FRESH";
+	const nextAutoRefreshIn = autoRefreshEnabled
+		? Math.max(0, autoRefreshInterval - (secondsSinceRefresh % autoRefreshInterval))
+		: null;
 
 	const formatDuration = (startTime: Date): string => {
 		const diff = now.getTime() - new Date(startTime).getTime();
@@ -122,7 +142,7 @@ export function ManagerDashboard({
 				: null;
 
 	return (
-		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none pb-10">
+		<div className="space-y-8 pb-10">
 			<PageHeader
 				title="Manager Dashboard"
 				subtitle={`Overview for ${user.name || user.email} • ${new Date().toLocaleDateString(undefined, {
@@ -154,6 +174,25 @@ export function ManagerDashboard({
 							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
 							{isRefreshing ? "Refreshing" : "Refresh"}
 						</Button>
+						<div className="flex items-center gap-2 rounded-[2px] border border-border bg-card px-3 py-2">
+							<Checkbox isSelected={autoRefreshEnabled} onChange={setAutoRefreshEnabled}>
+								<span className="text-[10px] font-mono uppercase">Auto</span>
+							</Checkbox>
+							<Select
+								value={String(autoRefreshInterval)}
+								onChange={(value: string) => setAutoRefreshInterval(Number(value))}
+								isDisabled={!autoRefreshEnabled}
+								containerClassName="w-[94px]"
+								className="h-8 min-h-0 text-xs"
+								options={[
+									{ value: "180", label: "3m" },
+									{ value: "300", label: "5m" },
+								]}
+							/>
+							{autoRefreshEnabled && nextAutoRefreshIn !== null && (
+								<span className="text-[10px] font-mono text-muted-foreground">Next {nextAutoRefreshIn}s</span>
+							)}
+						</div>
 						<Link to="/manager/monitor">
 							<Button variant="outline" className="gap-2">
 								<LiaStopwatchSolid />

@@ -10,7 +10,7 @@ import {
 	useState,
 } from "react";
 import type { ErrorInfo, ReactNode } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useNavigation, useSearchParams } from "react-router";
 import {
 	Button,
 	Card,
@@ -22,18 +22,30 @@ import {
 	Tab,
 	TabPanel,
 	Badge,
+	Checkbox,
+	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
+import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
 import { TaskAssignmentForm } from "./task-assignment-form";
 import { TaskCompletionForm } from "./task-completion-form";
 import { TaskSwitchForm } from "./task-switch-form";
 import { TaskTypeForm } from "./task-type-form";
+import { TaskTypeEditForm } from "./task-type-edit-form";
 
 type TaskManagerTab = "assignments" | "history" | "types";
 type TaskDisplayMode = "grid" | "list";
+type AssignmentFilter = "all" | "manager" | "worker";
 const DEFAULT_HISTORY_WINDOW_DAYS = 30;
+const TASK_REALTIME_SCOPES = ["tasks", "monitor"] as const;
+const TASK_INVALIDATION_EVENTS = [
+	"task_assignment_changed",
+	"time_log_changed",
+	"break_changed",
+	"worker_status_changed",
+] as const;
 
 type TaskHistorySummaryMetrics = {
 	totalInWindow: number;
@@ -126,6 +138,8 @@ export function TaskManager({
 	const metricsWindowDays = historyWindowDays ?? DEFAULT_HISTORY_WINDOW_DAYS;
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
+	const navigation = useNavigation();
+	const isRefreshing = navigation.state !== "idle";
 	const tabParam = searchParams.get("tab");
 	const activeTab: TaskManagerTab = isTaskManagerTab(tabParam) ? tabParam : "assignments";
 
@@ -140,7 +154,26 @@ export function TaskManager({
 
 	const [showAssignForm, setShowAssignForm] = useState(false);
 	const [showTaskTypeForm, setShowTaskTypeForm] = useState(false);
+	const [selectedTaskType, setSelectedTaskType] = useState<TaskType | null>(null);
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("grid");
+	const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>("all");
+	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+	const [autoRefreshInterval, setAutoRefreshInterval] = useState(120);
+	const [lastSyncedAt, setLastSyncedAt] = useState(() => new Date());
+	const [refreshClock, setRefreshClock] = useState(() => new Date());
+
+	const realtime = useManagerRealtime({
+		scopes: TASK_REALTIME_SCOPES,
+		invalidateOn: TASK_INVALIDATION_EVENTS,
+		pollingIntervalSeconds: 45,
+		onInvalidate: () => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+
+			navigate(0);
+		},
+	});
 
 	// State for Complete/Switch Modals
 	const [selectedAssignment, setSelectedAssignment] = useState<TaskAssignment | null>(null);
@@ -162,33 +195,114 @@ export function TaskManager({
 		null
 	);
 
+	const [updateTypeState, updateTypeAction, isUpdateTypePending] = useActionState(
+		async (_prev: { error?: string | null; success?: boolean } | null, formData: FormData) => {
+			const { updateTaskTypeAction } = await import("./actions");
+			return updateTaskTypeAction(_prev, formData);
+		},
+		null
+	);
+
+	const [setTaskTypeActiveState, setTaskTypeActiveAction, isSetTaskTypeActivePending] =
+		useActionState(
+			async (_prev: { error?: string | null; success?: boolean } | null, formData: FormData) => {
+				const { setTaskTypeActiveStateAction } = await import("./actions");
+				return setTaskTypeActiveStateAction(_prev, formData);
+			},
+			null
+		);
+
+	const [localTaskTypes, setLocalTaskTypes] = useState(taskTypes);
+
 	// Local state to maintain the list of assignments across server actions
 	// This ensures updates "stick" after the optimistic period ends but before a full page reload
 	const [localAssignments, setLocalAssignments] = useState(activeAssignments);
 
+	useEffect(() => {
+		setLocalTaskTypes(taskTypes);
+		setLastSyncedAt(new Date());
+	}, [taskTypes]);
+
 	// Sync with props if they change (e.g. from parent revalidation)
 	useEffect(() => {
 		setLocalAssignments(activeAssignments);
+		setLastSyncedAt(new Date());
 	}, [activeAssignments]);
 
 	// Sync with action results
 	useEffect(() => {
 		if (assignState?.success && assignState.activeAssignments) {
 			setLocalAssignments(assignState.activeAssignments);
+			setLastSyncedAt(new Date());
 		}
 	}, [assignState]);
 
 	useEffect(() => {
 		if (completeState?.success && completeState.activeAssignments) {
 			setLocalAssignments(completeState.activeAssignments);
+			setLastSyncedAt(new Date());
 		}
 	}, [completeState]);
 
 	useEffect(() => {
 		if (switchState?.success && switchState.activeAssignments) {
 			setLocalAssignments(switchState.activeAssignments);
+			setLastSyncedAt(new Date());
 		}
 	}, [switchState]);
+
+	useEffect(() => {
+		if (createTypeState?.success && createTypeState.TaskType) {
+			setLocalTaskTypes((current) => {
+				const withoutExisting = current.filter((taskType) => taskType.id !== createTypeState.TaskType?.id);
+				return [createTypeState.TaskType!, ...withoutExisting];
+			});
+			setLastSyncedAt(new Date());
+		}
+	}, [createTypeState]);
+
+	useEffect(() => {
+		if (updateTypeState?.success && updateTypeState.TaskType) {
+			setLocalTaskTypes((current) =>
+				current.map((taskType) =>
+					taskType.id === updateTypeState.TaskType?.id ? updateTypeState.TaskType : taskType
+				)
+			);
+			setLastSyncedAt(new Date());
+		}
+	}, [updateTypeState]);
+
+	useEffect(() => {
+		if (setTaskTypeActiveState?.success && setTaskTypeActiveState.TaskType) {
+			setLocalTaskTypes((current) =>
+				current.map((taskType) =>
+					taskType.id === setTaskTypeActiveState.TaskType?.id
+						? setTaskTypeActiveState.TaskType
+						: taskType
+				)
+			);
+			setLastSyncedAt(new Date());
+		}
+	}, [setTaskTypeActiveState]);
+
+	useEffect(() => {
+		const interval = window.setInterval(() => {
+			setRefreshClock(new Date());
+		}, 1000);
+
+		return () => window.clearInterval(interval);
+	}, []);
+
+	useEffect(() => {
+		if (!autoRefreshEnabled) return;
+
+		const interval = window.setInterval(() => {
+			if (document.hidden) return;
+			navigate(0);
+		}, Math.max(60, autoRefreshInterval) * 1000);
+
+		return () => window.clearInterval(interval);
+	}, [autoRefreshEnabled, autoRefreshInterval, navigate]);
 
 	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
 		TaskAssignment[],
@@ -297,7 +411,45 @@ export function TaskManager({
 		);
 	};
 
-	const latestActionError = assignState?.error || completeState?.error || switchState?.error;
+	const filteredAssignments = optimisticAssignments.filter((assignment) => {
+		if (assignmentFilter === "manager") {
+			return getAssignmentSource(assignment) === "MANAGER";
+		}
+
+		if (assignmentFilter === "worker") {
+			return getAssignmentSource(assignment) === "WORKER";
+		}
+
+		return true;
+	});
+
+	const activeTaskTypes = localTaskTypes.filter((taskType) => taskType.isActive);
+	const secondsSinceSync = Math.max(
+		0,
+		Math.floor((refreshClock.getTime() - lastSyncedAt.getTime()) / 1000)
+	);
+	const freshnessLabel = secondsSinceSync >= 180 ? "STALE" : "FRESH";
+	const realtimeStatusLabel =
+		realtime.connectionState === "connected"
+			? "Connected"
+			: realtime.connectionState === "reconnecting"
+				? "Reconnecting"
+				: "Offline fallback";
+
+	const latestActionError =
+		assignState?.error ||
+		completeState?.error ||
+		switchState?.error ||
+		createTypeState?.error ||
+		updateTypeState?.error ||
+		setTaskTypeActiveState?.error;
+
+	const handleTaskTypeStatusToggle = (taskType: TaskType, nextIsActive: boolean) => {
+		const fd = new FormData();
+		fd.set("taskTypeId", taskType.id);
+		fd.set("isActive", nextIsActive ? "true" : "false");
+		setTaskTypeActiveAction(fd);
+	};
 
 	return (
 		<div className="space-y-6">
@@ -305,16 +457,67 @@ export function TaskManager({
 				title="Task Management"
 				subtitle="Assign and track employee tasks"
 				actions={
-					<div className="flex space-x-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<Button onClick={() => setShowAssignForm(true)} variant="primary">
 							Assign Task
 						</Button>
 						<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
 							Create Task Type
 						</Button>
+						<Button onClick={() => navigate(0)} variant="outline">
+							Refresh
+						</Button>
 					</div>
 				}
 			/>
+
+			<div className="rounded-[2px] border border-border/60 bg-card px-3 py-2">
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+							Data freshness
+						</p>
+						<p className="font-mono text-xs text-foreground">
+							Last sync {lastSyncedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+							{" "}
+							({secondsSinceSync}s ago)
+						</p>
+						<p
+							className={cn(
+								"text-[10px] font-mono uppercase",
+								freshnessLabel === "STALE" ? "text-warning" : "text-emerald-600"
+							)}
+						>
+							{freshnessLabel === "STALE"
+								? "Potentially stale view - refresh recommended"
+								: "Fresh view"}
+						</p>
+						<p className="text-[10px] font-mono uppercase text-muted-foreground">
+							Live {realtimeStatusLabel}
+							{realtime.lastEventAt
+								? ` • Last event ${realtime.lastEventAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+								: ""}
+							{realtime.usingPollingFallback ? " • Polling enabled" : ""}
+						</p>
+					</div>
+					<div className="flex items-center gap-3">
+						<Checkbox isSelected={autoRefreshEnabled} onChange={setAutoRefreshEnabled}>
+							<span className="text-xs font-mono uppercase">Auto refresh</span>
+						</Checkbox>
+						<Select
+							value={String(autoRefreshInterval)}
+							onChange={(value: string) => setAutoRefreshInterval(Number(value))}
+							isDisabled={!autoRefreshEnabled}
+							containerClassName="w-[110px]"
+							className="h-9"
+							options={[
+								{ value: "120", label: "Every 2m" },
+								{ value: "300", label: "Every 5m" },
+							]}
+						/>
+					</div>
+				</div>
+			</div>
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -335,8 +538,10 @@ export function TaskManager({
 						<h3 className="font-heading text-xs uppercase tracking-wider text-muted-foreground mb-2">
 							Task Types
 						</h3>
-						<p className="text-2xl font-mono tabular-nums">{taskTypes.length}</p>
-						<p className="text-sm text-muted-foreground">Available</p>
+						<p className="text-2xl font-mono tabular-nums">{activeTaskTypes.length}</p>
+						<p className="text-sm text-muted-foreground">
+							{localTaskTypes.length} total ({localTaskTypes.length - activeTaskTypes.length} inactive)
+						</p>
 					</CardBody>
 				</Card>
 
@@ -424,12 +629,35 @@ export function TaskManager({
 				<TabPanel id="assignments">
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between">
-							<CardTitle>Active Task Assignments</CardTitle>
-							{optimisticAssignments.length > 0 && (
-								<Button size="sm" onClick={() => setShowAssignForm(true)} variant="primary">
-									Assign Task
-								</Button>
-							)}
+							<div className="space-y-2">
+								<CardTitle>Active Task Assignments</CardTitle>
+								<div className="flex flex-wrap items-center gap-2">
+									<Button
+										variant={assignmentFilter === "all" ? "primary" : "outline"}
+										size="xs"
+										onClick={() => setAssignmentFilter("all")}
+									>
+										All ({optimisticAssignments.length})
+									</Button>
+									<Button
+										variant={assignmentFilter === "manager" ? "primary" : "outline"}
+										size="xs"
+										onClick={() => setAssignmentFilter("manager")}
+									>
+										Manager
+									</Button>
+									<Button
+										variant={assignmentFilter === "worker" ? "primary" : "outline"}
+										size="xs"
+										onClick={() => setAssignmentFilter("worker")}
+									>
+										Self-assigned
+									</Button>
+								</div>
+							</div>
+							<Button size="sm" onClick={() => setShowAssignForm(true)} variant="primary">
+								Assign Task
+							</Button>
 						</CardHeader>
 						<CardBody>
 							{latestActionError && (
@@ -437,7 +665,7 @@ export function TaskManager({
 									{latestActionError}
 								</div>
 							)}
-							{optimisticAssignments.length === 0 ? (
+							{filteredAssignments.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
 									<div className="mb-3 rounded-full bg-muted/50 p-4">
 										<div className="h-6 w-6 rounded-sm bg-foreground/20" />
@@ -454,7 +682,7 @@ export function TaskManager({
 								</div>
 							) : displayMode === "grid" ? (
 								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-									{optimisticAssignments.map((assignment: TaskAssignment) => (
+									{filteredAssignments.map((assignment: TaskAssignment) => (
 										<div
 											key={assignment.id}
 											className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
@@ -566,7 +794,7 @@ export function TaskManager({
 											</tr>
 										</thead>
 										<tbody>
-											{optimisticAssignments.map((assignment) => (
+										{filteredAssignments.map((assignment) => (
 												<tr
 													key={assignment.id}
 													className="border-b border-border hover:bg-muted/50"
@@ -653,7 +881,7 @@ export function TaskManager({
 							<CardTitle>Task Types</CardTitle>
 						</CardHeader>
 						<CardBody>
-							{taskTypes.length === 0 ? (
+							{localTaskTypes.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
 									<div className="mb-3 rounded-full bg-muted/50 p-4">
 										<div className="h-6 w-6 rounded-sm bg-foreground/20" />
@@ -670,7 +898,7 @@ export function TaskManager({
 								</div>
 							) : displayMode === "grid" ? (
 								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-									{taskTypes.map((taskType) => (
+									{localTaskTypes.map((taskType) => (
 										<div
 											key={taskType.id}
 											className="group relative flex flex-col justify-between rounded-[2px] border border-border bg-card p-4 transition-all hover:border-primary/50"
@@ -718,16 +946,23 @@ export function TaskManager({
 												)}
 											</div>
 
-											<div className="mt-auto space-y-2">
-												<Badge
-													variant="secondary"
-													className="w-full justify-center font-mono text-[10px] uppercase"
+											<div className="mt-auto grid grid-cols-2 gap-2">
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => setSelectedTaskType(taskType)}
+													disabled={isUpdateTypePending || isSetTaskTypeActivePending}
 												>
-													Edit Workflow Pending
-												</Badge>
-												<p className="text-center text-xs text-muted-foreground">
-													Configuration updates are not available yet.
-												</p>
+													Edit
+												</Button>
+												<Button
+													size="sm"
+													variant={taskType.isActive ? "secondary" : "primary"}
+													onClick={() => handleTaskTypeStatusToggle(taskType, !taskType.isActive)}
+													disabled={isUpdateTypePending || isSetTaskTypeActivePending}
+												>
+													{taskType.isActive ? "Deactivate" : "Reactivate"}
+												</Button>
 											</div>
 										</div>
 									))}
@@ -742,11 +977,11 @@ export function TaskManager({
 												<th className="p-4 text-left">Description</th>
 												<th className="p-4 text-left">Est. Time / Unit</th>
 												<th className="p-4 text-left">Status</th>
-												<th className="p-4 text-left">Configuration</th>
+												<th className="p-4 text-left">Actions</th>
 											</tr>
 										</thead>
 										<tbody>
-											{taskTypes.map((taskType) => (
+											{localTaskTypes.map((taskType) => (
 												<tr key={taskType.id} className="border-b border-border hover:bg-muted/50">
 													<td className="p-4">{taskType.name}</td>
 													<td className="p-4">{taskType.Station.name}</td>
@@ -766,8 +1001,25 @@ export function TaskManager({
 															{taskType.isActive ? "Active" : "Inactive"}
 														</Badge>
 													</td>
-													<td className="p-4 text-xs text-muted-foreground">
-														Edit workflow pending
+													<td className="p-4">
+														<div className="flex gap-2">
+															<Button
+																size="xs"
+																variant="outline"
+																onClick={() => setSelectedTaskType(taskType)}
+																disabled={isUpdateTypePending || isSetTaskTypeActivePending}
+															>
+																Edit
+															</Button>
+															<Button
+																size="xs"
+																variant={taskType.isActive ? "secondary" : "primary"}
+																onClick={() => handleTaskTypeStatusToggle(taskType, !taskType.isActive)}
+																disabled={isUpdateTypePending || isSetTaskTypeActivePending}
+															>
+																{taskType.isActive ? "Deactivate" : "Reactivate"}
+															</Button>
+														</div>
 													</td>
 												</tr>
 											))}
@@ -784,7 +1036,7 @@ export function TaskManager({
 			{showAssignForm && (
 				<TaskAssignmentForm
 					employees={employees}
-					taskTypes={taskTypes}
+					taskTypes={activeTaskTypes}
 					activeAssignments={optimisticAssignments}
 					onClose={() => setShowAssignForm(false)}
 					onSubmit={assignAction}
@@ -813,7 +1065,7 @@ export function TaskManager({
 			{activeModal === "switch" && selectedAssignment && (
 				<TaskSwitchForm
 					assignment={selectedAssignment}
-					taskTypes={taskTypes}
+					taskTypes={activeTaskTypes}
 					onClose={() => {
 						setActiveModal("none");
 						setSelectedAssignment(null);
@@ -833,6 +1085,17 @@ export function TaskManager({
 					onSubmit={createTypeAction}
 					isPending={isCreateTypePending}
 					state={createTypeState}
+				/>
+			)}
+
+			{selectedTaskType && (
+				<TaskTypeEditForm
+					key={selectedTaskType.id}
+					taskType={selectedTaskType}
+					onClose={() => setSelectedTaskType(null)}
+					onSubmit={updateTypeAction}
+					isPending={isUpdateTypePending}
+					state={updateTypeState}
 				/>
 			)}
 		</div>

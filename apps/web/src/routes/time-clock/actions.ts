@@ -6,6 +6,7 @@ import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { validateRequest } from "~/lib/auth";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
 import { getWorkerSelfAssignmentAccess } from "~/lib/task-assignment-permissions";
+import { publishManagerRealtimeEvent } from "~/lib/manager-realtime";
 
 export type ClockActionState = {
 	error?: string;
@@ -103,6 +104,15 @@ export async function startSelfTaskAction(
 		},
 	});
 
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "worker_started_task",
+		employeeId: context.employeeId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "worker_task_started",
+		employeeId: context.employeeId,
+	});
+
 	return { success: true, message: `Started task: ${taskType.name}` };
 }
 
@@ -173,6 +183,15 @@ export async function switchSelfTaskAction(
 		});
 	});
 
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "worker_switched_task",
+		employeeId: context.employeeId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "worker_task_switched",
+		employeeId: context.employeeId,
+	});
+
 	return { success: true, message: `Switched to task: ${taskType.name}` };
 }
 
@@ -217,6 +236,16 @@ export async function endSelfTaskAction(
 			endTime: new Date(),
 			notes: notes ? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim() : activeAssignment.notes,
 		},
+	});
+
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "worker_ended_task",
+		employeeId: context.employeeId,
+		taskAssignmentId: activeAssignment.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "worker_task_ended",
+		employeeId: context.employeeId,
 	});
 
 	return { success: true, message: `Ended task: ${activeAssignment.TaskType.name}` };
@@ -268,6 +297,15 @@ export async function clockIn(
 
 	await db.employee.update({ where: { id: employeeId }, data: { lastStationId: stationId } });
 
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "clock_in",
+		employeeId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "clock_in",
+		employeeId,
+	});
+
 	return { success: true, message: `${employee.name} clocked in at ${station.name}` };
 }
 
@@ -300,6 +338,20 @@ export async function clockOut(
 			},
 			data: { endTime: new Date(), updatedAt: new Date() },
 		});
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "clock_out",
+		employeeId: log.employeeId,
+		timeLogId: log.id,
+	});
+	publishManagerRealtimeEvent("break_changed", "monitor", {
+		reason: "clock_out_closed_breaks",
+		employeeId: log.employeeId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "clock_out",
+		employeeId: log.employeeId,
 	});
 
 	return { success: true, message: `${log.Employee.name} clocked out` };
@@ -342,6 +394,11 @@ export async function startBreak(
 		},
 	});
 
+	publishManagerRealtimeEvent("break_changed", "monitor", {
+		reason: "break_start",
+		employeeId,
+	});
+
 	return { success: true, message: "Break started" };
 }
 
@@ -366,6 +423,12 @@ export async function endBreak(
 	await db.timeLog.update({
 		where: { id: activeBreakLog.id },
 		data: { endTime: new Date(), updatedAt: new Date() },
+	});
+
+	publishManagerRealtimeEvent("break_changed", "monitor", {
+		reason: "break_end",
+		employeeId,
+		timeLogId: activeBreakLog.id,
 	});
 
 	return { success: true, message: "Break ended" };
@@ -413,6 +476,14 @@ export async function updateTimeLog(
 		},
 	});
 
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "time_log_updated",
+		timeLogId: logId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "time_log_updated",
+	});
+
 	return { success: true, message: "Time log updated" };
 }
 
@@ -433,6 +504,14 @@ export async function deleteTimeLog(
 			note: "Deleted from time clock UI",
 			clockMethod: "MANUAL",
 		},
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "time_log_deleted",
+		timeLogId: logId,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "time_log_deleted",
 	});
 
 	return { success: true, message: "Time log deleted" };
@@ -506,6 +585,20 @@ export async function pinToggleClock(
 			});
 		});
 
+		publishManagerRealtimeEvent("time_log_changed", "monitor", {
+			reason: "pin_clock_out",
+			employeeId: matchedEmployee.id,
+			timeLogId: activeWorkLog.id,
+		});
+		publishManagerRealtimeEvent("break_changed", "monitor", {
+			reason: "pin_clock_out_closed_breaks",
+			employeeId: matchedEmployee.id,
+		});
+		publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+			reason: "pin_clock_out",
+			employeeId: matchedEmployee.id,
+		});
+
 		return { success: true, message: `${matchedEmployee.name} clocked out` };
 	}
 
@@ -540,6 +633,15 @@ export async function pinToggleClock(
 			where: { id: matchedEmployee!.id },
 			data: { lastStationId: stationId },
 		});
+	});
+
+	publishManagerRealtimeEvent("time_log_changed", "monitor", {
+		reason: "pin_clock_in",
+		employeeId: matchedEmployee.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "pin_clock_in",
+		employeeId: matchedEmployee.id,
 	});
 
 	return { success: true, message: `${matchedEmployee.name} clocked in at ${station.name}` };
