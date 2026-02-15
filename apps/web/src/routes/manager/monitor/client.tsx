@@ -202,59 +202,74 @@ export function FloorMonitor({
 		}));
 
 	return (
-		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none">
+		<div className="space-y-8">
 			{/* Header */}
 			<PageHeader
 				title="Floor Monitor"
 				subtitle="Operations Monitor"
-				actions={
-					<div className="flex items-center gap-4">
-						<div className="px-3 py-2 rounded-[2px] border border-border bg-card" aria-live="polite">
-							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-								Data Snapshot
+actions={
+					<div className="flex items-center gap-6">
+						{/* Data Snapshot Readout */}
+						<div className="flex flex-col items-end">
+							<div className="flex items-center gap-2 mb-0.5">
+								<span className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+									Data Snapshot
+								</span>
+								<div
+									className={cn(
+										"w-1.5 h-1.5 rounded-full",
+										freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
+									)}
+								/>
 							</div>
-							<div className="font-mono text-xs tabular-nums">
-								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+							<div className="font-mono text-xl tabular-nums leading-none tracking-tight text-foreground">
+								{snapshotDate.toLocaleTimeString([], {
+									hour: "2-digit",
+									minute: "2-digit",
+									second: "2-digit",
+								})}
 							</div>
-							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
-								{freshnessState === "STALE"
-									? "Data is stale for selected cadence."
-									: "Data is within expected refresh window."}
-							</p>
 						</div>
-						<div className="text-right mr-4" aria-live="polite">
-							<div className="font-mono text-xl font-bold tracking-tighter tabular-nums">
-								{currentTime.toLocaleTimeString([], { hour12: false })}
+
+						{/* Control Toolbar */}
+						<div className="flex items-center gap-1 p-1 bg-card border border-border rounded-[2px] shadow-sm">
+							<button
+								type="button"
+								onClick={() => navigate(0)}
+								disabled={isRefreshing}
+								className={cn(
+									"h-8 w-8 flex items-center justify-center rounded-[1px] transition-colors",
+									"hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+									isRefreshing ? "opacity-50 cursor-not-allowed" : "text-foreground",
+								)}
+								title="Refresh Now"
+							>
+								<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+							</button>
+
+							<div className="w-px h-5 bg-border mx-1" />
+
+							<div className="flex items-center gap-3 px-2">
+								<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} className="gap-2">
+									<span className="text-[10px] font-heading uppercase tracking-wider font-semibold">
+										Auto
+									</span>
+								</Checkbox>
+
+								<Select
+									value={refreshInterval.toString()}
+									onChange={(val: string) => setRefreshInterval(Number(val))}
+									isDisabled={!autoRefresh}
+									containerClassName="w-[70px]"
+									className="h-8 min-h-0 text-xs py-0 px-2"
+									options={[
+										{ value: "10", label: "10s" },
+										{ value: "30", label: "30s" },
+										{ value: "60", label: "1m" },
+										{ value: "300", label: "5m" },
+									]}
+								/>
 							</div>
-						</div>
-						<button
-							type="button"
-							onClick={() => navigate(0)}
-							disabled={isRefreshing}
-							className="inline-flex h-10 items-center gap-2 rounded-[2px] border border-border bg-card px-3 text-xs font-heading uppercase tracking-wider hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-60"
-						>
-							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-							{isRefreshing ? "Refreshing" : "Refresh"}
-						</button>
-						<div className="flex items-center gap-3 bg-muted/50 p-1.5 rounded-[2px] border border-border">
-							<Checkbox
-								isSelected={autoRefresh}
-								onChange={setAutoRefresh}
-								label="Auto refresh"
-							/>
-							<div className="h-4 w-px bg-border" />
-							<Select
-								value={refreshInterval.toString()}
-								onChange={(val: string) => setRefreshInterval(Number(val))}
-								isDisabled={!autoRefresh}
-								className="w-20"
-								options={[
-									{ value: "10", label: "10s" },
-									{ value: "30", label: "30s" },
-									{ value: "60", label: "1m" },
-									{ value: "300", label: "5m" },
-								]}
-							/>
 						</div>
 					</div>
 				}
