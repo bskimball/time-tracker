@@ -7,7 +7,6 @@ import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
-import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import {
 	LiaUserClockSolid,
 	LiaExclamationTriangleSolid,
@@ -18,6 +17,7 @@ import {
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
+	LiaSyncSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -85,7 +85,7 @@ export function ManagerDashboard({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [now, setNow] = useState(() => new Date());
-    const realtime = useManagerRealtime({
+	useManagerRealtime({
 		scopes: DASHBOARD_REALTIME_SCOPES,
 		invalidateOn: DASHBOARD_INVALIDATION_EVENTS,
 		pollingIntervalSeconds: 90,
@@ -148,13 +148,23 @@ export function ManagerDashboard({
 				})}`}
 				actions={
 					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
-						<ManagerConnectionStatus
-							label="Data Snapshot"
-							lastSyncedAt={snapshotDate}
-							realtime={realtime}
-							onRefresh={() => navigate(0)}
-							isRefreshing={isRefreshing}
-						/>
+						<div className="px-3 py-2 rounded-[2px] border border-border/60 bg-card">
+							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+								Data Snapshot
+							</div>
+							<div className="font-data text-xs tabular-nums">
+								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+							</div>
+						</div>
+						<Button
+							variant="outline"
+							className="gap-2"
+							onPress={() => navigate(0)}
+							disabled={isRefreshing}
+						>
+							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
+							{isRefreshing ? "Refreshing" : "Refresh"}
+						</Button>
 						<Link to="/manager/monitor">
 							<Button variant="outline" className="gap-2">
 								<LiaStopwatchSolid />

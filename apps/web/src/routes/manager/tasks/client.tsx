@@ -6,6 +6,7 @@ import {
 	use,
 	useActionState,
 	useEffect,
+	useRef,
 	useOptimistic,
 	useState,
 } from "react";
@@ -26,7 +27,6 @@ import {
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
-import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
 import { TaskAssignmentForm } from "./task-assignment-form";
 import { TaskCompletionForm } from "./task-completion-form";
@@ -156,9 +156,9 @@ export function TaskManager({
 	const [selectedTaskType, setSelectedTaskType] = useState<TaskType | null>(null);
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("grid");
 	const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>("all");
-	const [lastSyncedAt, setLastSyncedAt] = useState(() => new Date());
+	const lastSyncedAtRef = useRef(new Date());
 
-	const realtime = useManagerRealtime({
+	useManagerRealtime({
 		scopes: TASK_REALTIME_SCOPES,
 		invalidateOn: TASK_INVALIDATION_EVENTS,
 		pollingIntervalSeconds: 45,
@@ -216,34 +216,34 @@ export function TaskManager({
 
 	useEffect(() => {
 		setLocalTaskTypes(taskTypes);
-		setLastSyncedAt(new Date());
+		lastSyncedAtRef.current = new Date();
 	}, [taskTypes]);
 
 	// Sync with props if they change (e.g. from parent revalidation)
 	useEffect(() => {
 		setLocalAssignments(activeAssignments);
-		setLastSyncedAt(new Date());
+		lastSyncedAtRef.current = new Date();
 	}, [activeAssignments]);
 
 	// Sync with action results
 	useEffect(() => {
 		if (assignState?.success && assignState.activeAssignments) {
 			setLocalAssignments(assignState.activeAssignments);
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [assignState]);
 
 	useEffect(() => {
 		if (completeState?.success && completeState.activeAssignments) {
 			setLocalAssignments(completeState.activeAssignments);
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [completeState]);
 
 	useEffect(() => {
 		if (switchState?.success && switchState.activeAssignments) {
 			setLocalAssignments(switchState.activeAssignments);
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [switchState]);
 
@@ -253,7 +253,7 @@ export function TaskManager({
 				const withoutExisting = current.filter((taskType) => taskType.id !== createTypeState.TaskType?.id);
 				return [createTypeState.TaskType!, ...withoutExisting];
 			});
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [createTypeState]);
 
@@ -264,7 +264,7 @@ export function TaskManager({
 					taskType.id === updateTypeState.TaskType?.id ? updateTypeState.TaskType : taskType
 				)
 			);
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [updateTypeState]);
 
@@ -277,7 +277,7 @@ export function TaskManager({
 						: taskType
 				)
 			);
-			setLastSyncedAt(new Date());
+			lastSyncedAtRef.current = new Date();
 		}
 	}, [setTaskTypeActiveState]);
 
@@ -424,18 +424,14 @@ export function TaskManager({
 				subtitle="Assign and track employee tasks"
 				actions={
 					<div className="flex flex-wrap items-center gap-2">
-						<ManagerConnectionStatus
-							label="Task Status"
-							lastSyncedAt={lastSyncedAt}
-							realtime={realtime}
-							onRefresh={() => navigate(0)}
-							isRefreshing={isRefreshing}
-						/>
 						<Button onClick={() => setShowAssignForm(true)} variant="primary">
 							Assign Task
 						</Button>
 						<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
 							Create Task Type
+						</Button>
+						<Button onClick={() => navigate(0)} variant="outline" disabled={isRefreshing}>
+							Refresh
 						</Button>
 					</div>
 				}

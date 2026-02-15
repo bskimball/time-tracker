@@ -11,12 +11,12 @@ import {
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
-import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import {
 	LiaUserClockSolid,
 	LiaChartPieSolid,
 	LiaExclamationTriangleSolid,
 	LiaStopwatchSolid,
+	LiaSyncSolid,
 } from "react-icons/lia";
 
 const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
@@ -80,7 +80,7 @@ export function FloorMonitor({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const realtime = useManagerRealtime({
+	useManagerRealtime({
 		scopes: MONITOR_REALTIME_SCOPES,
 		invalidateOn: MONITOR_INVALIDATION_EVENTS,
 		pollingIntervalSeconds: 30,
@@ -187,13 +187,29 @@ export function FloorMonitor({
 				title="Floor Monitor"
 				subtitle="Operations Monitor"
 				actions={
-					<ManagerConnectionStatus
-						label="Floor Status"
-						lastSyncedAt={snapshotDate}
-						realtime={realtime}
-						onRefresh={() => navigate(0)}
-						isRefreshing={isRefreshing}
-					/>
+					<div className="flex items-center gap-2">
+						<div className="rounded-[2px] border border-border/60 bg-card px-3 py-2">
+							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
+								Snapshot
+							</div>
+							<div className="font-data text-xs tabular-nums">
+								{snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+							</div>
+						</div>
+						<button
+							type="button"
+							onClick={() => navigate(0)}
+							disabled={isRefreshing}
+							className={cn(
+								"h-9 w-9 flex items-center justify-center rounded-[2px] border border-border/60 bg-card transition-colors",
+								"hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+								isRefreshing ? "opacity-60 cursor-not-allowed" : "text-foreground",
+							)}
+							title="Refresh Now"
+						>
+							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+						</button>
+					</div>
 				}
 			/>
 

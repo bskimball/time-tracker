@@ -27,10 +27,17 @@ interface AppLayoutProps {
 	title: string;
 	brandHref?: string;
 	navLinks?: AppNavLink[];
+	statusBarSlot?: ReactNode;
 	children: ReactNode;
 }
 
-export function AppLayout({ title, brandHref = "/", navLinks = [], children }: AppLayoutProps) {
+export function AppLayout({
+	title,
+	brandHref = "/",
+	navLinks = [],
+	statusBarSlot,
+	children,
+}: AppLayoutProps) {
 	// Composable Layout using IndustrialSidebar Compound Components
 	const userSection = (
 		<div className="flex flex-col gap-2">
@@ -62,7 +69,7 @@ export function AppLayout({ title, brandHref = "/", navLinks = [], children }: A
 				</IndustrialSidebar.Footer>
 			</IndustrialSidebar.Sidebar>
 			<IndustrialSidebar.Main>
-				<IndustrialSidebar.StatusBar />
+				<IndustrialSidebar.StatusBar>{statusBarSlot}</IndustrialSidebar.StatusBar>
 				<div id="main-content" className="flex-1 overflow-y-auto p-6 relative z-0" tabIndex={-1}>
 					{children}
 				</div>
