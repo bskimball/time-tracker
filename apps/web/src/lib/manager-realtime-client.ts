@@ -47,7 +47,7 @@ type ManagedEventSource = {
 	addEventListener: (name: string, listener: (event: unknown) => void) => void;
 };
 
-const SSE_ENDPOINT = "/realtime/manager-stream";
+const SSE_ENDPOINT = "/api/realtime/manager-stream";
 
 function clampPollingSeconds(value: number | undefined) {
 	if (typeof value !== "number" || Number.isNaN(value)) {

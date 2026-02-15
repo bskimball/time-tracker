@@ -53,7 +53,7 @@ app.use("/doc", requiredApiKey());
 
 // Apply API key authentication to all routes except health
 app.use("/*", async (c, next) => {
-	if (c.req.path.includes("/realtime/manager-stream")) {
+	if (c.req.path === "/api/realtime/manager-stream") {
 		return next();
 	}
 
@@ -64,7 +64,7 @@ app.use("/*", async (c, next) => {
 app.get("/ui", swaggerUI({ url: "/api/doc" }));
 
 // Register other routes
-app.route("/realtime", realtimeRoutes);
+app.route("/api/realtime", realtimeRoutes);
 app.route("/time-clock", timeClockRoutes);
 app.route("/employees", employeeRoutes);
 app.route("/stations", stationRoutes);
