@@ -22,12 +22,11 @@ import {
 	Tab,
 	TabPanel,
 	Badge,
-	Checkbox,
-	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import type { TaskType, TaskAssignment, Employee, Station } from "./types";
 import { TaskAssignmentForm } from "./task-assignment-form";
 import { TaskCompletionForm } from "./task-completion-form";
@@ -157,10 +156,7 @@ export function TaskManager({
 	const [selectedTaskType, setSelectedTaskType] = useState<TaskType | null>(null);
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("grid");
 	const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>("all");
-	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
-	const [autoRefreshInterval, setAutoRefreshInterval] = useState(120);
 	const [lastSyncedAt, setLastSyncedAt] = useState(() => new Date());
-	const [refreshClock, setRefreshClock] = useState(() => new Date());
 
 	const realtime = useManagerRealtime({
 		scopes: TASK_REALTIME_SCOPES,
@@ -285,26 +281,6 @@ export function TaskManager({
 		}
 	}, [setTaskTypeActiveState]);
 
-	useEffect(() => {
-		const interval = window.setInterval(() => {
-			setRefreshClock(new Date());
-		}, 1000);
-
-		return () => window.clearInterval(interval);
-	}, []);
-
-	useEffect(() => {
-		if (!autoRefreshEnabled) return;
-
-		const interval = window.setInterval(() => {
-			if (document.hidden) return;
-			if (navigation.state !== "idle") return;
-			navigate(0);
-		}, Math.max(60, autoRefreshInterval) * 1000);
-
-		return () => window.clearInterval(interval);
-	}, [autoRefreshEnabled, autoRefreshInterval, navigate, navigation.state]);
-
 	const [optimisticAssignments, addOptimisticAssignment] = useOptimistic<
 		TaskAssignment[],
 		| { type: "add"; data: { employeeId: string; taskTypeId: string; notes?: string } }
@@ -425,17 +401,6 @@ export function TaskManager({
 	});
 
 	const activeTaskTypes = localTaskTypes.filter((taskType) => taskType.isActive);
-	const secondsSinceSync = Math.max(
-		0,
-		Math.floor((refreshClock.getTime() - lastSyncedAt.getTime()) / 1000)
-	);
-	const freshnessLabel = secondsSinceSync >= 180 ? "STALE" : "FRESH";
-	const realtimeStatusLabel =
-		realtime.connectionState === "connected"
-			? "Connected"
-			: realtime.connectionState === "reconnecting"
-				? "Reconnecting"
-				: "Offline fallback";
 
 	const latestActionError =
 		assignState?.error ||
@@ -459,66 +424,22 @@ export function TaskManager({
 				subtitle="Assign and track employee tasks"
 				actions={
 					<div className="flex flex-wrap items-center gap-2">
+						<ManagerConnectionStatus
+							label="Task Status"
+							lastSyncedAt={lastSyncedAt}
+							realtime={realtime}
+							onRefresh={() => navigate(0)}
+							isRefreshing={isRefreshing}
+						/>
 						<Button onClick={() => setShowAssignForm(true)} variant="primary">
 							Assign Task
 						</Button>
 						<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
 							Create Task Type
 						</Button>
-						<Button onClick={() => navigate(0)} variant="outline">
-							Refresh
-						</Button>
 					</div>
 				}
 			/>
-
-			<div className="rounded-[2px] border border-border/60 bg-card px-3 py-2">
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-							Data freshness
-						</p>
-						<p className="font-mono text-xs text-foreground">
-							Last sync {lastSyncedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-							{" "}
-							({secondsSinceSync}s ago)
-						</p>
-						<p
-							className={cn(
-								"text-[10px] font-mono uppercase",
-								freshnessLabel === "STALE" ? "text-warning" : "text-emerald-600"
-							)}
-						>
-							{freshnessLabel === "STALE"
-								? "Potentially stale view - refresh recommended"
-								: "Fresh view"}
-						</p>
-						<p className="text-[10px] font-mono uppercase text-muted-foreground">
-							Live {realtimeStatusLabel}
-							{realtime.lastEventAt
-								? ` • Last event ${realtime.lastEventAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-								: ""}
-							{realtime.usingPollingFallback ? " • Polling enabled" : ""}
-						</p>
-					</div>
-					<div className="flex items-center gap-3">
-						<Checkbox isSelected={autoRefreshEnabled} onChange={setAutoRefreshEnabled}>
-							<span className="text-xs font-mono uppercase">Auto refresh</span>
-						</Checkbox>
-						<Select
-							value={String(autoRefreshInterval)}
-							onChange={(value: string) => setAutoRefreshInterval(Number(value))}
-							isDisabled={!autoRefreshEnabled}
-							containerClassName="w-[110px]"
-							className="h-9"
-							options={[
-								{ value: "120", label: "Every 2m" },
-								{ value: "300", label: "Every 5m" },
-							]}
-						/>
-					</div>
-				</div>
-			</div>
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">

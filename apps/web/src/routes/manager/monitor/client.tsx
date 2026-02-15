@@ -4,21 +4,19 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useNavigation } from "react-router";
 import {
 	Card,
-	Checkbox,
 	Badge,
 	IndustrialPanel,
 	LedIndicator,
-	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import {
 	LiaUserClockSolid,
 	LiaChartPieSolid,
 	LiaExclamationTriangleSolid,
 	LiaStopwatchSolid,
-	LiaSyncSolid,
 } from "react-icons/lia";
 
 const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
@@ -82,8 +80,6 @@ export function FloorMonitor({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const [autoRefresh, setAutoRefresh] = useState(false);
-	const [refreshInterval, setRefreshInterval] = useState(60); // seconds
 	const realtime = useManagerRealtime({
 		scopes: MONITOR_REALTIME_SCOPES,
 		invalidateOn: MONITOR_INVALIDATION_EVENTS,
@@ -106,54 +102,7 @@ export function FloorMonitor({
 		return () => clearInterval(interval);
 	}, []);
 
-	useEffect(() => {
-		if (!autoRefresh) return;
-
-		const intervalInMs = Math.max(30, refreshInterval) * 1000;
-		const interval = window.setInterval(() => {
-			if (document.hidden || isRefreshing) {
-				return;
-			}
-			navigate(0);
-		}, intervalInMs);
-
-		return () => clearInterval(interval);
-	}, [autoRefresh, refreshInterval, navigate, isRefreshing]);
-
-	useEffect(() => {
-		if (!autoRefresh) {
-			return;
-		}
-
-		const handleVisibilityChange = () => {
-			if (!document.hidden && !isRefreshing) {
-				navigate(0);
-			}
-		};
-
-		document.addEventListener("visibilitychange", handleVisibilityChange);
-		return () => {
-			document.removeEventListener("visibilitychange", handleVisibilityChange);
-		};
-	}, [autoRefresh, isRefreshing, navigate]);
-
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
-	const secondsSinceRefresh = Math.max(
-		0,
-		Math.floor((currentTime.getTime() - snapshotDate.getTime()) / 1000),
-	);
-	const staleThresholdSeconds = autoRefresh ? Math.max(refreshInterval * 2, 20) : 120;
-	const freshnessState = secondsSinceRefresh >= staleThresholdSeconds ? "STALE" : "FRESH";
-	const realtimeStatusLabel =
-		realtime.connectionState === "connected"
-			? "Connected"
-			: realtime.connectionState === "reconnecting"
-				? "Reconnecting"
-				: "Offline fallback";
-	const nextAutoRefreshIn = autoRefresh
-		? Math.max(0, refreshInterval - (secondsSinceRefresh % refreshInterval))
-		: null;
-
 	const calculateDuration = (startTime: Date): string => {
 		const diff = currentTime.getTime() - new Date(startTime).getTime();
 		const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -237,95 +186,14 @@ export function FloorMonitor({
 			<PageHeader
 				title="Floor Monitor"
 				subtitle="Operations Monitor"
-actions={
-					<div className="flex items-center p-1 bg-card border border-border rounded-[2px] shadow-sm">
-						{/* Data Snapshot Readout */}
-						<div
-							className="flex flex-col justify-center px-3 border-r border-border mr-1 select-none min-w-[90px]"
-							title={`Last snapshot at ${snapshotDate.toLocaleTimeString()}`}
-						>
-							<div className="flex items-center gap-1.5">
-								<div
-									className={cn(
-										"w-1.5 h-1.5 rounded-full",
-										freshnessState === "STALE" ? "bg-amber-500" : "bg-emerald-500 animate-pulse",
-									)}
-								/>
-								<div className="font-mono text-xs font-medium leading-none text-foreground tabular-nums">
-									{snapshotDate.toLocaleTimeString([], {
-										hour: "2-digit",
-										minute: "2-digit",
-										second: "2-digit",
-									})}
-								</div>
-							</div>
-							<div className="text-[9px] text-muted-foreground font-heading uppercase tracking-wider leading-none mt-1 ml-3">
-Last Refresh
-							</div>
-							<div
-								className={cn(
-									"text-[9px] font-mono uppercase tracking-wide mt-1 ml-3",
-									freshnessState === "STALE" ? "text-warning" : "text-emerald-600"
-								)}
-							>
-								{freshnessState === "STALE"
-									? `STALE ${secondsSinceRefresh}s`
-									: `FRESH ${secondsSinceRefresh}s`}
-							</div>
-							<div className="text-[9px] font-mono uppercase tracking-wide mt-1 ml-3 text-muted-foreground">
-								{realtimeStatusLabel}
-								{realtime.lastEventAt
-									? ` • ${realtime.lastEventAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-									: ""}
-								{realtime.usingPollingFallback ? " • Polling" : ""}
-							</div>
-						</div>
-
-						{/* Refresh Button */}
-						<button
-							type="button"
-							onClick={() => navigate(0)}
-							disabled={isRefreshing}
-							className={cn(
-								"h-8 w-8 flex items-center justify-center rounded-[1px] transition-colors ml-1",
-								"hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-								isRefreshing ? "opacity-50 cursor-not-allowed" : "text-foreground",
-							)}
-							title="Refresh Now"
-						>
-							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-						</button>
-
-						<div className="w-px h-5 bg-border mx-1" />
-
-						{/* Auto Refresh Controls */}
-						<div className="flex items-center gap-3 px-2">
-							<Checkbox isSelected={autoRefresh} onChange={setAutoRefresh} className="gap-2">
-								<span className="text-[10px] font-heading uppercase tracking-wider font-semibold">
-									Auto
-								</span>
-							</Checkbox>
-
-							<Select
-								value={refreshInterval.toString()}
-								onChange={(val: string) => setRefreshInterval(Number(val))}
-								isDisabled={!autoRefresh}
-								containerClassName="w-[70px]"
-								className="h-8 min-h-0 text-xs py-0 px-2"
-								options={[
-									{ value: "30", label: "30s" },
-									{ value: "60", label: "1m" },
-									{ value: "300", label: "5m" },
-								]}
-							/>
-
-							{autoRefresh && nextAutoRefreshIn !== null && (
-								<span className="text-[10px] font-mono text-muted-foreground">
-									Next {nextAutoRefreshIn}s
-								</span>
-							)}
-						</div>
-					</div>
+				actions={
+					<ManagerConnectionStatus
+						label="Floor Status"
+						lastSyncedAt={snapshotDate}
+						realtime={realtime}
+						onRefresh={() => navigate(0)}
+						isRefreshing={isRefreshing}
+					/>
 				}
 			/>
 

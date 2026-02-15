@@ -2,10 +2,12 @@
 
 import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useNavigation } from "react-router";
-import { Card, CardHeader, CardTitle, CardBody, Alert, Checkbox, Select } from "@monorepo/design-system";
+import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerConnectionStatus } from "~/routes/manager/connection-status";
 import {
 	LiaUserClockSolid,
 	LiaExclamationTriangleSolid,
@@ -16,7 +18,6 @@ import {
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
-	LiaSyncSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -51,6 +52,14 @@ type ActiveTaskByEmployee = Record<
 	}
 >;
 
+const DASHBOARD_REALTIME_SCOPES = ["monitor", "tasks"] as const;
+const DASHBOARD_INVALIDATION_EVENTS = [
+	"task_assignment_changed",
+	"time_log_changed",
+	"break_changed",
+	"worker_status_changed",
+] as const;
+
 export function ManagerDashboard({
 	activeTimeLogs,
 	activeTasksByEmployee,
@@ -76,8 +85,18 @@ export function ManagerDashboard({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [now, setNow] = useState(() => new Date());
-	const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
-	const [autoRefreshInterval, setAutoRefreshInterval] = useState(180);
+    const realtime = useManagerRealtime({
+		scopes: DASHBOARD_REALTIME_SCOPES,
+		invalidateOn: DASHBOARD_INVALIDATION_EVENTS,
+		pollingIntervalSeconds: 90,
+		onInvalidate: () => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+
+			navigate(0);
+		},
+	});
 
 	useEffect(() => {
 		const interval = window.setInterval(() => {
@@ -87,30 +106,7 @@ export function ManagerDashboard({
 		return () => window.clearInterval(interval);
 	}, []);
 
-	useEffect(() => {
-		if (!autoRefreshEnabled) {
-			return;
-		}
-
-		const interval = window.setInterval(() => {
-			if (document.hidden || isRefreshing) {
-				return;
-			}
-			navigate(0);
-		}, Math.max(120, autoRefreshInterval) * 1000);
-
-		return () => window.clearInterval(interval);
-	}, [autoRefreshEnabled, autoRefreshInterval, isRefreshing, navigate]);
-
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
-	const secondsSinceRefresh = Math.max(
-		0,
-		Math.floor((now.getTime() - snapshotDate.getTime()) / 1000),
-	);
-	const freshnessState = secondsSinceRefresh >= 120 ? "STALE" : "FRESH";
-	const nextAutoRefreshIn = autoRefreshEnabled
-		? Math.max(0, autoRefreshInterval - (secondsSinceRefresh % autoRefreshInterval))
-		: null;
 
 	const formatDuration = (startTime: Date): string => {
 		const diff = now.getTime() - new Date(startTime).getTime();
@@ -152,47 +148,13 @@ export function ManagerDashboard({
 				})}`}
 				actions={
 					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
-						<div className="px-3 py-2 rounded-[2px] border border-border bg-card">
-							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-								Data Snapshot
-							</div>
-							<div className="font-data text-xs tabular-nums">
-								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-							</div>
-							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
-								{freshnessState === "STALE"
-									? "Data may be stale. Refresh recommended."
-									: "Data is current within the last 2 minutes."}
-							</p>
-						</div>
-						<Button
-							variant="outline"
-							className="gap-2"
-							onPress={() => navigate(0)}
-							disabled={isRefreshing}
-						>
-							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
-							{isRefreshing ? "Refreshing" : "Refresh"}
-						</Button>
-						<div className="flex items-center gap-2 rounded-[2px] border border-border bg-card px-3 py-2">
-							<Checkbox isSelected={autoRefreshEnabled} onChange={setAutoRefreshEnabled}>
-								<span className="text-[10px] font-mono uppercase">Auto</span>
-							</Checkbox>
-							<Select
-								value={String(autoRefreshInterval)}
-								onChange={(value: string) => setAutoRefreshInterval(Number(value))}
-								isDisabled={!autoRefreshEnabled}
-								containerClassName="w-[94px]"
-								className="h-8 min-h-0 text-xs"
-								options={[
-									{ value: "180", label: "3m" },
-									{ value: "300", label: "5m" },
-								]}
-							/>
-							{autoRefreshEnabled && nextAutoRefreshIn !== null && (
-								<span className="text-[10px] font-mono text-muted-foreground">Next {nextAutoRefreshIn}s</span>
-							)}
-						</div>
+						<ManagerConnectionStatus
+							label="Data Snapshot"
+							lastSyncedAt={snapshotDate}
+							realtime={realtime}
+							onRefresh={() => navigate(0)}
+							isRefreshing={isRefreshing}
+						/>
 						<Link to="/manager/monitor">
 							<Button variant="outline" className="gap-2">
 								<LiaStopwatchSolid />
