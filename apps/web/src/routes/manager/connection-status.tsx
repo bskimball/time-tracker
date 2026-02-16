@@ -12,7 +12,7 @@ type ManagerConnectionStatusProps = {
 };
 
 export function ManagerConnectionStatus({
-	label = "System Status",
+	label = "Live Stream Status",
 	lastSyncedAt,
 	realtime,
 	onRefresh,
@@ -78,7 +78,7 @@ export function ManagerConnectionStatus({
 							"text-[9px] uppercase tracking-wider font-medium",
 							connectionState === "connected" ? "text-emerald-600" : "text-amber-600"
 						)}>
-							{connectionState === "connected" ? "Live Stream" : "Reconnecting"}
+							{connectionState === "connected" ? "Live Stream" : "Live Stream Reconnecting"}
 						</span>
 						{realtime.usingPollingFallback && (
 							<span className="text-[8px] px-1 py-0.5 rounded-[1px] bg-muted text-muted-foreground font-mono uppercase">

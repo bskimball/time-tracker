@@ -11,6 +11,7 @@ import {
 } from "react-router";
 import { ThemeProvider } from "~/components/theme-provider";
 import { ThemeBlockingScript } from "~/components/theme-blocking-script";
+import { NetworkOfflineBanner } from "~/components/network-offline-banner";
 import {
 	IndustrialHeader,
 	IndustrialPanel,
@@ -28,7 +29,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<ThemeBlockingScript />
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<meta name="theme-color" content="var(--background)" />
+				<meta name="theme-color" content="#18181b" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+				<meta name="mobile-web-app-capable" content="yes" />
+				<link rel="manifest" href="/manifest.webmanifest" />
+				<link rel="icon" href="/favicon.ico" sizes="any" />
+				<link rel="apple-touch-icon" href="/icons/icon-192.svg" />
 				<Meta />
 				<Links />
 			</head>
@@ -45,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					<ThemeProvider defaultTheme="system">
 						<NuqsAdapter>{children}</NuqsAdapter>
 					</ThemeProvider>
+					<NetworkOfflineBanner />
 					<ScrollRestoration />
 				</div>
 			</body>
