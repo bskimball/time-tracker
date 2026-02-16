@@ -59,6 +59,22 @@ export default defineConfig(({ mode }) => {
 							},
 						},
 						{
+							urlPattern: ({ request }) =>
+								request.destination === "style" || request.destination === "script",
+							handler: "NetworkFirst",
+							options: {
+								cacheName: "static-resources",
+							},
+						},
+						{
+							urlPattern: ({ request }) =>
+								request.destination === "image" || request.destination === "font",
+							handler: "CacheFirst",
+							options: {
+								cacheName: "static-assets",
+							},
+						},
+						{
 							urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
 							handler: "NetworkOnly",
 						},
