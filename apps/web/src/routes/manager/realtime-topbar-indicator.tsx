@@ -21,7 +21,7 @@ const TOPBAR_INVALIDATION_EVENTS = ["heartbeat"] as const;
 			? "LIVE"
 			: realtime.connectionState === "reconnecting"
 				? "RETRY"
-				: "OFF";
+				: "OFFLINE";
 
 	const dotClassName =
 		realtime.connectionState === "connected"
@@ -45,6 +45,9 @@ const TOPBAR_INVALIDATION_EVENTS = ["heartbeat"] as const;
 			}
 		>
 			<span className={cn("h-1.5 w-1.5 rounded-full", dotClassName)} aria-hidden="true" />
+			<span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80">
+				STREAM
+			</span>
 			<span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
 				{stateLabel}
 			</span>

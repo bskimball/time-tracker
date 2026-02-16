@@ -65,3 +65,24 @@ if (import.meta.hot) {
 		}
 	});
 }
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+	void import("virtual:pwa-register").then(({ registerSW }) => {
+		let hasShownUpdatePrompt = false;
+		const updateSW = registerSW({
+			onNeedRefresh() {
+				if (hasShownUpdatePrompt) return;
+				hasShownUpdatePrompt = true;
+				const shouldRefresh = window.confirm(
+					"A new version of Time Tracker is available. Refresh now to update?"
+				);
+				if (shouldRefresh) {
+					void updateSW(true);
+				}
+			},
+			onOfflineReady() {
+				console.info("[PWA] Offline cache is ready.");
+			},
+		});
+	});
+}
