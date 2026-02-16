@@ -51,7 +51,7 @@ Use this page for quick triage before escalating to engineering support.
 
 - Confirm `x-api-key` header is set on every request.
 - Confirm the integration key matches the current active value.
-- Rotate and reissue key if exposure or mismatch is suspected.
+- If exposure or mismatch is suspected, rotate `TIME_CLOCK_API_KEY` in the server environment and redeploy.
 
 ### `/api/doc` or `/api/ui` not accessible
 
@@ -73,6 +73,6 @@ Use this page for quick triage before escalating to engineering support.
 
 - Repeated data integrity issues after corrections.
 - Realtime stream instability across multiple manager sessions.
-- Authentication failures after key rotation and access revalidation.
+- Authentication failures after environment key rotation and access revalidation.
 
 Include route, user role, timestamp, and request details when escalating.

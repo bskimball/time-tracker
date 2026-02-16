@@ -84,7 +84,7 @@ See [Realtime Streaming](/api/realtime-streaming) for connection behavior.
 
 ## Not currently available
 
-- `/time-clock` route exists but is currently not implemented for public REST clock actions.
+- `/api/time-clock` route exists but is currently not implemented for public REST clock actions.
 
 ## Explore in OpenAPI UI
 

@@ -6,8 +6,8 @@ description: How to authenticate requests to the Time Tracker REST API.
 ## Authentication method
 
 - Header name: `x-api-key`
-- API key source: administrator-generated key from `/settings/api-keys`
-- Environment binding used by the API service: `TIME_CLOCK_API_KEY`
+- Current validation source: server environment variable `TIME_CLOCK_API_KEY`
+- Note: `/settings/api-keys` currently manages app integration keys, but API middleware checks `TIME_CLOCK_API_KEY`
 
 ## Which routes require API keys
 
@@ -30,10 +30,10 @@ curl -X GET "https://your-domain.example/api/employees" \
 
 ## Key management best practices
 
-- Use separate keys per integration system.
+- Treat `TIME_CLOCK_API_KEY` as a shared integration secret and store it in a secret manager.
 - Store keys in your secret manager, never in client-side code.
-- Rotate keys during incident response and scheduled security reviews.
-- Revoke unused keys in `/settings/api-keys`.
+- Rotate the environment key during incident response and scheduled security reviews.
+- Restart or redeploy services after key rotation so all API instances load the new value.
 
 ## Related docs
 

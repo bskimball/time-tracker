@@ -32,7 +32,7 @@ Behavior:
 
 - Content type: `text/event-stream`
 - Includes retry hint (`retry: 2000`).
-- Emits event IDs to support client-side resume semantics.
+- Emits event IDs for client-side logging, ordering, or deduplication. The server does not currently use `Last-Event-ID` to replay missed events.
 - Intended for manager portal live indicators and floor monitoring.
 
 ## Minimal JavaScript example
@@ -40,9 +40,14 @@ Behavior:
 ```js
 const stream = new EventSource('/api/realtime/manager-stream?scopes=monitor,tasks');
 
-stream.addEventListener('message', (event) => {
+stream.addEventListener('task_assignment_changed', (event) => {
   const payload = JSON.parse(event.data);
-  console.log(payload);
+  console.log('Task assignment changed:', payload);
+});
+
+stream.addEventListener('heartbeat', (event) => {
+  const payload = JSON.parse(event.data);
+  console.log('Heartbeat:', payload);
 });
 
 stream.onerror = () => {

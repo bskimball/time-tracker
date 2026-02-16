@@ -12,6 +12,16 @@ Time Tracker provides an OpenAPI 3.0-compliant REST API for integrations, automa
 - Swagger UI: `/api/ui`
 - Health endpoint: `/api/health`
 
+## Accessing OpenAPI docs with API-key auth
+
+- `/api/doc` and `/api/ui` are API-key protected.
+- Some environments may not inject `x-api-key` automatically from Swagger UI when requesting `/api/doc`.
+- Reliable workflow: fetch the spec with `curl` and open it in your preferred OpenAPI viewer.
+
+```bash
+curl -H "x-api-key: YOUR_API_KEY" https://your-domain.example/api/doc
+```
+
 ## Authentication
 
 - API key header: `x-api-key`
