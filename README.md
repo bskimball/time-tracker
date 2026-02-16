@@ -1,6 +1,6 @@
 # Time Tracker Monorepo
 
-A modern time tracking application built with React Server Components, featuring a web app and marketing site in a monorepo structure.
+A modern time tracking application built with React Server Components, featuring a web app, marketing site, and docs site in a monorepo structure.
 
 ## Overview
 
@@ -8,6 +8,7 @@ This monorepo contains:
 
 - **apps/web**: Main time tracking application built with React Router 7 and React Server Components
 - **apps/marketing**: Marketing website built with Astro
+- **apps/docs**: Customer documentation built with Astro Starlight
 - **packages/design-system**: Shared UI components and styling
 
 ## Tech Stack
@@ -36,10 +37,11 @@ This monorepo contains:
 4. Start development environment: `docker compose --profile dev up`
 5. The web app will be available at `http://localhost:5173`
 6. The marketing site will be available at `http://localhost:4321`
+7. The docs site will be available at `http://localhost:4322`
 
 ### Development Commands
 
-- `npm run dev` - Run web + marketing dev servers
+- `npm run dev` - Run design-system + web + marketing + docs dev servers
 - `npm run build` - Build all workspaces
 - `npm run lint` - Lint all workspaces
 - `npm run typecheck` - Typecheck all workspaces
@@ -66,6 +68,15 @@ Public marketing website for the time tracker.
 - **Build**: `cd apps/marketing && npm run build`
 - **Lint**: `cd apps/marketing && npm run lint`
 
+#### Docs Site (`apps/docs`)
+
+Customer-facing product and API documentation with Astro Starlight.
+
+- **Dev server**: `http://localhost:4322`
+- **Commands**: `cd apps/docs && npm run dev`
+- **Build**: `cd apps/docs && npm run build`
+- **Lint**: `cd apps/docs && npm run lint`
+
 ### Packages
 
 #### Design System (`packages/design-system`)
@@ -80,7 +91,8 @@ Shared UI components built with TailwindCSS and React Aria Components.
 ```
 ├── apps/
 │   ├── web/           # Main time tracking app
-│   └── marketing/     # Marketing website
+│   ├── marketing/     # Marketing website
+│   └── docs/          # Customer documentation (Starlight)
 ├── packages/
 │   └── design-system/ # Shared UI components
 ├── docker-compose.yml # Docker services

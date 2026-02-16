@@ -3,9 +3,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { pinoLogger } from "hono-pino";
-
-// Import logger
-const { logger } = await import("./dist/rsc/lib/logger.js");
+import { logger } from "./src/lib/logger.ts";
 
 // Dynamically import the React Router build output and type it as a handler
 /** @typedef {function(Request): Promise<Response>} BuildFunction */

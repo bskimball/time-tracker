@@ -64,7 +64,7 @@ app.use("/*", async (c, next) => {
 app.get("/ui", swaggerUI({ url: "/api/doc" }));
 
 // Register other routes
-app.route("/api/realtime", realtimeRoutes);
+app.route("/realtime", realtimeRoutes);
 app.route("/time-clock", timeClockRoutes);
 app.route("/employees", employeeRoutes);
 app.route("/stations", stationRoutes);

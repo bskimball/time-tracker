@@ -2,7 +2,6 @@ import { validateRequest } from "~/lib/auth";
 import { getRequest } from "~/lib/request-context";
 import { ReportsManager } from "./client";
 import { PageHeader } from "~/components/page-header";
-import { IndustrialSpinner } from "~/components/industrial-spinner";
 import {
 	getProductivityReport,
 	getTaskPerformanceReport,
@@ -156,12 +155,6 @@ export default async function Component() {
 			<PageHeader
 				title="Reports & Analytics"
 				subtitle="Operational intelligence and workforce metrics"
-				actions={
-					<div className="flex items-center gap-2 rounded-[2px] border border-border/50 bg-muted/20 px-3 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
-						<IndustrialSpinner size="sm" />
-						Loading reports
-					</div>
-				}
 			/>
 
 			<ReportsManager

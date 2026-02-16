@@ -1,7 +1,7 @@
 {
 	"name": "monorepo",
 	"version": "1.0.0",
-	"description": "Monorepo for React Router app and Astro marketing site",
+	"description": "Monorepo for web app, Astro marketing site, and Starlight docs",
 	"private": true,
 	"type": "module",
 	"workspaces": [
@@ -10,9 +10,14 @@
 	],
 	"scripts": {
 		"build": "npm run build --workspaces",
-		"dev": "concurrently \"npm -w packages/design-system run dev\" \"npm -w apps/web run dev\" \"npm -w apps/marketing run dev\"",
+		"dev": "concurrently \"npm -w packages/design-system run dev\" \"npm -w apps/web run dev\" \"npm -w apps/marketing run dev\" \"npm -w apps/docs run dev\"",
 		"dev:web": "npm -w apps/web run dev",
 		"dev:marketing": "npm -w apps/marketing run dev",
+		"dev:docs": "npm -w apps/docs run dev",
+		"start": "concurrently \"npm -w apps/web run start\" \"npm -w apps/marketing run start\" \"npm -w apps/docs run start\"",
+		"start:web": "npm -w apps/web run start",
+		"start:marketing": "npm -w apps/marketing run start",
+		"start:docs": "npm -w apps/docs run start",
 		"lint": "npm run lint --workspaces",
 		"typecheck": "npm run typecheck --workspaces"
 	},

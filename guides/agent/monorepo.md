@@ -2,7 +2,7 @@
 
 ## One sentence
 
-This is a monorepo with a React Router web app (RSC Data mode), an Astro marketing site, and a shared design system package.
+This is a monorepo with a React Router web app (RSC Data mode), an Astro marketing site, a Starlight docs site, and a shared design system package.
 
 ## Tooling baseline
 
@@ -13,11 +13,12 @@ This is a monorepo with a React Router web app (RSC Data mode), an Astro marketi
 
 - `apps/web` — main application
 - `apps/marketing` — marketing site
+- `apps/docs` — customer docs site (Astro Starlight)
 - `packages/design-system` — shared UI components
 
 ## Common commands (repo root)
 
-- Dev (all): `npm run dev` (watches design-system + web + marketing)
+- Dev (all): `npm run dev` (watches design-system + web + marketing + docs)
 - Build all: `npm run build`
 - Lint all: `npm run lint`
 - Typecheck all: `npm run typecheck`
@@ -42,4 +43,4 @@ Use Docker Compose when you need a real database:
 ## Where docs live
 
 - Canonical agent docs: `guides/agent/*`
-- Additional app docs: `apps/web/guides/*` and `apps/marketing/README.md`
+- Additional app docs: `apps/web/guides/*`, `apps/marketing/README.md`, and `apps/docs/src/content/docs/*`
