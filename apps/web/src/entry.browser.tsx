@@ -74,7 +74,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 				if (hasShownUpdatePrompt) return;
 				hasShownUpdatePrompt = true;
 				const shouldRefresh = window.confirm(
-					"A new version of Time Tracker is available. Refresh now to update?"
+					"A new version of Shift Pulse is available. Refresh now to update?"
 				);
 				if (shouldRefresh) {
 					void updateSW(true);

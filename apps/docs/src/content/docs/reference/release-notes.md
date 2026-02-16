@@ -1,6 +1,6 @@
 ---
 title: Release Notes
-description: Customer-facing change log for Time Tracker documentation and product workflows.
+description: Customer-facing change log for Shift Pulse documentation and product workflows.
 ---
 
 This page tracks notable customer-facing documentation updates tied to product behavior.

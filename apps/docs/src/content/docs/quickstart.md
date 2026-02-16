@@ -1,12 +1,12 @@
 ---
 title: Deployment Quickstart
-description: Start using Time Tracker in hosted or on-premise environments.
+description: Start using Shift Pulse in hosted or on-premise environments.
 ---
 
 ## Choose your deployment model
 
 - **Hosted**: Fastest onboarding; infrastructure is managed for you.
-- **On-premise**: Run Time Tracker inside your own network and infrastructure.
+- **On-premise**: Run Shift Pulse inside your own network and infrastructure.
 
 ## Hosted quickstart
 

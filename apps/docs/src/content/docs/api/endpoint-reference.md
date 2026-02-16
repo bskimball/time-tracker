@@ -1,6 +1,6 @@
 ---
 title: Endpoint Reference
-description: Customer-facing endpoint inventory for the Time Tracker API.
+description: Customer-facing endpoint inventory for the Shift Pulse API.
 ---
 
 All endpoints below are under `/api`.

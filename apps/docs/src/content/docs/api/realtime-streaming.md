@@ -3,7 +3,7 @@ title: Realtime Streaming
 description: Use the manager realtime SSE stream for live operational views.
 ---
 
-Time Tracker exposes a Server-Sent Events (SSE) endpoint for manager-facing live updates.
+Shift Pulse exposes a Server-Sent Events (SSE) endpoint for manager-facing live updates.
 
 ## Endpoint
 

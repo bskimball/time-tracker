@@ -1,6 +1,6 @@
-# Time Tracker (Agent Notes)
+# Shift Pulse (Agent Notes)
 
-Time Tracker is a monorepo containing a React Router web app (RSC Data mode), an Astro marketing site, and a shared design system.
+Shift Pulse is a monorepo containing a React Router web app (RSC Data mode), an Astro marketing site, and a shared design system.
 
 ## Essentials
 

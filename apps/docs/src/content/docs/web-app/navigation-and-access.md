@@ -1,6 +1,6 @@
 ---
 title: Navigation and Access
-description: Route map, portal structure, and role access guidance for Time Tracker.
+description: Route map, portal structure, and role access guidance for Shift Pulse.
 ---
 
 This page maps core URLs to user experiences and explains who should use each area.

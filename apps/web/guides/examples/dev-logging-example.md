@@ -148,7 +148,7 @@ npm run dev
 **Meanwhile, `logs/dev.log` contains:**
 
 ```json
-{"level":"info","time":"2025-01-16T10:15:23.000Z","app":"time-tracker","msg":"Server running on http://localhost:5173"}
+{"level":"info","time":"2025-01-16T10:15:23.000Z","app":"shift-pulse","msg":"Server running on http://localhost:5173"}
 {"level":"info","time":"2025-01-16T10:15:30.000Z","requestId":"c3d4","method":"GET","path":"/dashboard","msg":"Loading dashboard"}
 {"level":"debug","time":"2025-01-16T10:15:30.234Z","requestId":"c3d4","component":"prisma","query":"SELECT * FROM Employee","duration":"12.34ms","msg":"Database query"}
 {"level":"error","time":"2025-01-16T10:15:31.000Z","requestId":"c3d4","err":{"type":"NotFoundError","message":"Employee not found"},"msg":"Failed to load employee 999"}

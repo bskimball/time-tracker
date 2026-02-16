@@ -38,7 +38,7 @@ type ManagerRealtimeBus = {
 };
 
 type ManagerRealtimeGlobal = typeof globalThis & {
-	__timeTrackerManagerRealtimeBus?: ManagerRealtimeBus;
+	__shiftPulseManagerRealtimeBus?: ManagerRealtimeBus;
 };
 
 const HEARTBEAT_INTERVAL_MS = 20_000;
@@ -116,8 +116,8 @@ function createManagerRealtimeBus(): ManagerRealtimeBus {
 
 function getBus() {
 	const runtime = globalThis as ManagerRealtimeGlobal;
-	runtime.__timeTrackerManagerRealtimeBus ??= createManagerRealtimeBus();
-	return runtime.__timeTrackerManagerRealtimeBus;
+	runtime.__shiftPulseManagerRealtimeBus ??= createManagerRealtimeBus();
+	return runtime.__shiftPulseManagerRealtimeBus;
 }
 
 export function publishManagerRealtimeEvent(

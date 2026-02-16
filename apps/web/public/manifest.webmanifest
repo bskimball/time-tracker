@@ -1,7 +1,7 @@
 {
 	"id": "/",
-	"name": "Time Tracker",
-	"short_name": "TimeTracker",
+	"name": "Shift Pulse",
+	"short_name": "ShiftPulse",
 	"description": "Precision industrial time tracking for warehouse teams.",
 	"start_url": "/",
 	"scope": "/",

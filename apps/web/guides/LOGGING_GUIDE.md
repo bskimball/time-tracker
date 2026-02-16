@@ -1,6 +1,6 @@
 # Logging Guide
 
-This guide covers the comprehensive logging solution implemented in the Time Tracker application using Pino, a high-performance Node.js logger.
+This guide covers the comprehensive logging solution implemented in the Shift Pulse application using Pino, a high-performance Node.js logger.
 
 ## Table of Contents
 

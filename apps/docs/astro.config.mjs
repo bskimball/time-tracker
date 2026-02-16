@@ -6,8 +6,8 @@ import starlight from "@astrojs/starlight";
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: "Time Tracker Docs",
-			description: "Customer documentation for the Time Tracker application and API.",
+			title: "Shift Pulse Docs",
+			description: "Customer documentation for the Shift Pulse application and API.",
 			disable404Route: true,
 			social: [
 				{
@@ -25,7 +25,7 @@ export default defineConfig({
 					]
 				},
 				{
-					label: "Using Time Tracker",
+					label: "Using Shift Pulse",
 					items: [
 						{ label: "Web App Basics", slug: "web-app/basics" },
 						{ label: "Navigation and Access", slug: "web-app/navigation-and-access" },

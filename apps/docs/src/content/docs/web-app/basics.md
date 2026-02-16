@@ -1,9 +1,9 @@
 ---
 title: Web App Basics
-description: Role-based overview of core workflows in the Time Tracker web app.
+description: Role-based overview of core workflows in the Shift Pulse web app.
 ---
 
-Time Tracker is organized around warehouse operations and role-specific access.
+Shift Pulse is organized around warehouse operations and role-specific access.
 
 ## Role-based workflow model
 

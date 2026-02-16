@@ -15,7 +15,7 @@ export function Header({
 		<div className="container pt-16 mx-auto">
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-bold">
-					Time Tracker <sup>v4</sup>
+					Shift Pulse <sup>v4</sup>
 				</h1>
 				<div className="flex items-center gap-4">
 					<Nav userRole={userRole} />

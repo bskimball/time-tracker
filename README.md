@@ -1,4 +1,4 @@
-# Time Tracker Monorepo
+# Shift Pulse Monorepo
 
 A modern time tracking application built with React Server Components, featuring a web app, marketing site, and docs site in a monorepo structure.
 
@@ -61,7 +61,7 @@ Time tracking application with user management, task assignments, and reporting.
 
 #### Marketing Site (`apps/marketing`)
 
-Public marketing website for the time tracker.
+Public marketing website for Shift Pulse.
 
 - **Dev server**: `http://localhost:4321`
 - **Commands**: `cd apps/marketing && npm run dev`

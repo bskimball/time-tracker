@@ -1,6 +1,6 @@
 # Application Architecture Guide
 
-This guide provides a comprehensive overview of the Time Tracker application architecture, including its technical stack, routing structure, data model, and deployment patterns.
+This guide provides a comprehensive overview of the Shift Pulse application architecture, including its technical stack, routing structure, data model, and deployment patterns.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This guide provides a comprehensive overview of the Time Tracker application arc
 
 ## Overview
 
-Time Tracker is a **fulfillment warehouse time tracking and management system** built with React Server Components (RSC) in Data mode. It provides role-based dashboards for different user types:
+Shift Pulse is a **fulfillment warehouse time tracking and management system** built with React Server Components (RSC) in Data mode. It provides role-based dashboards for different user types:
 
 **Upstream Starting Point:** [https://github.com/bskimball/react-router-rsc-hono/tree/master/src](https://github.com/bskimball/react-router-rsc-hono/tree/master/src)
 

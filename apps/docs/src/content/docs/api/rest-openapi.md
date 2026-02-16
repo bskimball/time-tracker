@@ -1,9 +1,9 @@
 ---
 title: REST API and OpenAPI
-description: Integrate with Time Tracker using the OpenAPI-compliant REST API.
+description: Integrate with Shift Pulse using the OpenAPI-compliant REST API.
 ---
 
-Time Tracker provides an OpenAPI 3.0-compliant REST API for integrations, automation, and reporting.
+Shift Pulse provides an OpenAPI 3.0-compliant REST API for integrations, automation, and reporting.
 
 ## Base API surface
 

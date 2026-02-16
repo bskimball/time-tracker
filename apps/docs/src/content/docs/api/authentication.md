@@ -1,6 +1,6 @@
 ---
 title: API Authentication
-description: How to authenticate requests to the Time Tracker REST API.
+description: How to authenticate requests to the Shift Pulse REST API.
 ---
 
 ## Authentication method

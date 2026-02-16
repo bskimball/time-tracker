@@ -189,7 +189,7 @@ cat logs/dev.log | grep '"requestId":"abc-123"'
 ## Project Structure Reference
 
 ```
-time-tracker/
+shift-pulse/
 ├── apps/
 │   ├── web/                   # React Router RSC application
 │   │   ├── src/               # Application source code

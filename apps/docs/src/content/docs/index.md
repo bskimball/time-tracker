@@ -1,9 +1,9 @@
 ---
 title: Introduction
-description: Overview of the Time Tracker product documentation.
+description: Overview of the Shift Pulse product documentation.
 ---
 
-Time Tracker is warehouse workforce operations software with two deployment models:
+Shift Pulse is warehouse workforce operations software with two deployment models:
 
 - Hosted by the vendor
 - On-premise deployment in your own environment

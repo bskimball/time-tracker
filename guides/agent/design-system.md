@@ -1,6 +1,6 @@
 # Design System: Precision Industrial (Braun/Rams Aesthetic)
 
-The Time Tracker application uses a shared design system located in `packages/design-system`. It follows a **"Precision Industrial"** aesthetic—inspired by Dieter Rams, Braun, and high-end engineering tools.
+The Shift Pulse application uses a shared design system located in `packages/design-system`. It follows a **"Precision Industrial"** aesthetic—inspired by Dieter Rams, Braun, and high-end engineering tools.
 
 ## Core Principles
 

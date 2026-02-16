@@ -38,7 +38,7 @@ const loggerOptions: LoggerOptions = {
 	// Base metadata
 	base: {
 		env: process.env.NODE_ENV,
-		app: "time-tracker",
+		app: "shift-pulse",
 	},
 
 	// Redact sensitive data
