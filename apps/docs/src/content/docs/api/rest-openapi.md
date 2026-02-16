@@ -3,28 +3,42 @@ title: REST API and OpenAPI
 description: Integrate with Time Tracker using the OpenAPI-compliant REST API.
 ---
 
-Time Tracker provides an OpenAPI-compliant REST API for integrations, automation, and reporting pipelines.
+Time Tracker provides an OpenAPI 3.0-compliant REST API for integrations, automation, and reporting.
 
-## API capabilities
+## Base API surface
 
-- Manage users, teams, and assignments
-- Read and update time entries
-- Access operational data for reporting
+- Base path: `/api`
+- OpenAPI document: `/api/doc`
+- Swagger UI: `/api/ui`
+- Health endpoint: `/api/health`
 
 ## Authentication
 
-- Use organization-issued API credentials
-- Send authorization headers on every request
-- Scope credentials to the minimum required permissions
+- API key header: `x-api-key`
+- Most API routes require a valid key.
+- Use [API Authentication](/api/authentication) for setup and key handling.
 
-## OpenAPI specification
+## API capabilities
 
-- The API contract is published as an OpenAPI document
-- Use the spec to generate SDKs and typed clients
-- Validate requests and responses against the schema
+- Employees and stations lookup
+- Time logs querying with filters
+- Task type and task assignment lifecycle operations
+- Performance metrics retrieval and upsert-style integration flows
+- User and todo resources for operational extensions
 
-## Integration tips
+## Realtime behavior
 
-- Treat API operations as idempotent where possible
-- Implement retries with exponential backoff for transient failures
-- Log request IDs for faster support troubleshooting
+- Manager realtime stream is available at `/api/realtime/manager-stream`.
+- This endpoint uses authenticated manager/admin user context and is not API-key gated.
+- See [Realtime Streaming](/api/realtime-streaming) for details.
+
+## Important current limitation
+
+- `/api/time-clock` is currently a placeholder route and does not expose clock actions.
+- Clock in/out and break flows are handled through web app workflows.
+
+## Continue with API docs
+
+- [API Authentication](/api/authentication)
+- [Endpoint Reference](/api/endpoint-reference)
+- [Realtime Streaming](/api/realtime-streaming)
