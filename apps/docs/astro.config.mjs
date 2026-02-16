@@ -26,11 +26,27 @@ export default defineConfig({
 				},
 				{
 					label: "Using Time Tracker",
-					autogenerate: { directory: "web-app" }
+					items: [
+						{ label: "Web App Basics", slug: "web-app/basics" },
+						{ label: "Navigation and Access", slug: "web-app/navigation-and-access" },
+						{ label: "Employee Guide", slug: "web-app/employee" },
+						{ label: "Manager Guide", slug: "web-app/manager" },
+						{ label: "Administrator Guide", slug: "web-app/administrator" },
+						{ label: "Troubleshooting", slug: "web-app/troubleshooting" }
+					]
 				},
 				{
 					label: "API",
-					autogenerate: { directory: "api" }
+					items: [
+						{ label: "REST API and OpenAPI", slug: "api/rest-openapi" },
+						{ label: "API Authentication", slug: "api/authentication" },
+						{ label: "Endpoint Reference", slug: "api/endpoint-reference" },
+						{ label: "Realtime Streaming", slug: "api/realtime-streaming" }
+					]
+				},
+				{
+					label: "Reference",
+					items: [{ label: "Release Notes", slug: "reference/release-notes" }]
 				}
 			]
 		})

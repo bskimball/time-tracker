@@ -1,28 +1,31 @@
 ---
 title: Web App Basics
-description: Core workflows for employees and managers in the Time Tracker web UI.
+description: Role-based overview of core workflows in the Time Tracker web app.
 ---
 
-## Employee workflows
+Time Tracker is organized around warehouse operations and role-specific access.
 
-- Clock in and clock out from the time clock view
-- Start and end breaks according to policy
-- Review personal time entries and status
+## Role-based workflow model
 
-## Manager workflows
+- **Employee (Floor)**: clock in/out, breaks, and active task controls.
+- **Manager (Portal)**: monitor floor activity, manage timesheets, run reports, and coordinate assignments.
+- **Administrator (Settings + Executive)**: configure system behavior, access, and integration settings.
 
-- Review and approve submitted time entries
-- Fix missed punches and incorrect timestamps
-- Monitor attendance and utilization trends
+## Core navigation areas
 
-## Common setup tasks
+- `/floor` and `/floor/kiosk`: employee-first clock workflows.
+- `/manager`: operational management hub.
+- `/settings`: administration and configuration.
+- `/executive`: strategic KPI and analytics views.
 
-- Configure locations, shifts, and policy rules
-- Create teams and assign users to roles
-- Define approval paths and notification preferences
+## Design language in-product
 
-## Best practices
+- Precision Industrial UI patterns emphasize dense information, clear hierarchy, and high-signal status indicators.
+- Core interactions use compact cards, tabular values, hard borders, and quick action controls.
 
-- Keep role permissions minimal and explicit
-- Review exceptions daily to reduce payroll corrections
-- Use reports weekly to identify recurring gaps
+## Continue with role guides
+
+- [Navigation and Access](/web-app/navigation-and-access)
+- [Employee Guide](/web-app/employee)
+- [Manager Guide](/web-app/manager)
+- [Administrator Guide](/web-app/administrator)
