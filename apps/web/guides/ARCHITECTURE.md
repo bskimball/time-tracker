@@ -216,6 +216,27 @@ rsc-hono-app/
 
 ## Routing Architecture
 
+## Live Data Model: SSE + Polling Fallback
+
+Manager operational views (`/manager/tasks`, `/manager/monitor`) use a hybrid realtime model:
+
+- **Primary channel**: Server-Sent Events at `/api/realtime/manager-stream`
+- **Fallback channel**: bounded polling (30s-300s) when SSE is unavailable or repeatedly disconnects
+- **Event model**: typed events (`task_assignment_changed`, `time_log_changed`, `break_changed`, `worker_status_changed`, `heartbeat`) with monotonic event IDs and ISO timestamps
+- **Scope filtering**: clients subscribe by scope (`tasks`, `monitor`, or `all`) so pages only receive relevant updates
+
+### Expected behavior
+
+- When SSE is connected, manager pages revalidate on relevant events with throttling to avoid refresh storms.
+- If SSE enters repeated reconnect failures, UI shows offline fallback status and bounded polling keeps data fresh.
+- Heartbeats are emitted while connections are active to keep long-lived streams healthy and provide stale detection hints.
+
+### Troubleshooting
+
+- If manager pages are stuck in reconnecting/offline fallback, verify session auth is valid and `/api/realtime/manager-stream` returns `text/event-stream`.
+- If updates are delayed, check that mutation paths publish realtime events (`task`, `time log`, and `break` actions).
+- If behind a reverse proxy, keep buffering disabled for SSE (`X-Accel-Buffering: no`) and allow long-lived HTTP connections.
+
 ### Route Configuration
 
 Routes are defined in `apps/web/src/routes/config.ts` using React Router's configuration format with custom middleware support.

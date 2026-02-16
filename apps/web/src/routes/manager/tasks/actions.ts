@@ -3,17 +3,17 @@
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import { getManagerTaskAssignmentAccess } from "~/lib/task-assignment-permissions";
+import { publishManagerRealtimeEvent } from "~/lib/manager-realtime";
 
 import type { TaskAssignment, TaskType } from "./types";
 import type { Prisma } from "@prisma/client";
 
 export async function getTaskTypes() {
 	return await db.taskType.findMany({
-		where: { isActive: true },
 		include: {
 			Station: true,
 		},
-		orderBy: { name: "asc" },
+		orderBy: [{ isActive: "desc" }, { name: "asc" }],
 	});
 }
 
@@ -61,7 +61,7 @@ export async function assignTask(data: {
 		throw new Error(access.error);
 	}
 
-	return await db.$transaction(async (tx) => {
+	const assignment = await db.$transaction(async (tx) => {
 		// Check if employee has an active task
 		const existingAssignment = await tx.taskAssignment.findFirst({
 			where: {
@@ -75,7 +75,7 @@ export async function assignTask(data: {
 		}
 
 		// Create new task assignment
-		return await tx.taskAssignment.create({
+		const assignment = await tx.taskAssignment.create({
 			data: {
 				employeeId: data.employeeId,
 				taskTypeId: data.taskTypeId,
@@ -91,7 +91,21 @@ export async function assignTask(data: {
 				},
 			},
 		});
+
+		return assignment;
 	});
+
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "assigned",
+		employeeId: data.employeeId,
+		taskAssignmentId: assignment.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "task_assigned",
+		employeeId: data.employeeId,
+	});
+
+	return assignment;
 }
 
 export async function assignTaskAction(
@@ -169,6 +183,16 @@ export async function completeTask(taskId: string, unitsCompleted?: number, note
 		},
 	});
 
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "completed",
+		employeeId: assignment.employeeId,
+		taskAssignmentId: assignment.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "task_completed",
+		employeeId: assignment.employeeId,
+	});
+
 	return assignment;
 }
 
@@ -179,7 +203,7 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 		throw new Error(access.error);
 	}
 
-	return await db.$transaction(async (tx) => {
+	const nextAssignment = await db.$transaction(async (tx) => {
 		const [currentAssignment, employee] = await Promise.all([
 			tx.taskAssignment.findFirst({
 				where: {
@@ -207,7 +231,7 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 		}
 
 		// Create new assignment
-		return await tx.taskAssignment.create({
+		const nextAssignment = await tx.taskAssignment.create({
 			data: {
 				employeeId: employeeId,
 				taskTypeId: newTaskTypeId,
@@ -223,7 +247,21 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 				},
 			},
 		});
+
+		return nextAssignment;
 	});
+
+	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
+		reason: "switched",
+		employeeId,
+		taskAssignmentId: nextAssignment.id,
+	});
+	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
+		reason: "task_switched",
+		employeeId,
+	});
+
+	return nextAssignment;
 }
 
 export async function completeTaskAction(
@@ -364,8 +402,9 @@ export async function updateTaskType(
 	}
 ) {
 	const { user } = await validateRequest();
-	if (!user) {
-		throw new Error("Unauthorized");
+	const access = getManagerTaskAssignmentAccess(user);
+	if (!access.ok) {
+		throw new Error(access.error);
 	}
 
 	const taskType = await db.taskType.update({
@@ -377,6 +416,100 @@ export async function updateTaskType(
 	});
 
 	return taskType;
+}
+
+export async function updateTaskTypeAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{ TaskType?: TaskType; error?: string | null; success?: boolean }> {
+	try {
+		const id = String(formData.get("taskTypeId") || "").trim();
+		const name = String(formData.get("name") || "").trim();
+		const descriptionValue = formData.get("description");
+		const estimatedMinutesValue = formData.get("estimatedMinutesPerUnit");
+
+		if (!id || !name) {
+			return { error: "Task type and name are required", success: false };
+		}
+
+		const estimatedMinutesPerUnitRaw = estimatedMinutesValue
+			? String(estimatedMinutesValue).trim()
+			: "";
+
+		const estimatedMinutesPerUnit = estimatedMinutesPerUnitRaw
+			? Number.parseFloat(estimatedMinutesPerUnitRaw)
+			: null;
+
+		if (
+			estimatedMinutesPerUnit !== null &&
+			(!Number.isFinite(estimatedMinutesPerUnit) || estimatedMinutesPerUnit <= 0)
+		) {
+			return { error: "Estimated minutes must be a positive number", success: false };
+		}
+
+		const TaskType = await updateTaskType(id, {
+			name,
+			description: descriptionValue ? String(descriptionValue).trim() || undefined : undefined,
+			estimatedMinutesPerUnit: estimatedMinutesPerUnit ?? undefined,
+		});
+
+		return { TaskType, success: true };
+	} catch (error: unknown) {
+		return {
+			error: error instanceof Error ? error.message : "Failed to update task type",
+			success: false,
+		};
+	}
+}
+
+export async function setTaskTypeActiveStateAction(
+	_prevState: { error?: string | null; success?: boolean } | null,
+	formData: FormData
+): Promise<{ TaskType?: TaskType; error?: string | null; success?: boolean }> {
+	try {
+		const taskTypeId = String(formData.get("taskTypeId") || "").trim();
+		const nextIsActiveRaw = String(formData.get("isActive") || "").trim();
+
+		if (!taskTypeId || (nextIsActiveRaw !== "true" && nextIsActiveRaw !== "false")) {
+			return { error: "Task type and target state are required", success: false };
+		}
+
+		const { user } = await validateRequest();
+		const access = getManagerTaskAssignmentAccess(user);
+		if (!access.ok) {
+			return { error: access.error, success: false };
+		}
+
+		const nextIsActive = nextIsActiveRaw === "true";
+
+		if (!nextIsActive) {
+			const activeAssignmentCount = await db.taskAssignment.count({
+				where: {
+					taskTypeId,
+					endTime: null,
+				},
+			});
+
+			if (activeAssignmentCount > 0) {
+				return {
+					error:
+						"Cannot deactivate this task type while it has active assignments. Complete or switch those tasks first.",
+					success: false,
+				};
+			}
+		}
+
+		const TaskType = await updateTaskType(taskTypeId, {
+			isActive: nextIsActive,
+		});
+
+		return { TaskType, success: true };
+	} catch (error: unknown) {
+		return {
+			error: error instanceof Error ? error.message : "Failed to update task type status",
+			success: false,
+		};
+	}
 }
 
 export async function getTaskHistory(

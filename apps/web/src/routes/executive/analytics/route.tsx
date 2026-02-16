@@ -18,7 +18,7 @@ import {
 	getTaskTypeEfficiencyData,
 	getTrendAnalysisData,
 } from "./actions";
-import { AnalyticsClient } from "./client";
+import { AnalyticsClient } from "./analytics-dashboard";
 import { SectionTabs } from "./section-tabs";
 import { TimeRangeTabs } from "../time-range-tabs";
 import { ComparisonTabs } from "./comparison-tabs";
@@ -316,7 +316,12 @@ export default async function Component() {
 				</div>
 			</div>
 
-			<AnalyticsClient section={section} displays={displays} />
+			<AnalyticsClient
+				section={section}
+				range={range}
+				compare={compareBasis}
+				displays={displays}
+			/>
 		</div>
 	);
 }

@@ -84,6 +84,36 @@ function KpiBlock({ kpiPromise }: { kpiPromise: Promise<{ data: Kpi | null; erro
 }
 ```
 
+## Client-side section cache pattern (tabbed analytics/reporting UIs)
+
+Use this when a route changes query params (for example `?section=`) and users rapidly flip between tabs.
+
+- Keep `route.tsx` server-rendered and URL-driven.
+- Keep `range` / `compare` in URL as data scope keys.
+- In a small client display shell, cache resolved block results in memory by key:
+  - `${range}:${compare}:${section}:${block}`
+- On cache hit, render immediately without re-showing skeletons.
+- On cache miss, resolve the deferred promise and cache the result.
+- Invalidate cache when scope changes (for example `range` or `compare`).
+- Wrap section tab `navigate(...)` calls in `startTransition(...)` so current content stays visible during route transition.
+
+Example shape:
+
+```tsx
+"use client";
+
+const cacheRef = useRef(new Map<string, unknown>());
+
+function useCachedDisplay<T>(key: string, promise: Promise<T>): T {
+	if (cacheRef.current.has(key)) return cacheRef.current.get(key) as T;
+	const resolved = use(promise);
+	cacheRef.current.set(key, resolved);
+	return resolved;
+}
+```
+
+This pattern avoids loading flicker while preserving deep-linking and server streaming on first load.
+
 ## Anti-Patterns (Do Not Use)
 
 - One giant route-level `await Promise.all([...])` that gates the full page.
@@ -94,6 +124,7 @@ function KpiBlock({ kpiPromise }: { kpiPromise: Promise<{ data: Kpi | null; erro
 ## Existing Reference Routes
 
 - Fine-grained streaming: `apps/web/src/routes/executive/analytics/route.tsx`
+- Streaming + client display cache for section switches: `apps/web/src/routes/executive/analytics/analytics-dashboard.tsx`
 - Progressive manager dashboard: `apps/web/src/routes/manager/dashboard/client.tsx`
 - Deferred report sections: `apps/web/src/routes/manager/reports/client.tsx`
 

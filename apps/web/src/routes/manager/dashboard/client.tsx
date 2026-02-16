@@ -6,6 +6,8 @@ import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-s
 import { Button } from "@monorepo/design-system";
 import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
+import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
 import {
 	LiaUserClockSolid,
 	LiaExclamationTriangleSolid,
@@ -16,7 +18,6 @@ import {
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
-	LiaSyncSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -51,6 +52,14 @@ type ActiveTaskByEmployee = Record<
 	}
 >;
 
+const DASHBOARD_REALTIME_SCOPES = ["monitor", "tasks"] as const;
+const DASHBOARD_INVALIDATION_EVENTS = [
+	"task_assignment_changed",
+	"time_log_changed",
+	"break_changed",
+	"worker_status_changed",
+] as const;
+
 export function ManagerDashboard({
 	activeTimeLogs,
 	activeTasksByEmployee,
@@ -76,6 +85,18 @@ export function ManagerDashboard({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [now, setNow] = useState(() => new Date());
+	useManagerRealtime({
+		scopes: DASHBOARD_REALTIME_SCOPES,
+		invalidateOn: DASHBOARD_INVALIDATION_EVENTS,
+		pollingIntervalSeconds: 90,
+		onInvalidate: () => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+
+			navigate(0);
+		},
+	});
 
 	useEffect(() => {
 		const interval = window.setInterval(() => {
@@ -86,11 +107,7 @@ export function ManagerDashboard({
 	}, []);
 
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
-	const secondsSinceRefresh = Math.max(
-		0,
-		Math.floor((now.getTime() - snapshotDate.getTime()) / 1000),
-	);
-	const freshnessState = secondsSinceRefresh >= 120 ? "STALE" : "FRESH";
+	const staleAfterSeconds = 120;
 
 	const formatDuration = (startTime: Date): string => {
 		const diff = now.getTime() - new Date(startTime).getTime();
@@ -122,7 +139,7 @@ export function ManagerDashboard({
 				: null;
 
 	return (
-		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none pb-10">
+		<div className="space-y-8 pb-10">
 			<PageHeader
 				title="Manager Dashboard"
 				subtitle={`Overview for ${user.name || user.email} • ${new Date().toLocaleDateString(undefined, {
@@ -132,34 +149,14 @@ export function ManagerDashboard({
 				})}`}
 				actions={
 					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
-						<div className="px-3 py-2 rounded-[2px] border border-border bg-card">
-							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-								Data Snapshot
-							</div>
-							<div className="font-data text-xs tabular-nums">
-								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-							</div>
-							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
-								{freshnessState === "STALE"
-									? "Data may be stale. Refresh recommended."
-									: "Data is current within the last 2 minutes."}
-							</p>
-						</div>
-						<Button
-							variant="outline"
-							className="gap-2"
-							onPress={() => navigate(0)}
-							disabled={isRefreshing}
-						>
-							<LiaSyncSolid className={cn(isRefreshing && "animate-spin")} />
-							{isRefreshing ? "Refreshing" : "Refresh"}
-						</Button>
-						<Link to="/manager/monitor">
-							<Button variant="outline" className="gap-2">
-								<LiaStopwatchSolid />
-								Floor Monitor
-							</Button>
-						</Link>
+						<ManagerSnapshotControl
+							label="Data"
+							snapshotAt={snapshotDate}
+							now={now}
+							staleAfterSeconds={staleAfterSeconds}
+							onRefresh={() => navigate(0)}
+							isRefreshing={isRefreshing}
+						/>
 					</div>
 				}
 			/>

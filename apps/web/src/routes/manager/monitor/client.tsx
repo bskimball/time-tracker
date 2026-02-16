@@ -4,21 +4,28 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useNavigation } from "react-router";
 import {
 	Card,
-	Checkbox,
 	Badge,
 	IndustrialPanel,
 	LedIndicator,
-	Select,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
+import { useManagerRealtime } from "~/lib/manager-realtime-client";
+import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
 import {
 	LiaUserClockSolid,
 	LiaChartPieSolid,
 	LiaExclamationTriangleSolid,
 	LiaStopwatchSolid,
-	LiaSyncSolid,
 } from "react-icons/lia";
+
+const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
+const MONITOR_INVALIDATION_EVENTS = [
+	"task_assignment_changed",
+	"time_log_changed",
+	"break_changed",
+	"worker_status_changed",
+] as const;
 
 type ActiveTimeLog = {
 	id: string;
@@ -73,8 +80,18 @@ export function FloorMonitor({
 	const navigation = useNavigation();
 	const isRefreshing = navigation.state !== "idle";
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const [autoRefresh, setAutoRefresh] = useState(true);
-	const [refreshInterval, setRefreshInterval] = useState(30); // seconds
+	const realtime = useManagerRealtime({
+		scopes: MONITOR_REALTIME_SCOPES,
+		invalidateOn: MONITOR_INVALIDATION_EVENTS,
+		pollingIntervalSeconds: 30,
+		onInvalidate: () => {
+			if (document.hidden || isRefreshing) {
+				return;
+			}
+
+			navigate(0);
+		},
+	});
 	const stationStatusOptions = ["ACTIVE", "BUSY", "FULL", "IDLE", "INACTIVE"] as const;
 	const [statusFilters, setStatusFilters] = useState<string[]>([...stationStatusOptions]);
 
@@ -85,45 +102,7 @@ export function FloorMonitor({
 		return () => clearInterval(interval);
 	}, []);
 
-	useEffect(() => {
-		if (!autoRefresh) return;
-
-		const intervalInMs = Math.max(10, refreshInterval) * 1000;
-		const interval = window.setInterval(() => {
-			if (document.hidden || isRefreshing) {
-				return;
-			}
-			navigate(0);
-		}, intervalInMs);
-
-		return () => clearInterval(interval);
-	}, [autoRefresh, refreshInterval, navigate, isRefreshing]);
-
-	useEffect(() => {
-		if (!autoRefresh) {
-			return;
-		}
-
-		const handleVisibilityChange = () => {
-			if (!document.hidden && !isRefreshing) {
-				navigate(0);
-			}
-		};
-
-		document.addEventListener("visibilitychange", handleVisibilityChange);
-		return () => {
-			document.removeEventListener("visibilitychange", handleVisibilityChange);
-		};
-	}, [autoRefresh, isRefreshing, navigate]);
-
 	const snapshotDate = useMemo(() => new Date(snapshotAt), [snapshotAt]);
-	const secondsSinceRefresh = Math.max(
-		0,
-		Math.floor((currentTime.getTime() - snapshotDate.getTime()) / 1000),
-	);
-	const staleThresholdSeconds = autoRefresh ? Math.max(refreshInterval * 2, 20) : 120;
-	const freshnessState = secondsSinceRefresh >= staleThresholdSeconds ? "STALE" : "FRESH";
-
 	const calculateDuration = (startTime: Date): string => {
 		const diff = currentTime.getTime() - new Date(startTime).getTime();
 		const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -202,61 +181,20 @@ export function FloorMonitor({
 		}));
 
 	return (
-		<div className="space-y-8 animate-in fade-in duration-500 motion-reduce:animate-none">
+		<div className="space-y-8">
 			{/* Header */}
 			<PageHeader
 				title="Floor Monitor"
 				subtitle="Operations Monitor"
 				actions={
-					<div className="flex items-center gap-4">
-						<div className="px-3 py-2 rounded-[2px] border border-border bg-card" aria-live="polite">
-							<div className="text-[10px] font-heading uppercase tracking-wider text-muted-foreground">
-								Data Snapshot
-							</div>
-							<div className="font-mono text-xs tabular-nums">
-								Last updated {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-							</div>
-							<p className={cn("text-[10px] font-data", freshnessState === "STALE" ? "text-warning" : "text-emerald-600")}>
-								{freshnessState === "STALE"
-									? "Data is stale for selected cadence."
-									: "Data is within expected refresh window."}
-							</p>
-						</div>
-						<div className="text-right mr-4" aria-live="polite">
-							<div className="font-mono text-xl font-bold tracking-tighter tabular-nums">
-								{currentTime.toLocaleTimeString([], { hour12: false })}
-							</div>
-						</div>
-						<button
-							type="button"
-							onClick={() => navigate(0)}
-							disabled={isRefreshing}
-							className="inline-flex h-10 items-center gap-2 rounded-[2px] border border-border bg-card px-3 text-xs font-heading uppercase tracking-wider hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-60"
-						>
-							<LiaSyncSolid className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-							{isRefreshing ? "Refreshing" : "Refresh"}
-						</button>
-						<div className="flex items-center gap-3 bg-muted/50 p-1.5 rounded-[2px] border border-border">
-							<Checkbox
-								isSelected={autoRefresh}
-								onChange={setAutoRefresh}
-								label="Auto refresh"
-							/>
-							<div className="h-4 w-px bg-border" />
-							<Select
-								value={refreshInterval.toString()}
-								onChange={(val: string) => setRefreshInterval(Number(val))}
-								isDisabled={!autoRefresh}
-								className="w-20"
-								options={[
-									{ value: "10", label: "10s" },
-									{ value: "30", label: "30s" },
-									{ value: "60", label: "1m" },
-									{ value: "300", label: "5m" },
-								]}
-							/>
-						</div>
-					</div>
+					<ManagerSnapshotControl
+						label="Data"
+						snapshotAt={snapshotDate}
+						now={currentTime}
+						staleAfterSeconds={realtime.usingPollingFallback ? 180 : 120}
+						onRefresh={() => navigate(0)}
+						isRefreshing={isRefreshing}
+					/>
 				}
 			/>
 
@@ -498,13 +436,13 @@ export function FloorMonitor({
 						</Badge>
 					</div>
 
-					<Card className="h-[calc(100vh-300px)] overflow-hidden flex flex-col">
+					<Card className="h-[calc(100vh-300px)] overflow-hidden [&>div]:h-full [&>div]:flex [&>div]:flex-col">
 						<div className="bg-muted/30 p-2 grid grid-cols-4 gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-wider border-b border-border">
 							<div className="col-span-2">Employee</div>
 							<div className="text-right">Time</div>
 							<div className="text-center">Status</div>
 						</div>
-						<div className="overflow-y-auto flex-1 p-2 space-y-1">
+						<div className="overflow-y-auto flex-1 min-h-0 p-2 space-y-1">
 							{workLogs.map((log) => (
 								<div
 									key={log.id}

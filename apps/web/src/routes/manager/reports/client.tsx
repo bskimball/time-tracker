@@ -224,7 +224,7 @@ export function ReportsManager({
 				: Math.max(0, Math.min(100, activeRatio * 100 - (overtimeRatio ?? 0) * 20));
 
 		return (
-			<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="space-y-6">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 					<KpiCard
 						label="Workforce Total"
@@ -319,7 +319,7 @@ export function ReportsManager({
 		const data = reportData;
 
 		return (
-			<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="space-y-6">
 				<Card>
 					<CardHeader>
 						<div className="flex justify-between items-center">
@@ -414,7 +414,7 @@ export function ReportsManager({
 		const data = reportData;
 
 		return (
-			<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="space-y-6">
 				<Card>
 					<CardHeader>
 						<div className="flex justify-between items-center">
@@ -491,7 +491,7 @@ export function ReportsManager({
 		const data = reportData;
 
 		return (
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{data.stationEfficiencyData.map((station, index) => (
 					<Card key={index} className="group hover:border-primary/50 transition-colors">
 						<CardHeader className="pb-2 border-b border-border/50">
@@ -561,7 +561,7 @@ export function ReportsManager({
 		const data = reportData;
 
 		return (
-			<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+			<div className="space-y-6">
 				{data.summaryStats.totalOvertimeHours > 0 && (
 					<div className="flex items-center space-x-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-[2px]">
 						<div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-full text-red-600 dark:text-red-400">

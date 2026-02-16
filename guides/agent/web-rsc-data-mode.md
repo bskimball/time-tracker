@@ -53,10 +53,31 @@ Avoid this anti-pattern:
 
 - One large route-level `await Promise.all([...])` that blocks the entire page render.
 
+## Client cache for query-param tab switches
+
+For routes that switch views with query params (for example `?section=productivity`), use a hybrid pattern:
+
+- Keep the route server-rendered and URL-driven for deep links.
+- Keep filters like `range` / `compare` in URL.
+- Use a small client display shell to cache resolved deferred blocks in memory.
+- Key cache by scope + section + block (for example `${range}:${compare}:${section}:${block}`).
+- Clear cache when scope keys change (`range`/`compare`).
+- Wrap section `navigate(...)` calls in `startTransition(...)` so prior content stays visible while routing.
+
+This avoids skeleton flicker when users flip between sections and still preserves first-load streaming behavior.
+
 Reference guide:
 
 - `apps/web/guides/DATA_LOADING_STREAMING_GUIDE.md`
+- `apps/web/src/routes/executive/analytics/analytics-dashboard.tsx`
 
 ## Legacy notes
 
 - If you encounter an existing `loader` in older code, treat it as legacy and migrate toward async Server Component patterns when you’re already working in that area.
+
+## Manager live updates (SSE)
+
+- Manager operational pages use SSE at `/api/realtime/manager-stream` for live updates.
+- Keep SSE endpoint auth aligned with manager/admin session auth (do not rely on API-key-only middleware for browser manager views).
+- Publish lightweight typed events from server mutations (`task_assignment_changed`, `time_log_changed`, `break_changed`, `worker_status_changed`) and include event id/timestamp.
+- Client pages must gracefully degrade to bounded polling with backoff when SSE is unavailable.

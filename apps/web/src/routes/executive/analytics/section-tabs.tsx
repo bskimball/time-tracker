@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { cn } from "~/lib/cn";
 
@@ -29,8 +30,9 @@ export function SectionTabs({
 	const handleSectionChange = (section: string) => {
 		const newSearchParams = new URLSearchParams(searchParams);
 		newSearchParams.set("section", section);
-		// Keep the current range if it exists
-		navigate(`?${newSearchParams.toString()}`, { replace: false });
+		startTransition(() => {
+			navigate(`?${newSearchParams.toString()}`, { replace: false });
+		});
 	};
 
 	return (

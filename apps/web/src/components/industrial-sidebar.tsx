@@ -337,9 +337,10 @@ function IndustrialSidebarMain({ children, className }: IndustrialSidebarMainPro
 
 interface IndustrialSidebarStatusBarProps {
 	className?: string;
+	children?: ReactNode;
 }
 
-function IndustrialSidebarStatusBar({ className }: IndustrialSidebarStatusBarProps) {
+function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarStatusBarProps) {
 	const [now, setNow] = useState<Date | null>(null);
 	const navigation = useNavigation();
 	const isAnimating = navigation.state !== "idle";
@@ -370,6 +371,7 @@ function IndustrialSidebarStatusBar({ className }: IndustrialSidebarStatusBarPro
 			</div>
 
 			<div className="flex items-center gap-3">
+				{children ? <div className="flex items-center">{children}</div> : null}
 				<div className="font-mono text-xs text-muted-foreground tabular-nums tracking-wide">
 					{now
 						? now.toLocaleString("en-US", {

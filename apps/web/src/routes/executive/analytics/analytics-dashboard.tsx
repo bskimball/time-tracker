@@ -9,16 +9,84 @@ import {
 	CardTitle,
 	Metric,
 } from "@monorepo/design-system";
-import { Suspense, use } from "react";
-import { IndustrialSpinner } from "~/components/industrial-spinner";
+import { createContext, Suspense, use, useContext, useMemo } from "react";
+import type { ReactNode } from "react";
+import {
+	ProductivityKpiRowSkeleton,
+	ProductivityChartsSkeleton,
+	ProductivityStationCardsSkeleton,
+	ProductivityEmployeeTableSkeleton,
+	LaborCostKpiRowSkeleton,
+	LaborCostChartsSkeleton,
+	LaborCostStationTableSkeleton,
+	TrendKpisSkeleton,
+	TrendChartsSkeleton,
+	TrendAnomalyTableSkeleton,
+	CapacityKpisSkeleton,
+	CapacityFloorSkeleton,
+	BenchmarkKpisSkeleton,
+	BenchmarkChartsSkeleton,
+	BenchmarkStationTableSkeleton,
+} from "./skeletons";
 import { KPICard } from "~/routes/executive/kpi-card";
 import { BarChart, LineChart, PieChart } from "~/routes/executive/charts";
 import WarehouseFloor from "./components/WarehouseFloor";
 import type { AnalyticsStationOverview } from "./types";
 import type {
+	AnalyticsComparison,
+	AnalyticsRange,
 	AnalyticsSection,
 	AnalyticsSectionDisplayPromises,
 } from "./model";
+
+type AnalyticsDisplayCacheStore = Map<string, unknown>;
+
+function createAnalyticsDisplayCacheStore(_scope: string): AnalyticsDisplayCacheStore {
+	return new Map();
+}
+
+type AnalyticsDisplayCacheContextValue = {
+	cacheStore: AnalyticsDisplayCacheStore;
+	sectionCacheKey: string;
+};
+
+const AnalyticsDisplayCacheContext = createContext<AnalyticsDisplayCacheContextValue | null>(null);
+
+function useCachedDisplay<T>(slot: string, promise: Promise<T>): T {
+	const context = useContext(AnalyticsDisplayCacheContext);
+
+	if (!context) {
+		throw new Error("Analytics display cache context is missing.");
+	}
+
+	const key = `${context.sectionCacheKey}:${slot}`;
+	if (context.cacheStore.has(key)) {
+		return context.cacheStore.get(key) as T;
+	}
+
+	const resolved = use(promise);
+	context.cacheStore.set(key, resolved);
+
+	return resolved;
+}
+
+function useCachedDisplayState<T>(slot: string, promise: Promise<T>): { data: T; isCached: boolean } {
+	const context = useContext(AnalyticsDisplayCacheContext);
+
+	if (!context) {
+		throw new Error("Analytics display cache context is missing.");
+	}
+
+	const key = `${context.sectionCacheKey}:${slot}`;
+	if (context.cacheStore.has(key)) {
+		return { data: context.cacheStore.get(key) as T, isCached: true };
+	}
+
+	const resolved = use(promise);
+	context.cacheStore.set(key, resolved);
+
+	return { data: resolved, isCached: false };
+}
 
 function toMetricTrendDirection(value: string): "up" | "down" | "neutral" {
 	if (value === "up" || value === "down" || value === "neutral") {
@@ -30,16 +98,35 @@ function toMetricTrendDirection(value: string): "up" | "down" | "neutral" {
 
 interface AnalyticsClientProps {
 	section: AnalyticsSection;
+	range: AnalyticsRange;
+	compare: AnalyticsComparison;
 	displays: AnalyticsSectionDisplayPromises;
 }
 
-export function AnalyticsClient({ section, displays }: AnalyticsClientProps) {
+export function AnalyticsClient({ section, range, compare, displays }: AnalyticsClientProps) {
+	const cacheScope = `${range}:${compare}`;
+	const cacheStore = useMemo<AnalyticsDisplayCacheStore>(
+		() => createAnalyticsDisplayCacheStore(cacheScope),
+		[cacheScope]
+	);
+
+	const sectionCacheKey = `${cacheScope}:${section}`;
+	const providerValue = useMemo(
+		() => ({ cacheStore, sectionCacheKey }),
+		[cacheStore, sectionCacheKey]
+	);
+	const withCache = (content: ReactNode) => (
+		<AnalyticsDisplayCacheContext.Provider value={providerValue}>
+			{content}
+		</AnalyticsDisplayCacheContext.Provider>
+	);
+
 	if (section === "productivity") {
 		if (!displays.productivity) {
 			return <AnalyticsErrorCard message="No productivity analytics data available." />;
 		}
 
-		return <ProductivitySection displays={displays.productivity} />;
+		return withCache(<ProductivitySection displays={displays.productivity} />);
 	}
 
 	if (section === "labor-cost") {
@@ -47,7 +134,7 @@ export function AnalyticsClient({ section, displays }: AnalyticsClientProps) {
 			return <AnalyticsErrorCard message="No labor cost analytics data available." />;
 		}
 
-		return <LaborCostSection displays={displays["labor-cost"]} />;
+		return withCache(<LaborCostSection displays={displays["labor-cost"]} />);
 	}
 
 	if (section === "trends") {
@@ -55,7 +142,7 @@ export function AnalyticsClient({ section, displays }: AnalyticsClientProps) {
 			return <AnalyticsErrorCard message="No trend analytics data available." />;
 		}
 
-		return <TrendsSection displays={displays.trends} />;
+		return withCache(<TrendsSection displays={displays.trends} />);
 	}
 
 	if (section === "capacity") {
@@ -63,14 +150,14 @@ export function AnalyticsClient({ section, displays }: AnalyticsClientProps) {
 			return <AnalyticsErrorCard message="No capacity analytics data available." />;
 		}
 
-		return <CapacitySection displays={displays.capacity} />;
+		return withCache(<CapacitySection displays={displays.capacity} />);
 	}
 
 	if (!displays.benchmarks) {
 		return <AnalyticsErrorCard message="No benchmark analytics data available." />;
 	}
 
-	return <BenchmarksSection displays={displays.benchmarks} />;
+	return withCache(<BenchmarksSection displays={displays.benchmarks} />);
 }
 
 function ProductivitySection({
@@ -79,20 +166,20 @@ function ProductivitySection({
 	displays: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>;
 }) {
 	return (
-		<div className="space-y-6 animate-fade-in-up">
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading productivity KPIs" />}>
+		<div className="space-y-6">
+			<Suspense fallback={<ProductivityKpiRowSkeleton />}>
 				<ProductivityKpiRow promise={displays.kpis} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading productivity charts" />}>
+			<Suspense fallback={<ProductivityChartsSkeleton />}>
 				<ProductivityCharts promise={displays.charts} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading station cards" />}>
+			<Suspense fallback={<ProductivityStationCardsSkeleton />}>
 				<ProductivityStationCards promise={displays.stationCards} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading employee rankings" />}>
+			<Suspense fallback={<ProductivityEmployeeTableSkeleton />}>
 				<ProductivityEmployeeTable promise={displays.employeeTable} />
 			</Suspense>
 		</div>
@@ -104,7 +191,7 @@ function ProductivityKpiRow({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["kpis"];
 }) {
-	const result = use(promise);
+	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load productivity KPIs."} />;
 	}
@@ -118,6 +205,7 @@ function ProductivityKpiRow({
 				value={benchmarkData.productivity.current}
 				subtitle="Current Period Average"
 				icon="chart"
+				animateCountUp={!isCached}
 				trend={{
 					direction:
 						trendData.productivity.changePercent > 0
@@ -134,6 +222,7 @@ function ProductivityKpiRow({
 				value={`${benchmarkData.productivity.top10Percent} u/h`}
 				subtitle="98th Percentile"
 				icon="award"
+				animateCountUp={!isCached}
 				trend={{ direction: "up", value: "Top 10%", label: "Industry Benchmark" }}
 			/>
 			<KPICard
@@ -141,6 +230,7 @@ function ProductivityKpiRow({
 				value={`${benchmarkData.quality.current}%`}
 				subtitle="On-Time Rate"
 				icon="percent"
+				animateCountUp={!isCached}
 				trend={{ direction: "neutral", value: "95%", label: "Target" }}
 			/>
 			<Card className="h-full border-l-4 border-l-destructive bg-destructive/5">
@@ -169,7 +259,7 @@ function ProductivityCharts({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["charts"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load productivity charts."} />;
 	}
@@ -183,7 +273,7 @@ function ProductivityCharts({
 				<BarChart title="Station Efficiency Comparison" data={stationEfficiency} height={320} />
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
 				<BarChart title="Task Type Efficiency" data={taskTypeEfficiency} height={320} />
 				<BarChart title="Shift Productivity" data={shiftProductivity} height={320} />
 			</div>
@@ -196,7 +286,7 @@ function ProductivityStationCards({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["stationCards"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("station-cards", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load station cards."} />;
 	}
@@ -261,7 +351,7 @@ function ProductivityStationCards({
 										? "LOW"
 										: station.occupancy > 85
 											? "HIGH"
-											: "OK"}
+										    : "OK"}
 								</span>
 							</div>
 						</CardBody>
@@ -277,7 +367,7 @@ function ProductivityEmployeeTable({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["employeeTable"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("employee-table", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load employee rankings."} />;
 	}
@@ -341,16 +431,16 @@ function LaborCostSection({
 	displays: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>;
 }) {
 	return (
-		<div className="space-y-6 animate-fade-in-up">
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading labor KPIs" />}>
+		<div className="space-y-6">
+			<Suspense fallback={<LaborCostKpiRowSkeleton />}>
 				<LaborCostKpiRow promise={displays.kpis} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading labor charts" />}>
+			<Suspense fallback={<LaborCostChartsSkeleton />}>
 				<LaborCostCharts promise={displays.charts} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading station cost table" />}>
+			<Suspense fallback={<LaborCostStationTableSkeleton />}>
 				<LaborCostStationTable promise={displays.stationTable} />
 			</Suspense>
 		</div>
@@ -362,7 +452,7 @@ function LaborCostKpiRow({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>["kpis"];
 }) {
-	const result = use(promise);
+	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load labor KPIs."} />;
 	}
@@ -376,12 +466,14 @@ function LaborCostKpiRow({
 				value={`$${costSummary.regular.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				subtitle="840 Hours Logged"
 				icon="clock"
+				animateCountUp={!isCached}
 			/>
 			<KPICard
 				title="Overtime Cost"
 				value={`$${costSummary.overtime.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				subtitle="95 Hours Logged"
 				icon="dollar"
+				animateCountUp={!isCached}
 				trend={{ direction: "down", value: "-5%", label: "vs last period" }}
 			/>
 			<KPICard
@@ -389,6 +481,7 @@ function LaborCostKpiRow({
 				value={`$${costSummary.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				subtitle="Combined Labor"
 				icon="dollar"
+				animateCountUp={!isCached}
 			/>
 			<Card
 				className={`h-full border-l-4 ${
@@ -427,7 +520,7 @@ function LaborCostCharts({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>["charts"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load labor charts."} />;
 	}
@@ -441,7 +534,7 @@ function LaborCostCharts({
 				<BarChart title="Shift Productivity vs Cost" data={shiftProductivity} height={320} />
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-6">
 				<div className="lg:col-span-1">
 					<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
 				</div>
@@ -455,7 +548,7 @@ function LaborCostStationTable({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>["stationTable"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("station-table", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load labor station table."} />;
 	}
@@ -526,16 +619,16 @@ function LaborCostStationTable({
 
 function TrendsSection({ displays }: { displays: NonNullable<AnalyticsSectionDisplayPromises["trends"]> }) {
 	return (
-		<div className="space-y-6 animate-fade-in-up">
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading trend KPIs" />}>
+		<div className="space-y-6">
+			<Suspense fallback={<TrendKpisSkeleton />}>
 				<TrendKpis promise={displays.kpis} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading trend charts" />}>
+			<Suspense fallback={<TrendChartsSkeleton />}>
 				<TrendCharts promise={displays.charts} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading anomaly alerts" />}>
+			<Suspense fallback={<TrendAnomalyTableSkeleton />}>
 				<TrendAnomalyTable promise={displays.anomalyTable} />
 			</Suspense>
 		</div>
@@ -547,7 +640,7 @@ function TrendKpis({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["trends"]>["kpis"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load trend KPIs."} />;
 	}
@@ -583,7 +676,7 @@ function TrendCharts({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["trends"]>["charts"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load trend charts."} />;
 	}
@@ -603,7 +696,7 @@ function TrendAnomalyTable({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["trends"]>["anomalyTable"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("anomaly-table", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load anomaly alerts."} />;
 	}
@@ -670,17 +763,17 @@ function CapacitySection({
 	displays: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>;
 }) {
 	return (
-		<div className="space-y-6 animate-fade-in-up">
+		<div className="space-y-6">
 			<p className="text-xs font-mono text-muted-foreground">
 				Utilization is calculated as active staff divided by configured station capacity; staff
 				shortage compares active staffing against currently scheduled required headcount.
 			</p>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading capacity KPIs" />}>
+			<Suspense fallback={<CapacityKpisSkeleton />}>
 				<CapacityKpis promise={displays.kpis} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading warehouse floor" />}>
+			<Suspense fallback={<CapacityFloorSkeleton />}>
 				<CapacityFloor promise={displays.floor} />
 			</Suspense>
 		</div>
@@ -692,7 +785,7 @@ function CapacityKpis({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>["kpis"];
 }) {
-	const result = use(promise);
+	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load capacity KPIs."} />;
 	}
@@ -706,12 +799,14 @@ function CapacityKpis({
 				value={`${capacityData.overall.currentUtilization}%`}
 				subtitle={`Target: ${capacityData.overall.optimalUtilization}%`}
 				icon="industry"
+				animateCountUp={!isCached}
 			/>
 			<KPICard
 				title="Staff Shortage"
 				value={capacityData.overall.staffShortage}
 				subtitle="Positions Needed"
 				icon="users"
+				animateCountUp={!isCached}
 				trend={{ direction: "down", value: "Critical", label: "Impact High" }}
 			/>
 			<KPICard
@@ -719,12 +814,14 @@ function CapacityKpis({
 				value={`$${capacityData.overall.costImpact.toLocaleString()}`}
 				subtitle="Weekly Opportunity"
 				icon="dollar"
+				animateCountUp={!isCached}
 			/>
 			<KPICard
 				title="Bottlenecks"
 				value={capacityData.stations.filter((station) => station.utilization < 60).length}
 				subtitle="Stations Underutilized"
 				icon="chart"
+				animateCountUp={!isCached}
 			/>
 		</div>
 	);
@@ -735,7 +832,7 @@ function CapacityFloor({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>["floor"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("floor", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load warehouse floor."} />;
 	}
@@ -802,16 +899,16 @@ function BenchmarksSection({
 	displays: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>;
 }) {
 	return (
-		<div className="space-y-6 animate-fade-in-up">
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading benchmark KPIs" />}>
+		<div className="space-y-6">
+			<Suspense fallback={<BenchmarkKpisSkeleton />}>
 				<BenchmarkKpis promise={displays.kpis} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading benchmark charts" />}>
+			<Suspense fallback={<BenchmarkChartsSkeleton />}>
 				<BenchmarkCharts promise={displays.charts} />
 			</Suspense>
 
-			<Suspense fallback={<AnalyticsSectionFallback label="Loading benchmark station table" />}>
+			<Suspense fallback={<BenchmarkStationTableSkeleton />}>
 				<BenchmarkStationTable promise={displays.stationTable} />
 			</Suspense>
 		</div>
@@ -823,7 +920,7 @@ function BenchmarkKpis({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["kpis"];
 }) {
-	const result = use(promise);
+	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load benchmark KPIs."} />;
 	}
@@ -841,6 +938,7 @@ function BenchmarkKpis({
 				value={`${benchmarkData.productivity.current} u/h`}
 				subtitle={`Industry: ${benchmarkData.productivity.industryAvg} u/h`}
 				icon="chart"
+				animateCountUp={!isCached}
 				trend={{
 					direction: productivityDeltaVsIndustry >= 0 ? "up" : "down",
 					value: `${productivityDeltaVsIndustry >= 0 ? "+" : ""}${productivityDeltaVsIndustry.toFixed(1)} u/h`,
@@ -852,6 +950,7 @@ function BenchmarkKpis({
 				value={`$${benchmarkData.costPerUnit.current.toFixed(2)}`}
 				subtitle={`Target: $${benchmarkData.costPerUnit.target.toFixed(2)}`}
 				icon="dollar"
+				animateCountUp={!isCached}
 				trend={{
 					direction: costDeltaVsIndustry <= 0 ? "up" : "down",
 					value: `${costDeltaVsIndustry >= 0 ? "+" : ""}${costDeltaVsIndustry.toFixed(2)}`,
@@ -863,6 +962,7 @@ function BenchmarkKpis({
 				value={`${benchmarkData.quality.current}%`}
 				subtitle={`Top Decile: ${benchmarkData.quality.top10Percent}%`}
 				icon="percent"
+				animateCountUp={!isCached}
 				trend={{
 					direction: qualityDeltaVsIndustry >= 0 ? "up" : "down",
 					value: `${qualityDeltaVsIndustry >= 0 ? "+" : ""}${qualityDeltaVsIndustry.toFixed(1)} pts`,
@@ -878,7 +978,7 @@ function BenchmarkCharts({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["charts"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load benchmark charts."} />;
 	}
@@ -930,7 +1030,7 @@ function BenchmarkStationTable({
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["stationTable"];
 }) {
-	const result = use(promise);
+	const result = useCachedDisplay("station-table", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load benchmark table."} />;
 	}
@@ -1024,26 +1124,6 @@ function BenchmarkStationTable({
 					</tbody>
 				</table>
 			</div>
-		</Card>
-	);
-}
-
-function AnalyticsSectionFallback({
-	label,
-}: {
-	label: string;
-}) {
-	return (
-		<Card className="border-border/50">
-			<CardBody className="p-5">
-				<div className="flex items-center gap-3 text-xs font-industrial uppercase tracking-widest text-muted-foreground">
-					<IndustrialSpinner size="sm" />
-					{label}
-				</div>
-				<div
-					className="mt-4 h-56 animate-pulse rounded-[2px] border border-border bg-muted/20"
-				/>
-			</CardBody>
 		</Card>
 	);
 }

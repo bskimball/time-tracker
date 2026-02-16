@@ -59,6 +59,9 @@ export function MobileTimeClock({
 	const [error, setError] = React.useState("");
 	const [success, setSuccess] = React.useState("");
 	const [selectedTaskByEmployee, setSelectedTaskByEmployee] = React.useState<Record<string, string>>({});
+	const [expandedTaskControlsByEmployee, setExpandedTaskControlsByEmployee] = React.useState<
+		Record<string, boolean>
+	>({});
 
 	// Online status management
 	const { isOnline } = useOnlineStatus();
@@ -199,6 +202,13 @@ export function MobileTimeClock({
 
 	const selfAssignEnabled = canSelfAssign(assignmentMode);
 	const selfAssignRequired = isSelfAssignRequired(assignmentMode);
+
+	const toggleTaskControls = (employeeId: string) => {
+		setExpandedTaskControlsByEmployee((prev) => ({
+			...prev,
+			[employeeId]: !prev[employeeId],
+		}));
+	};
 
 	const handleWorkerTaskAction = async (
 		action: "start" | "switch" | "end",
@@ -417,10 +427,11 @@ export function MobileTimeClock({
 				{activeLogs.length > 0 && (
 					<MobileSection title="Active Sessions">
 						<div className="space-y-4">
-							{activeLogs.map((log) => {
+						{activeLogs.map((log) => {
 								const isOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
 								const activeTask = activeTasksByEmployee?.[log.employeeId];
 								const selectedTaskId = selectedTaskByEmployee[log.employeeId] || "";
+								const taskControlsExpanded = expandedTaskControlsByEmployee[log.employeeId] ?? false;
 								return (
 									<MobileCard key={log.id} padding="md">
 										<div className="space-y-3">
@@ -502,6 +513,26 @@ export function MobileTimeClock({
 
 											{selfAssignEnabled && (
 												<div className="space-y-2 border border-border/60 rounded-[2px] p-3">
+													<div className="flex items-center justify-between">
+														<div>
+															<p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+																Task Controls
+															</p>
+															<p className="text-xs text-muted-foreground">
+																{activeTask ? `Current: ${activeTask.taskTypeName}` : "No active task"}
+															</p>
+														</div>
+														<TouchButton
+															onPress={() => toggleTaskControls(log.employeeId)}
+															variant="outline"
+															size="sm"
+														>
+															{taskControlsExpanded ? "Hide" : "Manage"}
+														</TouchButton>
+													</div>
+
+													{taskControlsExpanded && (
+														<>
 													<TouchSelect
 														label={activeTask ? "Switch To Task" : "Start Task"}
 														value={selectedTaskId}
@@ -556,6 +587,8 @@ export function MobileTimeClock({
 															</TouchButton>
 														)}
 													</div>
+														</>
+													)}
 												</div>
 											)}
 										</div>

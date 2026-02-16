@@ -14,12 +14,12 @@ export function LoginClient() {
 			{/* Tactical grid background */}
 			<div className="absolute inset-0 bg-tactical-grid opacity-20 pointer-events-none" aria-hidden="true" />
 
-			<div className="w-full max-w-md animate-scale-in relative z-10">
+			<div className="w-full max-w-md relative z-10">
 				<SafetyStripes position="top" aria-hidden="true" />
 				<IndustrialPanel className="relative">
 					<IndustrialHeader title="Login" subtitle="SECURE_ACCESS_v1.0" />
 					<div className="p-8">
-						<p className="text-center text-sm mb-8 text-muted-foreground animate-fade-in font-heading uppercase tracking-wider">
+						<p className="text-center text-sm mb-8 text-muted-foreground font-heading uppercase tracking-wider">
 							Choose your authentication method
 						</p>
 
@@ -94,4 +94,3 @@ export function LoginClient() {
 		</main>
 	);
 }
-
