@@ -121,9 +121,8 @@ function IndustrialSidebarHeader({ title, brandHref }: IndustrialSidebarHeaderPr
 		<div className="relative border-b border-border bg-muted/10 p-5 overflow-hidden group">
 			<div className="absolute inset-0 bg-noise opacity-50 pointer-events-none" />
 			<Link to={href} className="relative flex items-center gap-4 z-10 hover:opacity-80 transition-opacity">
-				<div className="relative">
-					<div className="absolute inset-0 bg-[var(--primary)]/30 blur-md rounded-full animate-pulse" />
-					<div className="relative z-10 w-2.5 h-2.5 rounded-full bg-[var(--primary)] shadow-[0_0_10px_var(--primary)]" />
+				<div className="relative z-10 w-7 h-7 border border-primary/60 bg-primary/10 flex items-center justify-center text-primary font-mono text-xs font-bold tracking-wider shrink-0">
+					SP
 				</div>
 
 				{!isCollapsed && (
@@ -172,6 +171,7 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 	return (
 		<Link to={to} className={cn("block group", className)}>
 			<div
+				title={isCollapsed ? label : undefined}
 				className={cn(
 					"relative flex items-center transition-all duration-200 rounded-[2px] overflow-hidden",
 					isCollapsed ? "justify-center h-10 w-10 mx-auto" : "h-10 px-3",
@@ -270,11 +270,6 @@ function IndustrialSidebarCollapseButton({ className }: IndustrialSidebarCollaps
 					d="M13 5l7 7-7 7M5 5l7 7-7 7"
 				/>
 			</svg>
-			{!isCollapsed && (
-				<span className="ml-2 text-[10px] font-mono uppercase tracking-widest opacity-80">
-					Collapse
-				</span>
-			)}
 		</Button>
 	);
 }
@@ -358,16 +353,18 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 	return (
 		<div
 			className={cn(
-				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border/40",
+				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-primary/30",
 				className
 			)}
 		>
 			<div className="flex items-center gap-4">
-				<IndustrialLoader 
-					variant="processing" 
-					className="opacity-60" 
-					isAnimated={isAnimating}
-				/>
+				{isAnimating && (
+					<IndustrialLoader 
+						variant="processing" 
+						className="opacity-60" 
+						isAnimated={isAnimating}
+					/>
+				)}
 			</div>
 
 			<div className="flex items-center gap-3">

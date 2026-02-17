@@ -169,10 +169,16 @@ export function ManagerDashboard({
 						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Personnel</span>
 					</div>
 					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
 							{activeSessionCount}
 						</span>
 						<span className="text-sm text-muted-foreground font-data">/ {totalEmployees}</span>
+					</div>
+					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
+						<div 
+							className="h-full bg-primary transition-all duration-700" 
+							style={{ width: `${Math.min(100, (activeSessionCount / totalEmployees) * 100)}%` }} 
+						/>
 					</div>
 				</div>
 
@@ -186,9 +192,15 @@ export function ManagerDashboard({
 						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Longest Shift</span>
 					</div>
 					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
 							{longestSessionStart ? formatDuration(longestSessionStart) : "--"}
 						</span>
+					</div>
+					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
+						<div 
+							className="h-full bg-primary transition-all duration-700" 
+							style={{ width: longestSessionStart ? "100%" : "0%" }} 
+						/>
 					</div>
 				</div>
 
@@ -198,12 +210,17 @@ export function ManagerDashboard({
 						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Utilization</span>
 					</div>
 					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
+						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
 							{utilizationRate.toFixed(1)}%
 						</span>
 						<span className="text-sm text-muted-foreground font-data">Efficiency</span>
 					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Clocked in (WORK) or assigned task / total employees</p>
+					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
+						<div 
+							className="h-full bg-primary transition-all duration-700" 
+							style={{ width: `${Math.min(100, utilizationRate)}%` }} 
+						/>
+					</div>
 				</div>
 			</section>
 
@@ -256,7 +273,7 @@ export function ManagerDashboard({
 													{assignment.stationName || <span className="opacity-50 italic">Unassigned</span>}
 												</div>
 												<div className="col-span-3 text-sm">
-													<span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-200 dark:border-blue-900">
+													<span className="inline-flex items-center px-2 py-0.5 rounded-[2px] bg-primary/10 text-primary text-xs font-industrial border border-primary/20">
 														{assignment.taskTypeName}
 													</span>
 												</div>
@@ -326,7 +343,7 @@ export function ManagerDashboard({
 								</div>
 								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
 									<div
-										className="h-full bg-emerald-500 rounded-full"
+										className="h-full bg-success rounded-full"
 										style={{ width: `${Math.min(100, utilizationRate)}%` }}
 									/>
 								</div>
@@ -493,13 +510,13 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 	const { criticalAlerts, warningAlerts, activeAlertCount } = getAlertGroups(alerts);
 
 	return (
-		<Card className="border-t-4 border-t-orange-500 shadow-sm">
+		<Card className="border-t-[3px] border-t-primary shadow-industrial">
 			<CardHeader className="pb-3 border-b border-border/50">
 				<div className="flex justify-between items-center">
-					<CardTitle className="text-base uppercase tracking-wider text-orange-700 dark:text-orange-400">
+					<CardTitle className="text-base uppercase tracking-wider text-primary">
 						Operational Feed
 					</CardTitle>
-					<span className="text-xs font-data bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400 px-1.5 py-0.5 rounded-sm">
+					<span className="text-xs font-data bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
 						{activeAlertCount} ISSUES
 					</span>
 				</div>

@@ -24,6 +24,7 @@ import {
 	pinToggleClock,
 } from "~/routes/time-clock/actions";
 import type { ClockActionState } from "~/routes/time-clock/actions";
+import { cn } from "~/lib/cn";
 import { Button } from "@monorepo/design-system";
 import { Alert } from "@monorepo/design-system";
 import { Card, CardHeader, CardTitle, CardBody } from "@monorepo/design-system";
@@ -91,6 +92,7 @@ function ClockInForm({
 		null
 	);
 	const [selectState, selectFormAction] = useActionState<ClockActionState, FormData>(clockIn, null);
+	const [isEditingApiKey, setIsEditingApiKey] = useState(false);
 
 	const handleOfflineSubmit = useCallback(
 		(
@@ -233,46 +235,52 @@ function ClockInForm({
 					</Button>
 				</div>
 
-				<div className="mt-3 flex flex-col gap-1 mb-6">
-					<div className="flex items-center justify-between">
-						<label className="text-xs font-medium text-foreground">Device API Key</label>
-						<button
-							type="button"
-							className="text-xs text-primary hover:underline"
-							onClick={() => {
-								if (typeof window !== "undefined") {
-									const next = window.prompt("Enter API key", apiKey) ?? apiKey;
-									if (next !== null) {
-										saveApiKey(next.trim());
-										notify("API key updated", "success");
-									}
-								}
-							}}
-						>
-							Edit
-						</button>
-					</div>
-					<SimpleInput
-						type="password"
-						value={apiKey}
-						onChange={(e) => saveApiKey(e.target.value)}
-						placeholder="Stored locally for kiosk"
-					/>
+				<div className="mt-3 flex flex-col gap-2 mb-6">
+					<label className="text-xs font-medium text-foreground">Device API Key</label>
+					{isEditingApiKey ? (
+						<div className="flex gap-2 animate-fade-in">
+							<div className="flex-1">
+								<SimpleInput
+									type="text"
+									value={apiKey}
+									onChange={(e) => saveApiKey(e.target.value)}
+									placeholder="Enter API Key"
+									autoFocus
+								/>
+							</div>
+							<Button size="sm" onPress={() => setIsEditingApiKey(false)}>
+								Done
+							</Button>
+						</div>
+					) : (
+						<div className="flex justify-between items-center p-3 bg-muted/20 rounded-[2px] border border-border/50 group hover:border-primary/30 transition-colors">
+							<span className="text-xs font-mono text-muted-foreground tracking-wider">
+								{apiKey ? `••••••••${apiKey.slice(-4)}` : "NO API KEY SET"}
+							</span>
+							<button
+								type="button"
+								className="text-xs font-medium text-primary hover:text-primary/80 uppercase tracking-wider"
+								onClick={() => setIsEditingApiKey(true)}
+							>
+								Edit
+							</button>
+						</div>
+					)}
 				</div>
 
-				<div className="flex gap-2 w-full mb-4">
+				<div className="flex gap-2 w-full mb-4 bg-muted/10 p-1 rounded-[4px] border border-border/30">
 					<Button
 						type="button"
-						variant={method === "pin" ? "primary" : "outline"}
-						className="flex-1"
+						variant={method === "pin" ? "primary" : "ghost"}
+						className={cn("flex-1 rounded-[2px]", method === "pin" && "shadow-sm")}
 						onPress={() => setMethod("pin")}
 					>
 						PIN Number
 					</Button>
 					<Button
 						type="button"
-						variant={method === "select" ? "primary" : "outline"}
-						className="flex-1"
+						variant={method === "select" ? "primary" : "ghost"}
+						className={cn("flex-1 rounded-[2px]", method === "select" && "shadow-sm")}
 						onPress={() => setMethod("select")}
 					>
 						Select Employee

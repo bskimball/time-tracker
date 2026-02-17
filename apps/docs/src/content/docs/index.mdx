@@ -1,0 +1,68 @@
+---
+title: Introduction
+description: Overview of the Shift Pulse product documentation.
+---
+
+import { Card, CardHeader, CardTitle, CardBody, Badge } from '@monorepo/design-system';
+
+Shift Pulse is warehouse workforce operations software with two deployment models:
+
+<div className="flex gap-4 my-6 not-content">
+  <Badge variant="secondary">Hosted by Vendor</Badge>
+  <Badge variant="outline">On-Premise</Badge>
+</div>
+
+The product includes:
+
+- A role-based web app for employees, managers, and administrators
+- An OpenAPI-compliant REST API for integrations and reporting
+- A realtime stream for live manager dashboards
+
+## What to read first
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-content my-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>Getting Started</CardTitle>
+    </CardHeader>
+    <CardBody>
+      <p className="mb-4 text-sm text-muted-foreground">New to Shift Pulse?</p>
+      <div className="flex flex-col gap-2">
+        <a href="/quickstart" className="text-primary hover:underline">Deployment Quickstart &rarr;</a>
+        <a href="/web-app/basics" className="text-primary hover:underline">Web App Basics &rarr;</a>
+      </div>
+    </CardBody>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>Role Guides</CardTitle>
+    </CardHeader>
+    <CardBody>
+       <p className="mb-4 text-sm text-muted-foreground">Specific guides for your role.</p>
+       <div className="flex flex-col gap-2">
+        <a href="/web-app/employee" className="text-primary hover:underline">Employee Guide &rarr;</a>
+        <a href="/web-app/manager" className="text-primary hover:underline">Manager Guide &rarr;</a>
+        <a href="/web-app/administrator" className="text-primary hover:underline">Administrator Guide &rarr;</a>
+      </div>
+    </CardBody>
+  </Card>
+</div>
+
+## Product areas
+
+- **Floor Operations**: employee clock in/out, break tracking, and station-based work sessions.
+- **Manager Portal**: floor monitoring, timesheets, tasks, scheduling, exceptions, and reports.
+- **Admin Control Center**: stations, users, employees, API keys, and operational thresholds.
+- **Executive Analytics**: KPI dashboards and trend analysis (admin access path).
+
+## API docs
+
+- [API Authentication](/api/authentication)
+- [Endpoint Reference](/api/endpoint-reference)
+- [Realtime Streaming](/api/realtime-streaming)
+
+## Operations and support
+
+- [Troubleshooting](/web-app/troubleshooting)
+- [Release Notes](/reference/release-notes)

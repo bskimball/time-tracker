@@ -25,24 +25,33 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, actions, className }: PageHeaderProps) {
 	return (
-		<div
-			className={cn(
-				"flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8",
-				className
-			)}
-		>
-			<div>
-				<h1 className="text-4xl font-bold uppercase tracking-tight font-heading text-foreground">
-					{title}
-				</h1>
-				{subtitle && (
-					<div className="text-muted-foreground mt-2 text-base flex items-center gap-2">
-						<span className="font-bold">::</span>
-						<span>{subtitle}</span>
-					</div>
-				)}
+		<div className={cn("animate-fade-in-up mb-10", className)}>
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+				<div>
+					<h1 className="text-4xl font-bold uppercase tracking-tight font-heading text-foreground">
+						{title}
+					</h1>
+					{subtitle && (
+						<div className="text-muted-foreground mt-2 text-base flex items-center gap-2">
+							<span className="font-bold">::</span>
+							<span>{subtitle}</span>
+						</div>
+					)}
+				</div>
+				{actions && <div className="flex items-center gap-2">{actions}</div>}
 			</div>
-			{actions && <div className="flex items-center gap-2">{actions}</div>}
+			
+			<div className="flex items-center gap-3">
+				<div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+				<span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground/50">
+					{new Date().toLocaleDateString(undefined, {
+						weekday: "long",
+						year: "numeric",
+						month: "long",
+						day: "numeric",
+					})}
+				</span>
+			</div>
 		</div>
 	);
 }
