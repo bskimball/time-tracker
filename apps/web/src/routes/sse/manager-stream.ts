@@ -1,13 +1,14 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { User_role } from "@prisma/client";
-import { validateRequestWithRequest } from "../../lib/auth";
+
+import { validateRequestWithRequest } from "~/lib/auth";
 import {
 	getManagerRealtimeLatestEventId,
 	releaseManagerRealtimeConnection,
 	retainManagerRealtimeConnection,
 	subscribeToManagerRealtime,
 	type ManagerRealtimeEvent,
-} from "../../lib/manager-realtime";
+} from "~/lib/manager-realtime";
 
 const app = new OpenAPIHono();
 
@@ -68,7 +69,7 @@ app.get("/manager-stream", async (c) => {
 
 	let unsubscribe: (() => void) | null = null;
 	let closed = false;
- 
+
 	const cleanup = () => {
 		if (closed) {
 			return;

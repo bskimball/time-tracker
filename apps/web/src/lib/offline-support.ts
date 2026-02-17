@@ -22,9 +22,7 @@ interface OfflineQueue {
 }
 
 export function useOnlineStatus(): { isOnline: boolean; connectionType?: ConnectionType } {
-	const [isOnline, setIsOnline] = React.useState(
-		typeof navigator !== "undefined" ? navigator.onLine : true
-	);
+	const [isOnline, setIsOnline] = React.useState(true);
 	const [connectionType, setConnectionType] = React.useState<ConnectionType>();
 
 	React.useEffect(() => {

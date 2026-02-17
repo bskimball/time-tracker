@@ -41,17 +41,7 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
 				{actions && <div className="flex items-center gap-2">{actions}</div>}
 			</div>
 			
-			<div className="flex items-center gap-3">
-				<div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-				<span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground/50">
-					{new Date().toLocaleDateString(undefined, {
-						weekday: "long",
-						year: "numeric",
-						month: "long",
-						day: "numeric",
-					})}
-				</span>
-			</div>
+			<div className="h-px w-full bg-gradient-to-r from-border via-border/60 to-transparent" />
 		</div>
 	);
 }

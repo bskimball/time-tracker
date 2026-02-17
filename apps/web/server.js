@@ -11,6 +11,7 @@ import { logger } from "./src/lib/logger.ts";
 // @ts-expect-error - dynamic import of build output
 const build = (await import("./dist/rsc/index.js")).default;
 const api = (await import("./dist/api/index.js")).default;
+const sse = (await import("./dist/sse/index.js")).default;
 
 // Create the Hono app instance
 const app = new Hono();
@@ -23,6 +24,7 @@ app.use("/assets/*", compress());
 app.use("/*", serveStatic({ root: "./dist/client" }));
 
 app.route("/api", api);
+app.route("/", sse);
 
 // Special route for Chrome DevTools integration (returns 404 for this template)
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (c) => {

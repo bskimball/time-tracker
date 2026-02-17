@@ -6,7 +6,7 @@ import { useManagerRealtime } from "~/lib/manager-realtime-client";
 const TOPBAR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
 const TOPBAR_INVALIDATION_EVENTS = ["heartbeat"] as const;
 
-	export function ManagerRealtimeTopbarIndicator({ className }: { className?: string }) {
+export function ManagerRealtimeTopbarIndicator({ className }: { className?: string }) {
 	const realtime = useManagerRealtime({
 		scopes: TOPBAR_REALTIME_SCOPES,
 		invalidateOn: TOPBAR_INVALIDATION_EVENTS,
@@ -16,46 +16,57 @@ const TOPBAR_INVALIDATION_EVENTS = ["heartbeat"] as const;
 		},
 	});
 
-	const stateLabel =
-		realtime.connectionState === "connected"
-			? "LIVE"
-			: realtime.connectionState === "reconnecting"
-				? "RETRY"
-				: "OFFLINE";
+	// Derive state for cleaner rendering
+	const isConnected = realtime.connectionState === "connected";
+	const isReconnecting = realtime.connectionState === "reconnecting";
+	const isPolling = realtime.connectionState === "offline-fallback";
 
-	const dotClassName =
-		realtime.connectionState === "connected"
-			? "bg-emerald-500"
-			: realtime.connectionState === "reconnecting"
-				? "bg-amber-500 animate-pulse"
-				: "bg-muted-foreground/60";
+	// Determine visual properties based on state
+	let label = "OFFLINE";
+	let dotColor = "bg-muted-foreground";
+	let dotAnimation = "";
+	let containerBorder = "border-border/40";
+	let title = "Stream offline";
+
+	if (isConnected) {
+		label = "LIVE";
+		dotColor = "bg-[var(--color-success)] shadow-[0_0_6px_var(--color-success)]";
+		title = "Connected to live stream";
+	} else if (isReconnecting) {
+		label = "SYNC";
+		dotColor = "bg-[var(--color-warning)]";
+		dotAnimation = "animate-pulse";
+		title = "Reconnecting to live stream...";
+	} else if (isPolling) {
+		label = "POLL";
+		dotColor = "bg-[var(--color-warning)]";
+		containerBorder = "border-[var(--color-warning)]/30";
+		title = "Live stream offline; polling fallback active";
+	}
 
 	return (
 		<div
 			className={cn(
-				"inline-flex items-center gap-2 rounded-[2px] border border-border/40 bg-background/40 px-2 py-1",
+				"group inline-flex h-6 items-center gap-2 rounded-[2px] border bg-background/50 px-2 backdrop-blur-[2px] transition-all duration-300",
+				containerBorder,
 				className
 			)}
-			title={
-				realtime.connectionState === "offline-fallback"
-					? "Live stream offline; polling fallback active"
-					: realtime.connectionState === "reconnecting"
-						? "Reconnecting to live stream"
-						: "Connected to live stream"
-			}
+			title={title}
+			role="status"
+			aria-live="polite"
 		>
-			<span className={cn("h-1.5 w-1.5 rounded-full", dotClassName)} aria-hidden="true" />
-			<span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80">
-				STREAM
+			<span className="relative flex h-1.5 w-1.5 items-center justify-center">
+				{isConnected && (
+					<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-success)] opacity-20 duration-1000" />
+				)}
+				<span
+					className={cn("relative inline-flex h-1.5 w-1.5 rounded-full", dotColor, dotAnimation)}
+				/>
 			</span>
-			<span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-				{stateLabel}
+
+			<span className="font-mono text-[10px] font-medium tracking-widest text-muted-foreground transition-colors group-hover:text-foreground">
+				{label}
 			</span>
-			{realtime.usingPollingFallback ? (
-				<span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/70">
-					POLL
-				</span>
-			) : null}
 		</div>
 	);
 }

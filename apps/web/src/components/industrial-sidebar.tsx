@@ -353,18 +353,16 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 	return (
 		<div
 			className={cn(
-				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-primary/30",
+				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border/40",
 				className
 			)}
 		>
 			<div className="flex items-center gap-4">
-				{isAnimating && (
-					<IndustrialLoader 
-						variant="processing" 
-						className="opacity-60" 
-						isAnimated={isAnimating}
-					/>
-				)}
+				<IndustrialLoader
+					variant="processing"
+					className="opacity-60"
+					isAnimated={isAnimating}
+				/>
 			</div>
 
 			<div className="flex items-center gap-3">

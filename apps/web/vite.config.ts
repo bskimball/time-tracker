@@ -25,6 +25,26 @@ export default defineConfig(({ mode }) => {
 			},
 		};
 	}
+
+	if (mode === "sse") {
+		return {
+			plugins: [tsconfigPaths()],
+			build: {
+				copyPublicDir: false,
+				emptyOutDir: false,
+				outDir: "dist/sse",
+				rollupOptions: {
+					input: "src/routes/sse/index.ts",
+					output: {
+						entryFileNames: "index.js",
+					},
+					external: ["hono", "@hono/node-server"],
+				},
+				ssr: true,
+			},
+		};
+	}
+
 	return {
 		plugins: [
 			tailwindcss(),
@@ -79,6 +99,10 @@ export default defineConfig(({ mode }) => {
 							handler: "NetworkOnly",
 						},
 						{
+							urlPattern: ({ url }) => url.pathname.startsWith("/sse/"),
+							handler: "NetworkOnly",
+						},
+						{
 							urlPattern: ({ url }) => url.searchParams.has("_rsc"),
 							handler: "NetworkOnly",
 						},
@@ -89,6 +113,12 @@ export default defineConfig(({ mode }) => {
 				entry: "src/routes/api/index.ts",
 				exclude: [
 					/^(?!\/api).*/, // Exclude anything that doesn't start with /api
+				],
+			}),
+			honoDevServer({
+				entry: "src/routes/sse/index.ts",
+				exclude: [
+					/^(?!\/sse).*/, // Exclude anything that doesn't start with /sse
 				],
 			}),
 			devtoolsJson(),

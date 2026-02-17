@@ -14,7 +14,6 @@ import todoRoutes from "./todos";
 import taskTypeRoutes from "./task-types";
 import taskAssignmentRoutes from "./task-assignments";
 import performanceMetricRoutes from "./performance-metrics";
-import realtimeRoutes from "./realtime";
 
 const app = new OpenAPIHono();
 
@@ -53,10 +52,6 @@ app.use("/doc", requiredApiKey());
 
 // Apply API key authentication to all routes except health
 app.use("/*", async (c, next) => {
-	if (c.req.path === "/api/realtime/manager-stream") {
-		return next();
-	}
-
 	return requiredApiKey()(c, next);
 });
 
@@ -64,7 +59,6 @@ app.use("/*", async (c, next) => {
 app.get("/ui", swaggerUI({ url: "/api/doc" }));
 
 // Register other routes
-app.route("/realtime", realtimeRoutes);
 app.route("/time-clock", timeClockRoutes);
 app.route("/employees", employeeRoutes);
 app.route("/stations", stationRoutes);

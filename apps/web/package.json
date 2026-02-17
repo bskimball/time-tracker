@@ -6,7 +6,7 @@
 		"node": ">=22.6.0"
 	},
 	"scripts": {
-		"build": "cross-env vite build && vite build --mode api",
+		"build": "cross-env vite build && vite build --mode api && vite build --mode sse",
 		"dev": "cross-env NODE_ENV=development vite",
 		"start": "cross-env NODE_ENV=production node server.js",
 		"typecheck": "tsc --noEmit",

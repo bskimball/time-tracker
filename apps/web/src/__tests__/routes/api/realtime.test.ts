@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import realtimeApp from "~/routes/api/realtime";
+import realtimeApp from "~/routes/sse/manager-stream";
 
 const {
 	mockValidateRequestWithRequest,
