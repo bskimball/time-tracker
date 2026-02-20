@@ -39,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Meta />
 				<Links />
 			</head>
-			<body className="bg-noise min-h-screen selection:bg-primary/30">
+			<body className="bg-noise min-h-screen selection:bg-primary/30 font-body">
 				{/* Tactical grid overlay */}
 				<div className="fixed inset-0 bg-tactical-grid opacity-5 pointer-events-none z-0" aria-hidden="true" />
 				<div className="relative z-10 min-h-screen flex flex-col">

@@ -53,6 +53,7 @@ Update docs when you find:
 - General cross-cutting guidance: `guides/agent/*`
 - Web-app-specific deep dives: `apps/web/guides/*`
 - Marketing-specific notes: `apps/marketing/README.md` (or a focused guide if it grows)
+- Docs-site-specific notes: `apps/docs/src/content/docs/*` (and `apps/docs/src/styles/*` for presentation/system integration)
 
 ### Minimal format for a new guide
 

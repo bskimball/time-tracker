@@ -353,7 +353,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 	return (
 		<div
 			className={cn(
-				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border/40",
+				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border",
 				className
 			)}
 		>

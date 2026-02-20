@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type React from "react";
 import { useNavigate } from "react-router";
 import { parseAsStringEnum, useQueryState } from "nuqs";
@@ -50,6 +50,7 @@ type TimeCorrectionPayload = {
 };
 
 interface TimesheetProps {
+	initialTab?: string;
 	initialLogs: TimeLogWithDetails[];
 	pagination: {
 		page: number;
@@ -58,7 +59,6 @@ interface TimesheetProps {
 		totalPages: number;
 	};
 	correctionHistory?: TimeLogWithDetails[];
-	correctionHistoryPromise?: Promise<TimeLogWithDetails[]>;
 	clockedInEmployees: {
 		employeeId: string;
 		employeeName: string;
@@ -99,10 +99,10 @@ const formatDateTimeLocal = (value: Date | string | null) => {
 };
 
 export function TimesheetManager({
+	initialTab = "logs",
 	initialLogs,
 	pagination,
 	correctionHistory,
-	correctionHistoryPromise,
 	clockedInEmployees,
 	floorActiveEmployees,
 	employees,
@@ -120,7 +120,8 @@ export function TimesheetManager({
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
 	const [activeTab, setActiveTab] = useQueryState(
 		"tab",
-		parseAsStringEnum([...tabValues]).withDefault("logs")
+		parseAsStringEnum([...tabValues])
+			.withDefault((tabValues.includes(initialTab as TimesheetTab) ? initialTab : "logs") as TimesheetTab)
 	);
 
 	const refreshLogs = () => {
@@ -319,8 +320,8 @@ export function TimesheetManager({
 												<td className="p-4">{log.Station?.name || "None"}</td>
 												<td className="p-4">
 													<div>
-														<p>{new Date(log.startTime).toLocaleDateString()}</p>
-														<p className="text-sm text-muted-foreground">
+														<p suppressHydrationWarning>{new Date(log.startTime).toLocaleDateString()}</p>
+														<p className="text-sm text-muted-foreground" suppressHydrationWarning>
 															{new Date(log.startTime).toLocaleTimeString()}
 														</p>
 													</div>
@@ -328,8 +329,8 @@ export function TimesheetManager({
 												<td className="p-4">
 													{log.endTime ? (
 														<div>
-															<p>{new Date(log.endTime).toLocaleDateString()}</p>
-															<p className="text-sm text-muted-foreground">
+															<p suppressHydrationWarning>{new Date(log.endTime).toLocaleDateString()}</p>
+															<p className="text-sm text-muted-foreground" suppressHydrationWarning>
 																{new Date(log.endTime).toLocaleTimeString()}
 															</p>
 														</div>
@@ -412,12 +413,7 @@ export function TimesheetManager({
 							<CardTitle>Correction History</CardTitle>
 						</CardHeader>
 						<CardBody>
-							<Suspense fallback={<CorrectionHistoryFallback />}>
-								<DeferredCorrectionHistory
-									correctionHistory={correctionHistory}
-									correctionHistoryPromise={correctionHistoryPromise}
-								/>
-							</Suspense>
+							<CorrectionHistoryList correctionHistory={correctionHistory ?? []} />
 						</CardBody>
 					</Card>
 				</TabPanel>
@@ -507,7 +503,7 @@ export function TimesheetManager({
 															</Badge>
 														</td>
 														<td className="p-4">{entry.stationName || "None"}</td>
-														<td className="p-4">
+														<td className="p-4" suppressHydrationWarning>
 															{new Date(entry.startTime).toLocaleTimeString()}
 														</td>
 														<td className="p-4 font-mono">
@@ -581,7 +577,7 @@ export function TimesheetManager({
 													<td className="p-4">
 														{entry.stationName || entry.taskTypeName || "None"}
 													</td>
-													<td className="p-4">{new Date(entry.startTime).toLocaleTimeString()}</td>
+													<td className="p-4" suppressHydrationWarning>{new Date(entry.startTime).toLocaleTimeString()}</td>
 													<td className="p-4 font-mono">{formatDuration(entry.startTime, null)}</td>
 													<td className="p-4">
 														{getTaskSourceBadge(entry.source, entry.assignmentSource)}
@@ -619,30 +615,24 @@ export function TimesheetManager({
 	);
 }
 
-function DeferredCorrectionHistory({
+function CorrectionHistoryList({
 	correctionHistory,
-	correctionHistoryPromise,
 }: {
-	correctionHistory?: TimeLogWithDetails[];
-	correctionHistoryPromise?: Promise<TimeLogWithDetails[]>;
+	correctionHistory: TimeLogWithDetails[];
 }) {
-	const resolvedCorrectionHistory = correctionHistoryPromise
-		? use(correctionHistoryPromise)
-		: (correctionHistory ?? []);
-
 	return (
 		<div className="space-y-3">
 			<p className="text-sm text-muted-foreground">
 				Showing manual corrections and modifications made by managers
 			</p>
-			{resolvedCorrectionHistory.map((log) => (
+			{correctionHistory.map((log) => (
 				<div key={log.id} className="border border-border rounded-[2px] p-4 bg-muted/30">
 					<div className="flex justify-between items-start">
 						<div>
 							<h4 className="font-medium">
 								{log.Employee.name} - {log.type}
 							</h4>
-							<p className="text-sm text-muted-foreground">
+							<p className="text-sm text-muted-foreground" suppressHydrationWarning>
 								{new Date(log.startTime).toLocaleString()}
 								{log.endTime && ` - ${new Date(log.endTime).toLocaleString()}`}
 							</p>
@@ -652,19 +642,9 @@ function DeferredCorrectionHistory({
 					</div>
 				</div>
 			))}
-			{resolvedCorrectionHistory.length === 0 && (
+			{correctionHistory.length === 0 && (
 				<p className="text-center text-muted-foreground py-6">No corrections found</p>
 			)}
-		</div>
-	);
-}
-
-function CorrectionHistoryFallback() {
-	return (
-		<div className="space-y-2">
-			<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
-			<div className="h-16 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
-			<div className="h-16 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
 		</div>
 	);
 }

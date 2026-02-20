@@ -286,7 +286,7 @@ export default async function Component() {
 				subtitle="Comprehensive workforce productivity, financial metrics, and operational insights"
 			/>
 
-			<div className="sticky top-0 z-10 -mx-4 mb-6 border-b border-border bg-background/95 px-4 pt-2 backdrop-blur-sm sm:mx-0 sm:px-0">
+			<div className="-mx-4 mb-6 border-b border-border px-4 pt-2 sm:mx-0 sm:px-0">
 				<SectionTabs />
 
 				<div className="flex flex-col gap-4 py-3 lg:flex-row lg:items-center lg:justify-between">

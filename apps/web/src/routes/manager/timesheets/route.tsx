@@ -16,7 +16,9 @@ export default async function Component() {
 	}
 
 	const request = getRequest();
-	const pageParam = request ? new URL(request.url).searchParams.get("page") : null;
+	const searchParams = request ? new URL(request.url).searchParams : new URLSearchParams();
+	const pageParam = searchParams.get("page");
+	const tabParam = searchParams.get("tab") || "logs";
 	const parsedPage = pageParam ? parseInt(pageParam, 10) : NaN;
 	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 	const limit = 50;
@@ -35,15 +37,17 @@ export default async function Component() {
 	const stationsPromise = getStations();
 
 	// Fetch data in parallel
-	const [logsData, activeEmployeeData, employees, stations] = await Promise.all([
+	const [logsData, activeEmployeeData, employees, stations, correctionHistory] = await Promise.all([
 		logsDataPromise,
 		activeEmployeeDataPromise,
 		employeesPromise,
 		stationsPromise,
+		correctionHistoryPromise,
 	]);
 
 	return (
 		<TimesheetManager
+			initialTab={tabParam}
 			initialLogs={logsData.logs}
 			pagination={{
 				page,
@@ -51,7 +55,7 @@ export default async function Component() {
 				total: logsData.total,
 				totalPages: logsData.totalPages,
 			}}
-			correctionHistoryPromise={correctionHistoryPromise}
+			correctionHistory={correctionHistory}
 			clockedInEmployees={activeEmployeeData.clockedInEmployees}
 			floorActiveEmployees={activeEmployeeData.floorActiveEmployees}
 			employees={employees}

@@ -2,6 +2,7 @@
 
 import { Button as AriaButton, DialogTrigger, Popover, Dialog } from "react-aria-components";
 import { Badge } from "@monorepo/design-system";
+import { LiaCircleNotchSolid, LiaExclamationTriangleSolid, LiaInfoCircleSolid, LiaCheckCircleSolid } from "react-icons/lia";
 
 interface AlertItem {
 	id: string;
@@ -22,14 +23,23 @@ const priorityColor = {
 } as const;
 
 const typeIcon = {
-	error: "\u2718",
-	warning: "\u26A0",
-	info: "\u2139",
-	success: "\u2713",
+	error: LiaCircleNotchSolid,
+	warning: LiaExclamationTriangleSolid,
+	info: LiaInfoCircleSolid,
+	success: LiaCheckCircleSolid,
 } as const;
 
 export function AlertsPopover({ alerts }: AlertsPopoverProps) {
-	if (alerts.length === 0) return null;
+	if (alerts.length === 0) {
+		return (
+			<div className="flex items-center gap-2 px-3 py-1.5 rounded-[2px] border border-border/40 bg-muted/20 text-xs font-mono text-muted-foreground uppercase tracking-wide select-none">
+				<span className="relative flex h-2 w-2">
+					<span className="relative inline-flex rounded-full h-2 w-2 bg-chart-3" />
+				</span>
+				Systems_Nominal
+			</div>
+		);
+	}
 
 	return (
 		<DialogTrigger>
@@ -53,15 +63,15 @@ export function AlertsPopover({ alerts }: AlertsPopoverProps) {
 						<Badge variant="destructive">{alerts.length}</Badge>
 					</div>
 
-					<div className="overflow-y-auto max-h-[340px] divide-y divide-border/50">
-						{alerts.map((alert) => (
+				<div className="overflow-y-auto max-h-[340px] divide-y divide-border/50">
+					{alerts.map((alert) => {
+						const Icon = typeIcon[alert.type];
+						return (
 							<div
 								key={alert.id}
 								className="px-4 py-3 flex gap-3 items-start hover:bg-muted/20 transition-colors duration-100"
 							>
-								<span className="text-sm mt-0.5 flex-shrink-0 w-5 text-center" aria-hidden="true">
-									{typeIcon[alert.type]}
-								</span>
+								<Icon className="w-5 h-5 mt-0.5 flex-shrink-0 text-current" aria-hidden="true" />
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2">
 										<h4 className="font-heading font-bold text-sm tracking-tight text-foreground truncate">
@@ -76,8 +86,9 @@ export function AlertsPopover({ alerts }: AlertsPopoverProps) {
 									</p>
 								</div>
 							</div>
-						))}
-					</div>
+						);
+					})}
+				</div>
 				</Dialog>
 			</Popover>
 		</DialogTrigger>

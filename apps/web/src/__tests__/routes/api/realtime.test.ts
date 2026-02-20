@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// NOTE: This test targets the SSE route `~/routes/sse/manager-stream` (GET /manager-stream).
+// It currently lives under `routes/api` and is named `realtime.test.ts` for historical reasons.
 import realtimeApp from "~/routes/sse/manager-stream";
 
 const {

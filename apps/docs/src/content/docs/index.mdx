@@ -4,6 +4,7 @@ description: Overview of the Shift Pulse product documentation.
 ---
 
 import { Card, CardHeader, CardTitle, CardBody, Badge } from '@monorepo/design-system';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 Shift Pulse is warehouse workforce operations software with two deployment models:
 
@@ -20,34 +21,14 @@ The product includes:
 
 ## What to read first
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-content my-6">
-  <Card>
-    <CardHeader>
-      <CardTitle>Getting Started</CardTitle>
-    </CardHeader>
-    <CardBody>
-      <p className="mb-4 text-sm text-muted-foreground">New to Shift Pulse?</p>
-      <div className="flex flex-col gap-2">
-        <a href="/quickstart" className="text-primary hover:underline">Deployment Quickstart &rarr;</a>
-        <a href="/web-app/basics" className="text-primary hover:underline">Web App Basics &rarr;</a>
-      </div>
-    </CardBody>
-  </Card>
-
-  <Card>
-    <CardHeader>
-      <CardTitle>Role Guides</CardTitle>
-    </CardHeader>
-    <CardBody>
-       <p className="mb-4 text-sm text-muted-foreground">Specific guides for your role.</p>
-       <div className="flex flex-col gap-2">
-        <a href="/web-app/employee" className="text-primary hover:underline">Employee Guide &rarr;</a>
-        <a href="/web-app/manager" className="text-primary hover:underline">Manager Guide &rarr;</a>
-        <a href="/web-app/administrator" className="text-primary hover:underline">Administrator Guide &rarr;</a>
-      </div>
-    </CardBody>
-  </Card>
-</div>
+<CardGrid>
+  <LinkCard title="Deployment Quickstart" href="/quickstart" description="Choose hosted or on-premise setup and get running." />
+  <LinkCard title="Web App Basics" href="/web-app/basics" description="Orientation to the Shift Pulse interface and role structure." />
+  <LinkCard title="Employee Guide" href="/web-app/employee" description="Clock in/out, breaks, and station-based work sessions." />
+  <LinkCard title="Manager Guide" href="/web-app/manager" description="Floor monitoring, timesheets, tasks, and exceptions." />
+  <LinkCard title="Administrator Guide" href="/web-app/administrator" description="Stations, users, API keys, and operational thresholds." />
+  <LinkCard title="REST API & OpenAPI" href="/api/rest-openapi" description="Integrations and reporting via the OpenAPI-compliant REST API." />
+</CardGrid>
 
 ## Product areas
 

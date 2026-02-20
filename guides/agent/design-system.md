@@ -1,6 +1,6 @@
 # Design System: Precision Industrial (Braun/Rams Aesthetic)
 
-The Shift Pulse application uses a shared design system located in `packages/design-system`. It follows a **"Precision Industrial"** aesthetic—inspired by Dieter Rams, Braun, and high-end engineering tools.
+Shift Pulse uses a shared design system located in `packages/design-system` across `apps/web`, `apps/marketing`, and `apps/docs`. It follows a **"Precision Industrial"** aesthetic inspired by Dieter Rams, Braun, and high-end engineering tools.
 
 ## Core Principles
 
@@ -21,7 +21,7 @@ The design system uses the new CSS-first configuration:
 - **JIT Compilation**: Apps must explicitly point Tailwind to the design system source files.
 
 ### Integration Requirements
-In each app's global CSS file, you **must** include the `@source` directive to ensure JIT compilation works for shared components:
+In each app's global CSS file (`apps/web`, `apps/marketing`, `apps/docs`), you **must** include the `@source` directive to ensure JIT compilation works for shared components:
 
 ```css
 @import "@monorepo/design-system/styles/fonts";

@@ -6,6 +6,7 @@ Start here. This folder contains task-scoped guidance (progressive disclosure) s
 
 - **Working anywhere in the monorepo** → [monorepo.md](./monorepo.md)
 - **Changing the web app** (React Router + RSC Data mode) → [web-rsc-data-mode.md](./web-rsc-data-mode.md)
+- **Changing shared UI/tokens across app + marketing + docs** → [design-system.md](./design-system.md)
 - **Auth / roles / request context** → [auth.md](./auth.md)
 - **Time clock routing** (`/floor`, kiosk, mobile) → [routing-time-clock.md](./routing-time-clock.md)
 - **Testing** (Vitest patterns) → [testing.md](./testing.md)
@@ -20,4 +21,5 @@ Start here. This folder contains task-scoped guidance (progressive disclosure) s
 
 - Scripts and workspaces: `package.json`
 - Web app specifics: `apps/web/package.json`, `apps/web/README.md`
+- Docs site specifics: `apps/docs/src/content/docs/*`, `apps/docs/src/styles/*`
 - Local stack: `docker-compose.yml`

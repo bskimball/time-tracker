@@ -1,14 +1,26 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://astro.build/config
 export default defineConfig({
+	vite: {
+		// @ts-expect-error - Astro/Vite plugin type mismatch in monorepo
+		plugins: [tailwindcss(), tsconfigPaths()],
+		ssr: {
+			noExternal: ["@monorepo/design-system"],
+		},
+	},
 	integrations: [
+		react(),
 		starlight({
 			title: "Shift Pulse Docs",
 			description: "Customer documentation for the Shift Pulse application and API.",
 			disable404Route: true,
+			customCss: ["./src/styles/global.css"],
 			social: [
 				{
 					icon: "github",

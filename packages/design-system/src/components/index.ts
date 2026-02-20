@@ -17,3 +17,4 @@ export {
 	IndustrialSection,
 } from "./industrial";
 
+export * from "./decrypted-text";

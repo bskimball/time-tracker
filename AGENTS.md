@@ -1,6 +1,6 @@
 # Shift Pulse (Agent Notes)
 
-Shift Pulse is a monorepo containing a React Router web app (RSC Data mode), an Astro marketing site, and a shared design system.
+Shift Pulse is a monorepo containing a React Router web app (RSC Data mode), an Astro marketing site, an Astro Starlight docs site, and a shared design system.
 
 ## Essentials
 
@@ -11,13 +11,14 @@ Shift Pulse is a monorepo containing a React Router web app (RSC Data mode), an 
 
 - `apps/web` — main application
 - `apps/marketing` — marketing site
+- `apps/docs` — customer docs site (Astro Starlight)
 - `packages/design-system` — shared UI components ("Precision Industrial" / Braun aesthetic)
 
 ## Design System
 
 The project uses a custom **"Precision Industrial"** aesthetic inspired by Dieter Rams and Braun, built on **TailwindCSS v4**.
 - **Source of Truth**: `packages/design-system` contains all tokens (via CSS vars) and styles.
-- **Integration**: Apps must use `@source` to point to the design system for JIT compilation.
+- **Integration**: `apps/web`, `apps/marketing`, and `apps/docs` must use `@source` to point to the design system for JIT compilation.
 - **Tokens**: Zinc neutrals, Signal Orange (`primary`), Tabular numbers.
 - **Configuration**: **No `tailwind.config.*` files**. All configuration is done via CSS `@theme` blocks.
 - **Aesthetic**: Sharp corners (`rounded-[2px]`), hard borders, no soft shadows, data-dense.
@@ -29,7 +30,7 @@ See: [guides/agent/design-system.md](guides/agent/design-system.md)
 
 From repo root:
 
-- Dev (all): `npm run dev` (watches design-system + web + marketing)
+- Dev (all): `npm run dev` (watches design-system + web + marketing + docs)
 - Build all: `npm run build`
 - Lint all: `npm run lint`
 - Typecheck all: `npm run typecheck`

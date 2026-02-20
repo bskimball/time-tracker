@@ -25,7 +25,7 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, actions, className }: PageHeaderProps) {
 	return (
-		<div className={cn("animate-fade-in-up mb-10", className)}>
+		<div className={cn("mb-10", className)}>
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
 				<div>
 					<h1 className="text-4xl font-bold uppercase tracking-tight font-heading text-foreground">
@@ -41,7 +41,7 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
 				{actions && <div className="flex items-center gap-2">{actions}</div>}
 			</div>
 			
-			<div className="h-px w-full bg-gradient-to-r from-border via-border/60 to-transparent" />
+			<div className="border-b border-border" />
 		</div>
 	);
 }

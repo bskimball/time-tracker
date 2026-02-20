@@ -24,7 +24,7 @@ app.use("/assets/*", compress());
 app.use("/*", serveStatic({ root: "./dist/client" }));
 
 app.route("/api", api);
-app.route("/", sse);
+app.route("/sse", sse);
 
 // Special route for Chrome DevTools integration (returns 404 for this template)
 app.get("/.well-known/appspecific/com.chrome.devtools.json", (c) => {

@@ -175,9 +175,11 @@ export function ManagerDashboard({
 						<span className="text-sm text-muted-foreground font-data">/ {totalEmployees}</span>
 					</div>
 					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div 
-							className="h-full bg-primary transition-all duration-700" 
-							style={{ width: `${Math.min(100, (activeSessionCount / totalEmployees) * 100)}%` }} 
+						<div
+							className="h-full bg-primary transition-all duration-700"
+							style={{
+								width: `${totalEmployees > 0 ? Math.min(100, (activeSessionCount / totalEmployees) * 100) : 0}%`,
+							}}
 						/>
 					</div>
 				</div>

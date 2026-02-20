@@ -58,6 +58,8 @@ export default [
 				HTMLSelectElement: "readonly",
 				HTMLButtonElement: "readonly",
 				HTMLDivElement: "readonly",
+				HTMLSpanElement: "readonly",
+				IntersectionObserverEntry: "readonly",
 				SVGSVGElement: "readonly",
 				Node: "readonly",
 				NodeFilter: "readonly",

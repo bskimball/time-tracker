@@ -11,6 +11,8 @@ import {
 	Cell,
 	Area,
 	AreaChart as RechartsAreaChart,
+	ReferenceLine,
+	Label,
 } from "recharts";
 import { useId } from "react";
 
@@ -63,15 +65,24 @@ export interface TrendDataPoint {
 interface ProductivityTrendChartProps {
 	data: TrendDataPoint[];
 	height?: number;
+	/** If provided, draws a dashed warning reference line at this value */
+	thresholdMedium?: number;
+	/** If provided, draws a dashed high-alert reference line at this value */
+	thresholdHigh?: number;
 }
 
-export function ProductivityTrendChart({ data, height = 260 }: ProductivityTrendChartProps) {
+export function ProductivityTrendChart({
+	data,
+	height = 260,
+	thresholdMedium,
+	thresholdHigh,
+}: ProductivityTrendChartProps) {
 	const chartId = normalizeGradientId(useId());
 	const trendFillId = `${chartId}-trend-fill`;
 
 	return (
 		<ResponsiveContainer width="100%" height={height}>
-			<RechartsAreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+			<RechartsAreaChart data={data} margin={{ top: 8, right: 56, left: 0, bottom: 0 }}>
 				<defs>
 					<linearGradient id={trendFillId} x1="0" y1="0" x2="0" y2="1">
 						<stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.2} />
@@ -99,6 +110,46 @@ export function ProductivityTrendChart({ data, height = 260 }: ProductivityTrend
 						"Productivity",
 					]}
 				/>
+				{thresholdMedium !== undefined && (
+					<ReferenceLine
+						y={thresholdMedium}
+						stroke="var(--color-warning)"
+						strokeDasharray="4 3"
+						strokeOpacity={0.7}
+						strokeWidth={1.5}
+					>
+						<Label
+							value={`TARGET: ${thresholdMedium}`}
+							position="insideRight"
+							style={{
+								fontFamily: "var(--font-mono)",
+								fontSize: 9,
+								fill: "var(--color-warning)",
+								opacity: 0.9,
+							}}
+						/>
+					</ReferenceLine>
+				)}
+				{thresholdHigh !== undefined && (
+					<ReferenceLine
+						y={thresholdHigh}
+						stroke="var(--color-primary)"
+						strokeDasharray="4 3"
+						strokeOpacity={0.6}
+						strokeWidth={1.5}
+					>
+						<Label
+							value={`HIGH: ${thresholdHigh}`}
+							position="insideRight"
+							style={{
+								fontFamily: "var(--font-mono)",
+								fontSize: 9,
+								fill: "var(--color-primary)",
+								opacity: 0.85,
+							}}
+						/>
+					</ReferenceLine>
+				)}
 				<Area
 					type="monotone"
 					dataKey="value"

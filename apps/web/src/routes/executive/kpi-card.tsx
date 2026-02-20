@@ -118,6 +118,8 @@ interface KPICardProps {
 	icon?: keyof typeof iconMap;
 	animateCountUp?: boolean;
 	animationCacheKey?: string;
+	/** When true, renders with a Signal Orange left-border strip as the visual anchor */
+	dominant?: boolean;
 }
 
 export function KPICard({
@@ -129,6 +131,7 @@ export function KPICard({
 	icon,
 	animateCountUp = true,
 	animationCacheKey,
+	dominant = false,
 }: KPICardProps) {
 	const Icon = icon ? iconMap[icon] : null;
 	const shouldAnimate =
@@ -166,7 +169,9 @@ export function KPICard({
 	}
 
 	return (
-		<Card className="h-full group hover:border-primary/50 transition-colors duration-300">
+		<Card
+			className={`h-full group hover:border-primary/50 transition-colors duration-300 ${dominant ? "border-l-2 border-l-primary bg-primary/[0.03]" : ""}`}
+		>
 			<CardBody className="p-4 flex flex-col h-full justify-between gap-4">
 				<div className="flex items-start justify-between">
 					<Metric

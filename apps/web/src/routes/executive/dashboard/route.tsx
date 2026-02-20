@@ -38,6 +38,20 @@ import {
 } from "react-icons/lia";
 import { Suspense } from "react";
 
+// ── Section heading with numbered anchor ─────────────────────────────────────
+
+function SectionHeading({ index, label }: { index: string; label: string }) {
+	return (
+		<div className="flex items-center gap-3 mb-4">
+			<span className="font-mono text-[10px] text-primary/60 tabular-nums">{index}</span>
+			<div className="flex-1 h-px bg-border/40" />
+			<h2 className="text-[10px] font-industrial font-bold text-muted-foreground uppercase tracking-widest">
+				{label}
+			</h2>
+		</div>
+	);
+}
+
 type TimeRange = "today" | "week" | "month";
 
 function getTimeRangeFromRequest(): TimeRange {
@@ -57,19 +71,27 @@ export default async function Component() {
 	const timeRange = getTimeRangeFromRequest();
 	const alertsPromise = getExecutiveAlerts();
 
+	// Fetch prev-period trend data for delta calculation (always "week" lookback)
+	const prevTimeRange: TimeRange = timeRange === "today" ? "today" : timeRange === "month" ? "week" : "today";
+
 	const [
 		,
 		{ kpis, laborCost },
 		stationData,
 		trendData,
+		prevTrendData,
 		kpiThresholds,
 	] = await Promise.all([
 		authPromise,
 		getExecutiveDashboardKPIs(timeRange),
 		getStationPerformanceData(timeRange),
 		getPerformanceTrendData("productivity", timeRange),
+		getPerformanceTrendData("productivity", prevTimeRange),
 		getExecutiveKpiThresholds(),
 	]);
+
+	// ── Last-synced timestamp ────────────────────────────────────────────────
+	const lastSyncedAt = new Date().toISOString();
 
 	// ── Derived chart data ───────────────────────────────────────────────────
 
@@ -81,6 +103,20 @@ export default async function Component() {
 		date: format(new Date(point.date), trendDateFormat),
 		value: point.value,
 	}));
+
+	// ── Trend delta vs prev period ────────────────────────────────────────────
+	const currentAvg =
+		trendData.length > 0
+			? trendData.reduce((sum, p) => sum + p.value, 0) / trendData.length
+			: null;
+	const prevAvg =
+		prevTrendData.length > 0
+			? prevTrendData.reduce((sum, p) => sum + p.value, 0) / prevTrendData.length
+			: null;
+	const trendDelta =
+		currentAvg !== null && prevAvg !== null && prevAvg > 0
+			? ((currentAvg - prevAvg) / prevAvg) * 100
+			: null;
 
 	const stationChartData: StationBarData[] = stationData.slice(0, 6).map((s) => ({
 		name: s.stationName.length > 12 ? s.stationName.slice(0, 12) + "\u2026" : s.stationName,
@@ -142,6 +178,42 @@ export default async function Component() {
 	const occupancyConfig = getKPIConfig(kpis.occupancyLevel, "occupancy");
 	const varianceConfig = getKPIConfig(laborCost.variancePercentage, "variance");
 
+	// ── Dominant KPI: whichever is furthest from "neutral" ───────────────────
+	// We pick the first non-neutral status to highlight. Productivity is preferred anchor.
+	const dominantKPI =
+		productivityConfig.direction !== "neutral"
+			? "productivity"
+			: overtimeConfig.direction !== "neutral"
+				? "overtime"
+				: occupancyConfig.direction !== "neutral"
+					? "occupancy"
+					: "active-employees";
+
+	// ── Financial health status helpers ─────────────────────────────────────
+	function financialStatusDot(direction: "up" | "down" | "neutral") {
+		if (direction === "down") return "bg-chart-3"; // on-target = green
+		if (direction === "neutral") return "bg-warning"; // near threshold = amber
+		return "bg-destructive"; // over threshold = red
+	}
+
+	const costUnitStatus = financialStatusDot(
+		kpis.laborCostPerUnit <= 5 ? "down" : kpis.laborCostPerUnit <= 10 ? "neutral" : "up"
+	);
+	const varianceDotStatus = financialStatusDot(varianceConfig.direction);
+	const efficiencyStatus = financialStatusDot(
+		kpis.efficiencyRatio >= 0.85 ? "down" : kpis.efficiencyRatio >= 0.7 ? "neutral" : "up"
+	);
+
+	// ── Quick action micro-stats ─────────────────────────────────────────────
+	const costVarianceSign = laborCost.variance > 0 ? "+" : "";
+	const costVarianceMicroStat = `$${costVarianceSign}${Math.abs(laborCost.variance).toLocaleString(undefined, { maximumFractionDigits: 0 })} ${laborCost.variance > 0 ? "over" : "under"}`;
+	const quickActionStats: Record<string, string> = {
+		"Productivity Report": `${kpis.productivityRate} u/hr avg`,
+		"Cost Analysis": costVarianceMicroStat,
+		"Trend Analysis": trendDelta !== null ? `${trendDelta > 0 ? "+" : ""}${trendDelta.toFixed(1)}% vs prior` : "—",
+		"Capacity Planning": `${kpis.occupancyLevel.toFixed(0)}% utilized`,
+	};
+
 	return (
 		<div className="space-y-8 pb-8">
 			{/* ── Header ──────────────────────────────────────────────────── */}
@@ -150,11 +222,11 @@ export default async function Component() {
 					title="Executive Dashboard"
 					subtitle="Overview of key performance indicators, workforce analytics, and strategic insights"
 					actions={
-						<div className="flex items-center gap-3">
+						<div className="flex items-center gap-4">
 							<Suspense fallback={<AlertsPopoverFallback />}>
 								<ExecutiveAlertsPopover alertsPromise={alertsPromise} />
 							</Suspense>
-							<RefreshButton action={refreshDashboardCache} />
+							<RefreshButton action={refreshDashboardCache} lastSyncedAt={lastSyncedAt} />
 						</div>
 					}
 				/>
@@ -176,6 +248,20 @@ export default async function Component() {
 									Productivity Trend
 								</CardTitle>
 								<Badge variant="secondary">{trendRangeLabel}</Badge>
+								{trendDelta !== null && (
+									<span
+										className={`text-[10px] font-mono px-1.5 py-0.5 rounded-[1px] tabular-nums ${
+											trendDelta > 0
+												? "text-chart-3 bg-chart-3/10"
+												: trendDelta < 0
+													? "text-destructive bg-destructive/10"
+													: "text-muted-foreground bg-muted"
+										}`}
+									>
+										{trendDelta > 0 ? "+" : ""}
+										{trendDelta.toFixed(1)}% vs prior
+									</span>
+								)}
 							</div>
 							<Link
 								to="/executive/analytics?section=trends"
@@ -187,7 +273,11 @@ export default async function Component() {
 					</CardHeader>
 					<CardBody className="p-5">
 						{trendChartData.length > 0 ? (
-							<ProductivityTrendChart data={trendChartData} />
+							<ProductivityTrendChart
+								data={trendChartData}
+								thresholdMedium={kpiThresholds.productivityMedium}
+								thresholdHigh={kpiThresholds.productivityHigh}
+							/>
 						) : (
 							<div className="h-[260px] flex items-center justify-center text-muted-foreground font-mono text-sm">
 								No trend data available for the selected period
@@ -199,9 +289,7 @@ export default async function Component() {
 
 			{/* ── KPI Row ─────────────────────────────────────────────────── */}
 			<section>
-				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
-					Key Performance Indicators
-				</h2>
+				<SectionHeading index="01" label="Key Performance Indicators" />
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
 					<KPICard
 						title="Active Employees"
@@ -209,6 +297,7 @@ export default async function Component() {
 						subtitle="Current workforce"
 						icon="users"
 						animationCacheKey={`dashboard:${timeRange}:active-employees`}
+						dominant={dominantKPI === "active-employees"}
 						trend={{ direction: "neutral", value: "Stable", label: "vs last week" }}
 					/>
 					<KPICard
@@ -217,6 +306,7 @@ export default async function Component() {
 						subtitle={`${format(new Date(), "EEEE")}'s average`}
 						icon="chart"
 						animationCacheKey={`dashboard:${timeRange}:productivity-rate`}
+						dominant={dominantKPI === "productivity"}
 						trend={{
 							direction: productivityConfig.direction,
 							value:
@@ -234,6 +324,7 @@ export default async function Component() {
 						subtitle="Of total hours"
 						icon="clock"
 						animationCacheKey={`dashboard:${timeRange}:overtime`}
+						dominant={dominantKPI === "overtime"}
 						trend={{
 							direction: overtimeConfig.direction,
 							value:
@@ -251,6 +342,7 @@ export default async function Component() {
 						subtitle="Station utilization"
 						icon="industry"
 						animationCacheKey={`dashboard:${timeRange}:occupancy`}
+						dominant={dominantKPI === "occupancy"}
 						trend={{
 							direction: occupancyConfig.direction,
 							value:
@@ -267,9 +359,7 @@ export default async function Component() {
 
 			{/* ── Operations: Station Performance + Financial Health ────── */}
 			<section>
-				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
-					Operations Overview
-				</h2>
+				<SectionHeading index="02" label="Operations Overview" />
 
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					{/* ── Station Performance ────────────────────────────── */}
@@ -297,48 +387,43 @@ export default async function Component() {
 									</div>
 								)}
 							</CardBody>
-							{/* Station summary table */}
-							{stationData.length > 0 && (
-								<div className="border-t border-border/50 bg-muted/10 px-4 py-2">
-									<table className="w-full">
-										<thead>
-											<tr className="text-[10px] font-industrial text-muted-foreground uppercase tracking-widest">
-												<th className="text-left py-1 font-medium">Station</th>
-												<th className="text-right py-1 font-medium">Staff</th>
-												<th className="text-right py-1 font-medium">U/Hr</th>
-												<th className="text-right py-1 font-medium">Occ %</th>
-											</tr>
-										</thead>
-										<tbody className="divide-y divide-border/30">
-											{stationData.slice(0, 4).map((station) => (
-												<tr key={station.stationId} className="text-xs font-mono">
-													<td className="py-1.5 flex items-center gap-2">
-														<div
-															className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-																station.occupancyRate > 90
-																	? "bg-destructive"
-																	: station.occupancyRate > 70
-																		? "bg-chart-3"
-																		: "bg-chart-1"
-															}`}
-														/>
-														<span className="truncate max-w-[120px]">{station.stationName}</span>
-													</td>
-													<td className="py-1.5 text-right text-muted-foreground">
-														{station.totalEmployees}
-													</td>
-													<td className="py-1.5 text-right font-bold">
-														{station.avgUnitsPerHour.toFixed(1)}
-													</td>
-													<td className="py-1.5 text-right text-muted-foreground">
-														{station.occupancyRate.toFixed(0)}%
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-							)}
+							{/* Station exception panel: top performer + critical station */}
+							{stationData.length > 0 && (() => {
+								const sorted = [...stationData].sort(
+									(a, b) => b.avgUnitsPerHour - a.avgUnitsPerHour
+								);
+								const top = sorted[0];
+								const critical = [...stationData].sort(
+									(a, b) => b.occupancyRate - a.occupancyRate
+								)[0];
+								const hasCritical = critical && critical.occupancyRate > 80;
+								return (
+									<div className="border-t border-border/50 bg-muted/10 px-4 py-2 flex gap-3">
+										{top && (
+											<div className="flex-1 flex items-center gap-2 min-w-0">
+												<Badge variant="secondary" className="text-[9px] shrink-0">
+													TOP
+												</Badge>
+												<span className="font-mono text-xs font-bold truncate">{top.stationName}</span>
+												<span className="font-mono text-xs text-chart-3 shrink-0 tabular-nums">
+													{top.avgUnitsPerHour.toFixed(1)} u/hr
+												</span>
+											</div>
+										)}
+										{hasCritical && (
+											<div className="flex-1 flex items-center gap-2 min-w-0 border-l border-border/40 pl-3">
+												<Badge variant="destructive" className="text-[9px] shrink-0">
+													LOAD
+												</Badge>
+												<span className="font-mono text-xs truncate">{critical.stationName}</span>
+												<span className="font-mono text-xs text-destructive shrink-0 tabular-nums">
+													{critical.occupancyRate.toFixed(0)}%
+												</span>
+											</div>
+										)}
+									</div>
+								);
+							})()}
 						</Card>
 					</div>
 
@@ -359,16 +444,18 @@ export default async function Component() {
 								</div>
 							</CardHeader>
 
-							{/* Key financial metrics as a tight row */}
+							{/* Key financial metrics with status dots */}
 							<div className="grid grid-cols-3 divide-x divide-border/50 border-b border-border/50">
-								<div className="p-4">
+								<div className="p-4 relative">
+									<div className={`absolute top-3 right-3 w-1.5 h-1.5 rounded-full ${costUnitStatus}`} />
 									<Metric
 										label="Cost/Unit"
 										value={`$${kpis.laborCostPerUnit}`}
 										className="items-center text-center"
 									/>
 								</div>
-								<div className="p-4">
+								<div className="p-4 relative">
+									<div className={`absolute top-3 right-3 w-1.5 h-1.5 rounded-full ${varianceDotStatus}`} />
 									<Metric
 										label="Variance"
 										value={`${laborCost.variancePercentage > 0 ? "+" : ""}${laborCost.variancePercentage}%`}
@@ -376,7 +463,8 @@ export default async function Component() {
 										className="items-center text-center"
 									/>
 								</div>
-								<div className="p-4">
+								<div className="p-4 relative">
+									<div className={`absolute top-3 right-3 w-1.5 h-1.5 rounded-full ${efficiencyStatus}`} />
 									<Metric
 										label="Efficiency"
 										value={`${(kpis.efficiencyRatio * 100).toFixed(0)}%`}
@@ -419,10 +507,8 @@ export default async function Component() {
 
 			{/* ── Quick Actions ───────────────────────────────────────────── */}
 			<section>
-				<h2 className="text-sm font-industrial font-bold text-muted-foreground mb-4 uppercase tracking-widest">
-					Quick Actions
-				</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+				<SectionHeading index="03" label="Quick Actions" />
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
 					{[
 						{
 							title: "Productivity Report",
@@ -451,18 +537,25 @@ export default async function Component() {
 					].map((action) => (
 						<Link key={action.title} to={action.href}>
 							<Card className="h-full group hover:border-primary/50 transition-colors duration-200">
-								<CardBody className="p-5 flex items-start gap-4">
+								<CardBody className="p-5 flex items-center gap-4">
 									<div className="p-3 rounded-[2px] bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-200 flex-shrink-0">
 										<action.icon className="w-5 h-5" aria-hidden="true" />
 									</div>
-									<div>
+									<div className="flex-1 min-w-0">
 										<h3 className="font-bold text-foreground font-heading uppercase tracking-tight text-sm">
 											{action.title}
 										</h3>
-										<p className="text-xs text-muted-foreground mt-1 font-mono tracking-tight">
+										<p className="text-xs text-muted-foreground mt-0.5 font-mono tracking-tight">
 											{action.desc}
 										</p>
 									</div>
+									{quickActionStats[action.title] && (
+										<div className="text-right shrink-0">
+											<span className="font-mono text-xs font-bold text-primary tabular-nums">
+												{quickActionStats[action.title]}
+											</span>
+										</div>
+									)}
 								</CardBody>
 							</Card>
 						</Link>
