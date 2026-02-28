@@ -306,15 +306,16 @@ export default async function Component() {
 							{/* Material Simulation Overlay is built into Card now, but Hero gets an extra sweep */}
 							<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none" />
 
-							<CardHeader className="border-b border-white/10 bg-transparent relative z-10">
+							<CardHeader className="border-b border-border/50 bg-transparent relative z-10">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
+										<LedIndicator active />
 										<CardTitle className="uppercase tracking-widest font-industrial text-sm text-zinc-300">
 											{heroKpiData.title}
 										</CardTitle>
 										<Badge
 											variant="secondary"
-											className="bg-white/10 text-zinc-300 border-transparent hover:bg-white/20"
+											className="bg-muted/50 text-muted-foreground border-transparent hover:bg-muted/80"
 										>
 											{trendRangeLabel}
 										</Badge>
@@ -353,16 +354,16 @@ export default async function Component() {
 							<CardBody className="p-0 relative z-10 flex flex-col h-full">
 								<div className="p-6 md:p-8 pb-0">
 									<div className="flex items-baseline">
-										<div className="text-7xl md:text-9xl font-heading font-bold tracking-tighter text-white tabular-nums">
+										<div className="text-7xl md:text-9xl font-heading font-bold tracking-tighter text-foreground tabular-nums">
 											{heroKpiData.value}
 										</div>
-										<span className="text-2xl md:text-4xl text-zinc-500 font-normal ml-3 tracking-normal">
+										<span className="text-2xl md:text-4xl text-muted-foreground font-normal ml-3 tracking-normal">
 											u/hr
 										</span>
 									</div>
-									<div className="flex items-center gap-4 mt-2 font-mono text-sm text-zinc-400 uppercase tracking-wide">
+									<div className="flex items-center gap-4 mt-2 font-mono text-sm text-muted-foreground uppercase tracking-wide">
 										<span>{heroKpiData.subtitle}</span>
-										<span className="w-1 h-1 rounded-full bg-zinc-600" />
+										<span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
 										<span
 											className={
 												heroKpiData.trend.direction === "up"
