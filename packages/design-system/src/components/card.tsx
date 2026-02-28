@@ -35,16 +35,22 @@ export function Card({ children, className = "" }: CardProps) {
 		<div
 			className={cn(
 				"rounded-[2px] relative group overflow-hidden",
-				"bg-zinc-900 bg-gradient-to-b from-zinc-800 to-zinc-950 text-zinc-50",
-				"border border-zinc-700 ring-1 ring-inset ring-white/10",
+				// Light mode
+				"bg-white bg-gradient-to-b from-zinc-50 to-zinc-100/80 text-zinc-900",
+				"border border-zinc-200 ring-1 ring-inset ring-black/5",
 				"transition-all duration-300 ease-out",
-				"hover:border-zinc-600 hover:from-zinc-700/80 hover:to-zinc-900",
-				"[--color-foreground:var(--color-zinc-50)] [--color-muted-foreground:var(--color-zinc-400)] [--color-border:var(--color-zinc-700)]",
+				"hover:border-zinc-300 hover:from-zinc-100 hover:to-zinc-200/80",
+				"[--color-foreground:var(--color-zinc-900)] [--color-muted-foreground:var(--color-zinc-500)] [--color-border:var(--color-zinc-200)]",
+				// Dark mode
+				"dark:bg-zinc-900 dark:bg-gradient-to-b dark:from-zinc-800 dark:to-zinc-950 dark:text-zinc-50",
+				"dark:border-zinc-700 dark:ring-white/10",
+				"dark:hover:border-zinc-600 dark:hover:from-zinc-700/80 dark:hover:to-zinc-900",
+				"dark:[--color-foreground:var(--color-zinc-50)] dark:[--color-muted-foreground:var(--color-zinc-400)] dark:[--color-border:var(--color-zinc-700)]",
 				className
 			)}
 		>
 			{/* Material Simulation Overlay for all cards */}
-			<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-white/[0.05] via-transparent to-transparent pointer-events-none" />
+			<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-black/[0.03] dark:from-white/[0.05] via-transparent to-transparent pointer-events-none" />
 			
 			<div className="relative z-10">{children}</div>
 		</div>
@@ -59,7 +65,8 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
 	return (
 		<div
 			className={cn(
-				"p-5 border-b border-white/10 bg-white/5",
+				"p-5 border-b border-black/5 bg-black/[0.02]",
+				"dark:border-white/10 dark:bg-white/5",
 				"transition-colors duration-150 relative z-10",
 				className
 			)}

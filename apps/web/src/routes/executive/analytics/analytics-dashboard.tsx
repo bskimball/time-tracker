@@ -70,7 +70,10 @@ function useCachedDisplay<T>(slot: string, promise: Promise<T>): T {
 	return resolved;
 }
 
-function useCachedDisplayState<T>(slot: string, promise: Promise<T>): { data: T; isCached: boolean } {
+function useCachedDisplayState<T>(
+	slot: string,
+	promise: Promise<T>
+): { data: T; isCached: boolean } {
 	const context = useContext(AnalyticsDisplayCacheContext);
 
 	if (!context) {
@@ -264,7 +267,8 @@ function ProductivityCharts({
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load productivity charts."} />;
 	}
 
-	const { productivityTrends, stationEfficiency, taskTypeEfficiency, shiftProductivity } = result.data;
+	const { productivityTrends, stationEfficiency, taskTypeEfficiency, shiftProductivity } =
+		result.data;
 
 	return (
 		<>
@@ -347,11 +351,7 @@ function ProductivityStationCards({
 							<div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
 								<span>{station.employees} Staff</span>
 								<span>
-									{station.occupancy < 60
-										? "LOW"
-										: station.occupancy > 85
-											? "HIGH"
-										    : "OK"}
+									{station.occupancy < 60 ? "LOW" : station.occupancy > 85 ? "HIGH" : "OK"}
 								</span>
 							</div>
 						</CardBody>
@@ -592,9 +592,7 @@ function LaborCostStationTable({
 									</td>
 									<td
 										className={`px-4 py-2 text-right ${
-											overtimeHours > 20
-												? "font-bold text-destructive"
-												: "text-muted-foreground"
+											overtimeHours > 20 ? "font-bold text-destructive" : "text-muted-foreground"
 										}`}
 									>
 										{overtimeHours.toFixed(1)}
@@ -617,7 +615,11 @@ function LaborCostStationTable({
 	);
 }
 
-function TrendsSection({ displays }: { displays: NonNullable<AnalyticsSectionDisplayPromises["trends"]> }) {
+function TrendsSection({
+	displays,
+}: {
+	displays: NonNullable<AnalyticsSectionDisplayPromises["trends"]>;
+}) {
 	return (
 		<div className="space-y-6">
 			<Suspense fallback={<TrendKpisSkeleton />}>
@@ -726,11 +728,7 @@ function TrendAnomalyTable({
 							<tr key={index} className="text-xs font-mono hover:bg-muted/20">
 								<td className="px-4 py-2.5">
 									<Badge
-										variant={
-											anomaly.severity === "high"
-												? "destructive"
-												: "secondary"
-										}
+										variant={anomaly.severity === "high" ? "destructive" : "secondary"}
 										className={`h-5 text-[10px] uppercase ${
 											anomaly.severity === "medium"
 												? "border-warning bg-warning/20 text-warning"
@@ -880,10 +878,7 @@ function CapacityFloor({
 								</span>
 							</div>
 							<div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted/50">
-								<div
-									className="h-full bg-primary"
-									style={{ width: `${station.utilization}%` }}
-								/>
+								<div className="h-full bg-primary" style={{ width: `${station.utilization}%` }} />
 							</div>
 						</CardBody>
 					</Card>
@@ -928,7 +923,8 @@ function BenchmarkKpis({
 	const { benchmarkData } = result.data;
 	const productivityDeltaVsIndustry =
 		benchmarkData.productivity.current - benchmarkData.productivity.industryAvg;
-	const costDeltaVsIndustry = benchmarkData.costPerUnit.current - benchmarkData.costPerUnit.industryAvg;
+	const costDeltaVsIndustry =
+		benchmarkData.costPerUnit.current - benchmarkData.costPerUnit.industryAvg;
 	const qualityDeltaVsIndustry = benchmarkData.quality.current - benchmarkData.quality.industryAvg;
 
 	return (
@@ -1019,8 +1015,16 @@ function BenchmarkCharts({
 
 	return (
 		<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-			<BarChart title="Productivity Benchmark Ladder" data={productivityBenchmarkChart} height={300} />
-			<BarChart title="Cost Benchmark Ladder (Lower Is Better)" data={costBenchmarkChart} height={300} />
+			<BarChart
+				title="Productivity Benchmark Ladder"
+				data={productivityBenchmarkChart}
+				height={300}
+			/>
+			<BarChart
+				title="Cost Benchmark Ladder (Lower Is Better)"
+				data={costBenchmarkChart}
+				height={300}
+			/>
 		</div>
 	);
 }
@@ -1116,7 +1120,10 @@ function BenchmarkStationTable({
 							))
 						) : (
 							<tr>
-								<td colSpan={5} className="px-4 py-6 text-center text-xs font-mono text-muted-foreground">
+								<td
+									colSpan={5}
+									className="px-4 py-6 text-center text-xs font-mono text-muted-foreground"
+								>
 									No station benchmark data available for the selected window.
 								</td>
 							</tr>

@@ -253,7 +253,7 @@ export function KioskTimeClock({
 								)}
 
 								{pinState?.success && (
-<Alert variant="success" className="mb-8">
+									<Alert variant="success" className="mb-8">
 										{pinState.message}
 									</Alert>
 								)}
@@ -325,7 +325,7 @@ export function KioskTimeClock({
 
 					{/* Side Column: Active Sessions */}
 					{activeLogs.length > 0 && (
-<div className="lg:col-span-5 space-y-6">
+						<div className="lg:col-span-5 space-y-6">
 							<div className="flex items-center justify-between px-2">
 								<div className="flex flex-col">
 									<span className="font-mono text-[10px] text-secondary/50 tracking-widest uppercase mb-1">
@@ -343,39 +343,42 @@ export function KioskTimeClock({
 								</Badge>
 							</div>
 							<div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
-							{activeLogs.map((log) => (
-								<Card
-									key={log.id}
-									className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
-								>
-									<CardBody>
-										<div className="flex justify-between items-start">
+								{activeLogs.map((log) => (
+									<Card
+										key={log.id}
+										className="bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:shadow-industrial relative group overflow-hidden"
+									>
+										<CardBody>
+											<div className="flex justify-between items-start">
 												<div className="flex-1 min-w-0">
 													<div className="text-lg font-bold text-foreground font-heading truncate group-hover:text-primary transition-colors">
 														{log.employee.name}
 													</div>
-												<div className="flex items-center gap-2 mt-1">
-													<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
-														Station:
-													</span>
+													<div className="flex items-center gap-2 mt-1">
+														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+															Station:
+														</span>
 														<Badge
 															variant="secondary"
 															className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5"
 														>
-														{log.station?.name || "Unassigned"}
-													</Badge>
-												</div>
-												{activeTasksByEmployee?.[log.employeeId] && (
-													<div className="mt-1 flex items-center gap-2">
-														<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
-															Task:
-														</span>
-														<Badge variant="primary" className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
-															{activeTasksByEmployee[log.employeeId].taskTypeName}
+															{log.station?.name || "Unassigned"}
 														</Badge>
 													</div>
-												)}
-											</div>
+													{activeTasksByEmployee?.[log.employeeId] && (
+														<div className="mt-1 flex items-center gap-2">
+															<span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+																Task:
+															</span>
+															<Badge
+																variant="primary"
+																className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5"
+															>
+																{activeTasksByEmployee[log.employeeId].taskTypeName}
+															</Badge>
+														</div>
+													)}
+												</div>
 												<div className="text-right flex flex-col items-end">
 													<div className="text-lg font-data font-bold text-primary tabular-nums">
 														{new Date(log.startTime).toLocaleTimeString([], {
@@ -413,7 +416,7 @@ export function KioskTimeClock({
 							</span>
 						</div>
 						{showApiKey && (
-<div className="flex items-center gap-2">
+							<div className="flex items-center gap-2">
 								<SimpleInput
 									type="password"
 									value={apiKey}
@@ -451,7 +454,7 @@ export function KioskTimeClock({
 
 				{/* Notifications */}
 				{notifications.map((notification) => (
-<div key={notification.id} className={`fixed bottom-8 right-8 z-50`}>
+					<div key={notification.id} className={`fixed bottom-8 right-8 z-50`}>
 						<Alert
 							variant={
 								notification.type === "success"

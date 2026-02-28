@@ -50,7 +50,9 @@ export default function SettingsIndex() {
 					<Card className="h-full transition-colors hover:bg-muted/50">
 						<CardBody className="flex flex-col h-full">
 							<div className="flex items-center gap-4 mb-4">
-								<div className="p-2 rounded-[2px] bg-primary/10 text-primary border border-primary/20">{option.icon}</div>
+								<div className="p-2 rounded-[2px] bg-primary/10 text-primary border border-primary/20">
+									{option.icon}
+								</div>
 								<h3 className="font-semibold text-lg">{option.title}</h3>
 							</div>
 							<p className="text-muted-foreground mb-6 grow">{option.description}</p>

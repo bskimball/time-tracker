@@ -121,12 +121,7 @@ function buildSectionDisplayPromises({
 							taskTypeEfficiencyPromise,
 							shiftProductivityPromise,
 						]).then(
-							([
-								productivityTrends,
-								stationEfficiency,
-								taskTypeEfficiency,
-								shiftProductivity,
-							]) => ({
+							([productivityTrends, stationEfficiency, taskTypeEfficiency, shiftProductivity]) => ({
 								productivityTrends,
 								stationEfficiency,
 								taskTypeEfficiency,
@@ -316,12 +311,7 @@ export default async function Component() {
 				</div>
 			</div>
 
-			<AnalyticsClient
-				section={section}
-				range={range}
-				compare={compareBasis}
-				displays={displays}
-			/>
+			<AnalyticsClient section={section} range={range} compare={compareBasis} displays={displays} />
 		</div>
 	);
 }

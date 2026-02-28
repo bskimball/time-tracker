@@ -250,7 +250,9 @@ export function TaskManager({
 	useEffect(() => {
 		if (createTypeState?.success && createTypeState.TaskType) {
 			setLocalTaskTypes((current) => {
-				const withoutExisting = current.filter((taskType) => taskType.id !== createTypeState.TaskType?.id);
+				const withoutExisting = current.filter(
+					(taskType) => taskType.id !== createTypeState.TaskType?.id
+				);
 				return [createTypeState.TaskType!, ...withoutExisting];
 			});
 			lastSyncedAtRef.current = new Date();
@@ -458,7 +460,8 @@ export function TaskManager({
 						</h3>
 						<p className="text-2xl font-mono tabular-nums">{activeTaskTypes.length}</p>
 						<p className="text-sm text-muted-foreground">
-							{localTaskTypes.length} total ({localTaskTypes.length - activeTaskTypes.length} inactive)
+							{localTaskTypes.length} total ({localTaskTypes.length - activeTaskTypes.length}{" "}
+							inactive)
 						</p>
 					</CardBody>
 				</Card>
@@ -712,7 +715,7 @@ export function TaskManager({
 											</tr>
 										</thead>
 										<tbody>
-										{filteredAssignments.map((assignment) => (
+											{filteredAssignments.map((assignment) => (
 												<tr
 													key={assignment.id}
 													className="border-b border-border hover:bg-muted/50"
@@ -932,7 +935,9 @@ export function TaskManager({
 															<Button
 																size="xs"
 																variant={taskType.isActive ? "secondary" : "primary"}
-																onClick={() => handleTaskTypeStatusToggle(taskType, !taskType.isActive)}
+																onClick={() =>
+																	handleTaskTypeStatusToggle(taskType, !taskType.isActive)
+																}
 																disabled={isUpdateTypePending || isSetTaskTypeActivePending}
 															>
 																{taskType.isActive ? "Deactivate" : "Reactivate"}

@@ -132,7 +132,7 @@ export function ManagerDashboard({
 						new Date(row.startTime).getTime() < new Date(earliest).getTime()
 							? row.startTime
 							: earliest,
-					assignmentRows[0].startTime,
+					assignmentRows[0].startTime
 				)
 			: activeTimeLogs.length > 0
 				? activeTimeLogs[0].startTime
@@ -142,11 +142,14 @@ export function ManagerDashboard({
 		<div className="space-y-8 pb-10">
 			<PageHeader
 				title="Manager Dashboard"
-				subtitle={`Overview for ${user.name || user.email} • ${new Date().toLocaleDateString(undefined, {
-					weekday: "long",
-					month: "long",
-					day: "numeric",
-				})}`}
+				subtitle={`Overview for ${user.name || user.email} • ${new Date().toLocaleDateString(
+					undefined,
+					{
+						weekday: "long",
+						month: "long",
+						day: "numeric",
+					}
+				)}`}
 				actions={
 					<div className="flex flex-wrap items-center justify-end gap-2" aria-live="polite">
 						<ManagerSnapshotControl
@@ -162,11 +165,16 @@ export function ManagerDashboard({
 			/>
 
 			{/* KPI Control Panel - Industrial Grid Layout */}
-			<section aria-label="Key Metrics" className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial">
+			<section
+				aria-label="Key Metrics"
+				className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial"
+			>
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaUserClockSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Personnel</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Active Personnel
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -191,7 +199,9 @@ export function ManagerDashboard({
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaStopwatchSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Longest Shift</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Longest Shift
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -199,9 +209,9 @@ export function ManagerDashboard({
 						</span>
 					</div>
 					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div 
-							className="h-full bg-primary transition-all duration-700" 
-							style={{ width: longestSessionStart ? "100%" : "0%" }} 
+						<div
+							className="h-full bg-primary transition-all duration-700"
+							style={{ width: longestSessionStart ? "100%" : "0%" }}
 						/>
 					</div>
 				</div>
@@ -209,7 +219,9 @@ export function ManagerDashboard({
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaChartPieSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Utilization</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Utilization
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -218,9 +230,9 @@ export function ManagerDashboard({
 						<span className="text-sm text-muted-foreground font-data">Efficiency</span>
 					</div>
 					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div 
-							className="h-full bg-primary transition-all duration-700" 
-							style={{ width: `${Math.min(100, utilizationRate)}%` }} 
+						<div
+							className="h-full bg-primary transition-all duration-700"
+							style={{ width: `${Math.min(100, utilizationRate)}%` }}
 						/>
 					</div>
 				</div>
@@ -240,7 +252,8 @@ export function ManagerDashboard({
 								Active Task Sessions
 							</h3>
 							<span className="text-xs font-data text-muted-foreground tabular-nums">
-								LAST UPDATED • {snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+								LAST UPDATED •{" "}
+								{snapshotDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
 							</span>
 						</div>
 						<div className="divide-y divide-border">
@@ -272,7 +285,9 @@ export function ManagerDashboard({
 													</div>
 												</div>
 												<div className="col-span-3 text-sm text-muted-foreground truncate">
-													{assignment.stationName || <span className="opacity-50 italic">Unassigned</span>}
+													{assignment.stationName || (
+														<span className="opacity-50 italic">Unassigned</span>
+													)}
 												</div>
 												<div className="col-span-3 text-sm">
 													<span className="inline-flex items-center px-2 py-0.5 rounded-[2px] bg-primary/10 text-primary text-xs font-industrial border border-primary/20">
@@ -300,29 +315,41 @@ export function ManagerDashboard({
 
 					{/* Quick Actions Grid */}
 					<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-						<Link to="/manager/employees/new" className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200">
-								<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
-									<LiaUserPlusSolid className="w-6 h-6" />
-								</div>
-								<span className="text-sm font-heading font-medium">Add Employee</span>
+						<Link
+							to="/manager/employees/new"
+							className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200"
+						>
+							<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
+								<LiaUserPlusSolid className="w-6 h-6" />
+							</div>
+							<span className="text-sm font-heading font-medium">Add Employee</span>
 						</Link>
-						<Link to="/manager/timesheets" className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200">
-								<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
-									<LiaHistorySolid className="w-6 h-6" />
-								</div>
-								<span className="text-sm font-heading font-medium">Time Correction</span>
+						<Link
+							to="/manager/timesheets"
+							className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200"
+						>
+							<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
+								<LiaHistorySolid className="w-6 h-6" />
+							</div>
+							<span className="text-sm font-heading font-medium">Time Correction</span>
 						</Link>
-						<Link to="/manager/tasks" className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200">
-								<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
-									<LiaTasksSolid className="w-6 h-6" />
-								</div>
-								<span className="text-sm font-heading font-medium">Assign Tasks</span>
+						<Link
+							to="/manager/tasks"
+							className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200"
+						>
+							<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
+								<LiaTasksSolid className="w-6 h-6" />
+							</div>
+							<span className="text-sm font-heading font-medium">Assign Tasks</span>
 						</Link>
-						<Link to="/manager/reports" className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200">
-								<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
-									<LiaFileAltSolid className="w-6 h-6" />
-								</div>
-								<span className="text-sm font-heading font-medium">Reports</span>
+						<Link
+							to="/manager/reports"
+							className="group flex flex-col items-center justify-center p-6 border border-border bg-card hover:border-primary/50 hover:shadow-industrial rounded-[2px] transition-colors duration-200"
+						>
+							<div className="p-3 rounded-[2px] bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary transition-colors mb-3">
+								<LiaFileAltSolid className="w-6 h-6" />
+							</div>
+							<span className="text-sm font-heading font-medium">Reports</span>
 						</Link>
 					</div>
 				</div>
@@ -349,7 +376,9 @@ export function ManagerDashboard({
 										style={{ width: `${Math.min(100, utilizationRate)}%` }}
 									/>
 								</div>
-								<p className="text-[10px] text-muted-foreground mt-1">Clocked in (WORK) or assigned task vs total employees</p>
+								<p className="text-[10px] text-muted-foreground mt-1">
+									Clocked in (WORK) or assigned task vs total employees
+								</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
@@ -363,7 +392,9 @@ export function ManagerDashboard({
 										<TaskEfficiencyBar taskEfficiencyRatePromise={taskEfficiencyRatePromise} />
 									</Suspense>
 								</div>
-								<p className="text-[10px] text-muted-foreground mt-1">Average units/hour efficiency recorded today</p>
+								<p className="text-[10px] text-muted-foreground mt-1">
+									Average units/hour efficiency recorded today
+								</p>
 							</div>
 							<div>
 								<div className="flex justify-between text-xs mb-1.5">
@@ -372,7 +403,9 @@ export function ManagerDashboard({
 										<NetworkStatusValue networkStatusPromise={networkStatusPromise} />
 									</Suspense>
 								</div>
-								<p className="text-[10px] text-muted-foreground">Derived from same-day manual correction error signals</p>
+								<p className="text-[10px] text-muted-foreground">
+									Derived from same-day manual correction error signals
+								</p>
 							</div>
 						</CardBody>
 					</Card>
@@ -382,12 +415,20 @@ export function ManagerDashboard({
 	);
 }
 
-function TaskEfficiencyValue({ taskEfficiencyRatePromise }: { taskEfficiencyRatePromise: Promise<number> }) {
+function TaskEfficiencyValue({
+	taskEfficiencyRatePromise,
+}: {
+	taskEfficiencyRatePromise: Promise<number>;
+}) {
 	const taskEfficiencyRate = use(taskEfficiencyRatePromise);
 	return <span className="font-data font-medium">{taskEfficiencyRate.toFixed(1)}%</span>;
 }
 
-function TaskEfficiencyBar({ taskEfficiencyRatePromise }: { taskEfficiencyRatePromise: Promise<number> }) {
+function TaskEfficiencyBar({
+	taskEfficiencyRatePromise,
+}: {
+	taskEfficiencyRatePromise: Promise<number>;
+}) {
 	const taskEfficiencyRate = use(taskEfficiencyRatePromise);
 	return (
 		<div
@@ -404,7 +445,9 @@ function NetworkStatusValue({
 }) {
 	const networkStatus = use(networkStatusPromise);
 	return (
-		<span className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}>
+		<span
+			className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}
+		>
 			{networkStatus}
 		</span>
 	);
@@ -419,7 +462,9 @@ function ProgressFallback() {
 }
 
 function getAlertGroups(alerts: AlertData[]) {
-	const criticalAlerts = alerts.filter((alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH");
+	const criticalAlerts = alerts.filter(
+		(alert) => alert.severity === "CRITICAL" || alert.severity === "HIGH"
+	);
 	const warningAlerts = alerts.filter((alert) => alert.severity === "MEDIUM");
 	const activeAlertCount = alerts.filter((alert) => alert.severity !== "LOW").length;
 
@@ -434,13 +479,15 @@ function ActiveAlertsMetric({ alertsPromise }: { alertsPromise: Promise<AlertDat
 		<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 			<div className="flex items-center gap-2 text-muted-foreground mb-4">
 				<LiaExclamationTriangleSolid className="w-5 h-5" />
-				<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Alerts</span>
+				<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+					Active Alerts
+				</span>
 			</div>
 			<div className="flex items-baseline gap-2">
 				<span
 					className={cn(
 						"text-3xl font-data font-medium tracking-tight transition-colors",
-						activeAlertCount > 0 ? "text-orange-600" : "text-emerald-600",
+						activeAlertCount > 0 ? "text-orange-600" : "text-emerald-600"
 					)}
 				>
 					{activeAlertCount}
@@ -456,7 +503,9 @@ function ActiveAlertsMetricFallback() {
 		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border-l-2 border-l-border/70 animate-pulse">
 			<div className="flex items-center gap-2 text-muted-foreground mb-4">
 				<LiaExclamationTriangleSolid className="w-5 h-5 opacity-70" />
-				<span className="text-xs font-heading uppercase tracking-wider font-semibold">Active Alerts</span>
+				<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+					Active Alerts
+				</span>
 			</div>
 			<div className="h-8 w-24 bg-muted rounded-[2px]" />
 		</div>
@@ -474,7 +523,11 @@ function CriticalAlertsBanner({ alertsPromise }: { alertsPromise: Promise<AlertD
 	return (
 		<div className="space-y-2">
 			{criticalAlerts.map((alert) => (
-				<Alert key={alert.id} variant="error" className="border-l-4 border-l-red-600 shadow-sm animate-pulse-slow">
+				<Alert
+					key={alert.id}
+					variant="error"
+					className="border-l-4 border-l-red-600 shadow-sm animate-pulse-slow"
+				>
 					<div className="flex justify-between items-start gap-4">
 						<div>
 							<h4 className="font-heading font-bold text-red-900 dark:text-red-100 flex items-center gap-2">
@@ -484,7 +537,11 @@ function CriticalAlertsBanner({ alertsPromise }: { alertsPromise: Promise<AlertD
 						</div>
 						{alert.actionUrl && (
 							<Link to={alert.actionUrl}>
-								<Button size="xs" variant="outline" className="bg-background/50 hover:bg-background border-red-200 text-red-900">
+								<Button
+									size="xs"
+									variant="outline"
+									className="bg-background/50 hover:bg-background border-red-200 text-red-900"
+								>
 									Resolve
 								</Button>
 							</Link>
@@ -541,7 +598,7 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 											"text-[10px] font-heading font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm border",
 											alert.severity === "HIGH" || alert.severity === "CRITICAL"
 												? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900"
-												: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-900",
+												: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-900"
 										)}
 									>
 										{alert.type.replace("_", " ")}
@@ -554,7 +611,9 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 									</span>
 								</div>
 								<h5 className="text-sm font-medium mt-2 leading-tight">{alert.title}</h5>
-								<p className="text-xs text-muted-foreground mt-1 line-clamp-2">{alert.description}</p>
+								<p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+									{alert.description}
+								</p>
 								{alert.actionUrl && (
 									<Link
 										to={alert.actionUrl}
@@ -568,7 +627,10 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 					</div>
 				)}
 				<div className="p-3 border-t border-border/50 bg-muted/20 text-center">
-					<Link to="/manager/reports" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+					<Link
+						to="/manager/reports"
+						className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+					>
 						View Full Alert History
 					</Link>
 				</div>

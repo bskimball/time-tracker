@@ -120,7 +120,10 @@ function IndustrialSidebarHeader({ title, brandHref }: IndustrialSidebarHeaderPr
 	return (
 		<div className="relative border-b border-border bg-muted/10 p-5 overflow-hidden group">
 			<div className="absolute inset-0 bg-noise opacity-50 pointer-events-none" />
-			<Link to={href} className="relative flex items-center gap-4 z-10 hover:opacity-80 transition-opacity">
+			<Link
+				to={href}
+				className="relative flex items-center gap-4 z-10 hover:opacity-80 transition-opacity"
+			>
 				<div className="relative z-10 w-7 h-7 border border-primary/60 bg-primary/10 flex items-center justify-center text-primary font-mono text-xs font-bold tracking-wider shrink-0">
 					SP
 				</div>
@@ -165,7 +168,8 @@ interface IndustrialSidebarItemProps extends NavLink {
 function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebarItemProps) {
 	const { isCollapsed, brandHref } = useSidebarContext();
 	const location = useLocation();
-	const isActive = location.pathname === to || (to !== brandHref && location.pathname.startsWith(to));
+	const isActive =
+		location.pathname === to || (to !== brandHref && location.pathname.startsWith(to));
 	const Icon = icon ? iconMap[icon] : null;
 
 	return (
@@ -193,7 +197,9 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 						)}
 					/>
 				) : (
-					<div className={cn("h-1.5 w-1.5 rounded-full bg-current opacity-50", !isCollapsed && "mr-3")} />
+					<div
+						className={cn("h-1.5 w-1.5 rounded-full bg-current opacity-50", !isCollapsed && "mr-3")}
+					/>
 				)}
 
 				{!isCollapsed && (
@@ -298,15 +304,13 @@ function IndustrialSidebarFooter({ children, className }: IndustrialSidebarFoote
 			{!isCollapsed && (
 				<>
 					<div className="h-px w-full bg-gradient-to-r from-transparent via-border/40 to-transparent mb-4" />
-					
+
 					{content.length > 0 && (
 						<div className="px-3 mb-4 space-y-4">
 							<div className="flex items-center gap-3 opacity-40 mb-3">
 								<SafetyStripes className="h-1.5 flex-1" />
 							</div>
-							<div className="space-y-3">
-								{content}
-							</div>
+							<div className="space-y-3">{content}</div>
 						</div>
 					)}
 				</>
@@ -358,11 +362,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 			)}
 		>
 			<div className="flex items-center gap-4">
-				<IndustrialLoader
-					variant="processing"
-					className="opacity-60"
-					isAnimated={isAnimating}
-				/>
+				<IndustrialLoader variant="processing" className="opacity-60" isAnimated={isAnimating} />
 			</div>
 
 			<div className="flex items-center gap-3">
@@ -379,9 +379,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 				</div>
 				<div className="font-mono text-xs text-muted-foreground border-l border-border/50 pl-3">
 					{now
-						? now
-								.toLocaleDateString("en-US", { month: "short", day: "2-digit" })
-								.toUpperCase()
+						? now.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase()
 						: "-- ---"}
 				</div>
 			</div>

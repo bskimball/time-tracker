@@ -173,7 +173,7 @@ async function main() {
 		const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
 		const station = stations[index % stations.length];
 		const hireDate = new Date(seedNow);
-		hireDate.setDate(seedNow.getDate() - (index * 17) % (365 * 3));
+		hireDate.setDate(seedNow.getDate() - ((index * 17) % (365 * 3)));
 
 		const status: EmployeeStatus =
 			index < activeEmployeeCount
@@ -370,20 +370,20 @@ async function main() {
 	const activeAssignmentsToCreate = activeEmployees
 		.slice(0, activeAssignmentsTarget)
 		.map((employee, index) => {
-		const stationTaskType = employee.defaultStationId
-			? taskTypeByStation.get(employee.defaultStationId)
-			: null;
-		const selectedTaskType = stationTaskType ?? taskTypes[index % taskTypes.length];
-		const startedMinutesAgo = 35 + index * 9;
+			const stationTaskType = employee.defaultStationId
+				? taskTypeByStation.get(employee.defaultStationId)
+				: null;
+			const selectedTaskType = stationTaskType ?? taskTypes[index % taskTypes.length];
+			const startedMinutesAgo = 35 + index * 9;
 
-		return {
-			employeeId: employee.id,
-			taskTypeId: selectedTaskType.id,
-			startTime: new Date(now.getTime() - startedMinutesAgo * 60 * 1000),
-			endTime: null,
-			unitsCompleted: 22 + index * 5,
-			notes: `Active assignment in progress at ${selectedTaskType.name}`,
-		};
+			return {
+				employeeId: employee.id,
+				taskTypeId: selectedTaskType.id,
+				startTime: new Date(now.getTime() - startedMinutesAgo * 60 * 1000),
+				endTime: null,
+				unitsCompleted: 22 + index * 5,
+				notes: `Active assignment in progress at ${selectedTaskType.name}`,
+			};
 		});
 
 	assignmentRows.push(...activeAssignmentsToCreate);

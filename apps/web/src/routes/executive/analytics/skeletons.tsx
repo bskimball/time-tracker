@@ -18,20 +18,16 @@ export function ChartSkeleton({ title }: { title?: string; height?: number }) {
 			</CardHeader>
 			<CardBody className="p-4 flex-1 flex items-center justify-center">
 				<div className="w-full h-full border border-dashed border-border/40 rounded bg-muted/5 flex items-center justify-center">
-					<span className="text-xs font-mono text-muted-foreground animate-pulse">Initializing...</span>
+					<span className="text-xs font-mono text-muted-foreground animate-pulse">
+						Initializing...
+					</span>
 				</div>
 			</CardBody>
 		</Card>
 	);
 }
 
-export function TableSkeleton({
-	title,
-	rows = 5,
-}: {
-	title?: string;
-	rows?: number;
-}) {
+export function TableSkeleton({ title, rows = 5 }: { title?: string; rows?: number }) {
 	return (
 		<Card className="overflow-hidden">
 			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">

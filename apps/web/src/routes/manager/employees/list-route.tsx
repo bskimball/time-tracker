@@ -16,9 +16,10 @@ export default async function Component() {
 	// Parse search params
 	const search = query.get("search") || undefined;
 	const statusParam = query.get("status");
-	const status = statusParam && Object.values(EmployeeStatus).includes(statusParam as EmployeeStatus)
-		? (statusParam as EmployeeStatus)
-		: undefined;
+	const status =
+		statusParam && Object.values(EmployeeStatus).includes(statusParam as EmployeeStatus)
+			? (statusParam as EmployeeStatus)
+			: undefined;
 	const pageParam = query.get("page");
 	const parsedPage = pageParam ? parseInt(pageParam, 10) : NaN;
 	const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;

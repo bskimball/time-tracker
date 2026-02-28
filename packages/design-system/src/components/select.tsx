@@ -58,13 +58,16 @@ export function Select({
 	className = "",
 	...props
 }: SelectProps) {
-	// Prefer controlled value when provided; used for label lookup only
-	const selectedValue = value ?? defaultValue ?? null;
+	const [internalValue, setInternalValue] = React.useState(defaultValue);
+	const selectedValue = value !== undefined ? value : internalValue;
 
 	// React Aria Select now uses value/defaultValue/onChange instead of selectedKey/onSelectionChange
 	const handleSelectionChange = (key: React.Key | null) => {
 		// Normalize possible array of keys to a single string value for our simpler API
 		const sanitizedValue = key != null ? key.toString() : "";
+		if (value === undefined) {
+			setInternalValue(sanitizedValue);
+		}
 		onChange?.(sanitizedValue);
 	};
 
@@ -174,10 +177,15 @@ export function SimpleSelect({
 	"children" | "selectedKey" | "defaultSelectedKey" | "onSelectionChange" | "onChange"
 >) {
 	const isControlled = value !== undefined;
-	const selectedKey = isControlled ? value : undefined;
+	const [internalValue, setInternalValue] = React.useState(defaultValue);
+	const selectedKey = isControlled ? value : internalValue;
 
 	const handleSelectionChange = (key: React.Key | null) => {
-		onChange?.(key != null ? key.toString() : null);
+		const sanitizedValue = key != null ? key.toString() : null;
+		if (!isControlled) {
+			setInternalValue(sanitizedValue ?? undefined);
+		}
+		onChange?.(sanitizedValue);
 	};
 
 	const selectedLabel =

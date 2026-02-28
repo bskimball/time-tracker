@@ -44,26 +44,34 @@ export default async function Component() {
 		orderBy: { startTime: "desc" },
 	});
 
-	const [employees, stations, activeLogs, activeBreaks, assignmentMode, activeTaskTypes, activeAssignments] = await Promise.all([
+	const [
+		employees,
+		stations,
+		activeLogs,
+		activeBreaks,
+		assignmentMode,
+		activeTaskTypes,
+		activeAssignments,
+	] = await Promise.all([
 		db.employee.findMany({ orderBy: { name: "asc" } }),
 		db.station.findMany({ orderBy: { name: "asc" } }),
 		db.timeLog.findMany({
-		where: {
-			endTime: null,
-			type: "WORK",
-			deletedAt: null,
-		},
-		include: { Employee: true, Station: true },
-		orderBy: { startTime: "desc" },
+			where: {
+				endTime: null,
+				type: "WORK",
+				deletedAt: null,
+			},
+			include: { Employee: true, Station: true },
+			orderBy: { startTime: "desc" },
 		}),
 		db.timeLog.findMany({
-		where: {
-			endTime: null,
-			type: "BREAK",
-			deletedAt: null,
-		},
-		include: { Employee: true, Station: true },
-		orderBy: { startTime: "desc" },
+			where: {
+				endTime: null,
+				type: "BREAK",
+				deletedAt: null,
+			},
+			include: { Employee: true, Station: true },
+			orderBy: { startTime: "desc" },
 		}),
 		getTaskAssignmentMode(),
 		db.taskType.findMany({
@@ -88,19 +96,22 @@ export default async function Component() {
 		stationName: taskType.Station.name,
 	}));
 
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
-		if (acc[assignment.employeeId]) {
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>(
+		(acc, assignment) => {
+			if (acc[assignment.employeeId]) {
+				return acc;
+			}
+
+			acc[assignment.employeeId] = {
+				assignmentId: assignment.id,
+				taskTypeName: assignment.TaskType.name,
+				stationName: assignment.TaskType.Station.name,
+			};
+
 			return acc;
-		}
-
-		acc[assignment.employeeId] = {
-			assignmentId: assignment.id,
-			taskTypeName: assignment.TaskType.name,
-			stationName: assignment.TaskType.Station.name,
-		};
-
-		return acc;
-	}, {});
+		},
+		{}
+	);
 
 	return (
 		<>

@@ -35,8 +35,15 @@ export default async function Component() {
 		take: 50,
 	});
 
-	const [employees, stations, activeLogs, activeBreaks, activeAssignments, assignmentMode, activeTaskTypes] =
-		await Promise.all([
+	const [
+		employees,
+		stations,
+		activeLogs,
+		activeBreaks,
+		activeAssignments,
+		assignmentMode,
+		activeTaskTypes,
+	] = await Promise.all([
 		db.employee.findMany({ orderBy: { name: "asc" } }),
 		db.station.findMany({ orderBy: { name: "asc" } }),
 		db.timeLog.findMany({
@@ -72,19 +79,22 @@ export default async function Component() {
 		stationName: taskType.Station.name,
 	}));
 
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
-		if (acc[assignment.employeeId]) {
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>(
+		(acc, assignment) => {
+			if (acc[assignment.employeeId]) {
+				return acc;
+			}
+
+			acc[assignment.employeeId] = {
+				assignmentId: assignment.id,
+				taskTypeName: assignment.TaskType.name,
+				stationName: assignment.TaskType.Station.name,
+			};
+
 			return acc;
-		}
-
-		acc[assignment.employeeId] = {
-			assignmentId: assignment.id,
-			taskTypeName: assignment.TaskType.name,
-			stationName: assignment.TaskType.Station.name,
-		};
-
-		return acc;
-	}, {});
+		},
+		{}
+	);
 
 	// No more 'as any' casts - type safety is preserved
 	return (

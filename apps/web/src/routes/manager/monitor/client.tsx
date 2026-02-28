@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useNavigation } from "react-router";
-import {
-	Card,
-	Badge,
-	IndustrialPanel,
-	LedIndicator,
-} from "@monorepo/design-system";
+import { Card, Badge, IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
@@ -163,11 +158,13 @@ export function FloorMonitor({
 			: null;
 
 	const activeStationsCount = stations.filter(
-		(s) => s.isActive && getStationOccupancy(s.id) > 0,
+		(s) => s.isActive && getStationOccupancy(s.id) > 0
 	).length;
 	const stationLoadPercent =
 		stations.length > 0 ? Math.round((activeStationsCount / stations.length) * 100) : 0;
-	const filteredStations = stations.filter((station) => statusFilters.includes(getStationStatus(station)));
+	const filteredStations = stations.filter((station) =>
+		statusFilters.includes(getStationStatus(station))
+	);
 
 	// Identify workers who are assigned tasks but not in active work logs
 	const taskOnlyWorkers = activeTaskEntries
@@ -218,13 +215,17 @@ export function FloorMonitor({
 							{activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
 						</span>
 					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Clocked in (WORK) or assigned task</p>
+					<p className="text-[10px] text-muted-foreground mt-2">
+						Clocked in (WORK) or assigned task
+					</p>
 				</div>
 
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaChartPieSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Station Load</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Station Load
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -239,7 +240,9 @@ export function FloorMonitor({
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaExclamationTriangleSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Break Status</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Break Status
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -252,13 +255,13 @@ export function FloorMonitor({
 				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
 					<div className="flex items-center gap-2 text-muted-foreground mb-4">
 						<LiaStopwatchSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Shift Max</span>
+						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
+							Shift Max
+						</span>
 					</div>
 					<div className="flex items-baseline gap-2">
 						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{longestCurrentStartTime
-								? calculateDuration(longestCurrentStartTime)
-								: "--"}
+							{longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--"}
 						</span>
 						<span className="text-sm text-muted-foreground font-data">Duration</span>
 					</div>
@@ -287,7 +290,7 @@ export function FloorMonitor({
 										variant={statusFilters.includes(status) ? "primary" : "outline"}
 										className={cn(
 											"text-[10px] font-mono",
-											!statusFilters.includes(status) && "opacity-60",
+											!statusFilters.includes(status) && "opacity-60"
 										)}
 									>
 										{status}
@@ -329,7 +332,7 @@ export function FloorMonitor({
 									key={station.id}
 									className={cn(
 										"flex flex-col h-full",
-										status === "INACTIVE" && "opacity-60 grayscale",
+										status === "INACTIVE" && "opacity-60 grayscale"
 									)}
 									variant={status === "FULL" ? "destructive" : "default"}
 								>
@@ -354,7 +357,7 @@ export function FloorMonitor({
 												active={status !== "IDLE" && status !== "INACTIVE"}
 												className={cn(
 													status === "FULL" && "bg-destructive shadow-destructive/50",
-													status === "BUSY" && "bg-amber-500 shadow-amber-500/50",
+													status === "BUSY" && "bg-amber-500 shadow-amber-500/50"
 												)}
 											/>
 										</div>
@@ -379,7 +382,7 @@ export function FloorMonitor({
 																	: status === "BUSY"
 																		? "bg-amber-500"
 																		: "bg-primary"
-																: "bg-transparent",
+																: "bg-transparent"
 														)}
 													/>
 												))}
@@ -451,20 +454,26 @@ export function FloorMonitor({
 									<div className="col-span-2">
 										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
 										<div className="text-[10px] text-muted-foreground font-mono mt-1">
-											{log.Station?.name || (log.Employee.defaultStation ? `FLOAT (Def: ${log.Employee.defaultStation.name})` : "FLOAT")}
+											{log.Station?.name ||
+												(log.Employee.defaultStation
+													? `FLOAT (Def: ${log.Employee.defaultStation.name})`
+													: "FLOAT")}
 										</div>
 									</div>
 									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
 										{calculateDuration(log.startTime)}
 									</div>
 									<div className="text-center">
-										<Badge variant="outline" className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20">
+										<Badge
+											variant="outline"
+											className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20"
+										>
 											WORK
 										</Badge>
 									</div>
 								</div>
 							))}
-							
+
 							{breakLogs.map((log) => (
 								<div
 									key={log.id}
@@ -472,9 +481,7 @@ export function FloorMonitor({
 								>
 									<div className="col-span-2">
 										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
-										<div className="text-[10px] text-muted-foreground font-mono mt-1">
-											ON BREAK
-										</div>
+										<div className="text-[10px] text-muted-foreground font-mono mt-1">ON BREAK</div>
 									</div>
 									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
 										{calculateDuration(log.startTime)}

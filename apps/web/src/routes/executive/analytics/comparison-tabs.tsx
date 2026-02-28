@@ -28,7 +28,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 	const currentCompareParam = searchParams.get("compare") as ComparisonBasis | null;
 	const currentCompare = visibleOptions.some((option) => option.id === currentCompareParam)
 		? currentCompareParam
-		: visibleOptions[0]?.id ?? "previous-period";
+		: (visibleOptions[0]?.id ?? "previous-period");
 
 	const handleComparisonChange = (key: string | number) => {
 		if (!visibleOptions.some((option) => option.id === key)) {
@@ -45,7 +45,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 			<TabList
 				className={cn(
 					"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
-					className,
+					className
 				)}
 			>
 				{visibleOptions.map((option) => (

@@ -31,19 +31,19 @@ type EmployeeWithBreakData = EmployeeWithBreakPolicy & {
 };
 
 export async function getActiveAlerts(): Promise<Alert[]> {
-		const { user } = await validateRequest();
-		if (!user) {
-			throw new Error("Unauthorized");
-		}
+	const { user } = await validateRequest();
+	if (!user) {
+		throw new Error("Unauthorized");
+	}
 
-		const alerts: Alert[] = [];
+	const alerts: Alert[] = [];
 
-		// 1. Overtime warnings - employees approaching or exceeding limits
-		const now = new Date();
-		const todayStart = new Date(now);
-		todayStart.setHours(0, 0, 0, 0);
-		const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-		const dailyHours = new Map<string, number>();
+	// 1. Overtime warnings - employees approaching or exceeding limits
+	const now = new Date();
+	const todayStart = new Date(now);
+	todayStart.setHours(0, 0, 0, 0);
+	const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+	const dailyHours = new Map<string, number>();
 
 	// Get recent time logs for overtime calculations
 	const recentTimeLogs = await db.timeLog.findMany({
@@ -83,7 +83,8 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 	employeeHours.forEach((data, employeeId) => {
 		const hoursWorkedWeek = data.hours;
 		const weeklyLimit = data.employee.weeklyHoursLimit || 40;
-		const weeklyThreshold = weeklyLimit === 40 ? 32 : Math.max(weeklyLimit * 0.8, weeklyLimit - 8, 0);
+		const weeklyThreshold =
+			weeklyLimit === 40 ? 32 : Math.max(weeklyLimit * 0.8, weeklyLimit - 8, 0);
 		const hoursWorkedDay = dailyHours.get(employeeId) || 0;
 		const dailyLimit = data.employee.dailyHoursLimit || 8;
 		const dailyThreshold = dailyLimit === 8 ? 7 : Math.max(dailyLimit - 1, 0);
@@ -200,7 +201,7 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 		orderBy: { startTime: "desc" },
 	});
 
-	const lastBreakMap = new Map<string, typeof breakLogs[number]>();
+	const lastBreakMap = new Map<string, (typeof breakLogs)[number]>();
 	breakLogs.forEach((log) => {
 		if (!lastBreakMap.has(log.employeeId)) {
 			lastBreakMap.set(log.employeeId, log);
@@ -219,8 +220,13 @@ export async function getActiveAlerts(): Promise<Alert[]> {
 			return;
 		}
 
-		const breakEnd = lastBreak.endTime ? new Date(lastBreak.endTime) : new Date(lastBreak.startTime);
-		const hoursSinceLastBreak = Math.max(0, (now.getTime() - breakEnd.getTime()) / (1000 * 60 * 60));
+		const breakEnd = lastBreak.endTime
+			? new Date(lastBreak.endTime)
+			: new Date(lastBreak.startTime);
+		const hoursSinceLastBreak = Math.max(
+			0,
+			(now.getTime() - breakEnd.getTime()) / (1000 * 60 * 60)
+		);
 		const violationThreshold = policy.maxHoursWithoutBreak;
 		if (violationThreshold <= 0) {
 			return;

@@ -120,8 +120,9 @@ export function TimesheetManager({
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
 	const [activeTab, setActiveTab] = useQueryState(
 		"tab",
-		parseAsStringEnum([...tabValues])
-			.withDefault((tabValues.includes(initialTab as TimesheetTab) ? initialTab : "logs") as TimesheetTab)
+		parseAsStringEnum([...tabValues]).withDefault(
+			(tabValues.includes(initialTab as TimesheetTab) ? initialTab : "logs") as TimesheetTab
+		)
 	);
 
 	const refreshLogs = () => {
@@ -283,8 +284,7 @@ export function TimesheetManager({
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<CardTitle>Time Logs</CardTitle>
 								<div className="text-xs text-muted-foreground font-mono uppercase tracking-widest">
-									Page {pagination.page} of {totalPages} -{" "}
-									{pagination.total} records
+									Page {pagination.page} of {totalPages} - {pagination.total} records
 								</div>
 							</div>
 						</CardHeader>
@@ -320,7 +320,9 @@ export function TimesheetManager({
 												<td className="p-4">{log.Station?.name || "None"}</td>
 												<td className="p-4">
 													<div>
-														<p suppressHydrationWarning>{new Date(log.startTime).toLocaleDateString()}</p>
+														<p suppressHydrationWarning>
+															{new Date(log.startTime).toLocaleDateString()}
+														</p>
 														<p className="text-sm text-muted-foreground" suppressHydrationWarning>
 															{new Date(log.startTime).toLocaleTimeString()}
 														</p>
@@ -329,7 +331,9 @@ export function TimesheetManager({
 												<td className="p-4">
 													{log.endTime ? (
 														<div>
-															<p suppressHydrationWarning>{new Date(log.endTime).toLocaleDateString()}</p>
+															<p suppressHydrationWarning>
+																{new Date(log.endTime).toLocaleDateString()}
+															</p>
 															<p className="text-sm text-muted-foreground" suppressHydrationWarning>
 																{new Date(log.endTime).toLocaleTimeString()}
 															</p>
@@ -577,7 +581,9 @@ export function TimesheetManager({
 													<td className="p-4">
 														{entry.stationName || entry.taskTypeName || "None"}
 													</td>
-													<td className="p-4" suppressHydrationWarning>{new Date(entry.startTime).toLocaleTimeString()}</td>
+													<td className="p-4" suppressHydrationWarning>
+														{new Date(entry.startTime).toLocaleTimeString()}
+													</td>
 													<td className="p-4 font-mono">{formatDuration(entry.startTime, null)}</td>
 													<td className="p-4">
 														{getTaskSourceBadge(entry.source, entry.assignmentSource)}
@@ -615,11 +621,7 @@ export function TimesheetManager({
 	);
 }
 
-function CorrectionHistoryList({
-	correctionHistory,
-}: {
-	correctionHistory: TimeLogWithDetails[];
-}) {
+function CorrectionHistoryList({ correctionHistory }: { correctionHistory: TimeLogWithDetails[] }) {
 	return (
 		<div className="space-y-3">
 			<p className="text-sm text-muted-foreground">

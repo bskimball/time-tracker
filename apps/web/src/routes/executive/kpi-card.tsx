@@ -163,7 +163,9 @@ export function KPICard({
 	return (
 		<Card
 			className={`h-full group transition-all duration-300 relative overflow-hidden ${
-				dominant ? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" : ""
+				dominant
+					? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+					: ""
 			}`}
 		>
 			<CardBody

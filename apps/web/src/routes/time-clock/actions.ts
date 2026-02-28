@@ -14,9 +14,7 @@ export type ClockActionState = {
 	message?: string;
 } | null;
 
-type WorkerSelfTaskContext =
-	| { ok: true; employeeId: string }
-	| { ok: false; error: string };
+type WorkerSelfTaskContext = { ok: true; employeeId: string } | { ok: false; error: string };
 
 async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
 	const { user } = await validateRequest();
@@ -125,7 +123,9 @@ export async function switchSelfTaskAction(
 		return { success: false, error: context.error };
 	}
 
-	const taskTypeId = String(formData.get("newTaskTypeId") || formData.get("taskTypeId") || "").trim();
+	const taskTypeId = String(
+		formData.get("newTaskTypeId") || formData.get("taskTypeId") || ""
+	).trim();
 	const reasonRaw = formData.get("reason");
 	const reason = reasonRaw ? String(reasonRaw).trim() : null;
 
@@ -234,7 +234,9 @@ export async function endSelfTaskAction(
 		where: { id: activeAssignment.id },
 		data: {
 			endTime: new Date(),
-			notes: notes ? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim() : activeAssignment.notes,
+			notes: notes
+				? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim()
+				: activeAssignment.notes,
 		},
 	});
 

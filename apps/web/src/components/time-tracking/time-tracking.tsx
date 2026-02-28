@@ -509,10 +509,10 @@ function WorkerTaskControls({
 		startSelfTaskAction,
 		null
 	);
-	const [switchState, switchFormAction, isSwitchPending] = useActionState<ClockActionState, FormData>(
-		switchSelfTaskAction,
-		null
-	);
+	const [switchState, switchFormAction, isSwitchPending] = useActionState<
+		ClockActionState,
+		FormData
+	>(switchSelfTaskAction, null);
 	const [endState, endFormAction, isEndPending] = useActionState<ClockActionState, FormData>(
 		endSelfTaskAction,
 		null
@@ -570,7 +570,8 @@ function WorkerTaskControls({
 
 			{activeTask && (
 				<div className="text-xs text-muted-foreground">
-					Current task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+					Current task:{" "}
+					<span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
 					{activeTask.stationName ? ` @ ${activeTask.stationName}` : ""}
 				</div>
 			)}
@@ -592,12 +593,12 @@ function WorkerTaskControls({
 
 				{activeTask ? (
 					<div className="flex flex-wrap gap-2">
-					<form
-						action={switchFormAction}
-						onSubmit={() => {
-							resetSelectedTask();
-						}}
-					>
+						<form
+							action={switchFormAction}
+							onSubmit={() => {
+								resetSelectedTask();
+							}}
+						>
 							<input type="hidden" name="employeeId" value={employeeId} />
 							<input type="hidden" name="taskTypeId" value={selectedTaskId} />
 							<input type="hidden" name="newTaskTypeId" value={selectedTaskId} />
@@ -728,13 +729,20 @@ function ActiveSessions({
 													</span>
 												)}
 											</div>
-											<p className="text-sm text-muted-foreground">{log.Station?.name || "No station"}</p>
+											<p className="text-sm text-muted-foreground">
+												{log.Station?.name || "No station"}
+											</p>
 											{activeTask && (
 												<p className="text-xs text-muted-foreground">
-													Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+													Task:{" "}
+													<span className="font-medium text-foreground">
+														{activeTask.taskTypeName}
+													</span>
 												</p>
 											)}
-											<p className="text-xs">Started: {new Date(log.startTime).toLocaleTimeString()}</p>
+											<p className="text-xs">
+												Started: {new Date(log.startTime).toLocaleTimeString()}
+											</p>
 											<ElapsedTime startTime={log.startTime} />
 										</div>
 										<div className="flex gap-2">
@@ -824,93 +832,93 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 			<ModalOverlay className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
 				<Modal className="bg-base-100 rounded-lg shadow-xl w-full max-w-md mx-4">
 					<Dialog className="outline-none relative">
-							<form action={formAction} className="p-4">
-								<input type="hidden" name="logId" value={log.id} />
-								<h3 className="text-lg font-bold mb-4">Edit Time Log</h3>
+						<form action={formAction} className="p-4">
+							<input type="hidden" name="logId" value={log.id} />
+							<h3 className="text-lg font-bold mb-4">Edit Time Log</h3>
 
-								<div className="flex flex-col gap-1 mb-3">
-									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-foreground">Start Time</span>
-									</label>
-									<input
-										type="datetime-local"
-										name="startTime"
-										defaultValue={formatDateTimeLocal(log.startTime)}
-										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-										required
-									/>
-								</div>
+							<div className="flex flex-col gap-1 mb-3">
+								<label className="flex items-center justify-between">
+									<span className="text-sm font-medium text-foreground">Start Time</span>
+								</label>
+								<input
+									type="datetime-local"
+									name="startTime"
+									defaultValue={formatDateTimeLocal(log.startTime)}
+									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									required
+								/>
+							</div>
 
-								<div className="flex flex-col gap-1 mb-3">
-									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-foreground">End Time</span>
-									</label>
-									<input
-										type="datetime-local"
-										name="endTime"
-										defaultValue={formatDateTimeLocal(log.endTime)}
-										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-									/>
-								</div>
+							<div className="flex flex-col gap-1 mb-3">
+								<label className="flex items-center justify-between">
+									<span className="text-sm font-medium text-foreground">End Time</span>
+								</label>
+								<input
+									type="datetime-local"
+									name="endTime"
+									defaultValue={formatDateTimeLocal(log.endTime)}
+									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+								/>
+							</div>
 
-								<div className="flex flex-col gap-1 mb-3">
-									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-foreground">Type</span>
-									</label>
-									<select
-										name="type"
-										defaultValue={log.type}
-										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-										required
-									>
-										<option value="WORK">Work</option>
-										<option value="BREAK">Break</option>
-									</select>
-								</div>
+							<div className="flex flex-col gap-1 mb-3">
+								<label className="flex items-center justify-between">
+									<span className="text-sm font-medium text-foreground">Type</span>
+								</label>
+								<select
+									name="type"
+									defaultValue={log.type}
+									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									required
+								>
+									<option value="WORK">Work</option>
+									<option value="BREAK">Break</option>
+								</select>
+							</div>
 
-								<div className="flex flex-col gap-1 mb-3">
-									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-foreground">Station</span>
-									</label>
-									<select
-										name="stationId"
-										defaultValue={log.stationId || ""}
-										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-									>
-										<option value="">None</option>
-										{stations.map((st) => (
-											<option key={st.id} value={st.id}>
-												{st.name}
-											</option>
-										))}
-									</select>
-								</div>
+							<div className="flex flex-col gap-1 mb-3">
+								<label className="flex items-center justify-between">
+									<span className="text-sm font-medium text-foreground">Station</span>
+								</label>
+								<select
+									name="stationId"
+									defaultValue={log.stationId || ""}
+									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+								>
+									<option value="">None</option>
+									{stations.map((st) => (
+										<option key={st.id} value={st.id}>
+											{st.name}
+										</option>
+									))}
+								</select>
+							</div>
 
-								<div className="flex flex-col gap-1 mb-4">
-									<label className="flex items-center justify-between">
-										<span className="text-sm font-medium text-foreground">Note</span>
-									</label>
-									<textarea
-										name="note"
-										defaultValue={log.note || ""}
-										className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-										rows={3}
-									/>
-								</div>
+							<div className="flex flex-col gap-1 mb-4">
+								<label className="flex items-center justify-between">
+									<span className="text-sm font-medium text-foreground">Note</span>
+								</label>
+								<textarea
+									name="note"
+									defaultValue={log.note || ""}
+									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									rows={3}
+								/>
+							</div>
 
-								{state?.error && (
-									<Alert variant="error" className="relative mb-3 text-sm">
-										{state.error}
-									</Alert>
-								)}
+							{state?.error && (
+								<Alert variant="error" className="relative mb-3 text-sm">
+									{state.error}
+								</Alert>
+							)}
 
-								<div className="flex justify-end gap-2">
-									<Button type="button" variant="ghost" onPress={() => setIsOpen(false)}>
-										Cancel
-									</Button>
-									<EditSubmitButton />
-								</div>
-							</form>
+							<div className="flex justify-end gap-2">
+								<Button type="button" variant="ghost" onPress={() => setIsOpen(false)}>
+									Cancel
+								</Button>
+								<EditSubmitButton />
+							</div>
+						</form>
 					</Dialog>
 				</Modal>
 			</ModalOverlay>
@@ -1445,7 +1453,9 @@ function DeferredTimeHistory({
 		? use(completedLogsPromise)
 		: (completedLogs ?? []);
 
-	return <TimeHistory completedLogs={resolvedCompletedLogs} stations={stations} employees={employees} />;
+	return (
+		<TimeHistory completedLogs={resolvedCompletedLogs} stations={stations} employees={employees} />
+	);
 }
 
 function TimeHistoryFallback() {

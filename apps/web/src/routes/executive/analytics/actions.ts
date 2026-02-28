@@ -405,7 +405,10 @@ export async function getCostBreakdownData(timeRange: AnalyticsTimeRange = "week
  */
 export async function getStationOccupancyData() {
 	await ensureAnalyticsDataReady();
-	const stations = await db.station.findMany({ where: { isActive: true }, orderBy: { name: "asc" } });
+	const stations = await db.station.findMany({
+		where: { isActive: true },
+		orderBy: { name: "asc" },
+	});
 	const [activeWorkLogs, activeAssignments] = await Promise.all([
 		db.timeLog.findMany({
 			where: { type: "WORK", endTime: null, deletedAt: null },
@@ -687,7 +690,10 @@ export async function getCapacityUtilizationData(_timeRange: AnalyticsTimeRange 
 		getOperationalNumber("OPTIMAL_UTILIZATION_PERCENT", 80),
 		getOperationalNumber("LABOR_HOURLY_RATE", 18.5),
 	]);
-	const stations = await db.station.findMany({ where: { isActive: true }, orderBy: { name: "asc" } });
+	const stations = await db.station.findMany({
+		where: { isActive: true },
+		orderBy: { name: "asc" },
+	});
 	const [activeWorkLogs, activeAssignments, todayShifts] = await Promise.all([
 		db.timeLog.findMany({
 			where: { type: "WORK", endTime: null, deletedAt: null },
@@ -730,9 +736,13 @@ export async function getCapacityUtilizationData(_timeRange: AnalyticsTimeRange 
 	const stationRows = stations.map((station) => {
 		const currentStaff = currentByStation.get(station.id)?.size ?? 0;
 		const maxCapacity = station.capacity ?? Math.max(currentStaff, 1);
-		const requiredStaff = requiredByStation.get(station.id) ?? Math.max(1, Math.ceil(maxCapacity * 0.7));
+		const requiredStaff =
+			requiredByStation.get(station.id) ?? Math.max(1, Math.ceil(maxCapacity * 0.7));
 		const utilization = Number(((currentStaff / Math.max(maxCapacity, 1)) * 100).toFixed(0));
-		const recommendedStaff = Math.min(maxCapacity, Math.max(requiredStaff, Math.ceil(maxCapacity * 0.8)));
+		const recommendedStaff = Math.min(
+			maxCapacity,
+			Math.max(requiredStaff, Math.ceil(maxCapacity * 0.8))
+		);
 
 		return {
 			name: station.name,
@@ -817,8 +827,10 @@ export async function getTrendAnalysisData(timeRange: AnalyticsTimeRange = "week
 	}
 
 	const peakDay =
-		Array.from(dayCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? format(new Date(), "EEEE");
-	const peakShift = Array.from(shiftCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Morning";
+		Array.from(dayCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ??
+		format(new Date(), "EEEE");
+	const peakShift =
+		Array.from(shiftCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Morning";
 
 	const productivityChange = changePercent(productivityCurrent, productivityPrevious);
 	const costChange = changePercent(costCurrent, costPrevious);

@@ -68,7 +68,10 @@ export function TaskCompletionForm({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-live="polite">
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			aria-live="polite"
+		>
 			<Card className="relative w-full max-h-[90vh] max-w-lg overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Complete Task: {assignment.TaskType.name}</CardTitle>
@@ -76,8 +79,16 @@ export function TaskCompletionForm({
 				<CardBody>
 					<Form onSubmit={handleSubmit} className="space-y-4">
 						<div className="text-sm text-muted-foreground mb-4">
-							<p>Employee: <span className="text-foreground font-medium">{assignment.Employee.name}</span></p>
-							<p>Started: <span className="text-foreground font-medium">{new Date(assignment.startTime).toLocaleTimeString()}</span></p>
+							<p>
+								Employee:{" "}
+								<span className="text-foreground font-medium">{assignment.Employee.name}</span>
+							</p>
+							<p>
+								Started:{" "}
+								<span className="text-foreground font-medium">
+									{new Date(assignment.startTime).toLocaleTimeString()}
+								</span>
+							</p>
 						</div>
 
 						<div>
@@ -86,7 +97,9 @@ export function TaskCompletionForm({
 								type="number"
 								min="0"
 								value={formData.unitsCompleted}
-								onChange={(e) => setFormData((prev) => ({ ...prev, unitsCompleted: e.target.value }))}
+								onChange={(e) =>
+									setFormData((prev) => ({ ...prev, unitsCompleted: e.target.value }))
+								}
 								placeholder="0"
 							/>
 							{assignment.TaskType.estimatedMinutesPerUnit && (

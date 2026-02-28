@@ -19,17 +19,17 @@ type ConfigEntry = {
 	description: string;
 	validation:
 		| {
-			type: "number";
-			min: number;
-			max: number;
-			step: string;
-			unit: string;
+				type: "number";
+				min: number;
+				max: number;
+				step: string;
+				unit: string;
 		  }
 		| {
-			type: "enum";
-			options: readonly string[];
-			defaultValue: string;
-			unit: string;
+				type: "enum";
+				options: readonly string[];
+				defaultValue: string;
+				unit: string;
 		  };
 };
 
@@ -43,7 +43,10 @@ function SaveButton() {
 }
 
 export function OperationalConfigManager({ initialEntries }: { initialEntries: ConfigEntry[] }) {
-	const [state, action] = useActionState<OperationalConfigState, FormData>(updateOperationalConfig, null);
+	const [state, action] = useActionState<OperationalConfigState, FormData>(
+		updateOperationalConfig,
+		null
+	);
 
 	const activeEntries = initialEntries.map((entry) => {
 		const updated = state?.entries?.find((item) => item.key === entry.key);
@@ -66,12 +69,12 @@ export function OperationalConfigManager({ initialEntries }: { initialEntries: C
 				</CardHeader>
 				<CardBody className="space-y-2 text-sm text-muted-foreground">
 					<p>
-						These values drive cost calculations, utilization targets, and KPI threshold behavior across
-						the executive and manager dashboards.
+						These values drive cost calculations, utilization targets, and KPI threshold behavior
+						across the executive and manager dashboards.
 					</p>
 					<p>
-						Changes take effect immediately for new requests. Keep values aligned with your finance and
-						operations policy.
+						Changes take effect immediately for new requests. Keep values aligned with your finance
+						and operations policy.
 					</p>
 				</CardBody>
 			</Card>

@@ -393,10 +393,10 @@ export function ReportsManager({
 									))}
 									{data.productivityData.length === 0 && (
 										<tr>
-									<td
-										colSpan={7}
-										className="p-12 text-center text-muted-foreground font-heading text-sm"
-									>
+											<td
+												colSpan={7}
+												className="p-12 text-center text-muted-foreground font-heading text-sm"
+											>
 												No data found for the selected period.
 											</td>
 										</tr>

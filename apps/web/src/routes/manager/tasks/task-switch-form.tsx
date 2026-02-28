@@ -69,7 +69,10 @@ export function TaskSwitchForm({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-live="polite">
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			aria-live="polite"
+		>
 			<Card className="relative w-full max-h-[90vh] max-w-lg overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Switch Task</CardTitle>
@@ -77,9 +80,17 @@ export function TaskSwitchForm({
 				<CardBody>
 					<Form onSubmit={handleSubmit} className="space-y-4">
 						<div className="text-sm text-muted-foreground mb-4 p-3 bg-muted/20 rounded border border-border/50">
-							<p>Employee: <span className="text-foreground font-medium">{assignment.Employee.name}</span></p>
-							<p>Current Task: <span className="text-foreground font-medium">{assignment.TaskType.name}</span></p>
-							<p className="text-xs mt-1">Switching will complete the current task and start a new one.</p>
+							<p>
+								Employee:{" "}
+								<span className="text-foreground font-medium">{assignment.Employee.name}</span>
+							</p>
+							<p>
+								Current Task:{" "}
+								<span className="text-foreground font-medium">{assignment.TaskType.name}</span>
+							</p>
+							<p className="text-xs mt-1">
+								Switching will complete the current task and start a new one.
+							</p>
 						</div>
 
 						<SimpleSelect

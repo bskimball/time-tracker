@@ -54,7 +54,10 @@ export function TaskTypeEditForm({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-live="polite">
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+			aria-live="polite"
+		>
 			<Card className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto">
 				<CardHeader>
 					<div className="flex items-center justify-between gap-2">
@@ -81,18 +84,16 @@ export function TaskTypeEditForm({
 						<Input
 							label="Description"
 							value={formData.description}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, description: e.target.value }))
-							}
+							onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
 							placeholder="Optional description"
 						/>
 
 						<div>
 							<Input
-							label="Estimated Minutes Per Unit"
-							type="number"
-							step="0.1"
-							min="0.1"
+								label="Estimated Minutes Per Unit"
+								type="number"
+								step="0.1"
+								min="0.1"
 								value={formData.estimatedMinutesPerUnit}
 								onChange={(e) =>
 									setFormData((prev) => ({

@@ -88,8 +88,7 @@ describe("GET /manager-stream", () => {
 		expect(firstChunk.done).toBe(false);
 		const secondPreludeChunk = await reader!.read();
 		expect(secondPreludeChunk.done).toBe(false);
-		const preludeText =
-			decoder.decode(firstChunk.value) + decoder.decode(secondPreludeChunk.value);
+		const preludeText = decoder.decode(firstChunk.value) + decoder.decode(secondPreludeChunk.value);
 		expect(preludeText).toContain("retry: 2000");
 		expect(preludeText).toContain("latest_event_id=42");
 

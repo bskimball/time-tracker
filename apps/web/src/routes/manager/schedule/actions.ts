@@ -1,14 +1,6 @@
 "use server";
 
-import {
-	addDays,
-	endOfDay,
-	endOfWeek,
-	isValid,
-	parseISO,
-	startOfDay,
-	startOfWeek,
-} from "date-fns";
+import { addDays, endOfDay, endOfWeek, isValid, parseISO, startOfDay, startOfWeek } from "date-fns";
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
@@ -156,10 +148,7 @@ export async function getScheduleData(
 					},
 				},
 			},
-			orderBy: [
-				{ shift: { startTime: "asc" } },
-				{ employee: { name: "asc" } },
-			],
+			orderBy: [{ shift: { startTime: "asc" } }, { employee: { name: "asc" } }],
 		});
 	};
 
@@ -336,25 +325,38 @@ export async function getScheduleData(
 						startTime: true,
 						endTime: true,
 					},
-			  })
+				})
 			: [];
 
 	const dayHoursByEmployee = new Map<string, number>();
 	const weekHoursByEmployee = new Map<string, number>();
 
 	for (const log of timeLogsForLimits) {
-		const dayHours = hoursInRange(log.startTime, log.endTime, selectedDayStart, selectedDayEnd, now);
+		const dayHours = hoursInRange(
+			log.startTime,
+			log.endTime,
+			selectedDayStart,
+			selectedDayEnd,
+			now
+		);
 		const weekHours = hoursInRange(log.startTime, log.endTime, weekStart, weekEnd, now);
 		if (dayHours > 0) {
-			dayHoursByEmployee.set(log.employeeId, (dayHoursByEmployee.get(log.employeeId) ?? 0) + dayHours);
+			dayHoursByEmployee.set(
+				log.employeeId,
+				(dayHoursByEmployee.get(log.employeeId) ?? 0) + dayHours
+			);
 		}
 		if (weekHours > 0) {
-			weekHoursByEmployee.set(log.employeeId, (weekHoursByEmployee.get(log.employeeId) ?? 0) + weekHours);
+			weekHoursByEmployee.set(
+				log.employeeId,
+				(weekHoursByEmployee.get(log.employeeId) ?? 0) + weekHours
+			);
 		}
 	}
 
 	const selectedDateKey = selectedDayStart.toISOString().slice(0, 10);
-	const selectedDayEntries = days.find((day) => day.date.startsWith(selectedDateKey))?.entries ?? [];
+	const selectedDayEntries =
+		days.find((day) => day.date.startsWith(selectedDateKey))?.entries ?? [];
 
 	const stationNameById = new Map<string, string>(
 		stations.map((station) => [station.id, String(station.name)])
@@ -387,7 +389,10 @@ export async function getScheduleData(
 
 	for (const day of days) {
 		for (const entry of day.entries) {
-			weekPlannedByStation.set(entry.stationId, (weekPlannedByStation.get(entry.stationId) ?? 0) + 1);
+			weekPlannedByStation.set(
+				entry.stationId,
+				(weekPlannedByStation.get(entry.stationId) ?? 0) + 1
+			);
 		}
 	}
 
@@ -395,7 +400,10 @@ export async function getScheduleData(
 		if (!active.currentStationId) {
 			continue;
 		}
-		actualByStation.set(active.currentStationId, (actualByStation.get(active.currentStationId) ?? 0) + 1);
+		actualByStation.set(
+			active.currentStationId,
+			(actualByStation.get(active.currentStationId) ?? 0) + 1
+		);
 	}
 
 	const stationGaps: StationGapInsight[] = stationIds

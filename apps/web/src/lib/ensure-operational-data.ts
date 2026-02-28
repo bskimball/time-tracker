@@ -72,7 +72,10 @@ export async function ensureOperationalDataSeeded() {
 async function seedOperationalData() {
 	await ensureOperationalConfigSeeded();
 
-	const [stationCount, employeeCount] = await Promise.all([db.station.count(), db.employee.count()]);
+	const [stationCount, employeeCount] = await Promise.all([
+		db.station.count(),
+		db.employee.count(),
+	]);
 
 	if (stationCount === 0) {
 		await db.station.createMany({
@@ -157,17 +160,26 @@ async function seedOperationalData() {
 		}
 	}
 
-	const [taskTypeCount, shiftCount, shiftAssignmentCount, taskAssignmentCount, metricCount, timeLogCount] =
-		await Promise.all([
+	const [
+		taskTypeCount,
+		shiftCount,
+		shiftAssignmentCount,
+		taskAssignmentCount,
+		metricCount,
+		timeLogCount,
+	] = await Promise.all([
 		db.taskType.count(),
 		db.shift.count(),
 		db.shiftAssignment.count(),
 		db.taskAssignment.count(),
 		db.performanceMetric.count(),
 		db.timeLog.count(),
-		]);
+	]);
 
-	const stations = await db.station.findMany({ where: { isActive: true }, orderBy: { name: "asc" } });
+	const stations = await db.station.findMany({
+		where: { isActive: true },
+		orderBy: { name: "asc" },
+	});
 	const activeEmployees = await db.employee.findMany({
 		where: { status: "ACTIVE" },
 		orderBy: { name: "asc" },
@@ -203,15 +215,43 @@ async function seedOperationalData() {
 				shiftRows.push(
 					{
 						stationId: station.id,
-						startTime: new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 6, 0, 0),
-						endTime: new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 14, 0, 0),
+						startTime: new Date(
+							dayDate.getFullYear(),
+							dayDate.getMonth(),
+							dayDate.getDate(),
+							6,
+							0,
+							0
+						),
+						endTime: new Date(
+							dayDate.getFullYear(),
+							dayDate.getMonth(),
+							dayDate.getDate(),
+							14,
+							0,
+							0
+						),
 						requiredHeadcount: Math.max(1, Math.ceil(capacity * 0.6)),
 						shiftType: "MORNING",
 					},
 					{
 						stationId: station.id,
-						startTime: new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 14, 0, 0),
-						endTime: new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 22, 0, 0),
+						startTime: new Date(
+							dayDate.getFullYear(),
+							dayDate.getMonth(),
+							dayDate.getDate(),
+							14,
+							0,
+							0
+						),
+						endTime: new Date(
+							dayDate.getFullYear(),
+							dayDate.getMonth(),
+							dayDate.getDate(),
+							22,
+							0,
+							0
+						),
 						requiredHeadcount: Math.max(1, Math.ceil(capacity * 0.4)),
 						shiftType: "SWING",
 					}
@@ -288,7 +328,7 @@ async function seedOperationalData() {
 				const station = stationById.get(employee.defaultStationId);
 				const baseline = station?.name === "FILLING" ? 32 : station?.name === "RECEIVING" ? 20 : 26;
 				const hoursWorked = 7 + ((index + day) % 4) * 0.5;
-				const unitsProcessed = Math.round(hoursWorked * (baseline + ((index + day) % 5 - 2)));
+				const unitsProcessed = Math.round(hoursWorked * (baseline + (((index + day) % 5) - 2)));
 				const overtimeHours = Math.max(0, hoursWorked - 8);
 
 				await db.performanceMetric.create({

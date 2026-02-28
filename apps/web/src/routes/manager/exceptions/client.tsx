@@ -13,7 +13,12 @@ import {
 	SimpleSelect,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
-import type { ExceptionQueueData, ExceptionSeverity, ExceptionType, ManagerExceptionItem } from "./actions";
+import type {
+	ExceptionQueueData,
+	ExceptionSeverity,
+	ExceptionType,
+	ManagerExceptionItem,
+} from "./actions";
 
 const exceptionTypeOptions: Array<{ value: ExceptionType; label: string }> = [
 	{ value: "MISSING_PUNCH", label: "Missing Punch" },
@@ -33,10 +38,9 @@ function severityRank(severity: ExceptionSeverity) {
 	return 2;
 }
 
-function getSeverityBadgeVariant(severity: ExceptionSeverity):
-	| "destructive"
-	| "primary"
-	| "secondary" {
+function getSeverityBadgeVariant(
+	severity: ExceptionSeverity
+): "destructive" | "primary" | "secondary" {
 	if (severity === "CRITICAL") return "destructive";
 	if (severity === "HIGH") return "primary";
 	return "secondary";
@@ -80,13 +84,7 @@ function getDueLabel(dueAt: string, now: Date) {
 	};
 }
 
-function TypeCountCard({
-	label,
-	count,
-}: {
-	label: string;
-	count: number;
-}) {
+function TypeCountCard({ label, count }: { label: string; count: number }) {
 	return (
 		<div className="rounded-[2px] border border-border/50 bg-muted/20 p-3">
 			<p className="text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
@@ -217,13 +215,8 @@ export function ExceptionQueueView({ initialData }: { initialData: ExceptionQueu
 						<SimpleSelect
 							label="Type"
 							value={typeFilter}
-							onChange={(value) =>
-								setTypeFilter((value as "ALL" | ExceptionType | null) ?? "ALL")
-							}
-							options={[
-								{ value: "ALL", label: "All Types" },
-								...exceptionTypeOptions,
-							]}
+							onChange={(value) => setTypeFilter((value as "ALL" | ExceptionType | null) ?? "ALL")}
+							options={[{ value: "ALL", label: "All Types" }, ...exceptionTypeOptions]}
 						/>
 						<SimpleSelect
 							label="Severity"
@@ -231,10 +224,7 @@ export function ExceptionQueueView({ initialData }: { initialData: ExceptionQueu
 							onChange={(value) =>
 								setSeverityFilter((value as "ALL" | ExceptionSeverity | null) ?? "ALL")
 							}
-							options={[
-								{ value: "ALL", label: "All Severities" },
-								...severityOptions,
-							]}
+							options={[{ value: "ALL", label: "All Severities" }, ...severityOptions]}
 						/>
 						<SimpleSelect
 							label="Station"
@@ -338,11 +328,15 @@ function ExceptionRow({ item }: { item: ManagerExceptionItem }) {
 			<td className="p-3 align-top">
 				<div className="space-y-1">
 					<p className="font-medium">{item.employeeName ?? "Station-level exception"}</p>
-					<p className="text-xs text-muted-foreground">{item.stationName ?? "No station context"}</p>
+					<p className="text-xs text-muted-foreground">
+						{item.stationName ?? "No station context"}
+					</p>
 					<p className="text-xs font-mono text-muted-foreground">{item.contextLabel}</p>
 				</div>
 			</td>
-			<td className="p-3 align-top text-xs text-muted-foreground">{formatDateTime(item.detectedAt)}</td>
+			<td className="p-3 align-top text-xs text-muted-foreground">
+				{formatDateTime(item.detectedAt)}
+			</td>
 			<td className="p-3 align-top">
 				<p className="max-w-[24ch] text-sm leading-relaxed">{item.recommendedAction}</p>
 			</td>

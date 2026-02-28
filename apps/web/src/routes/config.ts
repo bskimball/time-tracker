@@ -114,26 +114,26 @@ export function routes(): RSCRouteConfig {
 								},
 							],
 						},
-					{
-						id: "manager-timesheets",
-						path: "timesheets",
-						lazy: () => import("./manager/timesheets/route.tsx"),
-					},
-					{
-						id: "manager-reports",
-						path: "reports",
-						lazy: () => import("./manager/reports/route.tsx"),
-					},
-					{
-						id: "manager-schedule",
-						path: "schedule",
-						lazy: () => import("./manager/schedule/route.tsx"),
-					},
-					{
-						id: "manager-exceptions",
-						path: "exceptions",
-						lazy: () => import("./manager/exceptions/route.tsx"),
-					},
+						{
+							id: "manager-timesheets",
+							path: "timesheets",
+							lazy: () => import("./manager/timesheets/route.tsx"),
+						},
+						{
+							id: "manager-reports",
+							path: "reports",
+							lazy: () => import("./manager/reports/route.tsx"),
+						},
+						{
+							id: "manager-schedule",
+							path: "schedule",
+							lazy: () => import("./manager/schedule/route.tsx"),
+						},
+						{
+							id: "manager-exceptions",
+							path: "exceptions",
+							lazy: () => import("./manager/exceptions/route.tsx"),
+						},
 						{
 							id: "manager-tasks",
 							path: "tasks",
