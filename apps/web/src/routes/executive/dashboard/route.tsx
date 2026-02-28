@@ -309,7 +309,6 @@ export default async function Component() {
 							<CardHeader className="border-b border-border/50 bg-transparent relative z-10">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
-										<LedIndicator active />
 										<CardTitle className="uppercase tracking-widest font-industrial text-sm text-zinc-300">
 											{heroKpiData.title}
 										</CardTitle>
