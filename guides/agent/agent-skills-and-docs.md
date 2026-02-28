@@ -2,10 +2,12 @@
 
 This guide explains two expectations:
 
-1. Use the assistant’s *skills/tools* when they improve correctness and speed.
+1. Use the assistant’s _skills/tools_ when they improve correctness and speed.
 2. Keep this repo’s agent docs accurate by updating or adding guides when you learn something new.
 
 ## Use skills/tools when appropriate
+
+Mandatory skill loading rules live in [core/required-skills.md](./core/required-skills.md). Follow those first.
 
 ### Prefer evidence over guessing
 
@@ -24,18 +26,11 @@ Run the smallest check that gives confidence, then expand if needed:
 
 If you changed behavior (not just types), add or update a test when there’s an obvious existing test location.
 
-### Apply the right “role”/skill
+### Skill selection heuristic
 
-When you’re stuck, explicitly switch modes and use the matching skill:
-
-- **Frontend Developer**: component boundaries (server vs client), forms, design-system usage.
-- **Frontend Design**: layout, spacing, responsive tweaks, accessibility basics.
-- **Database Engineer**: Prisma schema/migrations, query shape, index/perf implications.
-- **API Developer**: route handlers, validation (e.g. Zod), error handling.
-- **Data Analyst**: usage patterns, constraints, edge cases, reporting needs.
-- **Product Management**: clarify requirements, acceptance criteria, user flows.
-
-Keep the scope tight: pick 1–2 skills that match the task and avoid overbuilding.
+- Use the smallest set of skills needed for the task.
+- Prefer one implementation skill plus one review skill when both are needed.
+- For UI changes, include a UI/UX review pass before finalizing.
 
 ## Update guides when you discover a pitfall
 

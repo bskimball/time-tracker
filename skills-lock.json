@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "hono": {
+      "source": "yusukebe/hono-skill",
+      "sourceType": "github",
+      "computedHash": "8ed1510d7e5cebe8b93717870ccd9ca0d6190335f06ff89b3454e7a3f1afd23d"
+    },
+    "tailwind-design-system": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "c88178d861802fa836be54e377e82bb67899b6c378807679a1feecd21bf63cb8"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "61f8c307aa8ce0c4c52da8886d42e344dab83f76f9b5360cf8923b25fb1d67bb"
+    }
+  }
+}

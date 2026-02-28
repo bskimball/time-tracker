@@ -4,11 +4,6 @@
 
 This is a monorepo with a React Router web app (RSC Data mode), an Astro marketing site, a Starlight docs site, and a shared design system package.
 
-## Tooling baseline
-
-- **Node.js**: `>=22.6.0` (web app engines requirement)
-- **Package manager**: `npm` preferred; `pnpm` supported
-
 ## Workspaces
 
 - `apps/web` — main application
@@ -16,18 +11,7 @@ This is a monorepo with a React Router web app (RSC Data mode), an Astro marketi
 - `apps/docs` — customer docs site (Astro Starlight)
 - `packages/design-system` — shared UI components
 
-## Common commands (repo root)
-
-- Dev (all): `npm run dev` (watches design-system + web + marketing + docs)
-- Build all: `npm run build`
-- Lint all: `npm run lint`
-- Typecheck all: `npm run typecheck`
-
-If using pnpm, the equivalents are typically:
-- `pnpm -r dev`
-- `pnpm -r build`
-- `pnpm -r lint`
-- `pnpm -r typecheck`
+For runtime and command baselines, use [core/runtime-and-commands.md](./core/runtime-and-commands.md).
 
 ## Local stack (recommended)
 
@@ -39,6 +23,12 @@ Use Docker Compose when you need a real database:
 ### Database
 
 - **Prisma + PostgreSQL** (see `docker-compose.yml` and `prisma/schema.prisma`)
+
+## Task routing
+
+- If the task is in `apps/web`, read [web-rsc-data-mode.md](./web-rsc-data-mode.md) before editing.
+- If the task touches shared UI or tokens, read [design-system.md](./design-system.md).
+- If the task changes auth, read [auth.md](./auth.md).
 
 ## Where docs live
 
