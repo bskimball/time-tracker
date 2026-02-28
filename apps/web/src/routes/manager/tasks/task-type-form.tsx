@@ -68,7 +68,10 @@ export function TaskTypeForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" aria-live="polite">
+		<div
+			className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+			aria-live="polite"
+		>
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Task Type</CardTitle>

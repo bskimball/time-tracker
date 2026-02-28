@@ -107,8 +107,7 @@ export async function getProductivityReport(
 		let duration = 0;
 		if (log.endTime) {
 			duration =
-				(new Date(log.endTime).getTime() - new Date(log.startTime).getTime()) /
-				(1000 * 60 * 60);
+				(new Date(log.endTime).getTime() - new Date(log.startTime).getTime()) / (1000 * 60 * 60);
 		}
 
 		const existing = productivityMap.get(key);
@@ -414,9 +413,7 @@ export async function exportToCSV(
 
 	// Create data rows
 	const dataRows = data.map((row) =>
-		headers
-			.map((h) => formatCsvValue(getNestedValue(row, h.key)))
-			.join(",")
+		headers.map((h) => formatCsvValue(getNestedValue(row, h.key))).join(",")
 	);
 
 	return [headerRow, ...dataRows].join("\n");

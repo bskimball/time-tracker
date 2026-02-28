@@ -9,18 +9,18 @@ export interface AppNavLink {
 	label: string;
 	to: string;
 	icon?:
-	| "dashboard"
-	| "monitor"
-	| "users"
-	| "timesheets"
-	| "reports"
-	| "schedule"
-	| "tasks"
-	| "crown"
-	| "analytics"
-	| "settings"
-	| "clipboard"
-	| "briefcase";
+		| "dashboard"
+		| "monitor"
+		| "users"
+		| "timesheets"
+		| "reports"
+		| "schedule"
+		| "tasks"
+		| "crown"
+		| "analytics"
+		| "settings"
+		| "clipboard"
+		| "briefcase";
 }
 
 interface AppLayoutProps {

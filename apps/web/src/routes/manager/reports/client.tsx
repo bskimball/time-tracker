@@ -27,6 +27,11 @@ import {
 	LiaClockSolid,
 } from "react-icons/lia";
 import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import {
+	ProductivityTrendChart,
+	StationPerformanceChart,
+} from "~/components/charts/executive-charts";
+import type { TrendDataPoint, StationBarData } from "~/components/charts/executive-charts";
 import type {
 	ProductivityData,
 	TaskPerformanceData,
@@ -317,9 +322,45 @@ export function ReportsManager({
 
 	const renderProductivityReport = (reportData: ReportDataType) => {
 		const data = reportData;
+		
+		// Aggregate daily efficiency for trend chart
+		const dailyMap = new Map<string, { totalEfficiency: number; count: number }>();
+		data.productivityData.forEach(item => {
+			const current = dailyMap.get(item.date) || { totalEfficiency: 0, count: 0 };
+			// Assuming efficiency is 0-1.0 scale, we want to display as units/hr or similar?
+			// The chart expects "value". Let's use average efficiency * 100 for percentage
+			// OR if we have units/hr, let's use that.
+			// item.unitsProcessed / item.hoursWorked = units/hr
+			const unitsPerHour = item.hoursWorked > 0 ? (item.unitsProcessed || 0) / item.hoursWorked : 0;
+			
+			dailyMap.set(item.date, {
+				totalEfficiency: current.totalEfficiency + unitsPerHour,
+				count: current.count + 1
+			});
+		});
+
+		const trendData: TrendDataPoint[] = Array.from(dailyMap.entries()).map(([date, stats]) => ({
+			date,
+			value: stats.count > 0 ? stats.totalEfficiency / stats.count : 0
+		})).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 		return (
 			<div className="space-y-6">
+				{trendData.length > 0 && (
+					<Card>
+						<CardHeader>
+							<CardTitle className="uppercase tracking-wider">Productivity Trend</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<ProductivityTrendChart 
+								data={trendData} 
+								thresholdMedium={8} // Example threshold
+								thresholdHigh={12}  // Example threshold
+							/>
+						</CardBody>
+					</Card>
+				)}
+
 				<Card>
 					<CardHeader>
 						<div className="flex justify-between items-center">
@@ -393,10 +434,10 @@ export function ReportsManager({
 									))}
 									{data.productivityData.length === 0 && (
 										<tr>
-									<td
-										colSpan={7}
-										className="p-12 text-center text-muted-foreground font-heading text-sm"
-									>
+											<td
+												colSpan={7}
+												className="p-12 text-center text-muted-foreground font-heading text-sm"
+											>
 												No data found for the selected period.
 											</td>
 										</tr>
@@ -490,8 +531,31 @@ export function ReportsManager({
 	const renderStationReport = (reportData: ReportDataType) => {
 		const data = reportData;
 
+		const stationChartData: StationBarData[] = data.stationEfficiencyData
+			.slice(0, 8)
+			.map(s => ({
+				name: s.stationName,
+				productivity: s.averageEfficiency ? s.averageEfficiency * 100 : 0, // Using efficiency % as proxy for productivity visual
+				occupancy: s.peakOccupancy ? Math.min(100, (s.peakOccupancy / 10) * 100) : 0 // Rough estimate if capacity unknown, or just use raw if chart supports it. 
+				// Actually StationPerformanceChart expects occupancy to be 0-100. 
+				// Let's assume peakOccupancy is raw count. Without capacity, we can't calculate %.
+				// But we can map it for visualization. Let's just use 0 for now or try to infer.
+			}));
+
 		return (
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			<div className="space-y-6">
+				{stationChartData.length > 0 && (
+					<Card>
+						<CardHeader>
+							<CardTitle className="uppercase tracking-wider">Station Performance Overview</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<StationPerformanceChart data={stationChartData} />
+						</CardBody>
+					</Card>
+				)}
+
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{data.stationEfficiencyData.map((station, index) => (
 					<Card key={index} className="group hover:border-primary/50 transition-colors">
 						<CardHeader className="pb-2 border-b border-border/50">

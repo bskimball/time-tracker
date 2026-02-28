@@ -6,7 +6,6 @@ import { cn } from "~/lib/cn";
 
 type Section = "productivity" | "labor-cost" | "trends" | "capacity" | "benchmarks";
 
-
 interface SectionTabsProps {
 	sections?: Array<{ id: Section; label: string }>;
 	className?: string;

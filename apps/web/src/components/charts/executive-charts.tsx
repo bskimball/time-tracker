@@ -247,10 +247,7 @@ export function StationPerformanceChart({ data, height = 240 }: StationPerforman
 				/>
 				<Bar dataKey="occupancy" name="Occ %" radius={[2, 2, 0, 0]} maxBarSize={28}>
 					{data.map((entry, index) => (
-						<Cell
-							key={`cell-${index}`}
-							fill={occupancyFill(entry.occupancy)}
-						/>
+						<Cell key={`cell-${index}`} fill={occupancyFill(entry.occupancy)} />
 					))}
 				</Bar>
 			</RechartsBarChart>

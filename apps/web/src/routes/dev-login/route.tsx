@@ -1,11 +1,7 @@
 import { db } from "../../lib/db";
 import { CreateAdminForm, LoginSubmitButton } from "./client";
 import { loginAsUser } from "./actions";
-import {
-	IndustrialHeader,
-	IndustrialPanel,
-	SafetyStripes,
-} from "@monorepo/design-system";
+import { IndustrialHeader, IndustrialPanel, SafetyStripes } from "@monorepo/design-system";
 import type { User } from "@prisma/client";
 
 // Fetch data directly in Server Component instead of using loader

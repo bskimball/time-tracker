@@ -74,131 +74,137 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 	const dayEnd = endOfToday(now);
 	const weekStart = startOfWeek(now);
 
-	const [activeEmployees, activeStations, activeTimeLogs, weeklyWorkLogs, activeAssignments, shiftsToday] =
-		await Promise.all([
-			db.employee.findMany({
-				where: { status: "ACTIVE" },
-				select: {
-					id: true,
-					name: true,
-					dailyHoursLimit: true,
-					weeklyHoursLimit: true,
-					defaultStationId: true,
-					defaultStation: {
-						select: { id: true, name: true },
+	const [
+		activeEmployees,
+		activeStations,
+		activeTimeLogs,
+		weeklyWorkLogs,
+		activeAssignments,
+		shiftsToday,
+	] = await Promise.all([
+		db.employee.findMany({
+			where: { status: "ACTIVE" },
+			select: {
+				id: true,
+				name: true,
+				dailyHoursLimit: true,
+				weeklyHoursLimit: true,
+				defaultStationId: true,
+				defaultStation: {
+					select: { id: true, name: true },
+				},
+			},
+			orderBy: { name: "asc" },
+		}),
+		db.station.findMany({
+			where: { isActive: true },
+			select: { id: true, name: true },
+			orderBy: { name: "asc" },
+		}),
+		db.timeLog.findMany({
+			where: {
+				endTime: null,
+				deletedAt: null,
+			},
+			include: {
+				Employee: {
+					select: {
+						id: true,
+						name: true,
+						status: true,
+						dailyHoursLimit: true,
+						weeklyHoursLimit: true,
+						defaultStation: { select: { id: true, name: true } },
 					},
 				},
-				orderBy: { name: "asc" },
-			}),
-			db.station.findMany({
-				where: { isActive: true },
-				select: { id: true, name: true },
-				orderBy: { name: "asc" },
-			}),
-			db.timeLog.findMany({
-				where: {
-					endTime: null,
-					deletedAt: null,
-				},
-				include: {
-					Employee: {
-						select: {
-							id: true,
-							name: true,
-							status: true,
-							dailyHoursLimit: true,
-							weeklyHoursLimit: true,
-							defaultStation: { select: { id: true, name: true } },
-						},
-					},
-					Station: {
-						select: {
-							id: true,
-							name: true,
-						},
+				Station: {
+					select: {
+						id: true,
+						name: true,
 					},
 				},
-				orderBy: { startTime: "asc" },
-			}),
-			db.timeLog.findMany({
-				where: {
-					type: "WORK",
-					deletedAt: null,
-					startTime: { gte: weekStart },
-				},
-				include: {
-					Employee: {
-						select: {
-							id: true,
-							name: true,
-							dailyHoursLimit: true,
-							weeklyHoursLimit: true,
-							defaultStation: { select: { id: true, name: true } },
-						},
-					},
-					Station: {
-						select: {
-							id: true,
-							name: true,
-						},
+			},
+			orderBy: { startTime: "asc" },
+		}),
+		db.timeLog.findMany({
+			where: {
+				type: "WORK",
+				deletedAt: null,
+				startTime: { gte: weekStart },
+			},
+			include: {
+				Employee: {
+					select: {
+						id: true,
+						name: true,
+						dailyHoursLimit: true,
+						weeklyHoursLimit: true,
+						defaultStation: { select: { id: true, name: true } },
 					},
 				},
-			}),
-			db.taskAssignment.findMany({
-				where: { endTime: null },
-				include: {
-					Employee: {
-						select: {
-							id: true,
-							name: true,
-							status: true,
-							dailyHoursLimit: true,
-							weeklyHoursLimit: true,
-							defaultStation: { select: { id: true, name: true } },
-						},
+				Station: {
+					select: {
+						id: true,
+						name: true,
 					},
-					TaskType: {
-						select: {
-							id: true,
-							name: true,
-							stationId: true,
-							Station: {
-								select: {
-									id: true,
-									name: true,
-								},
+				},
+			},
+		}),
+		db.taskAssignment.findMany({
+			where: { endTime: null },
+			include: {
+				Employee: {
+					select: {
+						id: true,
+						name: true,
+						status: true,
+						dailyHoursLimit: true,
+						weeklyHoursLimit: true,
+						defaultStation: { select: { id: true, name: true } },
+					},
+				},
+				TaskType: {
+					select: {
+						id: true,
+						name: true,
+						stationId: true,
+						Station: {
+							select: {
+								id: true,
+								name: true,
 							},
 						},
 					},
-					AssignedByUser: {
-						select: {
-							name: true,
-							email: true,
-						},
+				},
+				AssignedByUser: {
+					select: {
+						name: true,
+						email: true,
 					},
 				},
-			}),
-			db.shift.findMany({
-				where: {
-					startTime: { lte: dayEnd },
-					endTime: { gte: dayStart },
-				},
-				include: {
-					station: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
-					assignments: {
-						select: {
-							employeeId: true,
-							status: true,
-						},
+			},
+		}),
+		db.shift.findMany({
+			where: {
+				startTime: { lte: dayEnd },
+				endTime: { gte: dayStart },
+			},
+			include: {
+				station: {
+					select: {
+						id: true,
+						name: true,
 					},
 				},
-			}),
-		]);
+				assignments: {
+					select: {
+						employeeId: true,
+						status: true,
+					},
+				},
+			},
+		}),
+	]);
 
 	const employeeById = new Map(activeEmployees.map((employee) => [employee.id, employee]));
 	const activeLogsByEmployee = new Map<string, (typeof activeTimeLogs)[number][]>();
@@ -280,7 +286,8 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 			detectedAt: assignment.startTime.toISOString(),
 			dueAt: new Date(now.getTime() + 30 * 60 * 1000).toISOString(),
 			ownerName: assignment.AssignedByUser?.name ?? null,
-			recommendedAction: "Backfill a work punch or release the employee from active task assignment.",
+			recommendedAction:
+				"Backfill a work punch or release the employee from active task assignment.",
 			contextLabel: `Active task: ${assignment.TaskType.name}`,
 			quickLinks: [
 				{ label: "Open Timesheets", href: "/manager/timesheets?tab=active" },
@@ -333,10 +340,16 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 		const start = new Date(log.startTime);
 		const end = log.endTime ? new Date(log.endTime) : now;
 		const duration = hoursBetween(start, end);
-		weeklyHoursByEmployee.set(log.employeeId, (weeklyHoursByEmployee.get(log.employeeId) ?? 0) + duration);
+		weeklyHoursByEmployee.set(
+			log.employeeId,
+			(weeklyHoursByEmployee.get(log.employeeId) ?? 0) + duration
+		);
 
 		if (start >= dayStart) {
-			dailyHoursByEmployee.set(log.employeeId, (dailyHoursByEmployee.get(log.employeeId) ?? 0) + duration);
+			dailyHoursByEmployee.set(
+				log.employeeId,
+				(dailyHoursByEmployee.get(log.employeeId) ?? 0) + duration
+			);
 		}
 	}
 
@@ -359,10 +372,7 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 		const assignment = activeAssignmentByEmployee.get(employee.id);
 		const workLog = activeWorkLogByEmployee.get(employee.id);
 		const stationId =
-			workLog?.Station?.id ??
-			assignment?.TaskType.stationId ??
-			employee.defaultStation?.id ??
-			null;
+			workLog?.Station?.id ?? assignment?.TaskType.stationId ?? employee.defaultStation?.id ?? null;
 		const stationName =
 			workLog?.Station?.name ??
 			assignment?.TaskType.Station.name ??
@@ -381,7 +391,10 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 			stationId,
 			stationName,
 			detectedAt: now.toISOString(),
-			dueAt: (severity === "CRITICAL" ? new Date(now.getTime() + 60 * 60 * 1000) : dayEnd).toISOString(),
+			dueAt: (severity === "CRITICAL"
+				? new Date(now.getTime() + 60 * 60 * 1000)
+				: dayEnd
+			).toISOString(),
 			ownerName: assignment?.AssignedByUser?.name ?? null,
 			recommendedAction:
 				severity === "CRITICAL"
@@ -413,7 +426,10 @@ export async function getManagerExceptionQueue(): Promise<ExceptionQueueData> {
 		activeOccupancyByStation.set(assignment.TaskType.stationId, stationSet);
 	}
 
-	const shiftDemandByStation = new Map<string, { demand: number; staffed: number; stationName: string }>();
+	const shiftDemandByStation = new Map<
+		string,
+		{ demand: number; staffed: number; stationName: string }
+	>();
 	for (const shift of shiftsToday) {
 		if (shift.startTime > now || shift.endTime < now) {
 			continue;

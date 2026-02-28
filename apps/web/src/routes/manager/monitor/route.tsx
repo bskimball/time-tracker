@@ -53,20 +53,20 @@ export default async function Component() {
 		);
 
 	const activeLogsPromise = db.timeLog.findMany({
-			where: {
-				endTime: null,
-				deletedAt: null,
-			},
-			include: {
-				Employee: {
-					include: {
-						defaultStation: true,
-					},
+		where: {
+			endTime: null,
+			deletedAt: null,
+		},
+		include: {
+			Employee: {
+				include: {
+					defaultStation: true,
 				},
-				Station: true,
 			},
-			orderBy: { startTime: "desc" },
-		});
+			Station: true,
+		},
+		orderBy: { startTime: "desc" },
+	});
 	const stationsPromise = getStations();
 
 	// Fetch real-time monitoring data

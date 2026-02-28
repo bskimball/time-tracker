@@ -1,18 +1,16 @@
 "use client";
 
 import { Link } from "react-router";
-import {
-	IndustrialHeader,
-	IndustrialPanel,
-	SafetyStripes,
-} from "@monorepo/design-system";
-
+import { IndustrialHeader, IndustrialPanel, SafetyStripes } from "@monorepo/design-system";
 
 export function LoginClient() {
 	return (
 		<main className="min-h-screen flex items-center justify-center bg-noise p-4 selection:bg-primary/30">
 			{/* Tactical grid background */}
-			<div className="absolute inset-0 bg-tactical-grid opacity-20 pointer-events-none" aria-hidden="true" />
+			<div
+				className="absolute inset-0 bg-tactical-grid opacity-20 pointer-events-none"
+				aria-hidden="true"
+			/>
 
 			<div className="w-full max-w-md relative z-10">
 				<SafetyStripes position="top" aria-hidden="true" />
@@ -50,8 +48,12 @@ export function LoginClient() {
 										d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
 									/>
 								</svg>
-								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">Continue with Google</span>
-								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">AUTH_G</span>
+								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">
+									Continue with Google
+								</span>
+								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">
+									AUTH_G
+								</span>
 							</Link>
 
 							<Link
@@ -68,8 +70,12 @@ export function LoginClient() {
 									<path fill="#7fba00" d="M1 13h10v10H1z" />
 									<path fill="#ffb900" d="M13 13h10v10H13z" />
 								</svg>
-								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">Continue with Microsoft</span>
-								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">AUTH_M</span>
+								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">
+									Continue with Microsoft
+								</span>
+								<span className="font-mono text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">
+									AUTH_M
+								</span>
 							</Link>
 						</div>
 
@@ -85,7 +91,9 @@ export function LoginClient() {
 							to="/floor"
 							className="flex w-full h-10 px-4 text-[10px] inline-flex items-center justify-center font-mono tracking-widest uppercase rounded-[2px] transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ring-offset-background text-muted-foreground border border-border/30 bg-muted/10 hover:bg-muted/30 hover:text-foreground group"
 						>
-							<span className="group-hover:translate-x-1 transition-transform font-bold">Access Floor Kiosk &rarr;</span>
+							<span className="group-hover:translate-x-1 transition-transform font-bold">
+								Access Floor Kiosk &rarr;
+							</span>
 						</Link>
 					</div>
 				</IndustrialPanel>

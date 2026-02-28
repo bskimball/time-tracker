@@ -40,7 +40,7 @@ export function PageHeader({ title, subtitle, actions, className }: PageHeaderPr
 				</div>
 				{actions && <div className="flex items-center gap-2">{actions}</div>}
 			</div>
-			
+
 			<div className="border-b border-border" />
 		</div>
 	);

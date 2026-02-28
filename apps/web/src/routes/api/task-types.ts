@@ -1,11 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "../../lib/db";
-import {
-	actionError,
-	errorResponseSchema,
-	serializeArrayDates,
-	serializeDates,
-} from "./types";
+import { actionError, errorResponseSchema, serializeArrayDates, serializeDates } from "./types";
 
 const app = new OpenAPIHono();
 

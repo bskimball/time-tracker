@@ -427,7 +427,8 @@ export async function getPerformanceTrends(
 ) {
 	const days = Math.max(1, differenceInCalendarDays(endDate, startDate) + 1);
 	const trends = [];
-	const hourlyRateForCost = metric === "cost" ? await getOperationalNumber("LABOR_HOURLY_RATE", 18.5) : 0;
+	const hourlyRateForCost =
+		metric === "cost" ? await getOperationalNumber("LABOR_HOURLY_RATE", 18.5) : 0;
 
 	for (let i = 0; i < days; i++) {
 		const date = addDays(startDate, i);
@@ -451,7 +452,7 @@ export async function getPerformanceTrends(
 		});
 
 		let value = 0;
-			switch (metric) {
+		switch (metric) {
 			case "productivity":
 				value = dayMetrics._avg.efficiency || 0;
 				break;

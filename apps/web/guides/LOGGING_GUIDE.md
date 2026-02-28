@@ -88,11 +88,11 @@ LOG_DB_QUERIES=true          # Enable database query logging
 
 ### Default Behavior
 
-| Environment | Console Output | File Output               | Query Logging |
-| ----------- | -------------- | ------------------------- | ------------- |
+| Environment | Console Output | File Output               | Query Logging     |
+| ----------- | -------------- | ------------------------- | ----------------- |
 | Development | Pretty print   | `logs/dev.log` (JSON)     | Disabled (opt-in) |
-| Production  | Warnings only  | `logs/app.log` + rotation | Disabled      |
-| Test        | Silent         | None                      | Disabled      |
+| Production  | Warnings only  | `logs/app.log` + rotation | Disabled          |
+| Test        | Silent         | None                      | Disabled          |
 
 ## Usage Patterns
 
@@ -777,14 +777,14 @@ Use CloudWatch agent:
 
 ### Quick Reference
 
-| Use Case                | Function/Pattern                |
-| ----------------------- | ------------------------------- |
-| Request-scoped logging  | `getLogger()`                   |
-| Performance measurement | `logPerformance(operation, fn)` |
-| Error logging           | `logError(error, context)`      |
-| Multi-step timing       | `createTimer(operation)`        |
-| Background jobs         | `createLogger({ component })`   |
-| API routes              | `c.var.logger` (Hono context)   |
+| Use Case                | Function/Pattern                 |
+| ----------------------- | -------------------------------- |
+| Request-scoped logging  | `getLogger()`                    |
+| Performance measurement | `logPerformance(operation, fn)`  |
+| Error logging           | `logError(error, context)`       |
+| Multi-step timing       | `createTimer(operation)`         |
+| Background jobs         | `createLogger({ component })`    |
+| API routes              | `c.var.logger` (Hono context)    |
 | Database queries        | Opt-in via `LOG_DB_QUERIES=true` |
 
 ### Key Files

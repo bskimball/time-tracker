@@ -25,7 +25,9 @@ export type AnalyticsData = {
 	anomalyData: Anomaly[];
 	capacityData: Awaited<ReturnType<typeof import("./actions").getCapacityUtilizationData>>;
 	trendData: Awaited<ReturnType<typeof import("./actions").getTrendAnalysisData>>;
-	employeeProductivity: Awaited<ReturnType<typeof import("./actions").getEmployeeProductivityRanking>>;
+	employeeProductivity: Awaited<
+		ReturnType<typeof import("./actions").getEmployeeProductivityRanking>
+	>;
 	dashboardData: AnalyticsDashboardData;
 	liveFloorData: LiveFloorData;
 	comparativeData: Awaited<ReturnType<typeof import("./actions").getComparativeAnalyticsData>>;
@@ -51,7 +53,9 @@ type ProductivityDisplays = {
 			shiftProductivity: AnalyticsData["shiftProductivity"];
 		}>
 	>;
-	stationCards: Promise<AnalyticsLoadResult<{ stationSnapshots: AnalyticsData["dashboardData"]["stations"] }>>;
+	stationCards: Promise<
+		AnalyticsLoadResult<{ stationSnapshots: AnalyticsData["dashboardData"]["stations"] }>
+	>;
 	employeeTable: Promise<
 		AnalyticsLoadResult<{
 			employeeProductivity: AnalyticsData["employeeProductivity"];

@@ -41,7 +41,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body className="bg-noise min-h-screen selection:bg-primary/30 font-body">
 				{/* Tactical grid overlay */}
-				<div className="fixed inset-0 bg-tactical-grid opacity-5 pointer-events-none z-0" aria-hidden="true" />
+				<div
+					className="fixed inset-0 bg-tactical-grid opacity-5 pointer-events-none z-0"
+					aria-hidden="true"
+				/>
 				<div className="relative z-10 min-h-screen flex flex-col">
 					<a
 						href="#main-content"
@@ -109,7 +112,7 @@ export function ErrorBoundary() {
 			<div className="w-full max-w-4xl">
 				{/* Industrial Warning Header */}
 				<SafetyStripes position="top" />
-				
+
 				<IndustrialPanel variant="destructive">
 					<IndustrialHeader
 						title={status}
@@ -117,13 +120,11 @@ export function ErrorBoundary() {
 						badge={errorName}
 						active={true}
 					/>
-					
+
 					{/* Error Message */}
 					<IndustrialSection title="Error Message">
 						<div className="flex justify-between items-start gap-4">
-							<p className="text-xl text-foreground font-medium leading-relaxed">
-								{message}
-							</p>
+							<p className="text-xl text-foreground font-medium leading-relaxed">{message}</p>
 							<Button
 								variant="ghost"
 								size="sm"
@@ -141,7 +142,7 @@ export function ErrorBoundary() {
 							</Button>
 						</div>
 					</IndustrialSection>
-					
+
 					{/* Error Details - Development Only */}
 					{isDev && errorStack && (
 						<IndustrialSection className="bg-muted/30">
@@ -160,7 +161,7 @@ export function ErrorBoundary() {
 							</details>
 						</IndustrialSection>
 					)}
-					
+
 					{/* Additional Error Details - Development Only */}
 					{isDev && Object.keys(errorDetails).length > 0 && (
 						<div className="p-8 bg-muted/30">
@@ -179,7 +180,7 @@ export function ErrorBoundary() {
 							</details>
 						</div>
 					)}
-					
+
 					{/* Action Footer */}
 					<div className="p-8 bg-accent/50 flex flex-col sm:flex-row items-center justify-between gap-4">
 						<div className="flex items-center gap-3">
@@ -196,7 +197,7 @@ export function ErrorBoundary() {
 						</a>
 					</div>
 				</IndustrialPanel>
-				
+
 				<SafetyStripes position="bottom" />
 			</div>
 		</main>

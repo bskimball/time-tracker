@@ -233,12 +233,7 @@ export function useManagerRealtime(options: ManagerRealtimeOptions): ManagerReal
 			clearTimer(fallbackSseRetryTimerRef);
 			clearIntervalTimer(fallbackPollTimerRef);
 		};
-	}, [
-		maxReconnectAttempts,
-		options.invalidateOn,
-		options.scopes,
-		pollingIntervalSeconds,
-	]);
+	}, [maxReconnectAttempts, options.invalidateOn, options.scopes, pollingIntervalSeconds]);
 
 	return {
 		connectionState,

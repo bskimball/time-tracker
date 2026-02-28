@@ -1,14 +1,6 @@
-import {
-	Card,
-	CardBody,
-	CardHeader,
-	CardTitle,
-	Badge,
-	LedIndicator,
-	Metric,
-} from "@monorepo/design-system";
+import { Card, CardBody, CardHeader, CardTitle, Badge, Metric } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
-import { KPICard } from "~/routes/executive/kpi-card";
+import { KPICard } from "~/components/kpi-card";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
 import { getRequest } from "~/lib/request-context";
@@ -28,8 +20,12 @@ import {
 	ProductivityTrendChart,
 	StationPerformanceChart,
 	CostComparisonChart,
-} from "./dashboard-charts";
-import type { TrendDataPoint, StationBarData, CostBarData } from "./dashboard-charts";
+} from "~/components/charts/executive-charts";
+import type {
+	TrendDataPoint,
+	StationBarData,
+	CostBarData,
+} from "~/components/charts/executive-charts";
 import {
 	LiaChartBarSolid,
 	LiaDollarSignSolid,
@@ -44,7 +40,7 @@ function SectionHeading({ index, label }: { index: string; label: string }) {
 	return (
 		<div className="flex items-center gap-3 mb-4">
 			<span className="font-mono text-[10px] text-primary/60 tabular-nums">{index}</span>
-			<div className="flex-1 h-px bg-gradient-to-r from-border/40 to-transparent" />
+			<div className="flex-1 h-px bg-linear-to-r from-border/40 to-transparent" />
 			<h2 className="text-[10px] font-industrial font-bold text-muted-foreground uppercase tracking-widest">
 				{label}
 			</h2>
@@ -293,8 +289,6 @@ export default async function Component() {
 						</div>
 					}
 				/>
-				{/* The Structural Gradient Anchor */}
-				<div className="h-px w-full bg-gradient-to-r from-primary via-warning to-destructive mt-4 opacity-50" />
 			</div>
 
 			{/* ── Time Range ──────────────────────────────────────────────── */}
@@ -310,12 +304,11 @@ export default async function Component() {
 						<SectionHeading index="01" label="Primary Focus" />
 						<Card className="flex-1 overflow-hidden flex flex-col min-h-0">
 							{/* Material Simulation Overlay is built into Card now, but Hero gets an extra sweep */}
-							<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none" />
+							<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none" />
 
 							<CardHeader className="border-b border-white/10 bg-transparent relative z-10">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
-										<LedIndicator active />
 										<CardTitle className="uppercase tracking-widest font-industrial text-sm text-zinc-300">
 											{heroKpiData.title}
 										</CardTitle>
@@ -327,7 +320,7 @@ export default async function Component() {
 										</Badge>
 										{trendDelta !== null && (
 											<span
-												className={`text-[10px] font-mono px-1.5 py-0.5 rounded-[2px] tabular-nums ${
+												className={`text-[10px] font-mono px-1.5 py-0.5 rounded-xs tabular-nums ${
 													trendDelta > 0
 														? "text-chart-3 bg-chart-3/20"
 														: trendDelta < 0
@@ -385,7 +378,7 @@ export default async function Component() {
 								</div>
 
 								{/* The Chart bleeds to edges */}
-								<div className="flex-1 mt-6 min-h-[220px] px-2 pb-2 [&_.recharts-text]:fill-zinc-400 [&_.recharts-cartesian-grid-horizontal_line]:stroke-white/5 [&_.recharts-tooltip-wrapper_.recharts-default-tooltip]:!bg-zinc-900 [&_.recharts-tooltip-wrapper_.recharts-default-tooltip]:!border-zinc-700">
+								<div className="flex-1 mt-6 min-h-55 px-2 pb-2 [&_.recharts-text]:fill-zinc-400 [&_.recharts-cartesian-grid-horizontal_line]:stroke-white/5 [&_.recharts-tooltip-wrapper_.recharts-default-tooltip]:!bg-zinc-900 [&_.recharts-tooltip-wrapper_.recharts-default-tooltip]:!border-zinc-700">
 									{trendChartData.length > 0 ? (
 										<ProductivityTrendChart
 											data={trendChartData}
@@ -393,7 +386,7 @@ export default async function Component() {
 											thresholdHigh={kpiThresholds.productivityHigh}
 										/>
 									) : (
-										<div className="h-[220px] flex items-center justify-center text-zinc-500 font-mono text-sm">
+										<div className="h-55 flex items-center justify-center text-zinc-500 font-mono text-sm">
 											No trend data available for the selected period
 										</div>
 									)}

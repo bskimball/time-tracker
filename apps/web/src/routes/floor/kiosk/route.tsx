@@ -1,10 +1,6 @@
 import { db } from "../../../lib/db";
 import { KioskTimeClock } from "./client";
-import {
-	IndustrialHeader,
-	IndustrialPanel,
-	SafetyStripes,
-} from "@monorepo/design-system";
+import { IndustrialHeader, IndustrialPanel, SafetyStripes } from "@monorepo/design-system";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 
 export default async function Component() {
