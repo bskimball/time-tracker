@@ -147,13 +147,13 @@ export function KPICard({
 					<div className="flex items-start justify-between">
 						<Metric label={title} value={String(value)} className="flex-1" />
 						{Icon && (
-							<div className="p-2 bg-white/5 rounded-xs text-zinc-500 opacity-50">
+							<div className="p-2 bg-muted/50 rounded-xs text-muted-foreground opacity-50">
 								<Icon className="h-5 w-5" aria-hidden="true" />
 							</div>
 						)}
 					</div>
-					<div className={`pt-4 border-t border-white/10 ${isDense ? "mt-1" : "mt-2"}`}>
-						<div className="h-3 bg-white/10 rounded w-2/3 animate-pulse" />
+					<div className={`pt-4 border-t border-border/50 ${isDense ? "mt-1" : "mt-2"}`}>
+						<div className="h-3 bg-muted/50 rounded w-2/3 animate-pulse" />
 					</div>
 				</CardBody>
 			</Card>
@@ -163,7 +163,9 @@ export function KPICard({
 	return (
 		<Card
 			className={`h-full group transition-all duration-300 relative overflow-hidden ${
-				dominant ? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" : ""
+				dominant
+					? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+					: ""
 			}`}
 		>
 			<CardBody
@@ -183,7 +185,7 @@ export function KPICard({
 							className={`p-2 rounded-xs transition-colors duration-300 ${
 								dominant
 									? "bg-primary/20 text-primary"
-									: "bg-white/5 text-zinc-400 group-hover:text-primary"
+									: "bg-muted/50 text-muted-foreground group-hover:text-primary"
 							}`}
 						>
 							<Icon className={`${isDense ? "h-4 w-4" : "h-5 w-5"}`} aria-hidden="true" />
@@ -192,8 +194,8 @@ export function KPICard({
 				</div>
 
 				{subtitle && (
-					<div className={`pt-2 border-t mt-1 border-white/10`}>
-						<p className={`text-[10px] font-mono truncate text-zinc-400`}>
+					<div className={`pt-2 border-t mt-1 border-border/50`}>
+						<p className={`text-[10px] font-mono truncate text-muted-foreground`}>
 							{subtitle}
 							{trend?.label && <span className="opacity-70 ml-1">({trend.label})</span>}
 						</p>
