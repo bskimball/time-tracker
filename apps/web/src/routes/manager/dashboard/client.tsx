@@ -8,16 +8,14 @@ import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
+import { KPICard } from "~/components/kpi-card";
 import {
-	LiaUserClockSolid,
-	LiaExclamationTriangleSolid,
-	LiaStopwatchSolid,
-	LiaChartPieSolid,
 	LiaArrowRightSolid,
 	LiaUserPlusSolid,
 	LiaHistorySolid,
 	LiaTasksSolid,
 	LiaFileAltSolid,
+	LiaExclamationTriangleSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -167,75 +165,41 @@ export function ManagerDashboard({
 			{/* KPI Control Panel - Industrial Grid Layout */}
 			<section
 				aria-label="Key Metrics"
-				className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial"
+				className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
 			>
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaUserClockSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Active Personnel
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{activeSessionCount}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">/ {totalEmployees}</span>
-					</div>
-					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div
-							className="h-full bg-primary transition-all duration-700"
-							style={{
-								width: `${totalEmployees > 0 ? Math.min(100, (activeSessionCount / totalEmployees) * 100) : 0}%`,
-							}}
-						/>
-					</div>
-				</div>
+				<KPICard
+					title="Active Personnel"
+					value={activeSessionCount}
+					subtitle={`${totalEmployees} Total Staff`}
+					icon="users"
+					trend={{
+						direction: "neutral",
+						value: `${totalEmployees > 0 ? Math.round((activeSessionCount / totalEmployees) * 100) : 0}%`,
+						label: "Active"
+					}}
+				/>
 
 				<Suspense fallback={<ActiveAlertsMetricFallback />}>
 					<ActiveAlertsMetric alertsPromise={alertsPromise} />
 				</Suspense>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaStopwatchSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Longest Shift
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{longestSessionStart ? formatDuration(longestSessionStart) : "--"}
-						</span>
-					</div>
-					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div
-							className="h-full bg-primary transition-all duration-700"
-							style={{ width: longestSessionStart ? "100%" : "0%" }}
-						/>
-					</div>
-				</div>
+				<KPICard
+					title="Longest Shift"
+					value={longestSessionStart ? formatDuration(longestSessionStart) : "--"}
+					subtitle="Current Session"
+					icon="clock"
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaChartPieSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Utilization
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-4xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{utilizationRate.toFixed(1)}%
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Efficiency</span>
-					</div>
-					<div className="mt-4 h-[2px] w-full bg-border overflow-hidden">
-						<div
-							className="h-full bg-primary transition-all duration-700"
-							style={{ width: `${Math.min(100, utilizationRate)}%` }}
-						/>
-					</div>
-				</div>
+				<KPICard
+					title="Utilization"
+					value={`${utilizationRate.toFixed(1)}%`}
+					subtitle="Efficiency Rate"
+					icon="chart"
+					trend={{
+						direction: utilizationRate > 80 ? "up" : utilizationRate < 50 ? "down" : "neutral",
+						value: utilizationRate > 80 ? "High" : utilizationRate < 50 ? "Low" : "Normal",
+					}}
+				/>
 			</section>
 
 			<div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
@@ -476,39 +440,27 @@ function ActiveAlertsMetric({ alertsPromise }: { alertsPromise: Promise<AlertDat
 	const { activeAlertCount } = getAlertGroups(alerts);
 
 	return (
-		<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-			<div className="flex items-center gap-2 text-muted-foreground mb-4">
-				<LiaExclamationTriangleSolid className="w-5 h-5" />
-				<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-					Active Alerts
-				</span>
-			</div>
-			<div className="flex items-baseline gap-2">
-				<span
-					className={cn(
-						"text-3xl font-data font-medium tracking-tight transition-colors",
-						activeAlertCount > 0 ? "text-orange-600" : "text-emerald-600"
-					)}
-				>
-					{activeAlertCount}
-				</span>
-				<span className="text-sm text-muted-foreground font-data">Requires Action</span>
-			</div>
-		</div>
+		<KPICard
+			title="Active Alerts"
+			value={activeAlertCount}
+			subtitle="Requires Action"
+			icon="award" // Using 'award' as placeholder or we can map another icon
+			trend={{
+				direction: activeAlertCount > 0 ? "down" : "neutral",
+				value: activeAlertCount > 0 ? "Attention Needed" : "All Clear",
+			}}
+			dominant={activeAlertCount > 0}
+		/>
 	);
 }
 
 function ActiveAlertsMetricFallback() {
 	return (
-		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border-l-2 border-l-border/70 animate-pulse">
-			<div className="flex items-center gap-2 text-muted-foreground mb-4">
-				<LiaExclamationTriangleSolid className="w-5 h-5 opacity-70" />
-				<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-					Active Alerts
-				</span>
-			</div>
-			<div className="h-8 w-24 bg-muted rounded-[2px]" />
-		</div>
+		<KPICard
+			title="Active Alerts"
+			value="--"
+			loading={true}
+		/>
 	);
 }
 

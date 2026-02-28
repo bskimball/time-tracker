@@ -1,6 +1,6 @@
 import { Card, CardBody, CardHeader, CardTitle, Badge, Metric } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
-import { KPICard } from "~/routes/executive/kpi-card";
+import { KPICard } from "~/components/kpi-card";
 import { Link } from "react-router";
 import { validateRequest } from "~/lib/auth";
 import { getRequest } from "~/lib/request-context";
@@ -20,8 +20,12 @@ import {
 	ProductivityTrendChart,
 	StationPerformanceChart,
 	CostComparisonChart,
-} from "./dashboard-charts";
-import type { TrendDataPoint, StationBarData, CostBarData } from "./dashboard-charts";
+} from "~/components/charts/executive-charts";
+import type {
+	TrendDataPoint,
+	StationBarData,
+	CostBarData,
+} from "~/components/charts/executive-charts";
 import {
 	LiaChartBarSolid,
 	LiaDollarSignSolid,

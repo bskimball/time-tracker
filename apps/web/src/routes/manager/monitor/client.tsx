@@ -7,12 +7,7 @@ import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
-import {
-	LiaUserClockSolid,
-	LiaChartPieSolid,
-	LiaExclamationTriangleSolid,
-	LiaStopwatchSolid,
-} from "react-icons/lia";
+import { KPICard } from "~/components/kpi-card";
 
 const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
 const MONITOR_INVALIDATION_EVENTS = [
@@ -198,75 +193,43 @@ export function FloorMonitor({
 			{/* Metrics Dashboard */}
 			<section
 				aria-label="Key Metrics"
-				className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial"
+				className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
 			>
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaUserClockSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Active Personnel
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{activeWorkerIds.size}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">
-							{activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
-						</span>
-					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">
-						Clocked in (WORK) or assigned task
-					</p>
-				</div>
+				<KPICard
+					title="Active Personnel"
+					value={activeWorkerIds.size}
+					subtitle={activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
+					icon="users"
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaChartPieSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Station Load
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{stationLoadPercent}%
-						</span>
-						<span className="text-sm text-muted-foreground font-data">
-							{activeStationsCount}/{stations.length} Active
-						</span>
-					</div>
-				</div>
+				<KPICard
+					title="Station Load"
+					value={`${stationLoadPercent}%`}
+					subtitle={`${activeStationsCount}/${stations.length} Active`}
+					icon="industry"
+					trend={{
+						direction: stationLoadPercent > 80 ? "up" : "neutral",
+						value: "Occupancy"
+					}}
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaExclamationTriangleSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Break Status
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{breakLogs.length}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Paused</span>
-					</div>
-				</div>
+				<KPICard
+					title="Break Status"
+					value={breakLogs.length}
+					subtitle="Paused"
+					icon="clock"
+					trend={{
+						direction: breakLogs.length > 2 ? "down" : "neutral", // Arbitrary logic for demo
+						value: "Workers"
+					}}
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaStopwatchSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Shift Max
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--"}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Duration</span>
-					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Longest active session on floor</p>
-				</div>
+				<KPICard
+					title="Shift Max"
+					value={longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--"}
+					subtitle="Longest active session"
+					icon="clock"
+				/>
 			</section>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
