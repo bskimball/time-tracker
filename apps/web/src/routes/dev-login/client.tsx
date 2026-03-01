@@ -1,15 +1,16 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { createAdminUser, type DevLoginState } from "./actions";
 import { Alert } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { SimpleInput } from "@monorepo/design-system";
 
 export function CreateAdminForm() {
-	const [state, formAction] = useFormState<DevLoginState, FormData>(
+	const [state, formAction] = useActionState<DevLoginState, FormData>(
 		// Type assertion needed because server actions can return Response for redirects,
-		// but useFormState types don't reflect this capability yet
+		// but useActionState types don't reflect this capability yet
 		createAdminUser as (state: DevLoginState, payload: FormData) => Promise<DevLoginState>,
 		{}
 	);
