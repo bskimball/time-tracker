@@ -311,7 +311,14 @@ export default async function Component() {
 				</div>
 			</div>
 
-			<AnalyticsClient section={section} range={range} compare={compareBasis} displays={displays} />
+			<div id={`analytics-section-${section}`} role="tabpanel" aria-label={`${section} analytics`}>
+				<AnalyticsClient
+					section={section}
+					range={range}
+					compare={compareBasis}
+					displays={displays}
+				/>
+			</div>
 		</div>
 	);
 }

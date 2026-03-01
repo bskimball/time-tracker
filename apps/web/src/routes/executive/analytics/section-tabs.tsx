@@ -36,22 +36,29 @@ export function SectionTabs({
 
 	return (
 		<nav className={cn("w-full overflow-x-auto pb-1", className)} aria-label="Analytics Sections">
-			<div className="flex items-center gap-1 min-w-max border-b border-border/60">
+			<div
+				className="flex min-w-max items-center gap-1 border-b border-border/60"
+				role="tablist"
+				aria-label="Analytics sections"
+			>
 				{sections.map(({ id, label }) => {
 					const isActive = currentSection === id;
 					return (
 						<button
+							type="button"
 							key={id}
 							onClick={() => handleSectionChange(id)}
+							role="tab"
+							aria-selected={isActive}
+							aria-controls={`analytics-section-${id}`}
 							className={cn(
-								"relative flex items-center px-4 h-9 text-xs font-industrial uppercase tracking-widest transition-colors duration-150 border-b-2",
+								"relative flex h-10 min-w-[120px] items-center justify-center px-4 text-xs font-bold font-industrial uppercase tracking-widest transition-colors duration-150 border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 								isActive
 									? "text-foreground border-primary"
 									: "text-muted-foreground border-transparent hover:text-foreground"
 							)}
-							aria-current={isActive ? "page" : undefined}
 						>
-							<span className="font-bold">{label}</span>
+							<span>{label}</span>
 						</button>
 					);
 				})}
