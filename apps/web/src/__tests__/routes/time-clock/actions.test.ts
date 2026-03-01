@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDb } from "~/__tests__/setup";
-import { startSelfTaskAction } from "~/routes/time-clock/actions";
+import { clockIn, startSelfTaskAction } from "~/routes/time-clock/actions";
 import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
 
 const { mockValidateRequest, mockGetTaskAssignmentMode } = vi.hoisted(() => ({
@@ -78,4 +78,27 @@ describe("startSelfTaskAction", () => {
 			});
 		}
 	);
+});
+
+describe("floor action scoping", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockValidateRequest.mockResolvedValue({
+			user: { id: "worker-user-1", role: "WORKER", employeeId: "emp-1" },
+		});
+	});
+
+	it("blocks worker clock-in attempts for other employees", async () => {
+		const formData = new FormData();
+		formData.set("employeeId", "emp-2");
+		formData.set("stationId", "station-1");
+
+		const result = await clockIn(null, formData);
+
+		expect(result).toEqual({
+			success: false,
+			error: "Workers can only perform floor actions for themselves",
+		});
+		expect(mockDb.employee.findUnique).not.toHaveBeenCalled();
+	});
 });

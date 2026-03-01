@@ -16,6 +16,36 @@ export type ClockActionState = {
 
 type WorkerSelfTaskContext = { ok: true; employeeId: string } | { ok: false; error: string };
 
+type FloorScopeResult = { ok: true; employeeId: string } | { ok: false; error: string };
+
+async function resolveScopedEmployeeId(requestedEmployeeId: string): Promise<FloorScopeResult> {
+	const { user } = await validateRequest();
+
+	if (!user) {
+		if (!requestedEmployeeId) {
+			return { ok: false, error: "Employee is required" };
+		}
+		return { ok: true, employeeId: requestedEmployeeId };
+	}
+
+	if (user.role === "WORKER") {
+		if (!user.employeeId) {
+			return { ok: false, error: "Worker session is not linked to an employee" };
+		}
+
+		if (requestedEmployeeId && requestedEmployeeId !== user.employeeId) {
+			return { ok: false, error: "Workers can only perform floor actions for themselves" };
+		}
+
+		return { ok: true, employeeId: user.employeeId };
+	}
+
+	return {
+		ok: false,
+		error: "Authenticated non-worker sessions cannot execute floor actions",
+	};
+}
+
 async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
 	const { user } = await validateRequest();
 	const mode = await getTaskAssignmentMode();
@@ -257,8 +287,13 @@ export async function clockIn(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = String(formData.get("employeeId") || "");
+	const requestedEmployeeId = String(formData.get("employeeId") || "");
 	const stationId = String(formData.get("stationId") || "");
+	const scopedEmployee = await resolveScopedEmployeeId(requestedEmployeeId);
+	if (!scopedEmployee.ok) {
+		return { success: false, error: scopedEmployee.error };
+	}
+	const employeeId = scopedEmployee.employeeId;
 
 	if (!employeeId || !stationId) {
 		return { success: false, error: "Employee and station are required" };
@@ -325,6 +360,16 @@ export async function clockOut(
 		return { success: false, error: "Active work log not found" };
 	}
 
+	const { user } = await validateRequest();
+	if (user?.role === "WORKER") {
+		if (!user.employeeId || user.employeeId !== log.employeeId) {
+			return {
+				success: false,
+				error: "Workers can only perform floor actions for themselves",
+			};
+		}
+	}
+
 	await db.$transaction(async (tx) => {
 		await tx.timeLog.update({
 			where: { id: logId },
@@ -363,10 +408,12 @@ export async function startBreak(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = String(formData.get("employeeId") || "");
-	if (!employeeId) {
-		return { success: false, error: "Employee is required" };
+	const requestedEmployeeId = String(formData.get("employeeId") || "");
+	const scopedEmployee = await resolveScopedEmployeeId(requestedEmployeeId);
+	if (!scopedEmployee.ok) {
+		return { success: false, error: scopedEmployee.error };
 	}
+	const employeeId = scopedEmployee.employeeId;
 
 	const [activeWorkLog, activeBreakLog] = await Promise.all([
 		db.timeLog.findFirst({
@@ -408,10 +455,12 @@ export async function endBreak(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
-	const employeeId = String(formData.get("employeeId") || "");
-	if (!employeeId) {
-		return { success: false, error: "Employee is required" };
+	const requestedEmployeeId = String(formData.get("employeeId") || "");
+	const scopedEmployee = await resolveScopedEmployeeId(requestedEmployeeId);
+	if (!scopedEmployee.ok) {
+		return { success: false, error: scopedEmployee.error };
 	}
+	const employeeId = scopedEmployee.employeeId;
 
 	const activeBreakLog = await db.timeLog.findFirst({
 		where: { employeeId, type: "BREAK", endTime: null, deletedAt: null },
@@ -520,6 +569,14 @@ export async function deleteTimeLog(
 }
 
 export async function checkPinStatus(_prevState: ClockActionState, formData: FormData) {
+	const { user } = await validateRequest();
+	if (user?.role === "WORKER") {
+		return {
+			success: false,
+			error: "Use your personal worker controls instead of kiosk PIN mode",
+		};
+	}
+
 	const pin = String(formData.get("pin") || "").trim();
 
 	if (!/^\d{4,6}$/.test(pin)) {
@@ -576,6 +633,14 @@ export async function pinToggleClock(
 	_prevState: ClockActionState,
 	formData: FormData
 ): Promise<ClockActionState> {
+	const { user } = await validateRequest();
+	if (user?.role === "WORKER") {
+		return {
+			success: false,
+			error: "Use your personal worker controls instead of kiosk PIN mode",
+		};
+	}
+
 	const pin = String(formData.get("pin") || "").trim();
 	const selectedStationId = String(formData.get("stationId") || "").trim();
 
