@@ -160,10 +160,24 @@ export function FloorMonitor({
 	const filteredStations = stations.filter((station) =>
 		statusFilters.includes(getStationStatus(station))
 	);
+	const visibleStationIds = new Set(filteredStations.map((station) => station.id));
+	const filteredWorkLogs = workLogs.filter((log) => {
+		if (!log.Station?.id) {
+			return statusFilters.includes("ACTIVE") || statusFilters.includes("IDLE");
+		}
+		return visibleStationIds.has(log.Station.id);
+	});
+	const filteredBreakLogs = breakLogs.filter((log) => {
+		if (!log.Station?.id) {
+			return statusFilters.includes("ACTIVE") || statusFilters.includes("IDLE");
+		}
+		return visibleStationIds.has(log.Station.id);
+	});
 
 	// Identify workers who are assigned tasks but not in active work logs
 	const taskOnlyWorkers = activeTaskEntries
 		.filter(([employeeId]) => !workLogs.some((log) => log.Employee.id === employeeId))
+		.filter(([, task]) => (task.stationId ? visibleStationIds.has(task.stationId) : true))
 		.map(([employeeId, task]) => ({
 			id: employeeId,
 			name: task.employeeName,
@@ -402,7 +416,7 @@ export function FloorMonitor({
 					<div className="flex items-center justify-between border-b border-border pb-2">
 						<h3 className="font-heading font-semibold text-lg">PERSONNEL MANIFEST</h3>
 						<Badge variant="secondary" className="font-mono">
-							TOTAL: {activeWorkerIds.size}
+							VISIBLE: {filteredWorkLogs.length + filteredBreakLogs.length + taskOnlyWorkers.length}
 						</Badge>
 					</div>
 
@@ -413,7 +427,7 @@ export function FloorMonitor({
 							<div className="text-center">Status</div>
 						</div>
 						<div className="overflow-y-auto flex-1 min-h-0 p-2 space-y-1">
-							{workLogs.map((log) => (
+							{filteredWorkLogs.map((log) => (
 								<div
 									key={log.id}
 									className="grid grid-cols-4 gap-2 p-2 rounded-[1px] hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 items-center"
@@ -441,7 +455,7 @@ export function FloorMonitor({
 								</div>
 							))}
 
-							{breakLogs.map((log) => (
+							{filteredBreakLogs.map((log) => (
 								<div
 									key={log.id}
 									className="grid grid-cols-4 gap-2 p-2 rounded-[1px] hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 items-center opacity-70"
@@ -487,9 +501,10 @@ export function FloorMonitor({
 								</div>
 							))}
 
-							{activeWorkerIds.size === 0 && (
+							{filteredWorkLogs.length + filteredBreakLogs.length + taskOnlyWorkers.length ===
+								0 && (
 								<div className="py-12 text-center text-muted-foreground text-sm">
-									No active personnel
+									No personnel match the selected status filters
 								</div>
 							)}
 						</div>
