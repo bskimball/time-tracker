@@ -17,6 +17,7 @@ import {
 	TabPanel,
 	SimpleSelect,
 	Badge,
+	Alert,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
@@ -118,6 +119,9 @@ export function TimesheetManager({
 	const hasNextPage = pagination.page < totalPages;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
+	const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
+		null
+	);
 	const [activeTab, setActiveTab] = useQueryState(
 		"tab",
 		parseAsStringEnum([...tabValues]).withDefault(
@@ -184,27 +188,44 @@ export function TimesheetManager({
 	};
 
 	const handleEndShift = async (logId: string) => {
-		await closeTimeLog(logId);
-		refreshLogs();
+		try {
+			await closeTimeLog(logId);
+			setFeedback({ type: "success", message: "Shift ended and saved." });
+			refreshLogs();
+		} catch (error) {
+			setFeedback({
+				type: "error",
+				message: error instanceof Error ? error.message : "Unable to end shift.",
+			});
+		}
 	};
 
 	const handleCorrectionSubmit = async (data: TimeCorrectionPayload) => {
-		if (editingLog) {
-			await editTimeCorrection(editingLog.id, {
-				startTime: data.startTime,
-				endTime: data.endTime,
-				stationId: data.stationId,
-				type: data.type,
-				note: data.note,
-				reason: data.reason,
-			});
-		} else {
-			await createTimeCorrection(data);
-		}
+		try {
+			if (editingLog) {
+				await editTimeCorrection(editingLog.id, {
+					startTime: data.startTime,
+					endTime: data.endTime,
+					stationId: data.stationId,
+					type: data.type,
+					note: data.note,
+					reason: data.reason,
+				});
+				setFeedback({ type: "success", message: "Time entry updated." });
+			} else {
+				await createTimeCorrection(data);
+				setFeedback({ type: "success", message: "Time entry added." });
+			}
 
-		setShowCorrectionForm(false);
-		setEditingLog(null);
-		refreshLogs();
+			setShowCorrectionForm(false);
+			setEditingLog(null);
+			refreshLogs();
+		} catch (error) {
+			setFeedback({
+				type: "error",
+				message: error instanceof Error ? error.message : "Unable to save time entry.",
+			});
+		}
 	};
 
 	const assignedNotClockedInCount = floorActiveEmployees.filter(
@@ -213,6 +234,12 @@ export function TimesheetManager({
 
 	return (
 		<div className="space-y-6">
+			{feedback && (
+				<Alert variant={feedback.type === "success" ? "success" : "error"}>
+					{feedback.message}
+				</Alert>
+			)}
+
 			<PageHeader
 				title="Timesheet Management"
 				subtitle="View and manage employee time entries and corrections"
