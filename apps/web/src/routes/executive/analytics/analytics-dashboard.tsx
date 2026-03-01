@@ -388,39 +388,50 @@ function ProductivityEmployeeTable({
 							<th className="px-4 py-3 text-left font-medium">Employee</th>
 							<th className="px-4 py-3 text-right font-medium">Units</th>
 							<th className="px-4 py-3 text-right font-medium">Hours</th>
-							<th className="px-4 py-3 text-right font-medium">Rate (u/h)</th>
+							<th className="px-4 py-3 text-right font-medium">Rate</th>
 							<th className="px-4 py-3 text-left font-medium">Station</th>
 							<th className="px-4 py-3 text-left font-medium">Performance</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-border/30">
-						{employeeProductivity.map((employee, index) => (
-							<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
-								<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right font-bold text-foreground">
-									{employee.value}
-								</td>
-								<td className="px-4 py-2.5">
-									<Badge variant="secondary" className="h-5 text-[10px]">
-										{employee.station}
-									</Badge>
-								</td>
-								<td className="px-4 py-2.5">
-									{employee.value >= benchmarkData.productivity.top10Percent ? (
-										<span className="font-bold text-primary">TOP 10%</span>
-									) : employee.value >= benchmarkData.productivity.industryAvg ? (
-										<span className="text-secondary">ABOVE AVG</span>
-									) : (
-										<span className="text-muted-foreground">BELOW AVG</span>
-									)}
-								</td>
-							</tr>
-						))}
+						{employeeProductivity.map((employee, index) => {
+							const hasVolumeInputs = false;
+
+							return (
+								<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
+									<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
+									<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
+									<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
+									<td className="px-4 py-2.5 text-right">
+										{hasVolumeInputs ? (
+											<span className="font-bold text-foreground">{employee.value} u/h</span>
+										) : (
+											<span className="text-muted-foreground">Derived estimate</span>
+										)}
+									</td>
+									<td className="px-4 py-2.5">
+										<Badge variant="secondary" className="h-5 text-[10px]">
+											{employee.station}
+										</Badge>
+									</td>
+									<td className="px-4 py-2.5">
+										{employee.value >= benchmarkData.productivity.top10Percent ? (
+											<span className="font-bold text-primary">TOP 10%</span>
+										) : employee.value >= benchmarkData.productivity.industryAvg ? (
+											<span className="text-secondary">ABOVE AVG</span>
+										) : (
+											<span className="text-muted-foreground">BELOW AVG</span>
+										)}
+									</td>
+								</tr>
+							);
+						})}
 					</tbody>
 				</table>
 			</div>
+			<p className="border-t border-border/40 px-4 py-2 text-[11px] font-mono text-muted-foreground">
+				Rate values are hidden when per-employee Units/Hours source data is unavailable.
+			</p>
 		</Card>
 	);
 }
