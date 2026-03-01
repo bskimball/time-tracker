@@ -592,7 +592,7 @@ export async function getProductivityMetrics(
 			unitsCompleted: assignment.unitsCompleted || 0,
 			efficiency:
 				assignment.unitsCompleted && duration > 0
-					? assignment.unitsCompleted / (duration * 60) // units per hour
+					? assignment.unitsCompleted / (duration / 60) // units per hour
 					: 0,
 			date: new Date(assignment.startTime).toISOString().split("T")[0],
 		};

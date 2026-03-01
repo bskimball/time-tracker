@@ -324,18 +324,14 @@ export function ReportsManager({
 	const renderProductivityReport = (reportData: ReportDataType) => {
 		const data = reportData;
 
-		// Aggregate daily efficiency for trend chart
+		// Aggregate daily efficiency index for trend chart
 		const dailyMap = new Map<string, { totalEfficiency: number; count: number }>();
 		data.productivityData.forEach((item) => {
 			const current = dailyMap.get(item.date) || { totalEfficiency: 0, count: 0 };
-			// Assuming efficiency is 0-1.0 scale, we want to display as units/hr or similar?
-			// The chart expects "value". Let's use average efficiency * 100 for percentage
-			// OR if we have units/hr, let's use that.
-			// item.unitsProcessed / item.hoursWorked = units/hr
-			const unitsPerHour = item.hoursWorked > 0 ? (item.unitsProcessed || 0) / item.hoursWorked : 0;
+			const efficiencyIndex = item.efficiency ?? 0;
 
 			dailyMap.set(item.date, {
-				totalEfficiency: current.totalEfficiency + unitsPerHour,
+				totalEfficiency: current.totalEfficiency + efficiencyIndex,
 				count: current.count + 1,
 			});
 		});
@@ -343,7 +339,7 @@ export function ReportsManager({
 		const trendData: TrendDataPoint[] = Array.from(dailyMap.entries())
 			.map(([date, stats]) => ({
 				date,
-				value: stats.count > 0 ? stats.totalEfficiency / stats.count : 0,
+				value: stats.count > 0 ? (stats.totalEfficiency / stats.count) * 100 : 0,
 			}))
 			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -394,7 +390,7 @@ export function ReportsManager({
 											Units
 										</th>
 										<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
-											Efficiency
+											Efficiency Index
 										</th>
 										<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
 											Overtime
@@ -534,7 +530,7 @@ export function ReportsManager({
 
 		const stationChartData: StationBarData[] = data.stationEfficiencyData.slice(0, 8).map((s) => ({
 			name: s.stationName,
-			productivity: s.averageEfficiency ? s.averageEfficiency * 100 : 0, // Using efficiency % as proxy for productivity visual
+			productivity: s.averageEfficiency ? s.averageEfficiency * 100 : 0,
 			occupancy: s.peakOccupancy ? Math.min(100, (s.peakOccupancy / 10) * 100) : 0, // Rough estimate if capacity unknown, or just use raw if chart supports it.
 			// Actually StationPerformanceChart expects occupancy to be 0-100.
 			// Let's assume peakOccupancy is raw count. Without capacity, we can't calculate %.
