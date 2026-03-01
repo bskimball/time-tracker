@@ -656,14 +656,14 @@ export function MobileTimeClock({
 				{method === "pin" && (
 					<MobileSection title="Quick Actions" showBorder={false}>
 						<div className="grid grid-cols-2 gap-3">
-							<Link to="/floor/reports">
+							<Link to="/floor">
 								<TouchButton variant="outline" size="md" className="w-full">
-									View Reports
+									Floor Dashboard
 								</TouchButton>
 							</Link>
-							<Link to="/floor/tasks">
+							<Link to="/floor/kiosk">
 								<TouchButton variant="outline" size="md" className="w-full">
-									My Tasks
+									Open Kiosk
 								</TouchButton>
 							</Link>
 						</div>

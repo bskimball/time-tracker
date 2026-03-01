@@ -1170,12 +1170,10 @@ function TimeHistory({
 	employees: Employee[];
 }) {
 	const [startDate, setStartDate] = useState(() => {
-		const today = new Date();
-		return today.toISOString().split("T")[0];
+		return "";
 	});
 	const [endDate, setEndDate] = useState(() => {
-		const today = new Date();
-		return today.toISOString().split("T")[0];
+		return "";
 	});
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 	const [selectedStationId, setSelectedStationId] = useState("");
