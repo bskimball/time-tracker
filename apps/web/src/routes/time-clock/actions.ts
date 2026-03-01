@@ -519,7 +519,7 @@ export async function deleteTimeLog(
 	return { success: true, message: "Time log deleted" };
 }
 
-export async function checkPinStatus(_prevState: any, formData: FormData) {
+export async function checkPinStatus(_prevState: ClockActionState, formData: FormData) {
 	const pin = String(formData.get("pin") || "").trim();
 
 	if (!/^\d{4,6}$/.test(pin)) {

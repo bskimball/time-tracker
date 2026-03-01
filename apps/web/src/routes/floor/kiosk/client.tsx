@@ -110,8 +110,12 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 			startTransition(async () => {
 				const formData = new FormData();
 				formData.append("pin", pin);
-				const result = (await checkPinAction(null, formData)) as any;
-				if (result?.success) {
+				const result = await checkPinAction(null, formData);
+				if (
+					result?.success === true &&
+					typeof result.employeeName === "string" &&
+					typeof result.isClockedIn === "boolean"
+				) {
 					setVerifiedUser({
 						employeeName: result.employeeName,
 						isClockedIn: result.isClockedIn,

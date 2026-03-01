@@ -130,18 +130,6 @@ export function getLaborCostAnalysisCacheKey(startDate: Date, endDate: Date): st
 	return `cost:${startDate.toISOString().split("T")[0]}:${endDate.toISOString().split("T")[0]}`;
 }
 
-export function getProductivityAnalyticsCacheKey(
-	startDate: Date,
-	endDate: Date,
-	filters: Record<string, unknown>
-): string {
-	const filterStr = Object.entries(filters)
-		.sort(([a], [b]) => a.localeCompare(b))
-		.map(([k, v]) => `${k}=${v}`)
-		.join("&");
-	return `analytics:${startDate.toISOString().split("T")[0]}:${endDate.toISOString().split("T")[0]}:${filterStr}`;
-}
-
 export function getStationPerformanceCacheKey(startDate: Date, endDate: Date): string {
 	return `stations:${startDate.toISOString().split("T")[0]}:${endDate.toISOString().split("T")[0]}`;
 }

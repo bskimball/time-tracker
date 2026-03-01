@@ -9,3 +9,5 @@ coverage
 *.min.css
 package-lock.json
 src/generated
+prisma/generated
+src/lib/generated/client

@@ -1,5 +1,13 @@
 {
 	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"astro": ["../../node_modules/astro"],
+			"astro/*": ["../../node_modules/astro/*"]
+		}
+	},
 	"include": [
 		".astro/types.d.ts",
 		"**/*"

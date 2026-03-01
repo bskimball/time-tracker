@@ -16,6 +16,7 @@ export default defineConfig({
 	},
 	integrations: [
 		react(),
+		// @ts-ignore - Astro type duplication across workspace installs
 		starlight({
 			title: "Shift Pulse Docs",
 			description: "Customer documentation for the Shift Pulse application and API.",

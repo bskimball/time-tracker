@@ -1,7 +1,14 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useMemo } from "react";
-import type { Theme } from "~/lib/themes";
+import {
+	THEME_STORAGE_KEY,
+	applyTheme,
+	getEffectiveTheme,
+	getStoredTheme,
+	setStoredTheme,
+	type Theme,
+} from "~/lib/themes";
 
 type ThemeProviderProps = {
 	children: React.ReactNode;
@@ -19,34 +26,26 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undef
 export function ThemeProvider({
 	children,
 	defaultTheme = "system",
-	storageKey = "ui-theme",
+	storageKey = THEME_STORAGE_KEY,
 	...props
 }: ThemeProviderProps) {
 	const [theme, setThemeState] = useState<Theme>(() => {
 		if (typeof window === "undefined") return defaultTheme;
 		try {
-			return (localStorage.getItem(storageKey) as Theme | null) || defaultTheme;
+			if (storageKey !== THEME_STORAGE_KEY) {
+				return (localStorage.getItem(storageKey) as Theme | null) || defaultTheme;
+			}
+
+			return getStoredTheme() || defaultTheme;
 		} catch {
 			return defaultTheme;
 		}
 	});
 
 	useEffect(() => {
-		const root = window.document.documentElement;
-
-		let effectiveTheme: "light" | "dark";
-
-		if (theme === "system") {
-			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-			effectiveTheme = prefersDark ? "dark" : "light";
-		} else {
-			effectiveTheme = theme;
-		}
-
-		root.classList.remove("light", "dark");
-		root.classList.add(effectiveTheme);
-		root.setAttribute("data-theme", effectiveTheme);
-		root.style.colorScheme = effectiveTheme;
+		const effectiveTheme = getEffectiveTheme(theme);
+		applyTheme(effectiveTheme);
+		window.document.documentElement.style.colorScheme = effectiveTheme;
 	}, [theme]);
 
 	const value = useMemo(
@@ -54,7 +53,11 @@ export function ThemeProvider({
 			theme,
 			setTheme: (nextTheme: Theme) => {
 				try {
-					localStorage.setItem(storageKey, nextTheme);
+					if (storageKey === THEME_STORAGE_KEY) {
+						setStoredTheme(nextTheme);
+					} else {
+						localStorage.setItem(storageKey, nextTheme);
+					}
 				} catch {
 					// Ignore localStorage errors (e.g., in private browsing mode)
 				}

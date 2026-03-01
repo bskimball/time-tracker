@@ -1557,10 +1557,23 @@ export function TimeTracking({
 	assignmentMode: TaskAssignmentMode;
 	taskOptions: TaskOption[];
 }) {
+	const getStatusBarOffset = () => {
+		if (typeof document === "undefined") {
+			return 0;
+		}
+
+		const statusBar = document.getElementById("app-status-bar");
+		if (!statusBar) {
+			return 0;
+		}
+
+		return Math.ceil(statusBar.getBoundingClientRect().bottom);
+	};
+
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
 	const [activeDrawer, setActiveDrawer] = useState<"roster" | "logs" | null>(null);
-	const [drawerTopOffset, setDrawerTopOffset] = useState(0);
+	const [drawerTopOffset, setDrawerTopOffset] = useState(() => getStatusBarOffset());
 
 	// Optimistic state for active logs
 	const [optimisticLogs, addOptimisticLog] = useOptimistic(
@@ -1632,15 +1645,12 @@ export function TimeTracking({
 	useEffect(() => {
 		const statusBar = document.getElementById("app-status-bar");
 		if (!statusBar) {
-			setDrawerTopOffset(0);
 			return;
 		}
 
 		const updateOffset = () => {
 			setDrawerTopOffset(Math.ceil(statusBar.getBoundingClientRect().bottom));
 		};
-
-		updateOffset();
 
 		const observer =
 			typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateOffset) : null;

@@ -21,15 +21,6 @@ export interface LaborCostAnalysis {
 	regularCost: number;
 }
 
-export interface ProductivityAnalytics {
-	unitsPerHour: number;
-	employeeId?: string;
-	stationId?: string;
-	shift?: string;
-	taskType?: string;
-	date: Date;
-}
-
 export interface StationPerformance {
 	stationId: string;
 	stationName: string;
@@ -38,131 +29,6 @@ export interface StationPerformance {
 	avgUnitsPerHour: number;
 	occupancyRate: number;
 	efficiencyScore: number;
-}
-
-/**
- * Calculate daily performance metrics for all employees
- */
-export async function calculateDailyperformanceMetrics(date: Date = new Date()) {
-	const dayStart = startOfDay(date);
-	const dayEnd = endOfDay(date);
-
-	try {
-		// Get all active employees
-		const employees = await db.employee.findMany({
-			where: { status: "ACTIVE" },
-			include: {
-				TimeLog: {
-					where: {
-						startTime: {
-							gte: dayStart,
-							lte: dayEnd,
-						},
-						endTime: { not: null },
-					},
-					include: {
-						Task: {
-							include: {
-								TaskType: true,
-							},
-						},
-					},
-				},
-			},
-		});
-
-		for (const employee of employees) {
-			await calculateEmployeeperformanceMetrics(employee, date);
-		}
-
-		console.log(
-			`Calculated performance metrics for ${employees.length} employees on ${date.toISOString().split("T")[0]}`
-		);
-	} catch (error) {
-		console.error("Error calculating daily performance metrics:", error);
-		throw error;
-	}
-}
-
-/**
- * Calculate performance metrics for a specific employee on a given date
- */
-type EmployeeWithTimeLogs = {
-	id: string;
-	TimeLog: Array<{
-		type: string;
-		startTime: Date | string;
-		endTime: Date | string | null;
-		stationId: string | null;
-		Task?: { unitsCompleted?: number | null } | null;
-	}>;
-};
-
-async function calculateEmployeeperformanceMetrics(employee: EmployeeWithTimeLogs, date: Date) {
-	const workLogs = employee.TimeLog.filter((log) => log.type === "WORK");
-
-	if (workLogs.length === 0) return;
-
-	// Calculate total hours worked
-	let totalHours = 0;
-	let overtimeHours = 0;
-	const stationMetrics = new Map<string, { hours: number; units: number }>();
-
-	for (const log of workLogs) {
-		const startTime = new Date(log.startTime);
-		const endTime = new Date(log.endTime!);
-		const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-
-		totalHours += hours;
-
-		// Calculate overtime (over 8 hours daily)
-		const dailyOvertime = Math.max(0, totalHours - 8);
-		overtimeHours = dailyOvertime;
-
-		// Track by station
-		const stationId = log.stationId || "unassigned";
-		if (!stationMetrics.has(stationId)) {
-			stationMetrics.set(stationId, { hours: 0, units: 0 });
-		}
-		const station = stationMetrics.get(stationId)!;
-		station.hours += hours;
-
-		// Count units from tasks
-		if (log.Task?.unitsCompleted) {
-			station.units += log.Task.unitsCompleted;
-		}
-	}
-
-	// Store metrics for each station
-	for (const [stationId, metrics] of stationMetrics) {
-		const efficiency = metrics.hours > 0 ? metrics.units / metrics.hours : 0;
-
-		await db.performanceMetric.upsert({
-			where: {
-				employeeId_date_stationId: {
-					employeeId: employee.id,
-					date: date,
-					stationId,
-				},
-			},
-			update: {
-				hoursWorked: metrics.hours,
-				unitsProcessed: metrics.units,
-				efficiency,
-				overtimeHours: stationId === stationMetrics.keys().next().value ? overtimeHours : 0,
-			},
-			create: {
-				id: `perf_${employee.id}_${date.toISOString().split("T")[0]}_${stationId}`,
-				employeeId: employee.id,
-				date,
-				stationId,
-				hoursWorked: metrics.hours,
-				unitsProcessed: metrics.units,
-				efficiency,
-				overtimeHours: stationId === stationMetrics.keys().next().value ? overtimeHours : 0,
-			},
-		});
-	}
 }
 
 /**
@@ -263,44 +129,6 @@ export async function getLaborCostAnalysis(
 		overtimeCost,
 		regularCost,
 	};
-}
-
-/**
- * Get productivity analytics filtered by various dimensions
- */
-export async function getProductivityAnalytics(
-	startDate: Date,
-	endDate: Date,
-	filters: {
-		employeeId?: string;
-		stationId?: string;
-		taskType?: string;
-	} = {}
-): Promise<ProductivityAnalytics[]> {
-	const whereClause: {
-		date: { gte: Date; lte: Date };
-		employeeId?: string;
-		stationId?: string;
-		taskType?: string;
-	} = {
-		date: {
-			gte: startOfDay(startDate),
-			lte: endOfDay(endDate),
-		},
-		...filters,
-	};
-
-	const metrics = await db.performanceMetric.findMany({
-		where: whereClause,
-		orderBy: { date: "asc" },
-	});
-
-	return metrics.map((metric) => ({
-		unitsPerHour: metric.efficiency || 0,
-		employeeId: metric.employeeId,
-		stationId: metric.stationId || undefined,
-		date: metric.date,
-	}));
 }
 
 /**

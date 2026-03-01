@@ -11,10 +11,7 @@ export { Badge } from "./badge";
 export { Metric } from "./metric";
 export {
 	SafetyStripes,
-	LedIndicator,
 	IndustrialPanel,
 	IndustrialHeader,
 	IndustrialSection,
 } from "./industrial";
-
-export * from "./decrypted-text";
