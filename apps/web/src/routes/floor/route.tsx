@@ -4,6 +4,7 @@ import { KioskRedirect } from "~/routes/time-clock/kiosk-redirect";
 import type { Employee, Station, TimeLog } from "@prisma/client";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
+import { validateRequest } from "~/lib/auth";
 
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
@@ -48,6 +49,7 @@ export default async function Component() {
 		stations,
 		activeLogs,
 		activeBreaks,
+		auth,
 		assignmentMode,
 		activeTaskTypes,
 		activeAssignments,
@@ -72,6 +74,7 @@ export default async function Component() {
 			include: { Employee: true, Station: true },
 			orderBy: { startTime: "desc" },
 		}),
+		validateRequest(),
 		getTaskAssignmentMode(),
 		db.taskType.findMany({
 			where: { isActive: true },
@@ -111,6 +114,8 @@ export default async function Component() {
 		},
 		{}
 	);
+
+	const workerEmployeeId = auth.user?.role === "WORKER" ? auth.user.employeeId : null;
 
 	return (
 		<>
@@ -153,6 +158,7 @@ export default async function Component() {
 							activeTasksByEmployee={activeTasksByEmployee}
 							assignmentMode={assignmentMode}
 							taskOptions={taskOptions}
+							workerEmployeeId={workerEmployeeId}
 						/>
 					</div>
 				</main>
