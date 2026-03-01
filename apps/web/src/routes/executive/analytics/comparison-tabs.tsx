@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { Tabs, TabList, Tab } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
@@ -26,9 +27,25 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 		: comparisonOptions;
 
 	const currentCompareParam = searchParams.get("compare") as ComparisonBasis | null;
-	const currentCompare = visibleOptions.some((option) => option.id === currentCompareParam)
-		? currentCompareParam
+	const currentCompare: ComparisonBasis = visibleOptions.some(
+		(option) => option.id === currentCompareParam
+	)
+		? (currentCompareParam as ComparisonBasis)
 		: (visibleOptions[0]?.id ?? "previous-period");
+
+	useEffect(() => {
+		if (!visibleOptions.length) {
+			return;
+		}
+
+		if (currentCompareParam === currentCompare) {
+			return;
+		}
+
+		const nextSearchParams = new URLSearchParams(searchParams);
+		nextSearchParams.set("compare", currentCompare);
+		navigate(`?${nextSearchParams.toString()}`, { replace: true });
+	}, [currentCompare, currentCompareParam, navigate, searchParams, visibleOptions.length]);
 
 	const handleComparisonChange = (key: string | number) => {
 		if (!visibleOptions.some((option) => option.id === key)) {
@@ -37,7 +54,9 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 
 		const newSearchParams = new URLSearchParams(searchParams);
 		newSearchParams.set("compare", key.toString());
-		navigate(`?${newSearchParams.toString()}`, { replace: false });
+		startTransition(() => {
+			navigate(`?${newSearchParams.toString()}`, { replace: false });
+		});
 	};
 
 	return (
