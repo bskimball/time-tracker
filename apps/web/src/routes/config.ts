@@ -63,6 +63,11 @@ export function routes(): RSCRouteConfig {
 							index: true,
 							lazy: () => import("./floor/route.tsx"),
 						},
+						{
+							id: "floor-time-clock-mobile",
+							path: "time-clock/mobile",
+							lazy: () => import("./floor/time-clock/mobile/route.tsx"),
+						},
 					],
 				},
 				{
