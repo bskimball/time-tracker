@@ -43,14 +43,14 @@ interface ScheduleViewProps {
 }
 
 const shiftColors: Record<string, string> = {
-	MORNING: "border-l-4 border-l-amber-500",
-	SWING: "border-l-4 border-l-blue-500",
-	NIGHT: "border-l-4 border-l-zinc-600",
+	MORNING: "border-l-4 border-l-warning",
+	SWING: "border-l-4 border-l-primary",
+	NIGHT: "border-l-4 border-l-muted-foreground",
 };
 
 const severityClasses: Record<StationGapInsight["severity"], string> = {
-	ok: "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
-	watch: "border-amber-500/50 bg-amber-500/10 text-amber-700",
+	ok: "border-success/50 bg-success/5 text-success",
+	watch: "border-warning/50 bg-warning/10 text-warning",
 	critical: "border-destructive/60 bg-destructive/10 text-destructive",
 };
 
@@ -249,7 +249,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
 								Confirmed
 							</p>
-							<p className="text-sm font-semibold text-emerald-600 font-mono">
+							<p className="text-sm font-semibold text-success font-mono">
 								{selectedDayStats.confirmed}
 							</p>
 						</div>
@@ -257,7 +257,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
 								Pending
 							</p>
-							<p className="text-sm font-semibold text-amber-600 font-mono">
+							<p className="text-sm font-semibold text-warning font-mono">
 								{selectedDayStats.pending}
 							</p>
 						</div>
@@ -297,7 +297,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							</p>
 							<p
 								className={`text-sm font-semibold font-mono ${
-									selectedDayGapSummary.gap > 0 ? "text-destructive" : "text-emerald-600"
+									selectedDayGapSummary.gap > 0 ? "text-destructive" : "text-success"
 								}`}
 							>
 								{selectedDayGapSummary.gap > 0
@@ -627,7 +627,7 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 																	backgroundColor:
 																		utilization > 80
 																			? "var(--color-primary)"
-																			: "var(--color-chart-3)",
+																			: "var(--color-success)",
 																}}
 															/>
 														</div>

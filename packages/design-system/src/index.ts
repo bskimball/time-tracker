@@ -11,7 +11,6 @@ export { Badge } from "./components/badge";
 export { Metric } from "./components/metric";
 export {
 	SafetyStripes,
-	LedIndicator,
 	IndustrialPanel,
 	IndustrialHeader,
 	IndustrialSection,

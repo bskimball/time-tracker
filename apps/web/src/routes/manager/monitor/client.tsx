@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useNavigation } from "react-router";
-import { Card, Badge, IndustrialPanel, LedIndicator } from "@monorepo/design-system";
+import { Card, Badge, IndustrialPanel } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
@@ -209,7 +209,7 @@ export function FloorMonitor({
 					icon="industry"
 					trend={{
 						direction: stationLoadPercent > 80 ? "up" : "neutral",
-						value: "Occupancy"
+						value: "Occupancy",
 					}}
 				/>
 
@@ -220,7 +220,7 @@ export function FloorMonitor({
 					icon="clock"
 					trend={{
 						direction: breakLogs.length > 2 ? "down" : "neutral", // Arbitrary logic for demo
-						value: "Workers"
+						value: "Workers",
 					}}
 				/>
 
@@ -316,11 +316,15 @@ export function FloorMonitor({
 													CAP: {capacity} | ID: {station.id.slice(0, 4)}
 												</div>
 											</div>
-											<LedIndicator
-												active={status !== "IDLE" && status !== "INACTIVE"}
+											<div
 												className={cn(
-													status === "FULL" && "bg-destructive shadow-destructive/50",
-													status === "BUSY" && "bg-amber-500 shadow-amber-500/50"
+													"w-2 h-2 rounded-full transition-all duration-300 ease-out shadow-sm",
+													status !== "IDLE" && status !== "INACTIVE"
+														? "bg-primary shadow-[0_0_8px_rgba(224,116,38,0.5)] scale-100"
+														: "bg-muted-foreground/30 scale-90",
+													status === "FULL" &&
+														"bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+													status === "BUSY" && "bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]"
 												)}
 											/>
 										</div>
@@ -343,7 +347,7 @@ export function FloorMonitor({
 																? status === "FULL"
 																	? "bg-destructive"
 																	: status === "BUSY"
-																		? "bg-amber-500"
+																		? "bg-warning"
 																		: "bg-primary"
 																: "bg-transparent"
 														)}
@@ -475,7 +479,7 @@ export function FloorMonitor({
 									<div className="text-center">
 										<Badge
 											variant="outline"
-											className="text-[10px] h-5 px-1 bg-blue-500/10 text-blue-600 border-blue-200"
+											className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20"
 										>
 											ASSIGNED
 										</Badge>

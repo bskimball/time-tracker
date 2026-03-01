@@ -519,6 +519,59 @@ export async function deleteTimeLog(
 	return { success: true, message: "Time log deleted" };
 }
 
+export async function checkPinStatus(_prevState: any, formData: FormData) {
+	const pin = String(formData.get("pin") || "").trim();
+
+	if (!/^\d{4,6}$/.test(pin)) {
+		return { success: false, error: "PIN must be 4-6 digits" };
+	}
+
+	await ensureOperationalDataSeeded();
+
+	const employees = await db.employee.findMany({
+		where: {
+			status: "ACTIVE",
+			pinHash: { not: null },
+		},
+	});
+
+	let matchedEmployee: (typeof employees)[number] | null = null;
+	for (const employee of employees) {
+		if (!employee.pinHash) {
+			continue;
+		}
+		const isMatch = await bcrypt.compare(pin, employee.pinHash);
+		if (isMatch) {
+			matchedEmployee = employee;
+			break;
+		}
+	}
+
+	if (!matchedEmployee) {
+		return { success: false, error: "Invalid PIN" };
+	}
+
+	const activeWorkLog = await db.timeLog.findFirst({
+		where: {
+			employeeId: matchedEmployee.id,
+			type: "WORK",
+			endTime: null,
+			deletedAt: null,
+		},
+		select: { id: true, stationId: true },
+	});
+
+	return {
+		success: true,
+		employeeId: matchedEmployee.id,
+		employeeName: matchedEmployee.name,
+		isClockedIn: !!activeWorkLog,
+		lastStationId: matchedEmployee.lastStationId,
+		defaultStationId: matchedEmployee.defaultStationId,
+		pin, // Send pin back to include in the final form
+	};
+}
+
 export async function pinToggleClock(
 	_prevState: ClockActionState,
 	formData: FormData

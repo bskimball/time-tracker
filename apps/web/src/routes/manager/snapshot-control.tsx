@@ -35,7 +35,7 @@ export function ManagerSnapshotControl({
 		>
 			<div className="flex items-center gap-2 px-3 py-2">
 				<span
-					className={cn("h-1.5 w-1.5 rounded-full", isStale ? "bg-amber-500" : "bg-emerald-500")}
+					className={cn("h-1.5 w-1.5 rounded-full", isStale ? "bg-warning" : "bg-success")}
 					aria-hidden="true"
 				/>
 				<div className="flex flex-col leading-none">

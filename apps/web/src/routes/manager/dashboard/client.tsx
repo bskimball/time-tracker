@@ -4,7 +4,7 @@ import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useNavigation } from "react-router";
 import { Card, CardHeader, CardTitle, CardBody, Alert } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
-import { IndustrialPanel, LedIndicator } from "@monorepo/design-system";
+import { IndustrialPanel } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
@@ -16,6 +16,8 @@ import {
 	LiaTasksSolid,
 	LiaFileAltSolid,
 	LiaExclamationTriangleSolid,
+	LiaUserClockSolid,
+	LiaStopwatchSolid,
 } from "react-icons/lia";
 import type { TimeLog, Employee, Station, User } from "@prisma/client";
 import { cn } from "~/lib/cn";
@@ -175,7 +177,7 @@ export function ManagerDashboard({
 					trend={{
 						direction: "neutral",
 						value: `${totalEmployees > 0 ? Math.round((activeSessionCount / totalEmployees) * 100) : 0}%`,
-						label: "Active"
+						label: "Active",
 					}}
 				/>
 
@@ -241,7 +243,7 @@ export function ManagerDashboard({
 												className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-muted/10 transition-colors group"
 											>
 												<div className="col-span-4 flex items-center gap-3">
-													<LedIndicator active={true} className="w-2 h-2" />
+													<div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(224,116,38,0.5)] scale-100" />
 													<div>
 														<div className="font-medium font-heading text-sm group-hover:text-primary transition-colors">
 															{assignment.employeeName}
@@ -410,7 +412,7 @@ function NetworkStatusValue({
 	const networkStatus = use(networkStatusPromise);
 	return (
 		<span
-			className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-emerald-600" : "text-warning"}`}
+			className={`font-data font-medium ${networkStatus === "ONLINE" ? "text-success" : "text-warning"}`}
 		>
 			{networkStatus}
 		</span>
@@ -455,13 +457,7 @@ function ActiveAlertsMetric({ alertsPromise }: { alertsPromise: Promise<AlertDat
 }
 
 function ActiveAlertsMetricFallback() {
-	return (
-		<KPICard
-			title="Active Alerts"
-			value="--"
-			loading={true}
-		/>
-	);
+	return <KPICard title="Active Alerts" value="--" loading={true} />;
 }
 
 function CriticalAlertsBanner({ alertsPromise }: { alertsPromise: Promise<AlertData[]> }) {
@@ -475,25 +471,17 @@ function CriticalAlertsBanner({ alertsPromise }: { alertsPromise: Promise<AlertD
 	return (
 		<div className="space-y-2">
 			{criticalAlerts.map((alert) => (
-				<Alert
-					key={alert.id}
-					variant="error"
-					className="border-l-4 border-l-red-600 shadow-sm animate-pulse-slow"
-				>
+				<Alert key={alert.id} variant="error" className="shadow-sm animate-pulse-slow">
 					<div className="flex justify-between items-start gap-4">
 						<div>
-							<h4 className="font-heading font-bold text-red-900 dark:text-red-100 flex items-center gap-2">
+							<h4 className="font-heading font-bold text-destructive flex items-center gap-2">
 								<LiaExclamationTriangleSolid /> {alert.title}
 							</h4>
-							<p className="mt-1 text-sm font-medium opacity-90">{alert.description}</p>
+							<p className="mt-1 text-sm font-medium text-foreground">{alert.description}</p>
 						</div>
 						{alert.actionUrl && (
 							<Link to={alert.actionUrl}>
-								<Button
-									size="xs"
-									variant="outline"
-									className="bg-background/50 hover:bg-background border-red-200 text-red-900"
-								>
+								<Button size="xs" variant="error">
 									Resolve
 								</Button>
 							</Link>
@@ -535,7 +523,7 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 			<CardBody className="p-0">
 				{warningAlerts.length === 0 && criticalAlerts.length === 0 ? (
 					<div className="p-6 text-center text-muted-foreground">
-						<div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mb-2">
+						<div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-success/10 text-success mb-2">
 							<LiaStopwatchSolid />
 						</div>
 						<p className="text-sm">All systems nominal.</p>
@@ -593,10 +581,10 @@ function OperationalFeedCard({ alertsPromise }: { alertsPromise: Promise<AlertDa
 
 function OperationalFeedFallback() {
 	return (
-		<Card className="border-t-4 border-t-orange-500 shadow-sm">
+		<Card className="border-t-4 border-t-warning shadow-sm">
 			<CardHeader className="pb-3 border-b border-border/50">
 				<div className="flex justify-between items-center">
-					<CardTitle className="text-base uppercase tracking-wider text-orange-700 dark:text-orange-400">
+					<CardTitle className="text-base uppercase tracking-wider text-warning">
 						Operational Feed
 					</CardTitle>
 					<span className="text-xs font-data bg-muted px-1.5 py-0.5 rounded-sm">...</span>

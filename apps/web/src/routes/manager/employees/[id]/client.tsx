@@ -222,7 +222,7 @@ export function EmployeeDetail({ employee }: EmployeeDetailProps) {
 		const sign = value > 0 ? "+" : "";
 		return {
 			label: `${sign}${value.toFixed(1)} ${unit}`,
-			className: value > 0 ? "text-emerald-600" : "text-red-600",
+			className: value > 0 ? "text-success" : "text-destructive",
 		};
 	};
 

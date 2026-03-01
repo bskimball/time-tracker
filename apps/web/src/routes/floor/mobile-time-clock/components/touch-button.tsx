@@ -130,9 +130,9 @@ export function TouchButton({
 			>
 				<span className="flex items-center gap-3 justify-center relative z-10">
 					{icon && <span className="flex-shrink-0">{icon}</span>}
-					<span className="font-bold">{children}</span>
+					<span className="font-bold uppercase tracking-tight">{children}</span>
 					{badge && (
-						<span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full min-w-[24px] min-h-[24px] flex items-center justify-center text-xs font-bold animate-pulse">
+						<span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full min-w-[24px] min-h-[24px] flex items-center justify-center text-xs font-bold animate-pulse shadow-sm">
 							{badge}
 						</span>
 					)}

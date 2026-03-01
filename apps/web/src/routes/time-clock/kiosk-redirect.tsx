@@ -13,7 +13,7 @@ export function KioskRedirect() {
 		if (typeof window !== "undefined") {
 			const stored = window.localStorage.getItem(KIOSK_STORAGE_KEY);
 			if (stored === "true") {
-				navigate("/time-clock/kiosk");
+				navigate("/floor/kiosk");
 			}
 		}
 	}, [navigate]);

@@ -114,12 +114,7 @@ export function ErrorBoundary() {
 				<SafetyStripes position="top" />
 
 				<IndustrialPanel variant="destructive">
-					<IndustrialHeader
-						title={status}
-						subtitle="System Alert"
-						badge={errorName}
-						active={true}
-					/>
+					<IndustrialHeader title={status} subtitle="System Alert" badge={errorName} />
 
 					{/* Error Message */}
 					<IndustrialSection title="Error Message">

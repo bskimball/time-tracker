@@ -68,8 +68,8 @@ export function TodoItem({
 							<>
 								<div
 									className={cn(
-										"w-5 h-5 border-2 border-blue-600 rounded transition-all",
-										isSelected ? "bg-blue-600" : "bg-white"
+										"w-5 h-5 border-[1px] border-primary rounded-[2px] transition-all flex items-center justify-center",
+										isSelected ? "bg-primary" : "bg-card"
 									)}
 								>
 									{isSelected && (

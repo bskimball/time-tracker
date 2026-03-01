@@ -25,12 +25,18 @@ import {
 } from "~/routes/time-clock/actions";
 import type { ClockActionState } from "~/routes/time-clock/actions";
 import { cn } from "~/lib/cn";
-import { Button } from "@monorepo/design-system";
-import { Alert } from "@monorepo/design-system";
-import { Card, CardHeader, CardTitle, CardBody } from "@monorepo/design-system";
-import { SimpleInput, Input } from "@monorepo/design-system";
-import { Select } from "@monorepo/design-system";
-import { Form } from "@monorepo/design-system";
+import {
+	Button,
+	Alert,
+	SimpleInput,
+	Input,
+	Select,
+	Form,
+	Card,
+	CardHeader,
+	CardTitle,
+	CardBody,
+} from "@monorepo/design-system";
 import { KioskContext, useKioskContext, type KioskContextValue } from "./context";
 import { useAutoRefresh, useKioskMode } from "./hooks";
 import { notify, subscribe } from "./notifications";
@@ -92,7 +98,8 @@ function ClockInForm({
 		null
 	);
 	const [selectState, selectFormAction] = useActionState<ClockActionState, FormData>(clockIn, null);
-	const [isEditingApiKey, setIsEditingApiKey] = useState(false);
+	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+	const [draftApiKey, setDraftApiKey] = useState(apiKey);
 
 	const handleOfflineSubmit = useCallback(
 		(
@@ -186,6 +193,21 @@ function ClockInForm({
 		[handleOfflineSubmit, employees, stations, onOptimisticClockIn]
 	);
 
+	const handleApiDialogOpenChange = useCallback(
+		(isOpen: boolean) => {
+			setIsApiKeyDialogOpen(isOpen);
+			if (isOpen) {
+				setDraftApiKey(apiKey);
+			}
+		},
+		[apiKey]
+	);
+
+	const handleSaveApiKey = useCallback(() => {
+		saveApiKey(draftApiKey.trim());
+		setIsApiKeyDialogOpen(false);
+	}, [draftApiKey, saveApiKey]);
+
 	useEffect(() => {
 		if (pinState?.success) {
 			// eslint-disable-next-line react-hooks/set-state-in-effect
@@ -214,188 +236,248 @@ function ClockInForm({
 	}, [selectState]);
 
 	return (
-		<Card>
+		<Card className="flex flex-col">
 			<CardHeader>
-				<CardTitle>Clock In/Out</CardTitle>
+				<CardTitle className="flex items-center gap-2">
+					<span className="w-2 h-2 rounded-full bg-primary" />
+					Access Terminal
+				</CardTitle>
 			</CardHeader>
-			<CardBody>
-				<div className="flex justify-between items-center text-xs text-muted-foreground">
-					<span>
-						Kiosk mode {kioskEnabled ? "enabled" : "disabled"}
-						{actionQueueSize > 0 && ` • ${actionQueueSize} pending`}
-					</span>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						onClick={syncOfflineActions}
-						disabled={isSyncing || actionQueueSize === 0}
-					>
-						{isSyncing ? "Syncing..." : actionQueueSize > 0 ? "Sync now" : "Queue empty"}
-					</Button>
-				</div>
-
-				<div className="mt-3 flex flex-col gap-2 mb-6">
-					<label className="text-xs font-medium text-foreground">Device API Key</label>
-					{isEditingApiKey ? (
-						<div className="flex gap-2 animate-fade-in">
-							<div className="flex-1">
-								<SimpleInput
-									type="text"
-									value={apiKey}
-									onChange={(e) => saveApiKey(e.target.value)}
-									placeholder="Enter API Key"
-									autoFocus
-								/>
-							</div>
-							<Button size="sm" onPress={() => setIsEditingApiKey(false)}>
-								Done
-							</Button>
-						</div>
-					) : (
-						<div className="flex justify-between items-center p-3 bg-muted/20 rounded-[2px] border border-border/50 group hover:border-primary/30 transition-colors">
-							<span className="text-xs font-mono text-muted-foreground tracking-wider">
-								{apiKey ? `••••••••${apiKey.slice(-4)}` : "NO API KEY SET"}
+			<CardBody className="flex-1 flex flex-col gap-6">
+				<div className="grid gap-4 md:grid-cols-2">
+					<div className="bg-muted/50 p-3 rounded-[2px] border border-border/50 flex items-center justify-between gap-3">
+						<div className="flex items-center gap-4 text-xs text-muted-foreground">
+							<span className="flex items-center gap-2">
+								<span>Mode</span>
+								<span
+									className={
+										kioskEnabled ? "text-primary font-medium" : "font-medium text-foreground"
+									}
+								>
+									{kioskEnabled ? "Kiosk" : "Standard"}
+								</span>
 							</span>
-							<button
-								type="button"
-								className="text-xs font-medium text-primary hover:text-primary/80 uppercase tracking-wider"
-								onClick={() => setIsEditingApiKey(true)}
-							>
-								Edit
-							</button>
+							<span className="flex items-center gap-1.5">
+								<span
+									className={cn(
+										"w-2 h-2 rounded-full",
+										actionQueueSize > 0 ? "bg-amber-500" : "bg-emerald-500"
+									)}
+								/>
+								{actionQueueSize} queued
+							</span>
 						</div>
-					)}
+						<Button
+							type="button"
+							variant={actionQueueSize > 0 ? "secondary" : "ghost"}
+							size="sm"
+							onPress={syncOfflineActions}
+							disabled={isSyncing || actionQueueSize === 0}
+							className={actionQueueSize === 0 ? "text-muted-foreground" : undefined}
+						>
+							{isSyncing ? "Syncing..." : "Force Sync"}
+						</Button>
+					</div>
+
+					<div className="bg-muted/50 p-3 rounded-[2px] border border-border/50 flex items-center justify-between gap-3">
+						<div className="flex flex-col">
+							<span className="text-xs text-muted-foreground">Device Auth</span>
+							<span className="text-sm font-mono text-foreground">
+								{apiKey ? `••••••••${apiKey.slice(-4)}` : "No token configured"}
+							</span>
+						</div>
+						<DialogTrigger isOpen={isApiKeyDialogOpen} onOpenChange={handleApiDialogOpenChange}>
+							<Button type="button" variant="outline" size="sm">
+								{apiKey ? "Manage Token" : "Add Token"}
+							</Button>
+							<ModalOverlay className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+								<Modal className="bg-card border border-border rounded-[2px] shadow-xl w-full max-w-md mx-4">
+									<Dialog className="outline-none p-5 space-y-4">
+										<div className="space-y-1">
+											<h3 className="text-base font-semibold text-foreground">Device Auth Token</h3>
+											<p className="text-sm text-muted-foreground">
+												Used for online sync and secure clock actions.
+											</p>
+										</div>
+										<SimpleInput
+											type="text"
+											value={draftApiKey}
+											onChange={(e) => setDraftApiKey(e.target.value)}
+											placeholder="Enter token"
+											autoFocus
+										/>
+										<div className="flex justify-between items-center pt-2">
+											<Button
+												type="button"
+												variant="ghost"
+												size="sm"
+												onPress={() => setDraftApiKey("")}
+											>
+												Clear
+											</Button>
+											<div className="flex gap-2">
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													onPress={() => setIsApiKeyDialogOpen(false)}
+												>
+													Cancel
+												</Button>
+												<Button
+													type="button"
+													variant="secondary"
+													size="sm"
+													onPress={handleSaveApiKey}
+												>
+													Save Token
+												</Button>
+											</div>
+										</div>
+									</Dialog>
+								</Modal>
+							</ModalOverlay>
+						</DialogTrigger>
+					</div>
 				</div>
 
-				<div className="flex gap-2 w-full mb-4 bg-muted/10 p-1 rounded-[4px] border border-border/30">
-					<Button
+				<div className="flex gap-1 w-full p-1 bg-muted/30 rounded-[2px] border border-border/50">
+					<button
 						type="button"
-						variant={method === "pin" ? "primary" : "ghost"}
-						className={cn("flex-1 rounded-[2px]", method === "pin" && "shadow-sm")}
-						onPress={() => setMethod("pin")}
+						className={cn(
+							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+							method === "pin"
+								? "bg-background text-foreground shadow-sm border border-border/50"
+								: "hover:bg-muted/50 text-muted-foreground"
+						)}
+						onClick={() => setMethod("pin")}
 					>
-						PIN Number
-					</Button>
-					<Button
+						PIN Entry
+					</button>
+					<button
 						type="button"
-						variant={method === "select" ? "primary" : "ghost"}
-						className={cn("flex-1 rounded-[2px]", method === "select" && "shadow-sm")}
-						onPress={() => setMethod("select")}
+						className={cn(
+							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+							method === "select"
+								? "bg-background text-foreground shadow-sm border border-border/50"
+								: "hover:bg-muted/50 text-muted-foreground"
+						)}
+						onClick={() => setMethod("select")}
 					>
-						Select Employee
-					</Button>
+						Manual Select
+					</button>
 				</div>
 
 				{method === "pin" ? (
-					<Form action={pinFormAction} onSubmit={handlePinSubmit}>
-						<div className="flex flex-col gap-1">
-							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">
-									Enter PIN
-								</span>
-							</label>
-							<Input
-								type="password"
-								name="pin"
-								value={pin}
-								ref={pinInputRef}
-								onChange={(e) => {
-									const value = e.target.value.replace(/\D/g, "");
-									if (value.length <= 6) {
-										setPin(value);
-									}
-								}}
-								placeholder="4-6 digit PIN"
-								className="px-3 py-2 border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full"
-								inputMode="numeric"
-								autoFocus={kioskEnabled}
-								maxLength={6}
-								pattern="\d{4,6}"
-								required
-							/>
+					<Form
+						action={pinFormAction}
+						onSubmit={handlePinSubmit}
+						className="flex flex-col flex-1 gap-6"
+					>
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="flex flex-col gap-2">
+								<label className="text-sm font-medium text-foreground flex justify-between">
+									<span>Security PIN</span>
+									<span className="text-muted-foreground font-normal">4-6 digits</span>
+								</label>
+								<div className="relative">
+									<Input
+										type="password"
+										name="pin"
+										value={pin}
+										ref={pinInputRef}
+										onChange={(e) => {
+											const value = e.target.value.replace(/\D/g, "");
+											if (value.length <= 6) {
+												setPin(value);
+											}
+										}}
+										placeholder="••••"
+										className="h-10 text-center text-base tracking-[0.35em]"
+										inputMode="numeric"
+										autoFocus={kioskEnabled}
+										maxLength={6}
+										pattern="\d{4,6}"
+										required
+									/>
+								</div>
+							</div>
+
+							<div className="flex flex-col gap-2">
+								<label className="text-sm font-medium text-foreground">Location Override</label>
+								<Select
+									name="stationId"
+									options={[
+										{ value: "", label: "Auto-detect (Last known)" },
+										...stations.map((st) => ({ value: st.id, label: st.name })),
+									]}
+								/>
+							</div>
 						</div>
 
-						<div className="flex flex-col gap-1 mt-3">
-							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">
-									Station
-								</span>
-							</label>
-							<Select
-								name="stationId"
-								options={[
-									{ value: "", label: "Use last station" },
-									...stations.map((st) => ({ value: st.id, label: st.name })),
-								]}
-							/>
-						</div>
-
-						<div className="flex justify-end mt-4">
+						<div className="mt-auto pt-5 border-t border-border flex justify-end">
 							<PinSubmitButton />
 						</div>
 
 						{pinState?.error && (
-							<Alert variant="error" className="relative mt-3">
+							<Alert variant="error" className="relative mt-4 text-sm">
 								{pinState.error}
 							</Alert>
 						)}
 						{pinState?.success && pinState?.message && (
-							<Alert variant="success" className="relative mt-3">
+							<Alert variant="success" className="relative mt-4 text-sm">
 								{pinState.message}
 							</Alert>
 						)}
 					</Form>
 				) : (
-					<Form action={selectFormAction} onSubmit={handleSelectSubmit}>
-						<div className="flex flex-col gap-1">
-							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">
-									Employee
-								</span>
-							</label>
-							<Select
-								name="employeeId"
-								options={[
-									{ value: "", label: "Select employee" },
-									...employees.map((emp) => ({ value: emp.id, label: emp.name })),
-								]}
-								value={selectedEmployeeId}
-								onChange={setSelectedEmployeeId}
-								isDisabled={employees.length === 0}
-							/>
+					<Form
+						action={selectFormAction}
+						onSubmit={handleSelectSubmit}
+						className="flex flex-col flex-1 gap-6"
+					>
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="flex flex-col gap-2">
+								<label className="text-sm font-medium text-foreground">Personnel Roster</label>
+								<Select
+									name="employeeId"
+									options={[
+										{ value: "", label: "-- Select Personnel --" },
+										...employees.map((emp) => ({ value: emp.id, label: emp.name })),
+									]}
+									value={selectedEmployeeId}
+									onChange={setSelectedEmployeeId}
+									isDisabled={employees.length === 0}
+								/>
+							</div>
+
+							<div className="flex flex-col gap-2">
+								<label className="text-sm font-medium text-foreground">Assigned Station</label>
+								<Select
+									name="stationId"
+									options={[
+										{ value: "", label: "-- Select Station --" },
+										...stations.map((st) => ({ value: st.id, label: st.name })),
+									]}
+									value={selectedStationId}
+									onChange={setSelectedStationId}
+									isDisabled={stations.length === 0}
+								/>
+							</div>
 						</div>
 
-						<div className="flex flex-col gap-1 mt-3">
-							<label className="flex items-center justify-between">
-								<span className="text-sm font-medium text-foreground w-24 inline-block">
-									Station
-								</span>
-							</label>
-							<Select
-								name="stationId"
-								options={[
-									{ value: "", label: "Select station" },
-									...stations.map((st) => ({ value: st.id, label: st.name })),
-								]}
-								value={selectedStationId}
-								onChange={setSelectedStationId}
-								isDisabled={stations.length === 0}
-							/>
-						</div>
-
-						<div className="flex justify-end mt-4">
+						<div className="mt-auto pt-5 border-t border-border flex justify-end">
 							<ClockInButton />
 						</div>
 
 						{selectState?.error && (
-							<Alert variant="error" className="relative mt-3">
+							<Alert variant="error" className="relative mt-4 text-sm">
 								{selectState.error}
 							</Alert>
 						)}
 						{selectState?.success && (
-							<Alert variant="success" className="relative mt-3">
-								Clocked in successfully!
+							<Alert variant="success" className="relative mt-4 text-sm">
+								Clock In Successful
 							</Alert>
 						)}
 					</Form>
@@ -408,7 +490,12 @@ function ClockInForm({
 function ClockInButton() {
 	const { pending } = useFormStatus();
 	return (
-		<Button type="submit" variant="primary" disabled={pending}>
+		<Button
+			type="submit"
+			variant="primary"
+			disabled={pending}
+			className="w-full md:w-auto md:min-w-44"
+		>
 			{pending ? "Clocking In..." : "Clock In"}
 		</Button>
 	);
@@ -417,7 +504,12 @@ function ClockInButton() {
 function PinSubmitButton() {
 	const { pending } = useFormStatus();
 	return (
-		<Button type="submit" variant="primary" disabled={pending}>
+		<Button
+			type="submit"
+			variant="primary"
+			disabled={pending}
+			className="w-full md:w-auto md:min-w-44"
+		>
 			{pending ? "Processing..." : "Clock In/Out"}
 		</Button>
 	);
@@ -483,12 +575,13 @@ function BreakButton({ employeeId, onBreak }: { employeeId: string; onBreak: boo
 			<Button
 				type="submit"
 				variant={onBreak ? "error" : "primary"}
-				size={kioskEnabled ? "sm" : "xs"}
+				size={kioskEnabled ? "lg" : "md"}
 				disabled={pending}
+				className="w-full"
 			>
 				{pending ? "..." : onBreak ? "End Break" : "Start Break"}
 			</Button>
-			{state?.error && <span className="text-xs text-red-600 ml-2">{state.error}</span>}
+			{state?.error && <span className="text-xs text-red-600 mt-1 block">{state.error}</span>}
 		</form>
 	);
 }
@@ -557,22 +650,14 @@ function WorkerTaskControls({
 	}
 
 	return (
-		<div className="mt-3 border border-border/60 rounded-[2px] bg-card px-3 py-3 space-y-3">
-			<p className="text-[11px] font-industrial uppercase tracking-[0.16em] text-muted-foreground">
-				Task Controls
-			</p>
+		<div className="mt-4 border-t border-border pt-4 space-y-3">
+			<div className="flex items-center gap-2">
+				<p className="text-xs font-medium text-muted-foreground">Sub-Routine / Task</p>
+			</div>
 
 			{requiresTask && !activeTask && (
-				<Alert variant="warning" aria-live="assertive" className="relative">
-					Task assignment required while clocked in. Start a task now.
-				</Alert>
-			)}
-
-			{activeTask && (
-				<div className="text-xs text-muted-foreground">
-					Current task:{" "}
-					<span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
-					{activeTask.stationName ? ` @ ${activeTask.stationName}` : ""}
+				<div className="bg-amber-500/10 border-l-2 border-amber-500 p-3 rounded-r-md">
+					<p className="text-sm text-amber-600 font-medium">Task Assignment Required</p>
 				</div>
 			)}
 
@@ -580,10 +665,13 @@ function WorkerTaskControls({
 				<Select
 					name="workerTaskType"
 					options={[
-						{ value: "", label: activeTask ? "Select replacement task" : "Select task" },
+						{
+							value: "",
+							label: activeTask ? "-- Select Replacement Task --" : "-- Select Task --",
+						},
 						...taskOptions.map((task) => ({
 							value: task.id,
-							label: task.stationName ? `${task.name} (${task.stationName})` : task.name,
+							label: task.stationName ? `${task.name} [${task.stationName}]` : task.name,
 						})),
 					]}
 					value={selectedTaskId}
@@ -592,12 +680,13 @@ function WorkerTaskControls({
 				/>
 
 				{activeTask ? (
-					<div className="flex flex-wrap gap-2">
+					<div className="flex flex-wrap gap-2 mt-2">
 						<form
 							action={switchFormAction}
 							onSubmit={() => {
 								resetSelectedTask();
 							}}
+							className="flex-1"
 						>
 							<input type="hidden" name="employeeId" value={employeeId} />
 							<input type="hidden" name="taskTypeId" value={selectedTaskId} />
@@ -607,18 +696,25 @@ function WorkerTaskControls({
 								type="submit"
 								variant="outline"
 								size="sm"
+								className="w-full"
 								disabled={isPending || !selectedTaskId}
 							>
-								{isSwitchPending ? "Switching..." : "Switch Task"}
+								{isSwitchPending ? "Switching..." : "Execute Switch"}
 							</Button>
 						</form>
 
-						<form action={endFormAction}>
+						<form action={endFormAction} className="flex-1">
 							<input type="hidden" name="employeeId" value={employeeId} />
 							<input type="hidden" name="assignmentId" value={activeTask.assignmentId} />
 							<input type="hidden" name="taskId" value={activeTask.assignmentId} />
-							<Button type="submit" variant="secondary" size="sm" disabled={isPending}>
-								{isEndPending ? "Ending..." : "End Task"}
+							<Button
+								type="submit"
+								variant="secondary"
+								size="sm"
+								className="w-full"
+								disabled={isPending}
+							>
+								{isEndPending ? "Terminating..." : "Terminate Task"}
 							</Button>
 						</form>
 					</div>
@@ -628,6 +724,7 @@ function WorkerTaskControls({
 						onSubmit={() => {
 							resetSelectedTask();
 						}}
+						className="mt-2"
 					>
 						<input type="hidden" name="employeeId" value={employeeId} />
 						<input type="hidden" name="taskTypeId" value={selectedTaskId} />
@@ -635,9 +732,10 @@ function WorkerTaskControls({
 							type="submit"
 							variant="primary"
 							size="sm"
+							className="w-full"
 							disabled={isPending || !selectedTaskId}
 						>
-							{isStartPending ? "Starting..." : "Start Task"}
+							{isStartPending ? "Initializing..." : "Initialize Task"}
 						</Button>
 					</form>
 				)}
@@ -645,17 +743,17 @@ function WorkerTaskControls({
 
 			<div aria-live="polite" className="space-y-2">
 				{startState?.error && (
-					<Alert variant="error" className="relative">
+					<Alert variant="error" className="text-sm">
 						{startState.error}
 					</Alert>
 				)}
 				{switchState?.error && (
-					<Alert variant="error" className="relative">
+					<Alert variant="error" className="text-sm">
 						{switchState.error}
 					</Alert>
 				)}
 				{endState?.error && (
-					<Alert variant="error" className="relative">
+					<Alert variant="error" className="text-sm">
 						{endState.error}
 					</Alert>
 				)}
@@ -704,52 +802,102 @@ function ActiveSessions({
 	}, [state]);
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Active Sessions</CardTitle>
+		<Card className="flex flex-col">
+			<CardHeader className="flex flex-row justify-between items-center">
+				<CardTitle className="flex items-center gap-2">
+					<span className="w-2 h-2 rounded-full bg-primary" />
+					Active Roster
+				</CardTitle>
+				<div className="text-sm font-medium text-muted-foreground bg-background/50 border border-border/50 px-3 py-1 rounded-[2px] z-10 relative">
+					Count: {activeLogs.length}
+				</div>
 			</CardHeader>
 			<CardBody>
 				{activeLogs.length === 0 ? (
-					<p>No active sessions</p>
+					<div className="h-full min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed border-border/40 rounded-[2px] text-muted-foreground bg-muted/5">
+						<svg
+							className="w-10 h-10 mb-3 opacity-30"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={1.5}
+								d="M12 4v16m8-8H4"
+							/>
+						</svg>
+						<p className="font-medium text-sm">No Active Personnel</p>
+					</div>
 				) : (
-					<div className="space-y-2">
+					<div className="space-y-4">
 						{activeLogs.map((log) => {
 							const employeeOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
 							const activeTask = activeTasksByEmployee?.[log.employeeId];
 
 							return (
-								<div key={log.id} className="p-4 bg-base-200 rounded space-y-3">
-									<div className="flex justify-between items-start gap-3">
+								<div
+									key={log.id}
+									className="relative bg-card border border-border rounded-[2px] p-4 shadow-sm transition-all hover:border-primary/30"
+								>
+									{/* Status indicator line */}
+									<div
+										className={cn(
+											"absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[2px] transition-colors",
+											employeeOnBreak ? "bg-amber-500" : "bg-primary"
+										)}
+									/>
+
+									<div className="flex flex-col sm:flex-row justify-between items-start gap-4 pl-3">
 										<div className="flex-1 min-w-0">
-											<div className="flex items-center gap-2">
-												<p className="font-semibold">{log.Employee.name}</p>
-												{employeeOnBreak && (
-													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+											<div className="flex flex-wrap items-center gap-3 mb-2">
+												<p className="font-semibold text-lg text-foreground">{log.Employee.name}</p>
+												{employeeOnBreak ? (
+													<span className="text-xs bg-amber-500/10 text-amber-600 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">
 														On Break
+													</span>
+												) : (
+													<span className="text-xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-medium">
+														Active
 													</span>
 												)}
 											</div>
-											<p className="text-sm text-muted-foreground">
-												{log.Station?.name || "No station"}
-											</p>
-											{activeTask && (
-												<p className="text-xs text-muted-foreground">
-													Task:{" "}
-													<span className="font-medium text-foreground">
-														{activeTask.taskTypeName}
+											<div className="flex flex-col gap-1.5">
+												<p className="text-sm text-muted-foreground flex items-center gap-2">
+													<span className="font-medium">Location:</span>
+													<span className="text-foreground">
+														{log.Station?.name || "Unassigned"}
 													</span>
 												</p>
-											)}
-											<p className="text-xs">
-												Started: {new Date(log.startTime).toLocaleTimeString()}
-											</p>
-											<ElapsedTime startTime={log.startTime} />
+												{activeTask && (
+													<p className="text-sm text-muted-foreground flex items-center gap-2">
+														<span className="font-medium">Task:</span>
+														<span className="text-foreground font-semibold">
+															{activeTask.taskTypeName}
+														</span>
+													</p>
+												)}
+												<div className="flex items-center gap-3 mt-2 pt-2 border-t border-border/50">
+													<p className="text-sm text-muted-foreground">
+														In:{" "}
+														{new Date(log.startTime).toLocaleTimeString([], {
+															hour: "2-digit",
+															minute: "2-digit",
+														})}
+													</p>
+													<span className="text-sm text-primary font-medium">
+														<ElapsedTime startTime={log.startTime} />
+													</span>
+												</div>
+											</div>
 										</div>
-										<div className="flex gap-2">
+										<div className="flex flex-col gap-3 w-full sm:w-auto">
 											<BreakButton employeeId={log.employeeId} onBreak={employeeOnBreak} />
 											<form
 												action={formAction}
 												onSubmit={(event) => handleClockOutSubmit(event, log.id)}
+												className="w-full"
 											>
 												<input type="hidden" name="logId" value={log.id} />
 												<ClockOutButton kioskMode={kioskEnabled} />
@@ -757,25 +905,27 @@ function ActiveSessions({
 										</div>
 									</div>
 
-									<WorkerTaskControls
-										employeeId={log.employeeId}
-										activeTask={activeTask}
-										assignmentMode={assignmentMode}
-										taskOptions={taskOptions}
-									/>
+									<div className="pl-3">
+										<WorkerTaskControls
+											employeeId={log.employeeId}
+											activeTask={activeTask}
+											assignmentMode={assignmentMode}
+											taskOptions={taskOptions}
+										/>
+									</div>
 								</div>
 							);
 						})}
 					</div>
 				)}
 				{state?.error && (
-					<Alert variant="error" className="relative">
+					<Alert variant="error" className="relative mt-5 text-sm">
 						{state.error}
 					</Alert>
 				)}
 				{state?.success && (
-					<Alert variant="success" className="relative">
-						Clocked out successfully!
+					<Alert variant="success" className="relative mt-5 text-sm">
+						Clock Out Successful
 					</Alert>
 				)}
 			</CardBody>
@@ -786,7 +936,13 @@ function ActiveSessions({
 function ClockOutButton({ kioskMode }: { kioskMode: boolean }) {
 	const { pending } = useFormStatus();
 	return (
-		<Button type="submit" variant="secondary" size={kioskMode ? "lg" : "md"} disabled={pending}>
+		<Button
+			type="submit"
+			variant="secondary"
+			size={kioskMode ? "lg" : "md"}
+			disabled={pending}
+			className="w-full"
+		>
 			{pending ? "Clocking Out..." : "Clock Out"}
 		</Button>
 	);
@@ -830,7 +986,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 				</svg>
 			</Button>
 			<ModalOverlay className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-				<Modal className="bg-base-100 rounded-lg shadow-xl w-full max-w-md mx-4">
+				<Modal className="bg-card border border-border rounded-[2px] shadow-xl w-full max-w-md mx-4">
 					<Dialog className="outline-none relative">
 						<form action={formAction} className="p-4">
 							<input type="hidden" name="logId" value={log.id} />
@@ -844,7 +1000,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 									type="datetime-local"
 									name="startTime"
 									defaultValue={formatDateTimeLocal(log.startTime)}
-									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									className="px-3 py-2 border rounded bg-card text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									required
 								/>
 							</div>
@@ -857,7 +1013,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 									type="datetime-local"
 									name="endTime"
 									defaultValue={formatDateTimeLocal(log.endTime)}
-									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									className="px-3 py-2 border rounded bg-card text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 								/>
 							</div>
 
@@ -868,7 +1024,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 								<select
 									name="type"
 									defaultValue={log.type}
-									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									className="px-3 py-2 border rounded bg-card text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									required
 								>
 									<option value="WORK">Work</option>
@@ -883,7 +1039,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 								<select
 									name="stationId"
 									defaultValue={log.stationId || ""}
-									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									className="px-3 py-2 border rounded bg-card text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 								>
 									<option value="">None</option>
 									{stations.map((st) => (
@@ -901,7 +1057,7 @@ function TimeLogEditDialog({ log, stations }: { log: TimeLogWithRelations; stati
 								<textarea
 									name="note"
 									defaultValue={log.note || ""}
-									className="px-3 py-2 border rounded bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+									className="px-3 py-2 border rounded bg-card text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
 									rows={3}
 								/>
 							</div>
@@ -1122,138 +1278,194 @@ function TimeHistory({
 	const showOvertimeWarning = selectedEmployeeId && netHours > dailyLimit;
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Time History</CardTitle>
+		<Card className="mt-4 flex flex-col overflow-hidden">
+			<CardHeader className="flex flex-row justify-between items-center">
+				<CardTitle className="flex items-center gap-2">
+					<svg
+						className="w-4 h-4 text-primary"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M4 6h16M4 10h16M4 14h16M4 18h16"
+						/>
+					</svg>
+					System Logs
+				</CardTitle>
+				<div className="text-sm font-medium text-muted-foreground bg-background/50 border border-border/50 px-3 py-1 rounded-[2px] z-10 relative">
+					Total Records: {filteredLogs.length}
+				</div>
 			</CardHeader>
 			<CardBody>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+				<div className="mb-6 bg-muted/30 p-4 rounded-[2px] border border-border/50 space-y-4">
 					<div className="flex flex-col gap-1">
-						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">Start Date</span>
-						</label>
-						<Input
-							type="date"
-							value={startDate}
-							onChange={(e) => setStartDate(e.target.value)}
-							className="text-sm"
-						/>
+						<p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+							Log Filters
+						</p>
+						<p className="text-xs text-muted-foreground">
+							Refine by date, personnel, location, or name.
+						</p>
 					</div>
+					<div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+						<div className="flex flex-col gap-1.5 lg:col-span-3">
+							<label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+								Start Date
+							</label>
+							<Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+						</div>
 
-					<div className="flex flex-col gap-1">
-						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">End Date</span>
-						</label>
-						<Input
-							type="date"
-							value={endDate}
-							onChange={(e) => setEndDate(e.target.value)}
-							className="text-sm"
-						/>
+						<div className="flex flex-col gap-1.5 lg:col-span-3">
+							<label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+								End Date
+							</label>
+							<Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+						</div>
+
+						<div className="flex flex-col gap-1.5 lg:col-span-3">
+							<label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+								Personnel
+							</label>
+							<Select
+								options={[
+									{ value: "", label: "-- All Personnel --" },
+									...employees.map((emp) => ({ value: emp.id, label: emp.name })),
+								]}
+								value={selectedEmployeeId}
+								onChange={setSelectedEmployeeId}
+							/>
+						</div>
+
+						<div className="flex flex-col gap-1.5 lg:col-span-3">
+							<label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+								Location
+							</label>
+							<Select
+								options={[
+									{ value: "", label: "-- All Locations --" },
+									{ value: "none", label: "Unassigned" },
+									...stations.map((st) => ({ value: st.id, label: st.name })),
+								]}
+								value={selectedStationId}
+								onChange={setSelectedStationId}
+							/>
+						</div>
+
+						<div className="flex flex-col gap-1.5 lg:col-span-8">
+							<label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+								Name Search
+							</label>
+							<Input
+								type="text"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								placeholder="Search by employee name"
+							/>
+						</div>
+
+						<div className="lg:col-span-4 flex items-end">
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="w-full lg:w-auto"
+								onPress={() => {
+									setStartDate("");
+									setEndDate("");
+									setSelectedEmployeeId("");
+									setSelectedStationId("");
+									setSearchQuery("");
+								}}
+							>
+								Clear Filters
+							</Button>
+						</div>
 					</div>
-
-					<div className="flex flex-col gap-1">
-						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">Employee</span>
-						</label>
-						<Select
-							options={[
-								{ value: "", label: "All Employees" },
-								...employees.map((emp) => ({ value: emp.id, label: emp.name })),
-							]}
-							value={selectedEmployeeId}
-							onChange={setSelectedEmployeeId}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-1">
-						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">Station</span>
-						</label>
-						<Select
-							options={[
-								{ value: "", label: "All Stations" },
-								{ value: "none", label: "No Station" },
-								...stations.map((st) => ({ value: st.id, label: st.name })),
-							]}
-							value={selectedStationId}
-							onChange={setSelectedStationId}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-1">
-						<label className="flex items-center justify-between">
-							<span className="text-sm font-medium text-foreground">Search</span>
-						</label>
-						<Input
-							type="text"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Employee name..."
-							className="text-sm"
-						/>
-					</div>
-				</div>
-
-				<div className="text-sm text-muted-foreground mb-2">
-					Showing {filteredLogs.length} of {completedLogs.length} entries
 				</div>
 
 				{filteredLogs.length === 0 ? (
-					<p className="text-sm text-muted-foreground">No completed sessions match the filters</p>
+					<div className="py-16 flex flex-col items-center justify-center border-2 border-dashed border-border/50 rounded-[2px] bg-muted/10">
+						<p className="text-sm font-medium text-muted-foreground">
+							No logs found matching criteria
+						</p>
+					</div>
 				) : (
-					<>
+					<div className="border border-border/50 rounded-[2px] overflow-hidden">
 						<div className="overflow-x-auto">
-							<table className="table table-sm">
+							<table className="w-full text-left border-collapse text-sm">
 								<thead>
-									<tr>
-										<th>Employee</th>
-										<th>Type</th>
-										<th>Station</th>
-										<th>Start</th>
-										<th>End</th>
-										<th>Duration</th>
-										<th>Actions</th>
+									<tr className="bg-muted/50 border-b border-border">
+										<th className="p-4 font-semibold text-muted-foreground">Personnel</th>
+										<th className="p-4 font-semibold text-muted-foreground">Type</th>
+										<th className="p-4 font-semibold text-muted-foreground">Location</th>
+										<th className="p-4 font-semibold text-muted-foreground">Time In</th>
+										<th className="p-4 font-semibold text-muted-foreground">Time Out</th>
+										<th className="p-4 font-semibold text-muted-foreground">Net Time</th>
+										<th className="p-4 font-semibold text-muted-foreground text-right">Actions</th>
 									</tr>
 								</thead>
-								<tbody>
+								<tbody className="divide-y divide-border/50 bg-card">
 									{filteredLogs.map((log) => {
 										const overtimeStatus = employeeOvertimeStatus[log.employeeId];
 										const showDailyOT = overtimeStatus?.dailyOT;
 										const showWeeklyOT = overtimeStatus?.weeklyOT;
 
 										return (
-											<tr key={log.id}>
-												<td>
-													<div className="flex items-center gap-2">
-														<span>{log.Employee.name}</span>
-														{showDailyOT && (
-															<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-																Daily OT
-															</span>
-														)}
-														{showWeeklyOT && (
-															<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-																Weekly OT
-															</span>
-														)}
+											<tr key={log.id} className="hover:bg-muted/30 transition-colors group">
+												<td className="p-4">
+													<div className="flex flex-col gap-1">
+														<span className="font-medium text-foreground">{log.Employee.name}</span>
+														<div className="flex gap-2">
+															{showDailyOT && (
+																<span className="text-xs bg-amber-500/10 text-amber-600 border border-amber-500/30 px-1.5 py-0.5 rounded-sm">
+																	Daily OT
+																</span>
+															)}
+															{showWeeklyOT && (
+																<span className="text-xs bg-amber-500/10 text-amber-600 border border-amber-500/30 px-1.5 py-0.5 rounded-sm">
+																	Weekly OT
+																</span>
+															)}
+														</div>
 													</div>
 												</td>
-												<td>
+												<td className="p-4">
 													<span
-														className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${log.type === "WORK" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800"}`}
+														className={cn(
+															"text-xs px-2 py-1 border rounded-full font-medium",
+															log.type === "WORK"
+																? "bg-primary/10 text-primary border-primary/30"
+																: "bg-amber-500/10 text-amber-600 border-amber-500/30"
+														)}
 													>
-														{log.type}
+														{log.type === "WORK" ? "Work" : "Break"}
 													</span>
 												</td>
-												<td>{log.Station?.name || "N/A"}</td>
-												<td>{new Date(log.startTime).toLocaleTimeString()}</td>
-												<td>{log.endTime ? new Date(log.endTime).toLocaleTimeString() : "-"}</td>
-												<td className="font-mono text-sm">
+												<td className="p-4 text-muted-foreground">{log.Station?.name || "N/A"}</td>
+												<td className="p-4 text-muted-foreground">
+													{new Date(log.startTime).toLocaleTimeString([], {
+														hour: "2-digit",
+														minute: "2-digit",
+													})}
+												</td>
+												<td className="p-4 text-muted-foreground">
+													{log.endTime ? (
+														new Date(log.endTime).toLocaleTimeString([], {
+															hour: "2-digit",
+															minute: "2-digit",
+														})
+													) : (
+														<span className="text-primary font-medium">Active</span>
+													)}
+												</td>
+												<td className="p-4 font-semibold text-foreground">
 													{calculateDuration(log.startTime, log.endTime)}
 												</td>
-												<td>
-													<div className="flex gap-1">
+												<td className="p-4 text-right">
+													<div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
 														<TimeLogEditDialog log={log} stations={stations} />
 														<DeleteButton logId={log.id} />
 													</div>
@@ -1264,36 +1476,57 @@ function TimeHistory({
 								</tbody>
 							</table>
 						</div>
-						<div className="border-t my-4"></div>
-						<div className="flex justify-end">
-							<div className="grid grid-cols-3 gap-4 bg-accent rounded-lg p-4 shadow">
-								<div>
-									<div className="text-xs font-medium text-muted-foreground">
-										Gross Hours (Work)
+
+						<div className="bg-muted/30 border-t border-border p-5">
+							<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+								<div className="flex items-center gap-2">
+									<div className="w-2 h-2 rounded-full bg-primary" />
+									<span className="text-sm font-medium text-muted-foreground">Metrics Summary</span>
+								</div>
+
+								<div className="flex gap-8 text-sm">
+									<div className="flex flex-col items-end">
+										<span className="text-muted-foreground mb-1">Gross (Work)</span>
+										<span className="text-xl font-semibold text-foreground">
+											{grossHours.toFixed(2)}
+											<span className="text-xs text-muted-foreground ml-1">hr</span>
+										</span>
 									</div>
-									<div className="text-2xl font-bold text-foreground">{grossHours.toFixed(2)}</div>
-								</div>
-								<div>
-									<div className="text-xs font-medium text-muted-foreground">Break Hours</div>
-									<div className="text-2xl font-bold text-foreground">{breakHours.toFixed(2)}</div>
-								</div>
-								<div>
-									<div className="text-xs font-medium text-muted-foreground">
-										Net Hours
-										{showOvertimeWarning && (
-											<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
-												Overtime
+									<div className="w-[1px] h-10 bg-border/50" />
+									<div className="flex flex-col items-end">
+										<span className="text-muted-foreground mb-1">Break Time</span>
+										<span className="text-xl font-semibold text-foreground">
+											{breakHours.toFixed(2)}
+											<span className="text-xs text-muted-foreground ml-1">hr</span>
+										</span>
+									</div>
+									<div className="w-[1px] h-10 bg-border/50" />
+									<div className="flex flex-col items-end relative">
+										<span className="text-muted-foreground mb-1">Net Total</span>
+										<div className="flex items-center gap-2">
+											{showOvertimeWarning && (
+												<span className="text-xs bg-amber-500/10 text-amber-600 border border-amber-500/30 px-2 py-0.5 rounded-full absolute -left-20 -top-2 font-medium">
+													Overtime
+												</span>
+											)}
+											<span
+												className={cn(
+													"text-2xl font-bold",
+													showOvertimeWarning ? "text-amber-600" : "text-primary"
+												)}
+											>
+												{netHours.toFixed(2)}
 											</span>
+											<span className="text-xs text-muted-foreground">hr</span>
+										</div>
+										{selectedEmployee && (
+											<div className="text-xs text-muted-foreground mt-1">Limit: {dailyLimit}h</div>
 										)}
 									</div>
-									<div className="text-2xl font-bold text-foreground">{netHours.toFixed(2)}</div>
-									{selectedEmployee && (
-										<div className="text-xs text-muted-foreground">Daily limit: {dailyLimit}h</div>
-									)}
 								</div>
 							</div>
 						</div>
-					</>
+					</div>
 				)}
 			</CardBody>
 		</Card>
@@ -1326,6 +1559,8 @@ export function TimeTracking({
 }) {
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
+	const [activeDrawer, setActiveDrawer] = useState<"roster" | "logs" | null>(null);
+	const [drawerTopOffset, setDrawerTopOffset] = useState(0);
 
 	// Optimistic state for active logs
 	const [optimisticLogs, addOptimisticLog] = useOptimistic(
@@ -1389,45 +1624,144 @@ export function TimeTracking({
 		[enqueue, focusPinInput, kioskEnabled, queue.length, status, sync, setKioskEnabled, apiKey]
 	);
 
+	const handleEnableKiosk = useCallback(() => {
+		setKioskEnabled(true);
+		window.location.href = "/floor/kiosk";
+	}, [setKioskEnabled]);
+
+	useEffect(() => {
+		const statusBar = document.getElementById("app-status-bar");
+		if (!statusBar) {
+			setDrawerTopOffset(0);
+			return;
+		}
+
+		const updateOffset = () => {
+			setDrawerTopOffset(Math.ceil(statusBar.getBoundingClientRect().bottom));
+		};
+
+		updateOffset();
+
+		const observer =
+			typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateOffset) : null;
+		observer?.observe(statusBar);
+		window.addEventListener("resize", updateOffset);
+
+		return () => {
+			observer?.disconnect();
+			window.removeEventListener("resize", updateOffset);
+		};
+	}, []);
+
 	return (
 		<KioskContext.Provider value={contextValue}>
-			<div className="mb-6 flex justify-end items-center">
-				<Button type="button" variant="primary" onPress={() => setKioskEnabled(!kioskEnabled)}>
-					{kioskEnabled ? "Disable Kiosk Mode" : "Enable Kiosk Mode"}
-				</Button>
+			<div className="flex flex-col gap-6 w-full relative z-10 min-h-[60vh]">
+				<div className="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onPress={() => setActiveDrawer("roster")}
+					>
+						View Roster ({optimisticLogs.length})
+					</Button>
+					<Button type="button" variant="outline" size="sm" onPress={() => setActiveDrawer("logs")}>
+						View Logs
+					</Button>
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						onPress={handleEnableKiosk}
+						className="transition-all duration-300"
+					>
+						Launch Kiosk Mode
+					</Button>
+				</div>
+
+				<div className="mx-auto w-full mt-2 md:mt-8 mb-12">
+					<ClockInForm
+						employees={employees}
+						stations={stations}
+						pinInputRef={pinInputRef}
+						onOptimisticClockIn={addOptimisticLog}
+					/>
+				</div>
+
+				{/* Drawer Overlay */}
+				<div
+					className={cn(
+						"fixed inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm z-50 transition-opacity duration-300",
+						activeDrawer ? "opacity-100" : "opacity-0 pointer-events-none"
+					)}
+					style={{ top: drawerTopOffset }}
+					onClick={() => setActiveDrawer(null)}
+					aria-hidden="true"
+				/>
+
+				{/* Drawer Content */}
+				<div
+					className={cn(
+						"fixed right-0 bottom-0 z-50 bg-background border-l border-border shadow-2xl transition-transform duration-300 ease-in-out flex flex-col min-h-0",
+						activeDrawer === "logs"
+							? "w-full sm:w-[620px] lg:w-[920px]"
+							: "w-full sm:w-[540px] md:w-[640px]",
+						activeDrawer ? "translate-x-0" : "translate-x-full"
+					)}
+					style={{ top: drawerTopOffset }}
+				>
+					<div className="flex justify-end p-3 border-b border-border bg-muted/20">
+						<Button variant="ghost" size="sm" onPress={() => setActiveDrawer(null)}>
+							<span className="sr-only">Close</span>
+							<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</Button>
+					</div>
+					<div className="flex-1 min-h-0 overflow-hidden p-4 md:p-6 bg-background">
+						{activeDrawer === "roster" ? (
+							<div className="h-full min-h-0 overflow-y-auto pr-1">
+								<ActiveSessions
+									activeLogs={optimisticLogs}
+									activeBreaks={activeBreaks}
+									activeTasksByEmployee={activeTasksByEmployee}
+									assignmentMode={assignmentMode}
+									taskOptions={taskOptions}
+								/>
+							</div>
+						) : null}
+						{activeDrawer === "logs" ? (
+							<div className="h-full min-h-0 overflow-y-auto pr-1">
+								<div className="flex items-center gap-3 mb-2">
+									<h3 className="text-base font-semibold text-foreground">Historical Data</h3>
+								</div>
+								<Suspense fallback={<TimeHistoryFallback />}>
+									<DeferredTimeHistory
+										completedLogs={completedLogs}
+										completedLogsPromise={completedLogsPromise}
+										stations={stations}
+										employees={employees}
+									/>
+								</Suspense>
+							</div>
+						) : null}
+					</div>
+				</div>
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-				<ClockInForm
-					employees={employees}
-					stations={stations}
-					pinInputRef={pinInputRef}
-					onOptimisticClockIn={addOptimisticLog}
-				/>
-				<ActiveSessions
-					activeLogs={optimisticLogs}
-					activeBreaks={activeBreaks}
-					activeTasksByEmployee={activeTasksByEmployee}
-					assignmentMode={assignmentMode}
-					taskOptions={taskOptions}
-				/>
-			</div>
-			<Suspense fallback={<TimeHistoryFallback />}>
-				<DeferredTimeHistory
-					completedLogs={completedLogs}
-					completedLogsPromise={completedLogsPromise}
-					stations={stations}
-					employees={employees}
-				/>
-			</Suspense>
 			{notifications.length > 0 && (
-				<div className="fixed bottom-4 right-4 space-y-2 z-50">
+				<div className="fixed bottom-4 right-4 space-y-2 z-50 flex flex-col items-end">
 					{notifications.map((note) => (
 						<Alert
 							key={note.id}
 							variant={
 								note.type === "success" ? "success" : note.type === "error" ? "error" : "warning"
 							}
-							className="relative"
+							className="relative shadow-lg max-w-sm animate-in slide-in-from-right-8"
 						>
 							{note.message}
 						</Alert>
@@ -1460,16 +1794,17 @@ function DeferredTimeHistory({
 
 function TimeHistoryFallback() {
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Time History</CardTitle>
+		<Card className="mt-4 flex flex-col overflow-hidden">
+			<CardHeader className="flex justify-between items-center">
+				<CardTitle className="flex items-center gap-2">
+					<span className="w-4 h-4 bg-muted animate-pulse rounded-full" />
+					System Logs Loading...
+				</CardTitle>
 			</CardHeader>
-			<CardBody>
-				<div className="space-y-3">
-					<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
-					<div className="h-10 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
-					<div className="h-48 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
-				</div>
+			<CardBody className="space-y-4">
+				<div className="h-12 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+				<div className="h-12 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+				<div className="h-64 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
 			</CardBody>
 		</Card>
 	);

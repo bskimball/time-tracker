@@ -365,9 +365,9 @@ export function TaskManager({
 	};
 
 	const getTaskEfficiencyColor = (efficiency: number): string => {
-		if (efficiency > 1.0) return "text-green-600";
-		if (efficiency > 0.8) return "text-yellow-600";
-		return "text-red-600";
+		if (efficiency > 1.0) return "text-success";
+		if (efficiency > 0.8) return "text-warning";
+		return "text-destructive";
 	};
 
 	const getAssignmentSource = (assignment: TaskAssignment): "MANAGER" | "WORKER" => {
@@ -616,8 +616,8 @@ export function TaskManager({
 														</h4>
 														{!assignment.endTime && (
 															<span className="relative flex h-2 w-2">
-																<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-																<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+																<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/75"></span>
+																<span className="relative inline-flex h-2 w-2 rounded-full bg-success"></span>
 															</span>
 														)}
 													</div>

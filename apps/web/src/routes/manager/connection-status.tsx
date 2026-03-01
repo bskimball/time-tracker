@@ -34,9 +34,9 @@ export function ManagerConnectionStatus({
 	// Connection Status Dot Color
 	const statusColor =
 		connectionState === "connected"
-			? "bg-emerald-500"
+			? "bg-success"
 			: connectionState === "reconnecting"
-				? "bg-amber-500 animate-pulse"
+				? "bg-warning animate-pulse"
 				: "bg-destructive";
 
 	return (
@@ -72,7 +72,7 @@ export function ManagerConnectionStatus({
 						<span
 							className={cn(
 								"text-[9px] font-mono uppercase leading-none",
-								isStale ? "text-amber-600 font-bold" : "text-muted-foreground"
+								isStale ? "text-warning font-bold" : "text-muted-foreground"
 							)}
 						>
 							{isStale ? "STALE" : "FRESH"}
@@ -88,7 +88,7 @@ export function ManagerConnectionStatus({
 						<span
 							className={cn(
 								"text-[9px] uppercase tracking-wider font-medium",
-								connectionState === "connected" ? "text-emerald-600" : "text-amber-600"
+								connectionState === "connected" ? "text-success" : "text-warning"
 							)}
 						>
 							{connectionState === "connected" ? "Live Stream" : "Live Stream Reconnecting"}

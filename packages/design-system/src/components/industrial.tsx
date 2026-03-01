@@ -19,28 +19,6 @@ export function SafetyStripes({ className, position = "top", ...props }: SafetyS
 	);
 }
 
-interface LedIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
-	active?: boolean;
-}
-
-export function LedIndicator({ className, active = false, ...props }: LedIndicatorProps) {
-	return (
-		<div className="flex flex-col items-center gap-2 pt-1">
-			<div
-				className={cn(
-					"led-indicator w-3 h-3 rounded-full", /* Smaller, rounder */
-					"transition-all duration-300 ease-out shadow-sm",
-					active && "bg-primary shadow-[0_0_8px_rgba(224,116,38,0.5)] scale-100",
-					!active && "bg-muted-foreground/30 scale-90",
-					className
-				)}
-				{...props}
-			/>
-			{/* Removed the vertical line for a cleaner look */}
-		</div>
-	);
-}
-
 interface IndustrialPanelProps extends React.HTMLAttributes<HTMLDivElement> {
 	variant?: "default" | "destructive";
 }
@@ -71,7 +49,6 @@ interface IndustrialHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement
 	title: React.ReactNode;
 	subtitle?: React.ReactNode;
 	badge?: React.ReactNode;
-	active?: boolean;
 }
 
 export function IndustrialHeader({
@@ -79,7 +56,6 @@ export function IndustrialHeader({
 	title,
 	subtitle,
 	badge,
-	active = true,
 	children,
 	...props
 }: IndustrialHeaderProps) {
@@ -94,8 +70,6 @@ export function IndustrialHeader({
 		>
 			<div className="absolute inset-0 bg-tactical-grid opacity-10" aria-hidden="true" />
 			<div className="relative flex items-start gap-6">
-				<LedIndicator active={active} aria-hidden="true" className="mt-1" />
-
 				<div className="flex-1">
 					{subtitle && (
 						<div className="font-industrial text-xs tracking-[0.1em] text-muted-foreground mb-2 transition-opacity duration-200">
@@ -116,7 +90,6 @@ export function IndustrialHeader({
 		</div>
 	);
 }
-
 
 export function IndustrialSection({
 	className,

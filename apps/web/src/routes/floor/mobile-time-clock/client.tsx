@@ -616,7 +616,7 @@ export function MobileTimeClock({
 					<MobileCard variant="warning" padding="md">
 						<div className="flex items-center gap-3">
 							<svg
-								className="w-6 h-6 text-yellow-600"
+								className="w-6 h-6 text-warning"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
