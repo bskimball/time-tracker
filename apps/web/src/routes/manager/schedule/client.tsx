@@ -54,6 +54,9 @@ const severityClasses: Record<StationGapInsight["severity"], string> = {
 	critical: "border-destructive/60 bg-destructive/10 text-destructive",
 };
 
+const ENABLE_SCHEDULE_PUBLISH_CONTROLS =
+	(import.meta.env.VITE_ENABLE_SCHEDULE_PUBLISH_CONTROLS ?? "false") === "true";
+
 export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleViewProps) {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
@@ -167,17 +170,16 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 				subtitle={`${weekRangeLabel} · ${weekShiftTotal} scheduled shifts`}
 				actions={
 					<div className="flex flex-wrap items-end gap-2">
-						<div className="flex flex-wrap gap-2">
-							<Button variant="outline" disabled>
-								Share Schedule (Unavailable)
-							</Button>
-							<Button variant="primary" disabled>
-								Publish Changes (Unavailable)
-							</Button>
-						</div>
-						<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
-							Controls disabled until publish pipeline is wired.
-						</p>
+						{ENABLE_SCHEDULE_PUBLISH_CONTROLS ? (
+							<div className="flex flex-wrap gap-2">
+								<Button variant="outline">Share Schedule</Button>
+								<Button variant="primary">Publish Changes</Button>
+							</div>
+						) : (
+							<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
+								Publish controls are hidden until the schedule pipeline is enabled.
+							</p>
+						)}
 					</div>
 				}
 			/>
