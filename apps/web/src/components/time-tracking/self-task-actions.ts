@@ -42,8 +42,12 @@ const unavailableAction: ServerTaskAction = async () => ({
 });
 
 export const startSelfTaskAction =
-	getServerAction(["startSelfTask", "startSelfTaskAction", "startWorkerTask", "startWorkerTaskAction"]) ??
-	unavailableAction;
+	getServerAction([
+		"startSelfTask",
+		"startSelfTaskAction",
+		"startWorkerTask",
+		"startWorkerTaskAction",
+	]) ?? unavailableAction;
 
 export const switchSelfTaskAction =
 	getServerAction([

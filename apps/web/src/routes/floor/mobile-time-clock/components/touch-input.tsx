@@ -68,14 +68,14 @@ export function TouchInput({
 
 	return (
 		<div className={`relative ${className}`}>
-			<label className="block text-base font-bold text-gray-700 mb-2">
+			<label className="block text-sm font-industrial uppercase tracking-wider text-muted-foreground mb-2">
 				{label}
-				{required && <span className="text-error ml-1">*</span>}
+				{required && <span className="text-destructive ml-1">*</span>}
 			</label>
 
 			<div className="relative">
 				{icon && (
-					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 z-10">
 						{icon}
 					</div>
 				)}
@@ -96,12 +96,12 @@ export function TouchInput({
 					className={`
             ${icon ? "pl-12" : "pl-4"}
             ${showPasswordToggle ? "pr-12" : "pr-4"}
-            min-h-[56px] text-base
-            border-2 rounded-lg
-            ${isFocused ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-300"}
-            ${error ? "border-error ring-2 ring-red-200" : ""}
-            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
-            transition-all duration-200
+            min-h-[56px] text-lg font-mono
+            border-[1px] rounded-[2px]
+            ${isFocused ? "border-primary ring-1 ring-primary/20" : "border-border"}
+            ${error ? "border-destructive ring-1 ring-destructive/20" : ""}
+            ${disabled ? "bg-muted/10 cursor-not-allowed text-muted-foreground" : "bg-card text-foreground"}
+            transition-all duration-150
             focus:outline-none
             ${className}
           `}
@@ -114,7 +114,7 @@ export function TouchInput({
 					<button
 						type="button"
 						onClick={() => setShowPassword(!showPassword)}
-						className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+						className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
 					>
 						{showPassword ? (
 							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +145,7 @@ export function TouchInput({
 				)}
 			</div>
 
-			{error && <p className="mt-2 text-sm text-error font-medium">{error}</p>}
+			{error && <p className="mt-2 text-sm text-destructive font-medium">{error}</p>}
 		</div>
 	);
 }
@@ -210,14 +210,14 @@ export function TouchSelect({
 
 	return (
 		<div className={`relative ${className}`} ref={selectRef}>
-			<label className="block text-base font-bold text-gray-700 mb-2">
+			<label className="block text-sm font-industrial uppercase tracking-wider text-muted-foreground mb-2">
 				{label}
-				{required && <span className="text-error ml-1">*</span>}
+				{required && <span className="text-destructive ml-1">*</span>}
 			</label>
 
 			<div className="relative">
 				{icon && (
-					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 z-10">
 						{icon}
 					</div>
 				)}
@@ -229,21 +229,21 @@ export function TouchSelect({
 					className={`
             ${icon ? "pl-12" : "pl-4"}
             pr-12
-            min-h-[56px] text-base
+            min-h-[56px] text-lg font-mono
             w-full text-left
-            border-2 rounded-lg
-            ${isOpen ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-300"}
-            ${error ? "border-error ring-2 ring-red-200" : ""}
-            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white hover:border-gray-400"}
-            transition-all duration-200
+            border-[1px] rounded-[2px]
+            ${isOpen ? "border-primary ring-1 ring-primary/20" : "border-border"}
+            ${error ? "border-destructive ring-1 ring-destructive/20" : ""}
+            ${disabled ? "bg-muted/10 cursor-not-allowed text-muted-foreground" : "bg-card text-foreground hover:border-primary/50"}
+            transition-all duration-150
             focus:outline-none
           `}
 				>
-					<span className={selectedOption ? "text-gray-900" : "text-gray-500"}>
+					<span className={selectedOption ? "text-foreground" : "text-muted-foreground/50"}>
 						{selectedOption ? selectedOption.label : placeholder}
 					</span>
 
-					<div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+					<div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50">
 						<svg
 							className={`w-6 h-6 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
 							fill="none"
@@ -261,8 +261,8 @@ export function TouchSelect({
 				</button>
 
 				{isOpen && (
-					<div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-						<div className="p-3 border-b border-gray-200">
+					<div className="absolute z-50 w-full mt-2 bg-card border border-border rounded-[2px] shadow-2xl max-h-64 overflow-y-auto">
+						<div className="p-3 border-b border-border bg-muted/5">
 							<Input
 								type="search"
 								placeholder="Search..."
@@ -273,7 +273,9 @@ export function TouchSelect({
 						</div>
 
 						{filteredOptions.length === 0 ? (
-							<div className="p-4 text-center text-gray-500 text-sm">No options found</div>
+							<div className="p-4 text-center text-muted-foreground text-sm font-mono">
+								No options found
+							</div>
 						) : (
 							filteredOptions.map((option) => (
 								<button
@@ -282,11 +284,11 @@ export function TouchSelect({
 									onClick={() => handleSelect(option)}
 									disabled={option.disabled}
 									className={`
-                    w-full px-4 py-3 text-left border-b border-gray-100 last:border-b-0
-                    hover:bg-gray-50 active:bg-gray-100
-                    transition-colors duration-150
-                    ${option.disabled ? "text-gray-400 cursor-not-allowed" : "text-gray-900"}
-                    ${option.value === value ? "bg-blue-50 text-blue-600 font-semibold" : ""}
+                    w-full px-4 py-4 text-left border-b border-border/50 last:border-b-0
+                    hover:bg-muted/10 active:bg-muted/20
+                    transition-colors duration-100 font-mono
+                    ${option.disabled ? "text-muted-foreground/30 cursor-not-allowed" : "text-foreground"}
+                    ${option.value === value ? "bg-primary/10 text-primary font-bold" : ""}
                   `}
 								>
 									{option.label}
@@ -297,7 +299,7 @@ export function TouchSelect({
 				)}
 			</div>
 
-			{error && <p className="mt-2 text-sm text-error font-medium">{error}</p>}
+			{error && <p className="mt-2 text-sm text-destructive font-medium">{error}</p>}
 		</div>
 	);
 }

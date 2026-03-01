@@ -1,5 +1,7 @@
 /* Design System CSS Variables - Refined Industrial (Braun/Rams) */
 
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
 	/* Primary Colors - Braun/Signal Orange (Primary Action) */
 	--color-primary: oklch(61% 0.16 42);

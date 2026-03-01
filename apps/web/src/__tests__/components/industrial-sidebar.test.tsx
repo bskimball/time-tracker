@@ -35,9 +35,7 @@ const renderSidebar = () => {
 		{ initialEntries: ["/manager"] }
 	);
 
-	return render(
-		<RouterProvider router={router} />
-	);
+	return render(<RouterProvider router={router} />);
 };
 
 describe("IndustrialSidebar", () => {

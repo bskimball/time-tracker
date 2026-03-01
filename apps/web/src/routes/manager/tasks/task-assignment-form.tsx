@@ -83,7 +83,10 @@ export function TaskAssignmentForm({
 	};
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" aria-live="polite">
+		<div
+			className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+			aria-live="polite"
+		>
 			<Card className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto">
 				<CardHeader>
 					<CardTitle>Assign Task</CardTitle>
@@ -95,7 +98,9 @@ export function TaskAssignmentForm({
 							value={formData.employeeId}
 							onChange={(value) => setFormData((prev) => ({ ...prev, employeeId: value ?? "" }))}
 							options={employees
-								.filter((emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime))
+								.filter(
+									(emp) => !activeAssignments.some((a) => a.employeeId === emp.id && !a.endTime)
+								)
 								.map((employee) => ({ value: employee.id, label: employee.name }))}
 							placeholder="Select an employee…"
 							isRequired

@@ -31,17 +31,17 @@ export async function getExecutiveDashboardKPIs(
 	let startDate: Date;
 	let endDate: Date;
 
-		switch (timeRange) {
-			case "week":
-				startDate = subDays(now, 6);
-				endDate = now;
-				break;
-			case "month":
-				startDate = subDays(now, 29);
-				endDate = now;
-				break;
-			case "today":
-			default:
+	switch (timeRange) {
+		case "week":
+			startDate = subDays(now, 6);
+			endDate = now;
+			break;
+		case "month":
+			startDate = subDays(now, 29);
+			endDate = now;
+			break;
+		case "today":
+		default:
 			startDate = new Date(now);
 			startDate.setHours(0, 0, 0, 0);
 			endDate = new Date(now);
@@ -74,17 +74,17 @@ export async function getStationPerformanceData(
 	let startDate: Date;
 	let endDate: Date;
 
-		switch (timeRange) {
-			case "week":
-				startDate = subDays(now, 6);
-				endDate = now;
-				break;
-			case "month":
-				startDate = subDays(now, 29);
-				endDate = now;
-				break;
-			case "today":
-			default:
+	switch (timeRange) {
+		case "week":
+			startDate = subDays(now, 6);
+			endDate = now;
+			break;
+		case "month":
+			startDate = subDays(now, 29);
+			endDate = now;
+			break;
+		case "today":
+		default:
 			startDate = new Date(now);
 			startDate.setHours(0, 0, 0, 0);
 			endDate = new Date(now);

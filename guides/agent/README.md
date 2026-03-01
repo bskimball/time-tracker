@@ -2,6 +2,14 @@
 
 Start here. This folder contains task-scoped guidance (progressive disclosure) so you can get the minimum needed for the task you’re doing.
 
+## Core baseline docs
+
+- Runtime + commands: [core/runtime-and-commands.md](./core/runtime-and-commands.md)
+- Workspace map: [core/workspaces.md](./core/workspaces.md)
+- Design system constraints: [core/design-system-rules.md](./core/design-system-rules.md)
+- Agent governance: [core/governance.md](./core/governance.md)
+- Required skill loading: [core/required-skills.md](./core/required-skills.md)
+
 ## What to read (by task)
 
 - **Working anywhere in the monorepo** → [monorepo.md](./monorepo.md)

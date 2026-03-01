@@ -68,7 +68,11 @@ function createSafePromise<T>(promise: Promise<T>) {
 
 import { Suspense, use } from "react";
 
-function Section({ kpiPromise }: { kpiPromise: Promise<{ data: Kpi | null; error: string | null }> }) {
+function Section({
+	kpiPromise,
+}: {
+	kpiPromise: Promise<{ data: Kpi | null; error: string | null }>;
+}) {
 	return (
 		<Suspense fallback={<BlockFallback label="Loading KPIs" />}>
 			<KpiBlock kpiPromise={kpiPromise} />
@@ -76,7 +80,11 @@ function Section({ kpiPromise }: { kpiPromise: Promise<{ data: Kpi | null; error
 	);
 }
 
-function KpiBlock({ kpiPromise }: { kpiPromise: Promise<{ data: Kpi | null; error: string | null }> }) {
+function KpiBlock({
+	kpiPromise,
+}: {
+	kpiPromise: Promise<{ data: Kpi | null; error: string | null }>;
+}) {
 	const result = use(kpiPromise);
 	if (result.error) return <ErrorCard message={result.error} />;
 	if (!result.data) return <EmptyCard />;

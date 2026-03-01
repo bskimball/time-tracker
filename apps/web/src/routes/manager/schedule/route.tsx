@@ -11,8 +11,12 @@ export default async function Component() {
 		throw new Error("Not authenticated");
 	}
 	const request = getRequest();
-	const weekStart = request ? new URL(request.url).searchParams.get("week") ?? undefined : undefined;
-	const selectedDay = request ? new URL(request.url).searchParams.get("day") ?? undefined : undefined;
+	const weekStart = request
+		? (new URL(request.url).searchParams.get("week") ?? undefined)
+		: undefined;
+	const selectedDay = request
+		? (new URL(request.url).searchParams.get("day") ?? undefined)
+		: undefined;
 	// Manager middleware on the parent route ensures only MANAGER/ADMIN can access.
 	const [schedule, stations, activeLogs] = await Promise.all([
 		getScheduleData(weekStart, selectedDay),

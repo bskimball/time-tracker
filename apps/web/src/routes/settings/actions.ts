@@ -296,3 +296,52 @@ export async function updateUserRole(
 		return { error: "Failed to update user role" };
 	}
 }
+
+export async function addUser(
+	_prevState: SettingsState,
+	formData: FormData
+): Promise<SettingsState> {
+	const { user } = await validateRequest();
+	if (!user) {
+		return { error: "Unauthorized" };
+	}
+
+	// Only admins or executives can add users
+	if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
+		return { error: "Unauthorized: Insufficient permissions" };
+	}
+
+	const email = formData.get("email") as string;
+	const name = formData.get("name") as string;
+	const role = formData.get("role") as string;
+
+	if (!email) {
+		return { error: "Email is required" };
+	}
+
+	try {
+		const existing = await db.user.findUnique({
+			where: { email },
+		});
+
+		if (existing) {
+			return { error: "User with this email already exists" };
+		}
+
+		await db.user.create({
+			data: {
+				id: crypto.randomUUID(),
+				email,
+				name: name || null,
+				role: (role as "ADMIN" | "MANAGER" | "WORKER" | "EXECUTIVE") || "WORKER",
+				updatedAt: new Date(),
+			},
+		});
+
+		redirect("/settings/users");
+		return { success: true };
+	} catch (error) {
+		console.error("Error adding user:", error);
+		return { error: "Failed to add user" };
+	}
+}

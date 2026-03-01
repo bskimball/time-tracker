@@ -29,10 +29,7 @@ export function IndustrialLoader({
 					style={{ color: colorVar }}
 				/>
 				<div
-					className={cn(
-						"absolute inset-0 w-1/3 bg-current",
-						isAnimated && "animate-scanner-line"
-					)}
+					className={cn("absolute inset-0 w-1/3 bg-current", isAnimated && "animate-scanner-line")}
 					style={{ color: colorVar }}
 				/>
 			</div>
@@ -43,10 +40,7 @@ export function IndustrialLoader({
 		return (
 			<div className={cn("flex items-center gap-1.5", className)}>
 				<div
-					className={cn(
-						"h-1.5 w-1.5 rounded-full bg-current",
-						isAnimated && "animate-pulse-glow"
-					)}
+					className={cn("h-1.5 w-1.5 rounded-full bg-current", isAnimated && "animate-pulse-glow")}
 					style={{ color: colorVar, animationDuration: "3s" }}
 				/>
 				<span

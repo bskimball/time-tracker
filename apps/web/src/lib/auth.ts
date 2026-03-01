@@ -132,7 +132,9 @@ export async function validateRequestWithRequest(req?: Request): Promise<Session
 	const canUseContextCache = contextRequest !== undefined && contextRequest === req;
 
 	if (canUseContextCache) {
-		const cached = getRequestCacheValue<Promise<SessionValidationResult>>(VALIDATE_REQUEST_CACHE_KEY);
+		const cached = getRequestCacheValue<Promise<SessionValidationResult>>(
+			VALIDATE_REQUEST_CACHE_KEY
+		);
 		if (cached) {
 			return cached;
 		}

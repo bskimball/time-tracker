@@ -60,7 +60,7 @@ export default async function Component() {
 				startTime: { gte: todayStart },
 			},
 		})
-		.then((openSystemErrorCount) => (openSystemErrorCount > 0 ? "DEGRADED" : "ONLINE" as const));
+		.then((openSystemErrorCount) => (openSystemErrorCount > 0 ? "DEGRADED" : ("ONLINE" as const)));
 
 	const [activeTimeLogs, totalEmployees, activeAssignments] = await Promise.all([
 		getActiveTimeLogs(),
@@ -77,21 +77,24 @@ export default async function Component() {
 		}),
 	]);
 
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>((acc, assignment) => {
-		if (acc[assignment.employeeId]) {
+	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>(
+		(acc, assignment) => {
+			if (acc[assignment.employeeId]) {
+				return acc;
+			}
+
+			acc[assignment.employeeId] = {
+				assignmentId: assignment.id,
+				employeeName: assignment.Employee.name,
+				taskTypeName: assignment.TaskType.name,
+				stationName: assignment.TaskType.Station.name,
+				startTime: assignment.startTime,
+			};
+
 			return acc;
-		}
-
-		acc[assignment.employeeId] = {
-			assignmentId: assignment.id,
-			employeeName: assignment.Employee.name,
-			taskTypeName: assignment.TaskType.name,
-			stationName: assignment.TaskType.Station.name,
-			startTime: assignment.startTime,
-		};
-
-		return acc;
-	}, {});
+		},
+		{}
+	);
 
 	const activeEmployeeIds = new Set<string>();
 	for (const log of activeTimeLogs) {

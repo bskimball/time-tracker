@@ -16,7 +16,9 @@ export function CreateAdminForm() {
 
 	return (
 		<div className="space-y-4">
-			<h2 className="text-xl font-bold font-industrial uppercase tracking-wide">Create Admin User</h2>
+			<h2 className="text-xl font-bold font-industrial uppercase tracking-wide">
+				Create Admin User
+			</h2>
 			<form action={formAction} className="space-y-4">
 				<div>
 					<label className="block text-sm font-medium mb-1">Name</label>

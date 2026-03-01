@@ -33,7 +33,7 @@ export function TimeRangeTabs({
 			<TabList
 				className={cn(
 					"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
-					className,
+					className
 				)}
 			>
 				{ranges.map((range) => (

@@ -250,7 +250,9 @@ export function TaskManager({
 	useEffect(() => {
 		if (createTypeState?.success && createTypeState.TaskType) {
 			setLocalTaskTypes((current) => {
-				const withoutExisting = current.filter((taskType) => taskType.id !== createTypeState.TaskType?.id);
+				const withoutExisting = current.filter(
+					(taskType) => taskType.id !== createTypeState.TaskType?.id
+				);
 				return [createTypeState.TaskType!, ...withoutExisting];
 			});
 			lastSyncedAtRef.current = new Date();
@@ -363,9 +365,9 @@ export function TaskManager({
 	};
 
 	const getTaskEfficiencyColor = (efficiency: number): string => {
-		if (efficiency > 1.0) return "text-green-600";
-		if (efficiency > 0.8) return "text-yellow-600";
-		return "text-red-600";
+		if (efficiency > 1.0) return "text-success";
+		if (efficiency > 0.8) return "text-warning";
+		return "text-destructive";
 	};
 
 	const getAssignmentSource = (assignment: TaskAssignment): "MANAGER" | "WORKER" => {
@@ -458,7 +460,8 @@ export function TaskManager({
 						</h3>
 						<p className="text-2xl font-mono tabular-nums">{activeTaskTypes.length}</p>
 						<p className="text-sm text-muted-foreground">
-							{localTaskTypes.length} total ({localTaskTypes.length - activeTaskTypes.length} inactive)
+							{localTaskTypes.length} total ({localTaskTypes.length - activeTaskTypes.length}{" "}
+							inactive)
 						</p>
 					</CardBody>
 				</Card>
@@ -613,8 +616,8 @@ export function TaskManager({
 														</h4>
 														{!assignment.endTime && (
 															<span className="relative flex h-2 w-2">
-																<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-																<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+																<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/75"></span>
+																<span className="relative inline-flex h-2 w-2 rounded-full bg-success"></span>
 															</span>
 														)}
 													</div>
@@ -712,7 +715,7 @@ export function TaskManager({
 											</tr>
 										</thead>
 										<tbody>
-										{filteredAssignments.map((assignment) => (
+											{filteredAssignments.map((assignment) => (
 												<tr
 													key={assignment.id}
 													className="border-b border-border hover:bg-muted/50"
@@ -932,7 +935,9 @@ export function TaskManager({
 															<Button
 																size="xs"
 																variant={taskType.isActive ? "secondary" : "primary"}
-																onClick={() => handleTaskTypeStatusToggle(taskType, !taskType.isActive)}
+																onClick={() =>
+																	handleTaskTypeStatusToggle(taskType, !taskType.isActive)
+																}
 																disabled={isUpdateTypePending || isSetTaskTypeActivePending}
 															>
 																{taskType.isActive ? "Deactivate" : "Reactivate"}

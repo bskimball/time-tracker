@@ -58,7 +58,9 @@ export function MobileTimeClock({
 	const [processing, setProcessing] = React.useState(false);
 	const [error, setError] = React.useState("");
 	const [success, setSuccess] = React.useState("");
-	const [selectedTaskByEmployee, setSelectedTaskByEmployee] = React.useState<Record<string, string>>({});
+	const [selectedTaskByEmployee, setSelectedTaskByEmployee] = React.useState<
+		Record<string, string>
+	>({});
 	const [expandedTaskControlsByEmployee, setExpandedTaskControlsByEmployee] = React.useState<
 		Record<string, boolean>
 	>({});
@@ -427,11 +429,12 @@ export function MobileTimeClock({
 				{activeLogs.length > 0 && (
 					<MobileSection title="Active Sessions">
 						<div className="space-y-4">
-						{activeLogs.map((log) => {
+							{activeLogs.map((log) => {
 								const isOnBreak = activeBreaks.some((b) => b.employeeId === log.employeeId);
 								const activeTask = activeTasksByEmployee?.[log.employeeId];
 								const selectedTaskId = selectedTaskByEmployee[log.employeeId] || "";
-								const taskControlsExpanded = expandedTaskControlsByEmployee[log.employeeId] ?? false;
+								const taskControlsExpanded =
+									expandedTaskControlsByEmployee[log.employeeId] ?? false;
 								return (
 									<MobileCard key={log.id} padding="md">
 										<div className="space-y-3">
@@ -442,7 +445,10 @@ export function MobileTimeClock({
 												</p>
 												{activeTask && (
 													<p className="text-xs text-muted-foreground">
-														Task: <span className="font-medium text-foreground">{activeTask.taskTypeName}</span>
+														Task:{" "}
+														<span className="font-medium text-foreground">
+															{activeTask.taskTypeName}
+														</span>
 													</p>
 												)}
 											</div>
@@ -484,7 +490,9 @@ export function MobileTimeClock({
 
 											{selfAssignEnabled && selfAssignRequired && !activeTask && (
 												<Alert variant="warning" aria-live="assertive">
-													<div className="font-semibold uppercase tracking-wide text-xs">Task assignment required</div>
+													<div className="font-semibold uppercase tracking-wide text-xs">
+														Task assignment required
+													</div>
 													<div className="text-sm">Start a task before continuing floor work.</div>
 												</Alert>
 											)}
@@ -519,7 +527,9 @@ export function MobileTimeClock({
 																Task Controls
 															</p>
 															<p className="text-xs text-muted-foreground">
-																{activeTask ? `Current: ${activeTask.taskTypeName}` : "No active task"}
+																{activeTask
+																	? `Current: ${activeTask.taskTypeName}`
+																	: "No active task"}
 															</p>
 														</div>
 														<TouchButton
@@ -533,60 +543,62 @@ export function MobileTimeClock({
 
 													{taskControlsExpanded && (
 														<>
-													<TouchSelect
-														label={activeTask ? "Switch To Task" : "Start Task"}
-														value={selectedTaskId}
-														onChange={(value) =>
-															setSelectedTaskByEmployee((prev) => ({
-																...prev,
-																[log.employeeId]: value,
-															}))
-														}
-														options={[
-															{ value: "", label: "Select task" },
-															...taskOptions.map((task) => ({
-																value: task.id,
-																label: task.stationName ? `${task.name} (${task.stationName})` : task.name,
-															})),
-														]}
-													/>
+															<TouchSelect
+																label={activeTask ? "Switch To Task" : "Start Task"}
+																value={selectedTaskId}
+																onChange={(value) =>
+																	setSelectedTaskByEmployee((prev) => ({
+																		...prev,
+																		[log.employeeId]: value,
+																	}))
+																}
+																options={[
+																	{ value: "", label: "Select task" },
+																	...taskOptions.map((task) => ({
+																		value: task.id,
+																		label: task.stationName
+																			? `${task.name} (${task.stationName})`
+																			: task.name,
+																	})),
+																]}
+															/>
 
-													<div className="flex gap-3 flex-wrap">
-														{activeTask ? (
-															<>
-																<TouchButton
-																	onPress={() =>
-																		handleWorkerTaskAction("switch", log.employeeId, {
-																			assignmentId: activeTask.assignmentId,
-																		})
-																	}
-																	variant="outline"
-																	disabled={processing || !selectedTaskId}
-																>
-																	Switch Task
-																</TouchButton>
-																<TouchButton
-																	onPress={() =>
-																		handleWorkerTaskAction("end", log.employeeId, {
-																			assignmentId: activeTask.assignmentId,
-																		})
-																	}
-																	variant="secondary"
-																	disabled={processing}
-																>
-																	End Task
-																</TouchButton>
-															</>
-														) : (
-															<TouchButton
-																onPress={() => handleWorkerTaskAction("start", log.employeeId)}
-																variant="primary"
-																disabled={processing || !selectedTaskId}
-															>
-																Start Task
-															</TouchButton>
-														)}
-													</div>
+															<div className="flex gap-3 flex-wrap">
+																{activeTask ? (
+																	<>
+																		<TouchButton
+																			onPress={() =>
+																				handleWorkerTaskAction("switch", log.employeeId, {
+																					assignmentId: activeTask.assignmentId,
+																				})
+																			}
+																			variant="outline"
+																			disabled={processing || !selectedTaskId}
+																		>
+																			Switch Task
+																		</TouchButton>
+																		<TouchButton
+																			onPress={() =>
+																				handleWorkerTaskAction("end", log.employeeId, {
+																					assignmentId: activeTask.assignmentId,
+																				})
+																			}
+																			variant="secondary"
+																			disabled={processing}
+																		>
+																			End Task
+																		</TouchButton>
+																	</>
+																) : (
+																	<TouchButton
+																		onPress={() => handleWorkerTaskAction("start", log.employeeId)}
+																		variant="primary"
+																		disabled={processing || !selectedTaskId}
+																	>
+																		Start Task
+																	</TouchButton>
+																)}
+															</div>
 														</>
 													)}
 												</div>
@@ -604,7 +616,7 @@ export function MobileTimeClock({
 					<MobileCard variant="warning" padding="md">
 						<div className="flex items-center gap-3">
 							<svg
-								className="w-6 h-6 text-yellow-600"
+								className="w-6 h-6 text-warning"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"

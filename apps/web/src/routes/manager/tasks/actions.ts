@@ -328,7 +328,6 @@ export async function switchTaskAction(
 }
 
 export async function createTaskType(data: {
-
 	name: string;
 	stationId: string;
 	description?: string;

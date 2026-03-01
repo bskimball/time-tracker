@@ -43,14 +43,14 @@ interface ScheduleViewProps {
 }
 
 const shiftColors: Record<string, string> = {
-	MORNING: "border-l-4 border-l-amber-500",
-	SWING: "border-l-4 border-l-blue-500",
-	NIGHT: "border-l-4 border-l-zinc-600",
+	MORNING: "border-l-4 border-l-warning",
+	SWING: "border-l-4 border-l-primary",
+	NIGHT: "border-l-4 border-l-muted-foreground",
 };
 
 const severityClasses: Record<StationGapInsight["severity"], string> = {
-	ok: "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
-	watch: "border-amber-500/50 bg-amber-500/10 text-amber-700",
+	ok: "border-success/50 bg-success/5 text-success",
+	watch: "border-warning/50 bg-warning/10 text-warning",
 	critical: "border-destructive/60 bg-destructive/10 text-destructive",
 };
 
@@ -93,7 +93,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 
 	const handleGoToCurrentWeek = () => {
 		const nextSearchParams = new URLSearchParams(searchParams);
-		nextSearchParams.set("week", format(startOfWeek(new Date(), { weekStartsOn: 0 }), "yyyy-MM-dd"));
+		nextSearchParams.set(
+			"week",
+			format(startOfWeek(new Date(), { weekStartsOn: 0 }), "yyyy-MM-dd")
+		);
 		nextSearchParams.set("day", format(new Date(), "yyyy-MM-dd"));
 		navigate(`?${nextSearchParams.toString()}`, { replace: false });
 	};
@@ -118,14 +121,16 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 	}));
 
 	const selectedDay = schedule.days.find((day) => day.date === selectedDate) ?? null;
-	const selectedDayLabel = selectedDay ? format(parseISO(selectedDay.date), "EEEE, MMM d") : "No day selected";
+	const selectedDayLabel = selectedDay
+		? format(parseISO(selectedDay.date), "EEEE, MMM d")
+		: "No day selected";
 	const selectedDayStats = selectedDay
 		? {
-			total: selectedDay.entries.length,
-			confirmed: selectedDay.entries.filter((entry) => entry.status === "CONFIRMED").length,
-			pending: selectedDay.entries.filter((entry) => entry.status === "PENDING").length,
-			open: selectedDay.entries.filter((entry) => entry.status === "OPEN").length,
-		}
+				total: selectedDay.entries.length,
+				confirmed: selectedDay.entries.filter((entry) => entry.status === "CONFIRMED").length,
+				pending: selectedDay.entries.filter((entry) => entry.status === "PENDING").length,
+				open: selectedDay.entries.filter((entry) => entry.status === "OPEN").length,
+			}
 		: { total: 0, confirmed: 0, pending: 0, open: 0 };
 
 	const weekShiftTotal = schedule.days.reduce((sum, day) => sum + day.entries.length, 0);
@@ -244,19 +249,25 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
 								Confirmed
 							</p>
-							<p className="text-sm font-semibold text-emerald-600 font-mono">{selectedDayStats.confirmed}</p>
+							<p className="text-sm font-semibold text-success font-mono">
+								{selectedDayStats.confirmed}
+							</p>
 						</div>
 						<div className="bg-muted/5 px-3 py-2">
 							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
 								Pending
 							</p>
-							<p className="text-sm font-semibold text-amber-600 font-mono">{selectedDayStats.pending}</p>
+							<p className="text-sm font-semibold text-warning font-mono">
+								{selectedDayStats.pending}
+							</p>
 						</div>
 						<div className="bg-muted/5 px-3 py-2">
 							<p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
 								Open
 							</p>
-							<p className="text-sm font-semibold text-muted-foreground font-mono">{selectedDayStats.open}</p>
+							<p className="text-sm font-semibold text-muted-foreground font-mono">
+								{selectedDayStats.open}
+							</p>
 						</div>
 					</div>
 				</CardBody>
@@ -286,10 +297,12 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 							</p>
 							<p
 								className={`text-sm font-semibold font-mono ${
-									selectedDayGapSummary.gap > 0 ? "text-destructive" : "text-emerald-600"
+									selectedDayGapSummary.gap > 0 ? "text-destructive" : "text-success"
 								}`}
 							>
-								{selectedDayGapSummary.gap > 0 ? `+${selectedDayGapSummary.gap}` : selectedDayGapSummary.gap}
+								{selectedDayGapSummary.gap > 0
+									? `+${selectedDayGapSummary.gap}`
+									: selectedDayGapSummary.gap}
 							</p>
 						</div>
 					</div>
@@ -323,11 +336,15 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												<p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
 													Gap
 												</p>
-												<p className="font-mono font-semibold">{row.gap > 0 ? `+${row.gap}` : row.gap}</p>
+												<p className="font-mono font-semibold">
+													{row.gap > 0 ? `+${row.gap}` : row.gap}
+												</p>
 											</div>
 										</div>
 										<div className="md:col-span-3 flex md:justify-end gap-2">
-											<Badge className={`border font-mono uppercase ${severityClasses[row.severity]}`}>
+											<Badge
+												className={`border font-mono uppercase ${severityClasses[row.severity]}`}
+											>
 												{row.severity === "ok" ? (
 													<CheckCircle2 className="h-3.5 w-3.5 mr-1" />
 												) : (
@@ -435,131 +452,133 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					</div>
 
 					{view === "grid" ? (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{filteredEntries.map((entry) => (
-									<div
-										key={entry.id}
-										className={`rounded-[2px] border border-border/50 bg-muted/40 p-4 transition-colors hover:bg-muted/60 ${shiftColors[entry.shiftType]}`}
-									>
-										<div className="flex justify-between items-start">
-											<div>
-												<h3 className="font-bold font-heading text-sm uppercase tracking-tight">{entry.employeeName}</h3>
-												<p className="text-xs text-muted-foreground font-mono">{entry.role}</p>
-											</div>
-											<Badge
-												variant={
-													entry.status === "CONFIRMED"
-														? "success"
-														: entry.status === "PENDING"
-															? "primary"
-														: "secondary"
-												}
-											>
-												{entry.status}
-											</Badge>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{filteredEntries.map((entry) => (
+								<div
+									key={entry.id}
+									className={`rounded-[2px] border border-border/50 bg-muted/40 p-4 transition-colors hover:bg-muted/60 ${shiftColors[entry.shiftType]}`}
+								>
+									<div className="flex justify-between items-start">
+										<div>
+											<h3 className="font-bold font-heading text-sm uppercase tracking-tight">
+												{entry.employeeName}
+											</h3>
+											<p className="text-xs text-muted-foreground font-mono">{entry.role}</p>
 										</div>
-										<p className="mt-1 text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground">
-											{entry.shiftType} Shift
+										<Badge
+											variant={
+												entry.status === "CONFIRMED"
+													? "success"
+													: entry.status === "PENDING"
+														? "primary"
+														: "secondary"
+											}
+										>
+											{entry.status}
+										</Badge>
+									</div>
+									<p className="mt-1 text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground">
+										{entry.shiftType} Shift
+									</p>
+									<div className="mt-3 text-sm">
+										<p className="font-medium">{entry.stationName}</p>
+										<p className="text-muted-foreground">
+											{format(parseISO(entry.startTime), "h:mm a")} -
+											{format(parseISO(entry.endTime), "h:mm a")}
 										</p>
-										<div className="mt-3 text-sm">
-											<p className="font-medium">{entry.stationName}</p>
-											<p className="text-muted-foreground">
+										{entry.notes && (
+											<p className="text-xs text-muted-foreground mt-2">{entry.notes}</p>
+										)}
+									</div>
+									<div className="mt-3 flex gap-2">
+										<Button variant="outline" size="sm">
+											Swap
+										</Button>
+										<Button variant="primary" size="sm">
+											Notify
+										</Button>
+									</div>
+								</div>
+							))}
+							{filteredEntries.length === 0 && (
+								<div className="col-span-full py-12 text-center">
+									<p className="text-muted-foreground">No shifts match your filters.</p>
+								</div>
+							)}
+						</div>
+					) : (
+						<div className="overflow-x-auto rounded-[2px] border border-border/60">
+							<table className="w-full text-sm">
+								<thead>
+									<tr className="border-b border-border bg-muted/20 text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
+										<th className="p-3 text-left">Employee</th>
+										<th className="p-3 text-left">Station</th>
+										<th className="p-3 text-left">Shift</th>
+										<th className="p-3 text-left">Role</th>
+										<th className="p-3 text-left">Status</th>
+										<th className="p-3 text-left">Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									{filteredEntries.map((entry) => (
+										<tr key={entry.id} className="border-b border-border hover:bg-muted/40">
+											<td className="p-3">
+												<div className="font-medium">{entry.employeeName}</div>
+												<p className="text-xs text-muted-foreground">{entry.role}</p>
+											</td>
+											<td className="p-3">{entry.stationName}</td>
+											<td className="p-3">
 												{format(parseISO(entry.startTime), "h:mm a")} -
 												{format(parseISO(entry.endTime), "h:mm a")}
-											</p>
-											{entry.notes && (
-												<p className="text-xs text-muted-foreground mt-2">{entry.notes}</p>
-											)}
-										</div>
-										<div className="mt-3 flex gap-2">
-											<Button variant="outline" size="sm">
-												Swap
-											</Button>
-											<Button variant="primary" size="sm">
-												Notify
-											</Button>
-										</div>
-									</div>
-								))}
-								{filteredEntries.length === 0 && (
-									<div className="col-span-full py-12 text-center">
-										<p className="text-muted-foreground">No shifts match your filters.</p>
-									</div>
-								)}
-							</div>
-					) : (
-							<div className="overflow-x-auto rounded-[2px] border border-border/60">
-								<table className="w-full text-sm">
-									<thead>
-										<tr className="border-b border-border bg-muted/20 text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-mono">
-											<th className="p-3 text-left">Employee</th>
-											<th className="p-3 text-left">Station</th>
-											<th className="p-3 text-left">Shift</th>
-											<th className="p-3 text-left">Role</th>
-											<th className="p-3 text-left">Status</th>
-											<th className="p-3 text-left">Actions</th>
-										</tr>
-									</thead>
-									<tbody>
-										{filteredEntries.map((entry) => (
-											<tr key={entry.id} className="border-b border-border hover:bg-muted/40">
-												<td className="p-3">
-													<div className="font-medium">{entry.employeeName}</div>
-													<p className="text-xs text-muted-foreground">{entry.role}</p>
-												</td>
-												<td className="p-3">{entry.stationName}</td>
-												<td className="p-3">
-													{format(parseISO(entry.startTime), "h:mm a")} -
-													{format(parseISO(entry.endTime), "h:mm a")}
-												</td>
-												<td className="p-3">
-													<Badge
-														variant={
-															entry.role === "LEAD"
+											</td>
+											<td className="p-3">
+												<Badge
+													variant={
+														entry.role === "LEAD"
+															? "primary"
+															: entry.role === "SUPPORT"
+																? "destructive"
+																: "secondary"
+													}
+												>
+													{entry.role}
+												</Badge>
+											</td>
+											<td className="p-3">
+												<Badge
+													variant={
+														entry.status === "CONFIRMED"
+															? "success"
+															: entry.status === "PENDING"
 																? "primary"
-																: entry.role === "SUPPORT"
-																	? "destructive"
-																	: "secondary"
-														}
-													>
-														{entry.role}
-													</Badge>
-												</td>
-												<td className="p-3">
-													<Badge
-														variant={
-															entry.status === "CONFIRMED"
-																? "success"
-																: entry.status === "PENDING"
-																	? "primary"
-																	: "secondary"
-														}
-													>
-														{entry.status}
-													</Badge>
-												</td>
-												<td className="p-3">
-													<div className="flex gap-2">
-														<Button variant="outline" size="sm">
-															Reassign
-														</Button>
-														<Button variant="ghost" size="sm">
-															Message
-														</Button>
-													</div>
-												</td>
-											</tr>
-										))}
-										{filteredEntries.length === 0 && (
-											<tr>
-												<td colSpan={6} className="p-4 text-center text-muted-foreground">
-													No shifts match your filters.
-												</td>
-											</tr>
-										)}
-									</tbody>
-								</table>
-							</div>
+																: "secondary"
+													}
+												>
+													{entry.status}
+												</Badge>
+											</td>
+											<td className="p-3">
+												<div className="flex gap-2">
+													<Button variant="outline" size="sm">
+														Reassign
+													</Button>
+													<Button variant="ghost" size="sm">
+														Message
+													</Button>
+												</div>
+											</td>
+										</tr>
+									))}
+									{filteredEntries.length === 0 && (
+										<tr>
+											<td colSpan={6} className="p-4 text-center text-muted-foreground">
+												No shifts match your filters.
+											</td>
+										</tr>
+									)}
+								</tbody>
+							</table>
+						</div>
 					)}
 				</CardBody>
 			</Card>
@@ -587,7 +606,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 								</thead>
 								<tbody>
 									{stations.map((station) => (
-										<tr key={station.id} className="border-b border-border/50 hover:bg-muted/5 transition-colors">
+										<tr
+											key={station.id}
+											className="border-b border-border/50 hover:bg-muted/5 transition-colors"
+										>
 											<td className="p-3 font-medium">{station.name}</td>
 											{schedule.days.map((day) => {
 												const count = day.entries.filter(
@@ -595,22 +617,25 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 												).length;
 												const denominator = Math.max(1, station.capacity ?? 1);
 												const utilization = Math.min((count / denominator) * 100, 100);
-														return (
-															<td key={`${station.id}-${day.date}`} className="p-3 text-center">
-																<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">
-																	<div
-																		className="h-full transition-all duration-500"
-																		style={{
-																			width: `${utilization}%`,
-																			backgroundColor: utilization > 80 ? "var(--color-primary)" : "var(--color-chart-3)",
-																		}}
-																	/>
-																</div>
-																<p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase tracking-[0.12em]">
-																	{count} shifts
-																</p>
-															</td>
-														);
+												return (
+													<td key={`${station.id}-${day.date}`} className="p-3 text-center">
+														<div className="h-8 rounded-[1px] bg-muted border border-border/30 overflow-hidden">
+															<div
+																className="h-full transition-all duration-500"
+																style={{
+																	width: `${utilization}%`,
+																	backgroundColor:
+																		utilization > 80
+																			? "var(--color-primary)"
+																			: "var(--color-success)",
+																}}
+															/>
+														</div>
+														<p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase tracking-[0.12em]">
+															{count} shifts
+														</p>
+													</td>
+												);
 											})}
 										</tr>
 									))}

@@ -2,7 +2,12 @@
 
 import { Button as AriaButton, DialogTrigger, Popover, Dialog } from "react-aria-components";
 import { Badge } from "@monorepo/design-system";
-import { LiaCircleNotchSolid, LiaExclamationTriangleSolid, LiaInfoCircleSolid, LiaCheckCircleSolid } from "react-icons/lia";
+import {
+	LiaCircleNotchSolid,
+	LiaExclamationTriangleSolid,
+	LiaInfoCircleSolid,
+	LiaCheckCircleSolid,
+} from "react-icons/lia";
 
 interface AlertItem {
 	id: string;
@@ -63,32 +68,32 @@ export function AlertsPopover({ alerts }: AlertsPopoverProps) {
 						<Badge variant="destructive">{alerts.length}</Badge>
 					</div>
 
-				<div className="overflow-y-auto max-h-[340px] divide-y divide-border/50">
-					{alerts.map((alert) => {
-						const Icon = typeIcon[alert.type];
-						return (
-							<div
-								key={alert.id}
-								className="px-4 py-3 flex gap-3 items-start hover:bg-muted/20 transition-colors duration-100"
-							>
-								<Icon className="w-5 h-5 mt-0.5 flex-shrink-0 text-current" aria-hidden="true" />
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2">
-										<h4 className="font-heading font-bold text-sm tracking-tight text-foreground truncate">
-											{alert.title}
-										</h4>
-										<div
-											className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${priorityColor[alert.priority]}`}
-										/>
+					<div className="overflow-y-auto max-h-[340px] divide-y divide-border/50">
+						{alerts.map((alert) => {
+							const Icon = typeIcon[alert.type];
+							return (
+								<div
+									key={alert.id}
+									className="px-4 py-3 flex gap-3 items-start hover:bg-muted/20 transition-colors duration-100"
+								>
+									<Icon className="w-5 h-5 mt-0.5 flex-shrink-0 text-current" aria-hidden="true" />
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2">
+											<h4 className="font-heading font-bold text-sm tracking-tight text-foreground truncate">
+												{alert.title}
+											</h4>
+											<div
+												className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${priorityColor[alert.priority]}`}
+											/>
+										</div>
+										<p className="text-xs font-mono text-muted-foreground mt-0.5 leading-relaxed">
+											{alert.message}
+										</p>
 									</div>
-									<p className="text-xs font-mono text-muted-foreground mt-0.5 leading-relaxed">
-										{alert.message}
-									</p>
 								</div>
-							</div>
-						);
-					})}
-				</div>
+							);
+						})}
+					</div>
 				</Dialog>
 			</Popover>
 		</DialogTrigger>

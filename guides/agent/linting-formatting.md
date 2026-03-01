@@ -1,12 +1,5 @@
 # Linting & Formatting (Agent Guide)
 
-## What’s enforced
-
-- ESLint + Prettier
-- Tabs indentation (project convention)
-- Double quotes
-- Semicolons
-
 ## Commands
 
 From repo root:
@@ -25,3 +18,5 @@ In `apps/web`:
 ## RSC-specific lint gotcha
 
 - `"use client"` / `"use server"` must be the very first line in the file.
+
+Use `npm run check` in `apps/web` after meaningful React Router/RSC edits.

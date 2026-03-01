@@ -2,22 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useNavigation } from "react-router";
-import {
-	Card,
-	Badge,
-	IndustrialPanel,
-	LedIndicator,
-} from "@monorepo/design-system";
+import { Card, Badge, IndustrialPanel } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
 import { useManagerRealtime } from "~/lib/manager-realtime-client";
 import { ManagerSnapshotControl } from "~/routes/manager/snapshot-control";
-import {
-	LiaUserClockSolid,
-	LiaChartPieSolid,
-	LiaExclamationTriangleSolid,
-	LiaStopwatchSolid,
-} from "react-icons/lia";
+import { KPICard } from "~/components/kpi-card";
 
 const MONITOR_REALTIME_SCOPES = ["monitor", "tasks"] as const;
 const MONITOR_INVALIDATION_EVENTS = [
@@ -163,11 +153,13 @@ export function FloorMonitor({
 			: null;
 
 	const activeStationsCount = stations.filter(
-		(s) => s.isActive && getStationOccupancy(s.id) > 0,
+		(s) => s.isActive && getStationOccupancy(s.id) > 0
 	).length;
 	const stationLoadPercent =
 		stations.length > 0 ? Math.round((activeStationsCount / stations.length) * 100) : 0;
-	const filteredStations = stations.filter((station) => statusFilters.includes(getStationStatus(station)));
+	const filteredStations = stations.filter((station) =>
+		statusFilters.includes(getStationStatus(station))
+	);
 
 	// Identify workers who are assigned tasks but not in active work logs
 	const taskOnlyWorkers = activeTaskEntries
@@ -201,69 +193,43 @@ export function FloorMonitor({
 			{/* Metrics Dashboard */}
 			<section
 				aria-label="Key Metrics"
-				className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden shadow-industrial"
+				className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
 			>
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaUserClockSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">
-							Active Personnel
-						</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{activeWorkerIds.size}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">
-							{activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
-						</span>
-					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Clocked in (WORK) or assigned task</p>
-				</div>
+				<KPICard
+					title="Active Personnel"
+					value={activeWorkerIds.size}
+					subtitle={activeWorkerIds.size > 0 ? "On Floor" : "Clear"}
+					icon="users"
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaChartPieSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Station Load</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{stationLoadPercent}%
-						</span>
-						<span className="text-sm text-muted-foreground font-data">
-							{activeStationsCount}/{stations.length} Active
-						</span>
-					</div>
-				</div>
+				<KPICard
+					title="Station Load"
+					value={`${stationLoadPercent}%`}
+					subtitle={`${activeStationsCount}/${stations.length} Active`}
+					icon="industry"
+					trend={{
+						direction: stationLoadPercent > 80 ? "up" : "neutral",
+						value: "Occupancy",
+					}}
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaExclamationTriangleSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Break Status</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{breakLogs.length}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Paused</span>
-					</div>
-				</div>
+				<KPICard
+					title="Break Status"
+					value={breakLogs.length}
+					subtitle="Paused"
+					icon="clock"
+					trend={{
+						direction: breakLogs.length > 2 ? "down" : "neutral", // Arbitrary logic for demo
+						value: "Workers",
+					}}
+				/>
 
-				<div className="bg-card p-4 md:p-6 flex flex-col justify-between group hover:bg-muted/5 transition-colors">
-					<div className="flex items-center gap-2 text-muted-foreground mb-4">
-						<LiaStopwatchSolid className="w-5 h-5" />
-						<span className="text-xs font-heading uppercase tracking-wider font-semibold">Shift Max</span>
-					</div>
-					<div className="flex items-baseline gap-2">
-						<span className="text-3xl font-data font-medium tracking-tight text-foreground group-hover:text-primary transition-colors">
-							{longestCurrentStartTime
-								? calculateDuration(longestCurrentStartTime)
-								: "--"}
-						</span>
-						<span className="text-sm text-muted-foreground font-data">Duration</span>
-					</div>
-					<p className="text-[10px] text-muted-foreground mt-2">Longest active session on floor</p>
-				</div>
+				<KPICard
+					title="Shift Max"
+					value={longestCurrentStartTime ? calculateDuration(longestCurrentStartTime) : "--"}
+					subtitle="Longest active session"
+					icon="clock"
+				/>
 			</section>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -287,7 +253,7 @@ export function FloorMonitor({
 										variant={statusFilters.includes(status) ? "primary" : "outline"}
 										className={cn(
 											"text-[10px] font-mono",
-											!statusFilters.includes(status) && "opacity-60",
+											!statusFilters.includes(status) && "opacity-60"
 										)}
 									>
 										{status}
@@ -329,7 +295,7 @@ export function FloorMonitor({
 									key={station.id}
 									className={cn(
 										"flex flex-col h-full",
-										status === "INACTIVE" && "opacity-60 grayscale",
+										status === "INACTIVE" && "opacity-60 grayscale"
 									)}
 									variant={status === "FULL" ? "destructive" : "default"}
 								>
@@ -350,11 +316,15 @@ export function FloorMonitor({
 													CAP: {capacity} | ID: {station.id.slice(0, 4)}
 												</div>
 											</div>
-											<LedIndicator
-												active={status !== "IDLE" && status !== "INACTIVE"}
+											<div
 												className={cn(
-													status === "FULL" && "bg-destructive shadow-destructive/50",
-													status === "BUSY" && "bg-amber-500 shadow-amber-500/50",
+													"w-2 h-2 rounded-full transition-all duration-300 ease-out shadow-sm",
+													status !== "IDLE" && status !== "INACTIVE"
+														? "bg-primary shadow-[0_0_8px_rgba(224,116,38,0.5)] scale-100"
+														: "bg-muted-foreground/30 scale-90",
+													status === "FULL" &&
+														"bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+													status === "BUSY" && "bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]"
 												)}
 											/>
 										</div>
@@ -377,9 +347,9 @@ export function FloorMonitor({
 																? status === "FULL"
 																	? "bg-destructive"
 																	: status === "BUSY"
-																		? "bg-amber-500"
+																		? "bg-warning"
 																		: "bg-primary"
-																: "bg-transparent",
+																: "bg-transparent"
 														)}
 													/>
 												))}
@@ -451,20 +421,26 @@ export function FloorMonitor({
 									<div className="col-span-2">
 										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
 										<div className="text-[10px] text-muted-foreground font-mono mt-1">
-											{log.Station?.name || (log.Employee.defaultStation ? `FLOAT (Def: ${log.Employee.defaultStation.name})` : "FLOAT")}
+											{log.Station?.name ||
+												(log.Employee.defaultStation
+													? `FLOAT (Def: ${log.Employee.defaultStation.name})`
+													: "FLOAT")}
 										</div>
 									</div>
 									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
 										{calculateDuration(log.startTime)}
 									</div>
 									<div className="text-center">
-										<Badge variant="outline" className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20">
+										<Badge
+											variant="outline"
+											className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20"
+										>
 											WORK
 										</Badge>
 									</div>
 								</div>
 							))}
-							
+
 							{breakLogs.map((log) => (
 								<div
 									key={log.id}
@@ -472,9 +448,7 @@ export function FloorMonitor({
 								>
 									<div className="col-span-2">
 										<div className="text-sm font-medium leading-none">{log.Employee.name}</div>
-										<div className="text-[10px] text-muted-foreground font-mono mt-1">
-											ON BREAK
-										</div>
+										<div className="text-[10px] text-muted-foreground font-mono mt-1">ON BREAK</div>
 									</div>
 									<div className="text-right font-mono text-xs tabular-nums text-muted-foreground">
 										{calculateDuration(log.startTime)}
@@ -505,7 +479,7 @@ export function FloorMonitor({
 									<div className="text-center">
 										<Badge
 											variant="outline"
-											className="text-[10px] h-5 px-1 bg-blue-500/10 text-blue-600 border-blue-200"
+											className="text-[10px] h-5 px-1 bg-primary/10 text-primary border-primary/20"
 										>
 											ASSIGNED
 										</Badge>

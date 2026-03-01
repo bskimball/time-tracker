@@ -14,9 +14,7 @@ export type ClockActionState = {
 	message?: string;
 } | null;
 
-type WorkerSelfTaskContext =
-	| { ok: true; employeeId: string }
-	| { ok: false; error: string };
+type WorkerSelfTaskContext = { ok: true; employeeId: string } | { ok: false; error: string };
 
 async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
 	const { user } = await validateRequest();
@@ -125,7 +123,9 @@ export async function switchSelfTaskAction(
 		return { success: false, error: context.error };
 	}
 
-	const taskTypeId = String(formData.get("newTaskTypeId") || formData.get("taskTypeId") || "").trim();
+	const taskTypeId = String(
+		formData.get("newTaskTypeId") || formData.get("taskTypeId") || ""
+	).trim();
 	const reasonRaw = formData.get("reason");
 	const reason = reasonRaw ? String(reasonRaw).trim() : null;
 
@@ -234,7 +234,9 @@ export async function endSelfTaskAction(
 		where: { id: activeAssignment.id },
 		data: {
 			endTime: new Date(),
-			notes: notes ? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim() : activeAssignment.notes,
+			notes: notes
+				? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim()
+				: activeAssignment.notes,
 		},
 	});
 
@@ -515,6 +517,59 @@ export async function deleteTimeLog(
 	});
 
 	return { success: true, message: "Time log deleted" };
+}
+
+export async function checkPinStatus(_prevState: any, formData: FormData) {
+	const pin = String(formData.get("pin") || "").trim();
+
+	if (!/^\d{4,6}$/.test(pin)) {
+		return { success: false, error: "PIN must be 4-6 digits" };
+	}
+
+	await ensureOperationalDataSeeded();
+
+	const employees = await db.employee.findMany({
+		where: {
+			status: "ACTIVE",
+			pinHash: { not: null },
+		},
+	});
+
+	let matchedEmployee: (typeof employees)[number] | null = null;
+	for (const employee of employees) {
+		if (!employee.pinHash) {
+			continue;
+		}
+		const isMatch = await bcrypt.compare(pin, employee.pinHash);
+		if (isMatch) {
+			matchedEmployee = employee;
+			break;
+		}
+	}
+
+	if (!matchedEmployee) {
+		return { success: false, error: "Invalid PIN" };
+	}
+
+	const activeWorkLog = await db.timeLog.findFirst({
+		where: {
+			employeeId: matchedEmployee.id,
+			type: "WORK",
+			endTime: null,
+			deletedAt: null,
+		},
+		select: { id: true, stationId: true },
+	});
+
+	return {
+		success: true,
+		employeeId: matchedEmployee.id,
+		employeeName: matchedEmployee.name,
+		isClockedIn: !!activeWorkLog,
+		lastStationId: matchedEmployee.lastStationId,
+		defaultStationId: matchedEmployee.defaultStationId,
+		pin, // Send pin back to include in the final form
+	};
 }
 
 export async function pinToggleClock(

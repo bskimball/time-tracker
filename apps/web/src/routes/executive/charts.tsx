@@ -177,7 +177,11 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 							cursor={{ stroke: "var(--color-primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
 						/>
 						<Legend
-							wrapperStyle={{ paddingTop: "16px", fontSize: "11px", fontFamily: "var(--font-mono)" }}
+							wrapperStyle={{
+								paddingTop: "16px",
+								fontSize: "11px",
+								fontFamily: "var(--font-mono)",
+							}}
 						/>
 						{data.datasets.map((dataset, index) => (
 							<Area
@@ -264,7 +268,11 @@ export function BarChart({ title, data, height = 250 }: BarChartProps) {
 							cursor={{ fill: "var(--color-muted)", opacity: 0.2 }}
 						/>
 						<Legend
-							wrapperStyle={{ paddingTop: "16px", fontSize: "11px", fontFamily: "var(--font-mono)" }}
+							wrapperStyle={{
+								paddingTop: "16px",
+								fontSize: "11px",
+								fontFamily: "var(--font-mono)",
+							}}
 						/>
 						{data.datasets.map((dataset, index) => (
 							<Bar
@@ -328,7 +336,10 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 								/>
 							))}
 						</Pie>
-						<Tooltip contentStyle={tooltipStyle.contentStyle} labelStyle={tooltipStyle.labelStyle} />
+						<Tooltip
+							contentStyle={tooltipStyle.contentStyle}
+							labelStyle={tooltipStyle.labelStyle}
+						/>
 						<Legend
 							layout="vertical"
 							verticalAlign="middle"

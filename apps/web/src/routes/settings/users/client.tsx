@@ -2,12 +2,13 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateUserRole } from "../actions";
+import { updateUserRole, addUser } from "../actions";
 import type { User } from "@prisma/client";
 import { Select } from "@monorepo/design-system";
 import { Alert } from "@monorepo/design-system";
 import { Card, CardBody, CardHeader, CardTitle } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
+import { Input } from "@monorepo/design-system";
 
 const ROLES = [
 	{ value: "ADMIN", label: "Admin" },
@@ -25,11 +26,47 @@ function SubmitButton() {
 	);
 }
 
+function AddUserForm() {
+	const [state, action] = useActionState(addUser, null);
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Add New User</CardTitle>
+			</CardHeader>
+			<CardBody>
+				<form action={action} className="space-y-4">
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<Input name="email" label="Email" type="email" required />
+						<Input name="name" label="Name" />
+						<Select name="role" label="Role" options={ROLES} defaultValue="WORKER" />
+					</div>
+					<div className="flex justify-end">
+						<SubmitButtonAdd />
+					</div>
+					{state?.error && <Alert variant="error">{state.error}</Alert>}
+					{state?.success && <Alert variant="success">User added successfully!</Alert>}
+				</form>
+			</CardBody>
+		</Card>
+	);
+}
+
+function SubmitButtonAdd() {
+	const { pending } = useFormStatus();
+	return (
+		<Button type="submit" disabled={pending} variant="primary">
+			{pending ? "Adding..." : "Add User"}
+		</Button>
+	);
+}
+
 export function UserManagement({ users }: { users: User[] }) {
 	const [state, action] = useActionState(updateUserRole, null);
 
 	return (
 		<div className="space-y-6">
+			<AddUserForm />
 			<Card>
 				<CardHeader>
 					<CardTitle>User Management</CardTitle>

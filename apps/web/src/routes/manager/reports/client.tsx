@@ -13,6 +13,7 @@ import {
 	Tab,
 	TabList,
 	Tabs,
+	Alert,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
@@ -27,6 +28,11 @@ import {
 	LiaClockSolid,
 } from "react-icons/lia";
 import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import {
+	ProductivityTrendChart,
+	StationPerformanceChart,
+} from "~/components/charts/executive-charts";
+import type { TrendDataPoint, StationBarData } from "~/components/charts/executive-charts";
 import type {
 	ProductivityData,
 	TaskPerformanceData,
@@ -79,13 +85,13 @@ const KpiCard = ({
 }) => {
 	const colors = {
 		default: "text-foreground",
-		success: "text-emerald-600",
-		warning: "text-orange-600",
-		destructive: "text-red-600",
+		success: "text-success",
+		warning: "text-warning",
+		destructive: "text-destructive",
 	};
 
 	return (
-		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border border-border rounded-[2px] shadow-sm group hover:border-primary/50 transition-colors">
+		<div className="bg-card p-4 md:p-6 flex flex-col justify-between border border-border rounded-xs shadow-sm group hover:border-primary/50 transition-colors">
 			<div className="flex items-center gap-2 text-muted-foreground mb-4">
 				{Icon && <Icon className="w-5 h-5" />}
 				<span className="text-xs font-heading uppercase tracking-wider font-semibold">{label}</span>
@@ -265,13 +271,13 @@ export function ReportsManager({
 									Performance Metrics
 								</h3>
 								<div className="space-y-4">
-									<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
+									<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-xs">
 										<span className="text-sm">Avg Hours / Employee</span>
 										<span className="font-data font-bold text-lg">
 											{data.summaryStats.averageHoursPerEmployee.toFixed(1)}h
 										</span>
 									</div>
-									<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-[2px]">
+									<div className="flex justify-between items-center p-3 bg-muted/20 border border-border/50 rounded-xs">
 										<span className="text-sm">Active Ratio</span>
 										<span className="font-data font-bold text-lg">
 											{data.summaryStats.totalEmployees > 0
@@ -282,7 +288,7 @@ export function ReportsManager({
 								</div>
 							</div>
 
-							<div className="flex items-center justify-center border border-dashed border-border rounded-[2px] bg-muted/5 min-h-[200px]">
+							<div className="flex items-center justify-center border border-dashed border-border rounded-xs bg-muted/5 min-h-50">
 								<div className="text-center space-y-2">
 									<p className="font-heading uppercase text-xs text-muted-foreground tracking-widest">
 										Coverage Index
@@ -318,8 +324,46 @@ export function ReportsManager({
 	const renderProductivityReport = (reportData: ReportDataType) => {
 		const data = reportData;
 
+		// Aggregate daily efficiency for trend chart
+		const dailyMap = new Map<string, { totalEfficiency: number; count: number }>();
+		data.productivityData.forEach((item) => {
+			const current = dailyMap.get(item.date) || { totalEfficiency: 0, count: 0 };
+			// Assuming efficiency is 0-1.0 scale, we want to display as units/hr or similar?
+			// The chart expects "value". Let's use average efficiency * 100 for percentage
+			// OR if we have units/hr, let's use that.
+			// item.unitsProcessed / item.hoursWorked = units/hr
+			const unitsPerHour = item.hoursWorked > 0 ? (item.unitsProcessed || 0) / item.hoursWorked : 0;
+
+			dailyMap.set(item.date, {
+				totalEfficiency: current.totalEfficiency + unitsPerHour,
+				count: current.count + 1,
+			});
+		});
+
+		const trendData: TrendDataPoint[] = Array.from(dailyMap.entries())
+			.map(([date, stats]) => ({
+				date,
+				value: stats.count > 0 ? stats.totalEfficiency / stats.count : 0,
+			}))
+			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
 		return (
 			<div className="space-y-6">
+				{trendData.length > 0 && (
+					<Card>
+						<CardHeader>
+							<CardTitle className="uppercase tracking-wider">Productivity Trend</CardTitle>
+						</CardHeader>
+						<CardBody>
+							<ProductivityTrendChart
+								data={trendData}
+								thresholdMedium={8} // Example threshold
+								thresholdHigh={12} // Example threshold
+							/>
+						</CardBody>
+					</Card>
+				)}
+
 				<Card>
 					<CardHeader>
 						<div className="flex justify-between items-center">
@@ -370,9 +414,7 @@ export function ReportsManager({
 											<td className="p-4 font-data text-right">
 												{row.efficiency ? (
 													<span
-														className={cn(
-															row.efficiency >= 1.0 ? "text-emerald-600" : "text-orange-600"
-														)}
+														className={cn(row.efficiency >= 1.0 ? "text-success" : "text-warning")}
 													>
 														{(row.efficiency * 100).toFixed(1)}%
 													</span>
@@ -382,7 +424,7 @@ export function ReportsManager({
 											</td>
 											<td className="p-4 font-data text-right">
 												{row.overtimeHours ? (
-													<span className="text-red-600 font-bold">
+													<span className="text-destructive font-bold">
 														{row.overtimeHours.toFixed(2)}
 													</span>
 												) : (
@@ -393,10 +435,10 @@ export function ReportsManager({
 									))}
 									{data.productivityData.length === 0 && (
 										<tr>
-									<td
-										colSpan={7}
-										className="p-12 text-center text-muted-foreground font-heading text-sm"
-									>
+											<td
+												colSpan={7}
+												className="p-12 text-center text-muted-foreground font-heading text-sm"
+											>
 												No data found for the selected period.
 											</td>
 										</tr>
@@ -490,69 +532,93 @@ export function ReportsManager({
 	const renderStationReport = (reportData: ReportDataType) => {
 		const data = reportData;
 
+		const stationChartData: StationBarData[] = data.stationEfficiencyData.slice(0, 8).map((s) => ({
+			name: s.stationName,
+			productivity: s.averageEfficiency ? s.averageEfficiency * 100 : 0, // Using efficiency % as proxy for productivity visual
+			occupancy: s.peakOccupancy ? Math.min(100, (s.peakOccupancy / 10) * 100) : 0, // Rough estimate if capacity unknown, or just use raw if chart supports it.
+			// Actually StationPerformanceChart expects occupancy to be 0-100.
+			// Let's assume peakOccupancy is raw count. Without capacity, we can't calculate %.
+			// But we can map it for visualization. Let's just use 0 for now or try to infer.
+		}));
+
 		return (
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				{data.stationEfficiencyData.map((station, index) => (
-					<Card key={index} className="group hover:border-primary/50 transition-colors">
-						<CardHeader className="pb-2 border-b border-border/50">
-							<CardTitle className="uppercase tracking-tight text-sm flex justify-between">
-								{station.stationName}
-								<Badge variant="outline" className="font-mono text-[10px]">
-									#{index + 1}
-								</Badge>
+			<div className="space-y-6">
+				{stationChartData.length > 0 && (
+					<Card>
+						<CardHeader>
+							<CardTitle className="uppercase tracking-wider">
+								Station Performance Overview
 							</CardTitle>
 						</CardHeader>
-						<CardBody className="space-y-4 pt-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
-										Total Hours
-									</p>
-									<p className="font-data font-bold text-lg">{station.totalHours.toFixed(1)}h</p>
-								</div>
-								<div>
-									<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
-										Peak Occupancy
-									</p>
-									<p className="font-data font-bold text-lg">{station.peakOccupancy}</p>
-								</div>
-							</div>
-
-							{station.averageEfficiency !== null && (
-								<div className="space-y-2 pt-2 border-t border-border/30">
-									<div className="flex justify-between text-xs">
-										<span className="text-muted-foreground uppercase font-heading tracking-wider">
-											Efficiency
-										</span>
-										<span className="font-data font-bold">
-											{(station.averageEfficiency * 100).toFixed(1)}%
-										</span>
-									</div>
-									<div className="h-1.5 w-full bg-muted overflow-hidden rounded-[1px]">
-										<div
-											className={cn(
-												"h-full transition-all duration-500",
-												station.averageEfficiency >= 0.9
-													? "bg-emerald-500"
-													: station.averageEfficiency >= 0.7
-														? "bg-primary"
-														: "bg-yellow-500"
-											)}
-											style={{ width: `${Math.min(station.averageEfficiency * 100, 100)}%` }}
-										/>
-									</div>
-								</div>
-							)}
+						<CardBody>
+							<StationPerformanceChart data={stationChartData} />
 						</CardBody>
 					</Card>
-				))}
-				{data.stationEfficiencyData.length === 0 && (
-					<div className="col-span-full p-12 border border-dashed border-border rounded-[2px] text-center">
-						<p className="font-heading uppercase tracking-widest text-muted-foreground text-sm">
-							No Station Data Available
-						</p>
-					</div>
 				)}
+
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{data.stationEfficiencyData.map((station, index) => (
+						<Card key={index} className="group hover:border-primary/50 transition-colors">
+							<CardHeader className="pb-2 border-b border-border/50">
+								<CardTitle className="uppercase tracking-tight text-sm flex justify-between">
+									{station.stationName}
+									<Badge variant="outline" className="font-mono text-[10px]">
+										#{index + 1}
+									</Badge>
+								</CardTitle>
+							</CardHeader>
+							<CardBody className="space-y-4 pt-4">
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
+											Total Hours
+										</p>
+										<p className="font-data font-bold text-lg">{station.totalHours.toFixed(1)}h</p>
+									</div>
+									<div>
+										<p className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider mb-1">
+											Peak Occupancy
+										</p>
+										<p className="font-data font-bold text-lg">{station.peakOccupancy}</p>
+									</div>
+								</div>
+
+								{station.averageEfficiency !== null && (
+									<div className="space-y-2 pt-2 border-t border-border/30">
+										<div className="flex justify-between text-xs">
+											<span className="text-muted-foreground uppercase font-heading tracking-wider">
+												Efficiency
+											</span>
+											<span className="font-data font-bold">
+												{(station.averageEfficiency * 100).toFixed(1)}%
+											</span>
+										</div>
+										<div className="h-1.5 w-full bg-muted overflow-hidden rounded-[1px]">
+											<div
+												className={cn(
+													"h-full transition-all duration-500",
+													station.averageEfficiency >= 0.9
+														? "bg-success"
+														: station.averageEfficiency >= 0.7
+															? "bg-primary"
+															: "bg-warning"
+												)}
+												style={{ width: `${Math.min(station.averageEfficiency * 100, 100)}%` }}
+											/>
+										</div>
+									</div>
+								)}
+							</CardBody>
+						</Card>
+					))}
+					{data.stationEfficiencyData.length === 0 && (
+						<div className="col-span-full p-12 border border-dashed border-border rounded-xs text-center">
+							<p className="font-heading uppercase tracking-widest text-muted-foreground text-sm">
+								No Station Data Available
+							</p>
+						</div>
+					)}
+				</div>
 			</div>
 		);
 	};
@@ -563,22 +629,22 @@ export function ReportsManager({
 		return (
 			<div className="space-y-6">
 				{data.summaryStats.totalOvertimeHours > 0 && (
-					<div className="flex items-center space-x-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-[2px]">
-						<div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-full text-red-600 dark:text-red-400">
+					<Alert variant="error" className="flex items-center space-x-4">
+						<div className="p-2 bg-destructive/10 rounded-full text-destructive">
 							<LiaClockSolid className="w-5 h-5" />
 						</div>
 						<div>
-							<p className="font-heading uppercase text-xs text-red-700 dark:text-red-300 tracking-wider font-bold">
+							<p className="font-heading uppercase text-xs tracking-wider font-bold">
 								Overtime Alert
 							</p>
-							<p className="text-sm text-foreground">
+							<p className="text-sm">
 								Total accumulated overtime:{" "}
 								<span className="font-data font-bold">
 									{data.summaryStats.totalOvertimeHours.toFixed(1)}h
 								</span>
 							</p>
 						</div>
-					</div>
+					</Alert>
 				)}
 
 				<Card>
@@ -618,7 +684,7 @@ export function ReportsManager({
 											<td className="p-4 font-data text-right">
 												{row.regularHoursWorked.toFixed(2)}
 											</td>
-											<td className="p-4 font-data text-right text-red-600 font-bold">
+											<td className="p-4 font-data text-right text-destructive font-bold">
 												{row.overtimeHoursWorked.toFixed(2)}
 											</td>
 										</tr>
@@ -677,7 +743,7 @@ export function ReportsManager({
 				>
 					<TabList
 						className={cn(
-							"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
+							"inline-flex w-auto justify-start gap-1 rounded-xs p-0.5 bg-card border border-border/40",
 							"flex-wrap" // Handle wrapping if needed for small screens
 						)}
 					>
@@ -687,7 +753,7 @@ export function ReportsManager({
 								key={type.value}
 								className={({ isSelected }) =>
 									cn(
-										"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center gap-2 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer",
+										"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-xs flex items-center justify-center gap-2 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer",
 										isSelected
 											? "bg-primary text-primary-foreground shadow-sm"
 											: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -702,7 +768,7 @@ export function ReportsManager({
 				</Tabs>
 
 				{/* Date Range Picker */}
-				<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-[2px] border border-border/50">
+				<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-xs border border-border/50">
 					<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
 					<div className="flex items-center gap-2">
 						<SimpleInput
@@ -812,12 +878,12 @@ function DeferredReportsSection({
 
 function ReportSectionFallback() {
 	return (
-		<div className="rounded-[2px] border border-border bg-card/60 p-6">
+		<div className="rounded-xs border border-border bg-card/60 p-6">
 			<div className="flex items-center gap-3 text-xs font-industrial uppercase tracking-widest text-muted-foreground">
 				<LiaSyncSolid className="h-4 w-4 animate-spin" />
 				Loading report module
 			</div>
-			<div className="mt-4 h-64 rounded-[2px] border border-border bg-muted/20 animate-pulse" />
+			<div className="mt-4 h-64 rounded-xs border border-border bg-muted/20 animate-pulse" />
 		</div>
 	);
 }

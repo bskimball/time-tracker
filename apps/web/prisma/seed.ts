@@ -173,7 +173,7 @@ async function main() {
 		const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
 		const station = stations[index % stations.length];
 		const hireDate = new Date(seedNow);
-		hireDate.setDate(seedNow.getDate() - (index * 17) % (365 * 3));
+		hireDate.setDate(seedNow.getDate() - ((index * 17) % (365 * 3)));
 
 		const status: EmployeeStatus =
 			index < activeEmployeeCount
@@ -313,96 +313,276 @@ async function main() {
 	]);
 
 	console.log(`✅ Created ${taskTypes.length} task types`);
-	// Create task assignments with broad historical coverage and active in-progress work
-	console.log("📋 Creating sample task assignments...");
 	const now = new Date();
+	const daysToSeed = 30;
 	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
 	const taskTypeByStation = new Map(taskTypes.map((taskType) => [taskType.stationId, taskType]));
 
-	const assignmentRows: Array<{
-		employeeId: string;
-		taskTypeId: string;
+	const shiftTemplates = [
+		{ label: "DAY", startHour: 6, durationHours: 8 },
+		{ label: "SWING", startHour: 14, durationHours: 8 },
+		{ label: "NIGHT", startHour: 22, durationHours: 8 },
+	];
+
+	const stationIdByName = new Map(stations.map((station) => [station.name, station.id]));
+	const roleByStation = new Map<string, string>([
+		[stationIdByName.get("PICKING") ?? "", "Picker"],
+		[stationIdByName.get("PACKING") ?? "", "Packer"],
+		[stationIdByName.get("FILLING") ?? "", "Filler"],
+		[stationIdByName.get("RECEIVING") ?? "", "Receiver"],
+		[stationIdByName.get("SHIPPING") ?? "", "Loader"],
+		[stationIdByName.get("QUALITY") ?? "", "Inspector"],
+		[stationIdByName.get("INVENTORY") ?? "", "Stock Associate"],
+	]);
+
+	console.log("🗓️ Creating shifts for the last 30 days...");
+	const shiftRows: Array<{
+		stationId: string;
 		startTime: Date;
-		endTime: Date | null;
-		unitsCompleted: number | null;
-		notes: string;
+		endTime: Date;
+		requiredHeadcount: number;
+		shiftType: string;
 	}> = [];
 
-	for (let dayOffset = 1; dayOffset <= 365 * 3; dayOffset++) {
-		for (const [employeeIndex, employee] of activeEmployees.entries()) {
-			if ((dayOffset + employeeIndex) % 9 === 0) continue;
+	for (let dayOffset = 0; dayOffset < daysToSeed; dayOffset++) {
+		const baseDate = new Date(now);
+		baseDate.setDate(now.getDate() - dayOffset);
+		baseDate.setHours(0, 0, 0, 0);
 
-			const stationTaskType = employee.defaultStationId
-				? taskTypeByStation.get(employee.defaultStationId)
-				: null;
-			const fallbackTaskType = taskTypes[(employeeIndex + dayOffset) % taskTypes.length];
-			const selectedTaskType = stationTaskType ?? fallbackTaskType;
+		for (const [stationIndex, station] of stations.entries()) {
+			for (const [shiftIndex, template] of shiftTemplates.entries()) {
+				const shiftStart = new Date(baseDate);
+				shiftStart.setHours(template.startHour, 0, 0, 0);
+				const shiftEnd = new Date(shiftStart.getTime() + template.durationHours * 60 * 60 * 1000);
 
-			const shiftDate = new Date(now);
-			shiftDate.setDate(now.getDate() - dayOffset);
-			const shiftStartHour = [6, 14, 22][employeeIndex % 3];
-			shiftDate.setHours(shiftStartHour, ((employeeIndex * 7 + dayOffset) % 4) * 15, 0, 0);
+				const baselineHeadcount = Math.max(2, Math.round((station.capacity ?? 6) * 0.55));
+				const headcountVariance = ((dayOffset + stationIndex + shiftIndex) % 3) - 1;
 
-			const segmentCount = (dayOffset + employeeIndex) % 5 === 0 ? 2 : 1;
-			let segmentStart = new Date(shiftDate);
-
-			for (let segment = 0; segment < segmentCount; segment++) {
-				const durationHours =
-					segmentCount === 2 && segment === 0 ? 4.0 : 6.8 + ((dayOffset + segment) % 3) * 0.35;
-				const endTime = new Date(segmentStart.getTime() + durationHours * 60 * 60 * 1000);
-				const unitsBase = 140 + ((employeeIndex * 19 + dayOffset * 11 + segment * 7) % 230);
-
-				assignmentRows.push({
-					employeeId: employee.id,
-					taskTypeId: selectedTaskType.id,
-					startTime: segmentStart,
-					endTime,
-					unitsCompleted: unitsBase,
-					notes: `Historical shift d-${dayOffset} segment ${segment + 1}`,
+				shiftRows.push({
+					stationId: station.id,
+					startTime: shiftStart,
+					endTime: shiftEnd,
+					requiredHeadcount: Math.max(1, baselineHeadcount + headcountVariance),
+					shiftType: template.label,
 				});
-
-				segmentStart = new Date(endTime.getTime() + 30 * 60 * 1000);
 			}
 		}
 	}
 
-	const activeAssignmentsTarget = Math.min(activeEmployees.length, 26);
-	const activeAssignmentsToCreate = activeEmployees
-		.slice(0, activeAssignmentsTarget)
-		.map((employee, index) => {
-		const stationTaskType = employee.defaultStationId
-			? taskTypeByStation.get(employee.defaultStationId)
-			: null;
-		const selectedTaskType = stationTaskType ?? taskTypes[index % taskTypes.length];
-		const startedMinutesAgo = 35 + index * 9;
+	await prisma.shift.createMany({ data: shiftRows });
 
-		return {
-			employeeId: employee.id,
-			taskTypeId: selectedTaskType.id,
-			startTime: new Date(now.getTime() - startedMinutesAgo * 60 * 1000),
-			endTime: null,
-			unitsCompleted: 22 + index * 5,
-			notes: `Active assignment in progress at ${selectedTaskType.name}`,
-		};
-		});
+	const shiftRangeStart = new Date(now);
+	shiftRangeStart.setDate(now.getDate() - (daysToSeed - 1));
+	shiftRangeStart.setHours(0, 0, 0, 0);
 
-	assignmentRows.push(...activeAssignmentsToCreate);
-
-	const createdAssignments = await prisma.taskAssignment.createMany({
-		data: assignmentRows,
+	const shifts = await prisma.shift.findMany({
+		where: {
+			startTime: {
+				gte: shiftRangeStart,
+			},
+		},
+		select: {
+			id: true,
+			stationId: true,
+			startTime: true,
+			endTime: true,
+			shiftType: true,
+		},
 	});
 
-	const activeAssignmentCount = assignmentRows.filter(
-		(assignment) => assignment.endTime === null
-	).length;
-	const historicalAssignmentCount = assignmentRows.length - activeAssignmentCount;
-
-	console.log(
-		`✅ Created ${createdAssignments.count} task assignments (${activeAssignmentCount} active, ${historicalAssignmentCount} historical)`
+	const shiftsByKey = new Map(
+		shifts.map((shift) => [
+			`${shift.stationId}|${shift.shiftType}|${shift.startTime.toISOString()}`,
+			shift,
+		])
 	);
 
-	// Create historical performance metrics for analytics charts
-	console.log("📈 Creating performance metrics history...");
+	console.log(`✅ Created ${shifts.length} shifts`);
+
+	console.log("👷 Creating shift assignments and call-outs...");
+	const shiftAssignmentRows: Array<{
+		shiftId: string;
+		employeeId: string;
+		role: string;
+		status: string;
+		notes: string;
+	}> = [];
+
+	const callOutRows: Array<{
+		employeeId: string;
+		shiftId: string;
+		date: Date;
+		reason: string;
+		status: string;
+	}> = [];
+
+	const scheduleRows: Array<{
+		employeeId: string;
+		stationId: string;
+		shiftId: string;
+		shiftStart: Date;
+		shiftEnd: Date;
+		inProgress: boolean;
+		employeeIndex: number;
+		dayOffset: number;
+	}> = [];
+
+	for (let dayOffset = 0; dayOffset < daysToSeed; dayOffset++) {
+		const baseDate = new Date(now);
+		baseDate.setDate(now.getDate() - dayOffset);
+		baseDate.setHours(0, 0, 0, 0);
+
+		for (const [employeeIndex, employee] of activeEmployees.entries()) {
+			const isScheduledOff = (dayOffset + employeeIndex) % 7 >= 5;
+			if (isScheduledOff) continue;
+
+			const shiftTemplate = shiftTemplates[employeeIndex % shiftTemplates.length];
+			const stationId =
+				employee.defaultStationId ?? stations[(employeeIndex + dayOffset) % stations.length].id;
+
+			const shiftStart = new Date(baseDate);
+			shiftStart.setHours(shiftTemplate.startHour, 0, 0, 0);
+			const shiftKey = `${stationId}|${shiftTemplate.label}|${shiftStart.toISOString()}`;
+			const shift = shiftsByKey.get(shiftKey);
+
+			if (!shift) continue;
+
+			const inProgress = dayOffset === 0 && shift.startTime <= now && shift.endTime > now;
+			const isCallOut = !inProgress && (employeeIndex * 11 + dayOffset * 7) % 31 === 0;
+
+			if (isCallOut) {
+				callOutRows.push({
+					employeeId: employee.id,
+					shiftId: shift.id,
+					date: shift.startTime,
+					reason: "Sick leave",
+					status: "APPROVED",
+				});
+				continue;
+			}
+
+			const role = roleByStation.get(stationId) ?? "Associate";
+			const status = inProgress ? "IN_PROGRESS" : "COMPLETED";
+
+			shiftAssignmentRows.push({
+				shiftId: shift.id,
+				employeeId: employee.id,
+				role,
+				status,
+				notes: dayOffset === 0 ? "Current roster" : `Rostered d-${dayOffset}`,
+			});
+
+			scheduleRows.push({
+				employeeId: employee.id,
+				stationId,
+				shiftId: shift.id,
+				shiftStart: shift.startTime,
+				shiftEnd: shift.endTime,
+				inProgress,
+				employeeIndex,
+				dayOffset,
+			});
+		}
+	}
+
+	if (shiftAssignmentRows.length > 0) {
+		await prisma.shiftAssignment.createMany({ data: shiftAssignmentRows });
+	}
+
+	if (callOutRows.length > 0) {
+		await prisma.callOut.createMany({ data: callOutRows });
+	}
+
+	const activeShiftAssignmentCount = shiftAssignmentRows.filter(
+		(assignment) => assignment.status === "IN_PROGRESS"
+	).length;
+
+	console.log(
+		`✅ Created ${shiftAssignmentRows.length} shift assignments (${activeShiftAssignmentCount} active) and ${callOutRows.length} call-outs`
+	);
+
+	console.log("📋 Creating task assignments tied to shift activity...");
+	type CreatedTaskRecord = {
+		id: string;
+		employeeId: string;
+		stationId: string;
+		startTime: Date;
+		endTime: Date | null;
+		inProgress: boolean;
+		employeeIndex: number;
+		dayOffset: number;
+	};
+
+	const createdTasks: CreatedTaskRecord[] = [];
+
+	for (const [rowIndex, row] of scheduleRows.entries()) {
+		const stationTaskType = taskTypeByStation.get(row.stationId);
+		const selectedTaskType = stationTaskType ?? taskTypes[rowIndex % taskTypes.length];
+		const taskStart = new Date(row.shiftStart.getTime() + ((rowIndex % 4) * 10 + 5) * 60 * 1000);
+		const taskEnd = row.inProgress
+			? null
+			: new Date(row.shiftEnd.getTime() - (25 + (rowIndex % 3) * 10) * 60 * 1000);
+		const spanHours = (taskEnd?.getTime() ?? now.getTime()) - taskStart.getTime();
+		const hoursWorked = Math.max(0.75, spanHours / (60 * 60 * 1000));
+		const unitsCompleted = row.inProgress
+			? Math.max(10, Math.round(hoursWorked * (10 + (rowIndex % 5))))
+			: Math.max(40, Math.round(hoursWorked * (18 + (rowIndex % 8))));
+
+		const task = await prisma.taskAssignment.create({
+			data: {
+				employeeId: row.employeeId,
+				taskTypeId: selectedTaskType.id,
+				source: "MANAGER",
+				assignedByUserId: managerUser.id,
+				startTime: taskStart,
+				endTime: taskEnd,
+				unitsCompleted,
+				notes: row.inProgress
+					? `In progress - ${selectedTaskType.name}`
+					: `Completed - ${selectedTaskType.name}`,
+			},
+			select: {
+				id: true,
+			},
+		});
+
+		createdTasks.push({
+			id: task.id,
+			employeeId: row.employeeId,
+			stationId: row.stationId,
+			startTime: taskStart,
+			endTime: taskEnd,
+			inProgress: row.inProgress,
+			employeeIndex: row.employeeIndex,
+			dayOffset: row.dayOffset,
+		});
+	}
+
+	const activeTaskCount = createdTasks.filter((task) => task.endTime === null).length;
+
+	console.log(`✅ Created ${createdTasks.length} task assignments (${activeTaskCount} active)`);
+
+	console.log("🕒 Creating time logs linked to tasks...");
+	const clockMethods = ["PIN", "CARD", "BIOMETRIC"] as const;
+	const timeLogRows = createdTasks.map((task, index) => ({
+		employeeId: task.employeeId,
+		stationId: task.stationId,
+		taskId: task.id,
+		startTime: new Date(task.startTime.getTime() - ((index % 3) * 5 + 3) * 60 * 1000),
+		endTime: task.inProgress ? null : task.endTime,
+		note: task.inProgress ? "Active shift in progress" : "Completed scheduled shift",
+		clockMethod: clockMethods[index % clockMethods.length],
+		updatedAt: new Date(),
+	}));
+
+	if (timeLogRows.length > 0) {
+		await prisma.timeLog.createMany({ data: timeLogRows });
+	}
+
+	const activeTimeLogCount = timeLogRows.filter((log) => log.endTime === null).length;
+	console.log(`✅ Created ${timeLogRows.length} time logs (${activeTimeLogCount} active)`);
+
+	console.log("📈 Creating last-30-days performance metrics...");
 	const activeEmployeesForMetrics = employees.filter((employee) => employee.status === "ACTIVE");
 	const stationBaselineRate = new Map<string, number>([
 		["PICKING", 28],
@@ -425,7 +605,7 @@ async function main() {
 		overtimeHours: number;
 	}> = [];
 
-	for (let dayOffset = 0; dayOffset < 365 * 3; dayOffset++) {
+	for (let dayOffset = 0; dayOffset < daysToSeed; dayOffset++) {
 		const metricDate = new Date();
 		metricDate.setDate(metricDate.getDate() - dayOffset);
 		metricDate.setHours(0, 0, 0, 0);
@@ -433,15 +613,16 @@ async function main() {
 		for (const [employeeIndex, employee] of activeEmployeesForMetrics.entries()) {
 			if (!employee.defaultStationId) continue;
 
-			// Introduce realistic attendance variability
-			if ((dayOffset + employeeIndex) % 10 === 0) continue;
+			const isScheduledOff = (dayOffset + employeeIndex) % 7 >= 5;
+			const calledOut = (employeeIndex * 11 + dayOffset * 7) % 31 === 0;
+			if (isScheduledOff || calledOut) continue;
 
 			const station = stations.find((s) => s.id === employee.defaultStationId);
 			const stationName = station?.name ?? "PICKING";
 			const baselineRate = stationBaselineRate.get(stationName) ?? 24;
 
-			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 11) - 5; // -5..+5
-			const hoursWorked = Number((7.3 + ((dayOffset + employeeIndex) % 5) * 0.4).toFixed(2));
+			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 11) - 5;
+			const hoursWorked = Number((7.2 + ((dayOffset + employeeIndex) % 4) * 0.45).toFixed(2));
 			const overtimeHours = Math.max(0, Number((hoursWorked - 8).toFixed(2)));
 			const unitsProcessed = Math.max(
 				0,
@@ -477,10 +658,14 @@ async function main() {
 	console.log(
 		`   - Employees: ${employees.length} (${activeEmployeeCount} active, ${onLeaveCount} on leave, ${inactiveCount} inactive)`
 	);
-	console.log(`   - Task Types: ${taskTypes.length}`);
+	console.log(`   - Shifts: ${shifts.length}`);
 	console.log(
-		`   - Task Assignments: ${createdAssignments.count} (${activeAssignmentCount} active, ${historicalAssignmentCount} historical)`
+		`   - Shift Assignments: ${shiftAssignmentRows.length} (${activeShiftAssignmentCount} active)`
 	);
+	console.log(`   - Call Outs: ${callOutRows.length}`);
+	console.log(`   - Task Types: ${taskTypes.length}`);
+	console.log(`   - Task Assignments: ${createdTasks.length} (${activeTaskCount} active)`);
+	console.log(`   - Time Logs: ${timeLogRows.length} (${activeTimeLogCount} active)`);
 	console.log(`   - Performance Metrics: ${metricRows.length}`);
 	console.log(`   - Users: 3 (Admin, Manager, Worker)`);
 	console.log("\n🔑 Login Information:");
