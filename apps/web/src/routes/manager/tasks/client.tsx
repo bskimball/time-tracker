@@ -411,6 +411,14 @@ export function TaskManager({
 		createTypeState?.error ||
 		updateTypeState?.error ||
 		setTaskTypeActiveState?.error;
+	const latestActionSuccessMessage = assignState?.success
+		? "Task assigned successfully."
+		: completeState?.success
+			? "Task completed successfully."
+			: switchState?.success
+				? "Task switched successfully."
+				: null;
+	const anyTaskMutationPending = isAssignPending || isCompletePending || isSwitchPending;
 
 	const handleTaskTypeStatusToggle = (taskType: TaskType, nextIsActive: boolean) => {
 		const fd = new FormData();
@@ -426,7 +434,11 @@ export function TaskManager({
 				subtitle="Assign and track employee tasks"
 				actions={
 					<div className="flex flex-wrap items-center gap-2">
-						<Button onClick={() => setShowAssignForm(true)} variant="primary">
+						<Button
+							onClick={() => setShowAssignForm(true)}
+							variant="primary"
+							disabled={anyTaskMutationPending}
+						>
 							Assign Task
 						</Button>
 						<Button onClick={() => setShowTaskTypeForm(true)} variant="outline">
@@ -576,7 +588,12 @@ export function TaskManager({
 									</Button>
 								</div>
 							</div>
-							<Button size="sm" onClick={() => setShowAssignForm(true)} variant="primary">
+							<Button
+								size="sm"
+								onClick={() => setShowAssignForm(true)}
+								variant="primary"
+								disabled={anyTaskMutationPending}
+							>
 								Assign Task
 							</Button>
 						</CardHeader>
@@ -584,6 +601,11 @@ export function TaskManager({
 							{latestActionError && (
 								<div className="mb-4 rounded-[2px] border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive">
 									{latestActionError}
+								</div>
+							)}
+							{latestActionSuccessMessage && !latestActionError && (
+								<div className="mb-4 rounded-[2px] border border-success/60 bg-success/10 px-3 py-2 text-sm text-success">
+									{latestActionSuccessMessage}
 								</div>
 							)}
 							{filteredAssignments.length === 0 ? (
@@ -676,6 +698,7 @@ export function TaskManager({
 															size="sm"
 															variant="outline"
 															className="w-full text-xs"
+															disabled={anyTaskMutationPending}
 															onClick={() => {
 																setSelectedAssignment(assignment);
 																setActiveModal("switch");
@@ -687,6 +710,7 @@ export function TaskManager({
 															size="sm"
 															variant="primary"
 															className="w-full text-xs"
+															disabled={anyTaskMutationPending}
 															onClick={() => {
 																setSelectedAssignment(assignment);
 																setActiveModal("complete");
@@ -740,6 +764,7 @@ export function TaskManager({
 																	<Button
 																		size="sm"
 																		variant="outline"
+																		disabled={anyTaskMutationPending}
 																		onClick={() => {
 																			setSelectedAssignment(assignment);
 																			setActiveModal("switch");
@@ -750,6 +775,7 @@ export function TaskManager({
 																	<Button
 																		size="sm"
 																		variant="primary"
+																		disabled={anyTaskMutationPending}
 																		onClick={() => {
 																			setSelectedAssignment(assignment);
 																			setActiveModal("complete");
