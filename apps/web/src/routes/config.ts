@@ -71,7 +71,7 @@ export function routes(): RSCRouteConfig {
 					lazy: () => import("./floor/kiosk/route.tsx"),
 				},
 
-				// Manager experience (MANAGER, ADMIN roles)
+				// Manager experience (MANAGER role)
 				{
 					id: "manager",
 					path: "manager",
