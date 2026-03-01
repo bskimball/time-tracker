@@ -88,7 +88,7 @@ export default async function handler(request: Request) {
 		});
 	}
 
-	// Protect /manager/* routes - require MANAGER or ADMIN role
+	// Protect /manager/* routes - require MANAGER role only
 	if (url.pathname.startsWith("/manager")) {
 		if (!user) {
 			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
@@ -98,7 +98,7 @@ export default async function handler(request: Request) {
 			});
 		}
 
-		if (user.role !== "MANAGER" && user.role !== "ADMIN") {
+		if (user.role !== "MANAGER") {
 			const defaultRoute = user.role === "ADMIN" ? "/executive" : "/floor";
 			return new Response(null, {
 				status: 302,
@@ -124,6 +124,16 @@ export default async function handler(request: Request) {
 				headers: { Location: defaultRoute },
 			});
 		}
+	}
+
+	// Restrict /floor/* for authenticated non-worker roles.
+	// Safe default: preserve public/worker floor usage, prevent manager/admin cross-role execution.
+	if (url.pathname.startsWith("/floor") && user && user.role !== "WORKER") {
+		const destination = user.role === "ADMIN" ? "/executive" : "/manager";
+		return new Response(null, {
+			status: 302,
+			headers: { Location: destination },
+		});
 	}
 
 	// Protect /settings and /todo routes - require any authenticated user
