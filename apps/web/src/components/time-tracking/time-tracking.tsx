@@ -1853,38 +1853,31 @@ function WorkerStatusFirstCard({
 	workerOnBreak: boolean;
 	workerActiveTask?: { assignmentId: string; taskTypeName: string; stationName: string | null };
 }) {
-	if (!workerActiveLog) {
-		return (
-			<Card className="border-primary/40 bg-primary/5">
-				<CardHeader>
-					<CardTitle className="text-sm uppercase tracking-wider">My Status</CardTitle>
-				</CardHeader>
-				<CardBody>
-					<p className="text-sm text-muted-foreground">
-						Clock in to start your shift and access personal task controls.
-					</p>
-				</CardBody>
-			</Card>
-		);
-	}
-
 	return (
 		<Card className="border-primary/40 bg-primary/5">
 			<CardHeader>
 				<CardTitle className="text-sm uppercase tracking-wider">My Status</CardTitle>
 			</CardHeader>
-			<CardBody className="space-y-2 text-sm">
-				<p>
-					<span className="font-medium">Station:</span>{" "}
-					{workerActiveLog.Station?.name || "Unassigned"}
-				</p>
-				<p>
-					<span className="font-medium">Break:</span> {workerOnBreak ? "On break" : "Working"}
-				</p>
-				<p>
-					<span className="font-medium">Task:</span>{" "}
-					{workerActiveTask ? workerActiveTask.taskTypeName : "No active task"}
-				</p>
+			<CardBody className={workerActiveLog ? "space-y-2 text-sm" : undefined}>
+				{!workerActiveLog ? (
+					<p className="text-sm text-muted-foreground">
+						Clock in to start your shift and access personal task controls.
+					</p>
+				) : (
+					<>
+						<p>
+							<span className="font-medium">Station:</span>{" "}
+							{workerActiveLog.Station?.name || "Unassigned"}
+						</p>
+						<p>
+							<span className="font-medium">Break:</span> {workerOnBreak ? "On break" : "Working"}
+						</p>
+						<p>
+							<span className="font-medium">Task:</span>{" "}
+							{workerActiveTask ? workerActiveTask.taskTypeName : "No active task"}
+						</p>
+					</>
+				)}
 			</CardBody>
 		</Card>
 	);
