@@ -23,6 +23,18 @@ type RSCMatch = {
 
 type RSCStreamOptions = Parameters<typeof renderToReadableStream>[1];
 
+function getPortalHomeForRole(role: string): string {
+	switch (role) {
+		case "ADMIN":
+		case "EXECUTIVE":
+			return "/executive";
+		case "MANAGER":
+			return "/manager";
+		default:
+			return "/floor";
+	}
+}
+
 function fetchServer(request: Request) {
 	// Wrap RSC rendering in request context so Server Components can access request
 	return runWithRequest(request, () =>
@@ -74,13 +86,7 @@ export default async function handler(request: Request) {
 
 	// Handle home page and dashboard redirects based on user role
 	if (url.pathname === "/" || url.pathname === "/dashboard") {
-		const destination = user
-			? user.role === "ADMIN"
-				? "/executive"
-				: user.role === "MANAGER"
-					? "/manager"
-					: "/floor"
-			: "/login";
+		const destination = user ? getPortalHomeForRole(user.role) : "/login";
 
 		return new Response(null, {
 			status: 302,
@@ -99,7 +105,7 @@ export default async function handler(request: Request) {
 		}
 
 		if (user.role !== "MANAGER") {
-			const defaultRoute = user.role === "ADMIN" ? "/executive" : "/floor";
+			const defaultRoute = getPortalHomeForRole(user.role);
 			return new Response(null, {
 				status: 302,
 				headers: { Location: defaultRoute },
@@ -118,7 +124,7 @@ export default async function handler(request: Request) {
 		}
 
 		if (user.role !== "ADMIN") {
-			const defaultRoute = user.role === "MANAGER" ? "/manager" : "/floor";
+			const defaultRoute = getPortalHomeForRole(user.role);
 			return new Response(null, {
 				status: 302,
 				headers: { Location: defaultRoute },
@@ -129,7 +135,7 @@ export default async function handler(request: Request) {
 	// Restrict /floor/* for authenticated non-worker roles.
 	// Safe default: preserve public/worker floor usage, prevent manager/admin cross-role execution.
 	if (url.pathname.startsWith("/floor") && user && user.role !== "WORKER") {
-		const destination = user.role === "ADMIN" ? "/executive" : "/manager";
+		const destination = getPortalHomeForRole(user.role);
 		return new Response(null, {
 			status: 302,
 			headers: { Location: destination },
