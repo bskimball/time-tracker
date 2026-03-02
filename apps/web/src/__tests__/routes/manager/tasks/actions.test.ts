@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDb } from "~/__tests__/setup";
-import { assignTaskAction, setTaskTypeActiveStateAction } from "~/routes/manager/tasks/actions";
+import {
+	assignTaskAction,
+	getProductivityMetrics,
+	setTaskTypeActiveStateAction,
+} from "~/routes/manager/tasks/actions";
 
 const { mockValidateRequest } = vi.hoisted(() => ({
 	mockValidateRequest: vi.fn(),
@@ -89,5 +93,22 @@ describe("manager task actions", () => {
 				data: { isActive: true },
 			})
 		);
+	});
+
+	it("calculates productivity efficiency in units per hour", async () => {
+		mockDb.taskAssignment.findMany.mockResolvedValue([
+			{
+				startTime: new Date("2026-02-01T08:00:00.000Z"),
+				endTime: new Date("2026-02-01T10:00:00.000Z"),
+				unitsCompleted: 30,
+				Employee: { name: "Taylor" },
+				TaskType: { name: "Packing" },
+			},
+		]);
+
+		const metrics = await getProductivityMetrics();
+
+		expect(metrics).toHaveLength(1);
+		expect(metrics[0].efficiency).toBe(15);
 	});
 });

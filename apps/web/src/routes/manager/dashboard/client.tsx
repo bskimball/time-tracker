@@ -359,7 +359,7 @@ export function ManagerDashboard({
 									</Suspense>
 								</div>
 								<p className="text-[10px] text-muted-foreground mt-1">
-									Average units/hour efficiency recorded today
+									Average efficiency index recorded today
 								</p>
 							</div>
 							<div>
