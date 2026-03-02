@@ -90,7 +90,7 @@ Primary manager routes:
   - `Overtime Analysis`
   - `Executive Summary`
 - Date-range controls are available inline.
-- Current behavior: CSV export control is not exposed in the manager UI. Tracked in [Issue #42](https://github.com/bskimball/time-tracker/issues/42).
+- CSV export is available via the `Export CSV` control in the reports UI.
 
 ### Schedule (`/manager/schedule`)
 

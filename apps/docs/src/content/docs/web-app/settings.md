@@ -57,13 +57,14 @@ Use this page to manage authenticated user accounts and role assignments.
 
 ## API Keys (`/settings/api-keys`)
 
-Use this page for integration key lifecycle management.
+Use this page for integration key lifecycle management (creation, naming, and rotation of integration identifiers).
 
 ### Key components
 
 - **Create New API Key** form (`name`).
 - **Your API Keys** list for active keys.
 - Key creation should follow secure distribution and rotation policy.
+- **Important:** keys generated on this page do **not** currently control authentication for `/api/*` routes. API requests are authenticated via the `TIME_CLOCK_API_KEY` environment variable (see `/api/authentication`).
 
 ## Operational Configuration (`/settings/operational-config`)
 
