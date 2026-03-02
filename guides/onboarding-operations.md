@@ -66,7 +66,7 @@ This single document is intentionally structured as a future multi-page docs sec
 
 - `WORKER`: uses floor tools and may self-assign tasks depending on mode.
 - `MANAGER`: controls assignments, monitors floor, resolves shift exceptions.
-- `ADMIN` / `EXECUTIVE`: manager capabilities plus broader settings/reporting scope.
+- `ADMIN` / `EXECUTIVE`: executive/settings/reporting scope. Direct `/manager/*` access is blocked, and `/floor/*` is reserved for public/`WORKER` flows; authenticated non-worker roles (`MANAGER`, `ADMIN`, `EXECUTIVE`) are redirected to their portal home.
 
 ### 3.2 Task assignment mode semantics (`TASK_ASSIGNMENT_MODE`)
 
