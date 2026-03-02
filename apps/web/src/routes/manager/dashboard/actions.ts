@@ -1,5 +1,3 @@
-"use server";
-
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import type { Employee, TimeLog } from "@prisma/client";
