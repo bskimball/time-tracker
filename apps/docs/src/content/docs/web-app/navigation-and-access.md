@@ -24,21 +24,27 @@ This page maps core URLs to user experiences and explains who should use each ar
 
 - `/floor`: standard floor time clock workflow.
 - `/floor/kiosk`: kiosk-optimized touch workflow.
+- `/floor/time-clock/mobile`: touch-first mobile time clock route.
 - `/time-clock`: compatibility route that renders the floor time-clock experience.
+- Current worker-session behavior gaps on `/floor` are tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44) and [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
 
 ### Manager portal routes
 
 - `/manager`: manager dashboard overview.
 - `/manager/monitor`: live floor monitor.
-- `/manager/employees`: employee directory and detail/edit flows.
+- `/manager/employees`: employee directory and search.
+- `/manager/employees/new`: create employee profile.
+- `/manager/employees/:id`: employee detail tabs.
+- `/manager/employees/:id/edit`: employee profile update form.
 - `/manager/timesheets`: logs, active sessions, and correction history.
-- `/manager/reports`: reporting and CSV export.
+- `/manager/reports`: reporting tabs and date-range analysis (CSV export control currently not exposed in manager UI).
 - `/manager/schedule`: schedule planning and active staffing context.
 - `/manager/exceptions`: exception queue and operational follow-up.
 - `/manager/tasks`: task types, assignment, switching, and completion.
 
 ### Administrator and executive routes
 
+- `/settings`: settings portal overview and admin navigation hub.
 - `/settings/stations`: station lifecycle and configuration.
 - `/settings/employees`: employee records and PIN management.
 - `/settings/users`: role assignment and user access.
@@ -46,6 +52,10 @@ This page maps core URLs to user experiences and explains who should use each ar
 - `/settings/operational-config`: KPI thresholds and business constants.
 - `/executive`: executive KPI dashboard.
 - `/executive/analytics`: deep analytics by section and time range.
+
+Settings route details are documented in [Settings Guide](/web-app/settings).
+
+Executive analysis details are documented in [Executive Guide](/web-app/executive).
 
 ## Permissions guidance
 

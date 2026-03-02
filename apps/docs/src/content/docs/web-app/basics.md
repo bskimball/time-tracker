@@ -28,4 +28,6 @@ Shift Pulse is organized around warehouse operations and role-specific access.
 - [Navigation and Access](/web-app/navigation-and-access)
 - [Employee Guide](/web-app/employee)
 - [Manager Guide](/web-app/manager)
+- [Settings Guide](/web-app/settings)
+- [Executive Guide](/web-app/executive)
 - [Administrator Guide](/web-app/administrator)
