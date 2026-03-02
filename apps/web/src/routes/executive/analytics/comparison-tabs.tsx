@@ -41,8 +41,13 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 	};
 
 	return (
-		<Tabs selectedKey={currentCompare} onSelectionChange={handleComparisonChange}>
+		<Tabs
+			selectedKey={currentCompare}
+			onSelectionChange={handleComparisonChange}
+			aria-label="Comparison basis"
+		>
 			<TabList
+				aria-label="Select comparison window"
 				className={cn(
 					"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
 					className
@@ -54,7 +59,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 						id={option.id}
 						className={({ isSelected }) =>
 							cn(
-								"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								"h-10 min-w-[92px] px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 								isSelected
 									? "bg-primary text-primary-foreground shadow-sm"
 									: "text-muted-foreground hover:text-foreground hover:bg-muted/50"

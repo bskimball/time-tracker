@@ -2,6 +2,7 @@
 
 import { startTransition } from "react";
 import { useSearchParams, useNavigate } from "react-router";
+import { Tab, TabList, Tabs } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
 
 type Section = "productivity" | "labor-cost" | "trends" | "capacity" | "benchmarks";
@@ -26,36 +27,44 @@ export function SectionTabs({
 
 	const currentSection = (searchParams.get("section") as Section) || "productivity";
 
-	const handleSectionChange = (section: string) => {
+	const handleSectionChange = (section: string | number) => {
 		const newSearchParams = new URLSearchParams(searchParams);
-		newSearchParams.set("section", section);
+		newSearchParams.set("section", section.toString());
 		startTransition(() => {
 			navigate(`?${newSearchParams.toString()}`, { replace: false });
 		});
 	};
 
 	return (
-		<nav className={cn("w-full overflow-x-auto pb-1", className)} aria-label="Analytics Sections">
-			<div className="flex items-center gap-1 min-w-max border-b border-border/60">
-				{sections.map(({ id, label }) => {
-					const isActive = currentSection === id;
-					return (
-						<button
-							key={id}
-							onClick={() => handleSectionChange(id)}
-							className={cn(
-								"relative flex items-center px-4 h-9 text-xs font-industrial uppercase tracking-widest transition-colors duration-150 border-b-2",
-								isActive
+		<Tabs
+			selectedKey={currentSection}
+			onSelectionChange={handleSectionChange}
+			aria-label="Analytics sections"
+		>
+			<TabList
+				aria-label="Select analytics section"
+				className={cn(
+					"inline-flex min-w-max w-full justify-start gap-1 overflow-x-auto pb-1 border-b border-border/60",
+					className
+				)}
+			>
+				{sections.map(({ id, label }) => (
+					<Tab
+						id={id}
+						key={id}
+						className={({ isSelected }) =>
+							cn(
+								"relative flex h-10 min-w-[120px] items-center justify-center border-b-2 px-4 text-xs font-bold font-industrial uppercase tracking-widest transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								isSelected
 									? "text-foreground border-primary"
 									: "text-muted-foreground border-transparent hover:text-foreground"
-							)}
-							aria-current={isActive ? "page" : undefined}
-						>
-							<span className="font-bold">{label}</span>
-						</button>
-					);
-				})}
-			</div>
-		</nav>
+							)
+						}
+					>
+						{label}
+					</Tab>
+				))}
+			</TabList>
+		</Tabs>
 	);
 }

@@ -268,6 +268,14 @@ export default async function Component() {
 	const rawCompare = parseComparison(searchParams.get("compare"));
 	const validComparisons = COMPARISON_COMPATIBILITY[range];
 	const compareBasis = validComparisons.includes(rawCompare) ? rawCompare : DEFAULT_COMPARE;
+	const sectionLabels = {
+		productivity: "Productivity",
+		"labor-cost": "Labor Costs",
+		trends: "Trends",
+		capacity: "Capacity",
+		benchmarks: "Benchmarks",
+	} satisfies Record<AnalyticsSection, string>;
+	const activeSectionLabel = sectionLabels[section];
 
 	const comparativeDataPromise = getComparativeAnalyticsData(range, compareBasis);
 	const displays = buildSectionDisplayPromises({ section, range });
@@ -311,7 +319,18 @@ export default async function Component() {
 				</div>
 			</div>
 
-			<AnalyticsClient section={section} range={range} compare={compareBasis} displays={displays} />
+			<div
+				id={`analytics-section-${section}`}
+				role="tabpanel"
+				aria-label={`${activeSectionLabel} analytics`}
+			>
+				<AnalyticsClient
+					section={section}
+					range={range}
+					compare={compareBasis}
+					displays={displays}
+				/>
+			</div>
 		</div>
 	);
 }
