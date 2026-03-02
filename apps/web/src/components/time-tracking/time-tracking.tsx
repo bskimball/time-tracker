@@ -67,14 +67,20 @@ const createId = () =>
 		? crypto.randomUUID()
 		: Math.random().toString(36).slice(2);
 
+export function getAvailableClockMethods(isWorkerSession: boolean): Array<"pin" | "select"> {
+	return isWorkerSession ? ["select"] : ["pin", "select"];
+}
+
 function ClockInForm({
 	employees,
 	stations,
+	isWorkerSession,
 	pinInputRef,
 	onOptimisticClockIn,
 }: {
 	employees: Employee[];
 	stations: Station[];
+	isWorkerSession?: boolean;
 	pinInputRef: React.RefObject<HTMLInputElement | null>;
 	onOptimisticClockIn: (log: TimeLogWithRelations) => void;
 }) {
@@ -88,7 +94,8 @@ function ClockInForm({
 		apiKey,
 		saveApiKey,
 	} = useKioskContext();
-	const [method, setMethod] = useState<"pin" | "select">("pin");
+	const availableMethods = getAvailableClockMethods(Boolean(isWorkerSession));
+	const [method, setMethod] = useState<"pin" | "select">(availableMethods[0] ?? "select");
 	const [pin, setPin] = useState("");
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 	const [selectedStationId, setSelectedStationId] = useState("");
@@ -227,6 +234,12 @@ function ClockInForm({
 	}, [kioskEnabled, focusPinInput]);
 
 	useEffect(() => {
+		if (isWorkerSession) {
+			setMethod("select");
+		}
+	}, [isWorkerSession]);
+
+	useEffect(() => {
 		if (selectState?.success) {
 			notify("Clocked in successfully", "success");
 		}
@@ -341,32 +354,38 @@ function ClockInForm({
 					</div>
 				</div>
 
-				<div className="flex gap-1 w-full p-1 bg-muted/30 rounded-[2px] border border-border/50">
-					<button
-						type="button"
-						className={cn(
-							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
-							method === "pin"
-								? "bg-background text-foreground shadow-sm border border-border/50"
-								: "hover:bg-muted/50 text-muted-foreground"
-						)}
-						onClick={() => setMethod("pin")}
-					>
-						PIN Entry
-					</button>
-					<button
-						type="button"
-						className={cn(
-							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
-							method === "select"
-								? "bg-background text-foreground shadow-sm border border-border/50"
-								: "hover:bg-muted/50 text-muted-foreground"
-						)}
-						onClick={() => setMethod("select")}
-					>
-						Manual Select
-					</button>
-				</div>
+				{availableMethods.length === 1 ? (
+					<p className="text-xs text-muted-foreground border border-border/50 bg-muted/30 rounded-[2px] p-3">
+						Worker sessions use personal controls instead of kiosk PIN mode.
+					</p>
+				) : (
+					<div className="flex gap-1 w-full p-1 bg-muted/30 rounded-[2px] border border-border/50">
+						<button
+							type="button"
+							className={cn(
+								"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+								method === "pin"
+									? "bg-background text-foreground shadow-sm border border-border/50"
+									: "hover:bg-muted/50 text-muted-foreground"
+							)}
+							onClick={() => setMethod("pin")}
+						>
+							PIN Entry
+						</button>
+						<button
+							type="button"
+							className={cn(
+								"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+								method === "select"
+									? "bg-background text-foreground shadow-sm border border-border/50"
+									: "hover:bg-muted/50 text-muted-foreground"
+							)}
+							onClick={() => setMethod("select")}
+						>
+							Manual Select
+						</button>
+					</div>
+				)}
 
 				{method === "pin" ? (
 					<Form
@@ -1721,6 +1740,7 @@ export function TimeTracking({
 					<ClockInForm
 						employees={employees}
 						stations={stations}
+						isWorkerSession={Boolean(workerEmployeeId)}
 						pinInputRef={pinInputRef}
 						onOptimisticClockIn={addOptimisticLog}
 					/>
