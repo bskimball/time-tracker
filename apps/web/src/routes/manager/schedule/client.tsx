@@ -56,8 +56,6 @@ const severityClasses: Record<StationGapInsight["severity"], string> = {
 
 const ENABLE_SCHEDULE_PUBLISH_CONTROLS =
 	(import.meta.env.VITE_ENABLE_SCHEDULE_PUBLISH_CONTROLS ?? "false") === "true";
-const ENABLE_SHIFT_ACTION_CONTROLS =
-	(import.meta.env.VITE_ENABLE_SCHEDULE_SHIFT_ACTIONS ?? "false") === "true";
 
 export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleViewProps) {
 	const [searchParams] = useSearchParams();
@@ -505,14 +503,14 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										<Button
 											variant="outline"
 											size="sm"
-											disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+											disabled
 										>
 											Swap
 										</Button>
 										<Button
 											variant="primary"
 											size="sm"
-											disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+											disabled
 										>
 											Notify
 										</Button>
@@ -581,14 +579,14 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 													<Button
 														variant="outline"
 														size="sm"
-														disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+														disabled
 													>
 														Reassign
 													</Button>
 													<Button
 														variant="ghost"
 														size="sm"
-														disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+														disabled
 													>
 														Message
 													</Button>
@@ -702,14 +700,14 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										<Button
 											variant="outline"
 											size="sm"
-											disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+											disabled
 										>
 											Adjust
 										</Button>
 										<Button
 											variant="ghost"
 											size="sm"
-											disabled={!ENABLE_SHIFT_ACTION_CONTROLS}
+											disabled
 										>
 											Message
 										</Button>
