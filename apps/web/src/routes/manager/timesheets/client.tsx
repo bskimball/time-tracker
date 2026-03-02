@@ -133,6 +133,12 @@ export function TimesheetManager({
 		navigate(0);
 	};
 
+	const refreshLogsAfterFeedback = () => {
+		window.setTimeout(() => {
+			refreshLogs();
+		}, 1200);
+	};
+
 	const goToPage = (nextPage: number) => {
 		const safePage = Math.max(1, Math.min(nextPage, totalPages));
 		const params = new URLSearchParams();
@@ -188,10 +194,12 @@ export function TimesheetManager({
 	};
 
 	const handleEndShift = async (logId: string) => {
+		setFeedback(null);
+
 		try {
 			await closeTimeLog(logId);
 			setFeedback({ type: "success", message: "Shift ended and saved." });
-			refreshLogs();
+			refreshLogsAfterFeedback();
 		} catch (error) {
 			setFeedback({
 				type: "error",
@@ -201,6 +209,8 @@ export function TimesheetManager({
 	};
 
 	const handleCorrectionSubmit = async (data: TimeCorrectionPayload) => {
+		setFeedback(null);
+
 		try {
 			if (editingLog) {
 				await editTimeCorrection(editingLog.id, {
@@ -219,7 +229,7 @@ export function TimesheetManager({
 
 			setShowCorrectionForm(false);
 			setEditingLog(null);
-			refreshLogs();
+			refreshLogsAfterFeedback();
 		} catch (error) {
 			setFeedback({
 				type: "error",
@@ -235,7 +245,10 @@ export function TimesheetManager({
 	return (
 		<div className="space-y-6">
 			{feedback && (
-				<Alert variant={feedback.type === "success" ? "success" : "error"}>
+				<Alert
+					variant={feedback.type === "success" ? "success" : "error"}
+					onClose={() => setFeedback(null)}
+				>
 					{feedback.message}
 				</Alert>
 			)}
@@ -246,6 +259,7 @@ export function TimesheetManager({
 				actions={
 					<Button
 						onClick={() => {
+							setFeedback(null);
 							setEditingLog(null);
 							setShowCorrectionForm(true);
 						}}
@@ -637,6 +651,8 @@ export function TimesheetManager({
 					employees={employees}
 					stations={stations}
 					initialLog={editingLog}
+					feedback={feedback}
+					onClearFeedback={() => setFeedback(null)}
 					onClose={() => {
 						setShowCorrectionForm(false);
 						setEditingLog(null);
@@ -683,12 +699,16 @@ function TimeCorrectionForm({
 	employees,
 	stations,
 	initialLog,
+	feedback,
+	onClearFeedback,
 	onClose,
 	onSubmit,
 }: {
 	employees: Employee[];
 	stations: { id: string; name: string }[];
 	initialLog: TimeLogWithDetails | null;
+	feedback: { type: "success" | "error"; message: string } | null;
+	onClearFeedback: () => void;
 	onClose: () => void;
 	onSubmit: (data: TimeCorrectionPayload) => Promise<void>;
 }) {
@@ -774,6 +794,14 @@ function TimeCorrectionForm({
 					</div>
 				</CardHeader>
 				<CardBody>
+					{feedback && (
+						<Alert
+							variant={feedback.type === "success" ? "success" : "error"}
+							onClose={onClearFeedback}
+						>
+							{feedback.message}
+						</Alert>
+					)}
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<SimpleSelect
 							label="Employee"
