@@ -1600,9 +1600,13 @@ export function TimeTracking({
 	const apiKey =
 		typeof window !== "undefined" ? window.localStorage.getItem("timeClock:apiKey") || "" : "";
 	const { queue, enqueue, sync, status } = useOfflineActionQueue(apiKey);
+	const isWorkerView = Boolean(workerEmployeeId);
 	const workerActiveLog = workerEmployeeId
-		? optimisticLogs.find((log) => log.employeeId === workerEmployeeId)
+		? (optimisticLogs.find((log) => log.employeeId === workerEmployeeId) ?? null)
 		: null;
+	const workerOnBreak = workerEmployeeId
+		? activeBreaks.some((log) => log.employeeId === workerEmployeeId)
+		: false;
 	const workerActiveTask = workerEmployeeId ? activeTasksByEmployee?.[workerEmployeeId] : undefined;
 
 	useEffect(() => {
@@ -1677,28 +1681,41 @@ export function TimeTracking({
 	return (
 		<KioskContext.Provider value={contextValue}>
 			<div className="flex flex-col gap-6 w-full relative z-10 min-h-[60vh]">
-				<div className="flex justify-end gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onPress={() => setActiveDrawer("roster")}
-					>
-						View Roster ({optimisticLogs.length})
-					</Button>
-					<Button type="button" variant="outline" size="sm" onPress={() => setActiveDrawer("logs")}>
-						View Logs
-					</Button>
-					<Button
-						type="button"
-						variant="secondary"
-						size="sm"
-						onPress={handleEnableKiosk}
-						className="transition-all duration-300"
-					>
-						Launch Kiosk Mode
-					</Button>
-				</div>
+				{isWorkerView ? (
+					<WorkerStatusFirstCard
+						workerActiveLog={workerActiveLog}
+						workerOnBreak={workerOnBreak}
+						workerActiveTask={workerActiveTask}
+					/>
+				) : (
+					<div className="flex justify-end gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onPress={() => setActiveDrawer("roster")}
+						>
+							View Roster ({optimisticLogs.length})
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onPress={() => setActiveDrawer("logs")}
+						>
+							View Logs
+						</Button>
+						<Button
+							type="button"
+							variant="secondary"
+							size="sm"
+							onPress={handleEnableKiosk}
+							className="transition-all duration-300"
+						>
+							Launch Kiosk Mode
+						</Button>
+					</div>
+				)}
 
 				<div className="mx-auto w-full mt-2 md:mt-8 mb-12">
 					<ClockInForm
@@ -1832,6 +1849,44 @@ function DeferredTimeHistory({
 	);
 }
 
+function WorkerStatusFirstCard({
+	workerActiveLog,
+	workerOnBreak,
+	workerActiveTask,
+}: {
+	workerActiveLog: TimeLogWithRelations | null;
+	workerOnBreak: boolean;
+	workerActiveTask?: { assignmentId: string; taskTypeName: string; stationName: string | null };
+}) {
+	return (
+		<Card className="border-primary/40 bg-primary/5">
+			<CardHeader>
+				<CardTitle className="text-sm uppercase tracking-wider">My Status</CardTitle>
+			</CardHeader>
+			<CardBody className={workerActiveLog ? "space-y-2 text-sm" : undefined}>
+				{!workerActiveLog ? (
+					<p className="text-sm text-muted-foreground">
+						Clock in to start your shift and access personal task controls.
+					</p>
+				) : (
+					<>
+						<p>
+							<span className="font-medium">Station:</span>{" "}
+							{workerActiveLog.Station?.name || "Unassigned"}
+						</p>
+						<p>
+							<span className="font-medium">Break:</span> {workerOnBreak ? "On break" : "Working"}
+						</p>
+						<p>
+							<span className="font-medium">Task:</span>{" "}
+							{workerActiveTask ? workerActiveTask.taskTypeName : "No active task"}
+						</p>
+					</>
+				)}
+			</CardBody>
+		</Card>
+	);
+}
 function TimeHistoryFallback() {
 	return (
 		<Card className="mt-4 flex flex-col overflow-hidden">
