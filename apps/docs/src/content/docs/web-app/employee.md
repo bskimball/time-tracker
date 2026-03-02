@@ -8,7 +8,7 @@ This guide is for frontline users clocking work and breaks on shared or personal
 ## Employee workspace routes
 
 - `/floor`: standard worker floor entry point.
-- `/time-clock`: compatibility route that maps to floor time-clock behavior.
+- `/time-clock` (legacy; no longer routed): use `/floor` as the current entry point.
 - `/floor/kiosk`: shared-device kiosk workflow.
 - `/floor/time-clock/mobile`: touch-first mobile time-clock variant.
 

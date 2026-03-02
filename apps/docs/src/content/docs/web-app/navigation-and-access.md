@@ -25,7 +25,7 @@ This page maps core URLs to user experiences and explains who should use each ar
 - `/floor`: standard floor time clock workflow.
 - `/floor/kiosk`: kiosk-optimized touch workflow.
 - `/floor/time-clock/mobile`: touch-first mobile time clock route.
-- `/time-clock`: compatibility route that renders the floor time-clock experience.
+- `/time-clock`: legacy compatibility route that may be disabled in current deployments; use `/floor` and related routes.
 - Current worker-session behavior gaps on `/floor` are tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44) and [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
 
 ### Manager portal routes
@@ -37,7 +37,7 @@ This page maps core URLs to user experiences and explains who should use each ar
 - `/manager/employees/:id`: employee detail tabs.
 - `/manager/employees/:id/edit`: employee profile update form.
 - `/manager/timesheets`: logs, active sessions, and correction history.
-- `/manager/reports`: reporting tabs and date-range analysis (CSV export control currently not exposed in manager UI).
+- `/manager/reports`: reporting tabs, date-range analysis, and CSV export.
 - `/manager/schedule`: schedule planning and active staffing context.
 - `/manager/exceptions`: exception queue and operational follow-up.
 - `/manager/tasks`: task types, assignment, switching, and completion.
