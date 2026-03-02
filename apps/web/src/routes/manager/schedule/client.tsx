@@ -410,6 +410,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					<CardTitle>Shift Board</CardTitle>
 				</CardHeader>
 				<CardBody className="space-y-4">
+					<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
+						Shift action buttons are disabled until message, reassign, swap, notify, and adjust
+						flows are available.
+					</p>
 					<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
 						<div className="flex items-end gap-2">
 							<Select
@@ -496,10 +500,18 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										)}
 									</div>
 									<div className="mt-3 flex gap-2">
-										<Button variant="outline" size="sm">
+										<Button
+											variant="outline"
+											size="sm"
+											disabled
+										>
 											Swap
 										</Button>
-										<Button variant="primary" size="sm">
+										<Button
+											variant="primary"
+											size="sm"
+											disabled
+										>
 											Notify
 										</Button>
 									</div>
@@ -564,10 +576,18 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 											</td>
 											<td className="p-3">
 												<div className="flex gap-2">
-													<Button variant="outline" size="sm">
+													<Button
+														variant="outline"
+														size="sm"
+														disabled
+													>
 														Reassign
 													</Button>
-													<Button variant="ghost" size="sm">
+													<Button
+														variant="ghost"
+														size="sm"
+														disabled
+													>
 														Message
 													</Button>
 												</div>
@@ -677,10 +697,18 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										</p>
 									</div>
 									<div className="mt-3 flex gap-2">
-										<Button variant="outline" size="sm">
+										<Button
+											variant="outline"
+											size="sm"
+											disabled
+										>
 											Adjust
 										</Button>
-										<Button variant="ghost" size="sm">
+										<Button
+											variant="ghost"
+											size="sm"
+											disabled
+										>
 											Message
 										</Button>
 									</div>
