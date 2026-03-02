@@ -12,7 +12,7 @@ import {
 	MobileHeader,
 } from "./components/mobile-layout";
 import { Alert } from "@monorepo/design-system";
-import type { Employee, Station, TimeLog } from "@prisma/client";
+import type { Station_name, TimeLog } from "@prisma/client";
 import { clockIn, clockOut, startBreak, endBreak, pinToggleClock } from "../../time-clock/actions";
 import { useOnlineStatus, useOfflineActionQueue } from "~/lib/offline-support";
 import { notify } from "~/components/time-tracking/notifications";
@@ -26,9 +26,19 @@ import {
 	type TaskOption,
 } from "~/components/time-tracking/self-task-actions";
 
-type TimeLogWithRelations = TimeLog & {
-	employee: Employee;
-	station: Station | null;
+export type MobileEmployee = {
+	id: string;
+	name: string;
+};
+
+export type MobileStation = {
+	id: string;
+	name: Station_name;
+};
+
+export type MobileTimeLogWithRelations = TimeLog & {
+	employee: MobileEmployee;
+	station: MobileStation | null;
 };
 
 export function MobileTimeClock({
@@ -40,10 +50,10 @@ export function MobileTimeClock({
 	assignmentMode,
 	taskOptions,
 }: {
-	employees: Employee[];
-	stations: Station[];
-	activeLogs: TimeLogWithRelations[];
-	activeBreaks: TimeLogWithRelations[];
+	employees: MobileEmployee[];
+	stations: MobileStation[];
+	activeLogs: MobileTimeLogWithRelations[];
+	activeBreaks: MobileTimeLogWithRelations[];
 	activeTasksByEmployee?: Record<
 		string,
 		{ assignmentId: string; taskTypeName: string; stationName: string | null }
