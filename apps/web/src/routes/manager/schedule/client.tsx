@@ -172,14 +172,17 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 					<div className="flex flex-wrap items-end gap-2">
 						{ENABLE_SCHEDULE_PUBLISH_CONTROLS ? (
 							<div className="flex flex-wrap gap-2">
-								<Button variant="outline">Share Schedule</Button>
-								<Button variant="primary">Publish Changes</Button>
+								<Button variant="outline" disabled aria-disabled="true">
+									Share Schedule
+								</Button>
+								<Button variant="primary" disabled aria-disabled="true">
+									Publish Changes
+								</Button>
 							</div>
-						) : (
-							<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
-								Publish controls are hidden until the schedule pipeline is enabled.
-							</p>
-						)}
+						) : null}
+						<p className="text-[10px] uppercase tracking-[0.12em] font-mono text-muted-foreground">
+							Publish and share controls are disabled until the schedule pipeline is enabled.
+						</p>
 					</div>
 				}
 			/>
