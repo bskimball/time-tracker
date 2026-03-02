@@ -1,10 +1,32 @@
 "use client";
 
+import { startTransition } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Tab, TabList, Tabs } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
+import {
+	COMPARISON_COMPATIBILITY,
+	DEFAULT_COMPARE,
+	type AnalyticsComparison,
+} from "./analytics/model";
 
 export type TimeRange = "today" | "week" | "month" | "quarter";
+
+export function normalizeComparisonForRange(
+	range: TimeRange,
+	compare: string | null
+): AnalyticsComparison {
+	const allowed = COMPARISON_COMPATIBILITY[range];
+	if (compare && allowed.includes(compare as AnalyticsComparison)) {
+		return compare as AnalyticsComparison;
+	}
+
+	if (allowed.includes(DEFAULT_COMPARE)) {
+		return DEFAULT_COMPARE;
+	}
+
+	return allowed[0];
+}
 
 interface TimeRangeTabsProps {
 	ranges?: readonly TimeRange[];
@@ -23,9 +45,16 @@ export function TimeRangeTabs({
 	const currentRange = (searchParams.get("range") as TimeRange) || defaultRange;
 
 	const handleRangeChange = (range: string | number) => {
+		const nextRange = range.toString() as TimeRange;
 		const nextSearchParams = new URLSearchParams(searchParams);
-		nextSearchParams.set("range", range.toString());
-		navigate(`?${nextSearchParams.toString()}`, { replace: false });
+		nextSearchParams.set("range", nextRange);
+
+		const compareParam = searchParams.get("compare");
+		nextSearchParams.set("compare", normalizeComparisonForRange(nextRange, compareParam));
+
+		startTransition(() => {
+			navigate(`?${nextSearchParams.toString()}`, { replace: false });
+		});
 	};
 
 	return (

@@ -1,12 +1,12 @@
 "use client";
 
+import { startTransition, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { Tabs, TabList, Tab } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
+import type { AnalyticsComparison } from "./model";
 
-type ComparisonBasis = "previous-period" | "last-year" | "rolling-30d";
-
-const comparisonOptions: Array<{ id: ComparisonBasis; label: string }> = [
+const comparisonOptions: Array<{ id: AnalyticsComparison; label: string }> = [
 	{ id: "previous-period", label: "Prev Period" },
 	{ id: "last-year", label: "Last Year" },
 	{ id: "rolling-30d", label: "Rolling 30d" },
@@ -14,7 +14,18 @@ const comparisonOptions: Array<{ id: ComparisonBasis; label: string }> = [
 
 interface ComparisonTabsProps {
 	className?: string;
-	availableOptions?: ComparisonBasis[];
+	availableOptions?: AnalyticsComparison[];
+}
+
+export function getNormalizedComparison(
+	availableOptions: AnalyticsComparison[],
+	requested: string | null
+): AnalyticsComparison {
+	if (requested && availableOptions.some((option) => option === requested)) {
+		return requested as AnalyticsComparison;
+	}
+
+	return availableOptions[0] ?? "previous-period";
 }
 
 export function ComparisonTabs({ className, availableOptions }: ComparisonTabsProps) {
@@ -25,10 +36,27 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 		? comparisonOptions.filter((opt) => availableOptions.includes(opt.id))
 		: comparisonOptions;
 
-	const currentCompareParam = searchParams.get("compare") as ComparisonBasis | null;
-	const currentCompare = visibleOptions.some((option) => option.id === currentCompareParam)
-		? currentCompareParam
-		: (visibleOptions[0]?.id ?? "previous-period");
+	const currentCompareParam = searchParams.get("compare") as AnalyticsComparison | null;
+	const currentCompare = getNormalizedComparison(
+		visibleOptions.map((option) => option.id),
+		currentCompareParam
+	);
+
+	useEffect(() => {
+		if (!visibleOptions.length) {
+			return;
+		}
+
+		if (currentCompareParam === currentCompare) {
+			return;
+		}
+
+		const nextSearchParams = new URLSearchParams(searchParams);
+		nextSearchParams.set("compare", currentCompare);
+		startTransition(() => {
+			navigate(`?${nextSearchParams.toString()}`, { replace: true });
+		});
+	}, [currentCompare, currentCompareParam, navigate, searchParams, visibleOptions.length]);
 
 	const handleComparisonChange = (key: string | number) => {
 		if (!visibleOptions.some((option) => option.id === key)) {
@@ -37,7 +65,9 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 
 		const newSearchParams = new URLSearchParams(searchParams);
 		newSearchParams.set("compare", key.toString());
-		navigate(`?${newSearchParams.toString()}`, { replace: false });
+		startTransition(() => {
+			navigate(`?${newSearchParams.toString()}`, { replace: false });
+		});
 	};
 
 	return (
