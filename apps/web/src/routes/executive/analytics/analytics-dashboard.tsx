@@ -33,6 +33,7 @@ import { BarChart, LineChart, PieChart } from "~/routes/executive/charts";
 import WarehouseFloor from "./components/WarehouseFloor";
 import type { AnalyticsStationOverview } from "./types";
 import type {
+	AnalyticsData,
 	AnalyticsComparison,
 	AnalyticsRange,
 	AnalyticsSection,
@@ -375,6 +376,21 @@ function ProductivityEmployeeTable({
 	const { employeeProductivity, benchmarkData } = result.data;
 
 	return (
+		<ProductivityEmployeeTableContent
+			employeeProductivity={employeeProductivity}
+			benchmarkData={benchmarkData}
+		/>
+	);
+}
+
+export function ProductivityEmployeeTableContent({
+	employeeProductivity,
+	benchmarkData,
+}: {
+	employeeProductivity: AnalyticsData["employeeProductivity"];
+	benchmarkData: AnalyticsData["benchmarkData"];
+}) {
+	return (
 		<Card className="overflow-hidden">
 			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
 				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
@@ -394,38 +410,30 @@ function ProductivityEmployeeTable({
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-border/30">
-						{employeeProductivity.map((employee, index) => {
-							const hasVolumeInputs = false;
-
-							return (
-								<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
-									<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
-									<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-									<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-									<td className="px-4 py-2.5 text-right">
-										{hasVolumeInputs ? (
-											<span className="font-bold text-foreground">{employee.value} u/h</span>
-										) : (
-											<span className="text-muted-foreground">Derived estimate</span>
-										)}
-									</td>
-									<td className="px-4 py-2.5">
-										<Badge variant="secondary" className="h-5 text-[10px]">
-											{employee.station}
-										</Badge>
-									</td>
-									<td className="px-4 py-2.5">
-										{employee.value >= benchmarkData.productivity.top10Percent ? (
-											<span className="font-bold text-primary">TOP 10%</span>
-										) : employee.value >= benchmarkData.productivity.industryAvg ? (
-											<span className="text-secondary">ABOVE AVG</span>
-										) : (
-											<span className="text-muted-foreground">BELOW AVG</span>
-										)}
-									</td>
-								</tr>
-							);
-						})}
+						{employeeProductivity.map((employee, index) => (
+							<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
+								<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
+								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
+								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
+								<td className="px-4 py-2.5 text-right">
+									<span className="text-muted-foreground">Derived estimate</span>
+								</td>
+								<td className="px-4 py-2.5">
+									<Badge variant="secondary" className="h-5 text-[10px]">
+										{employee.station}
+									</Badge>
+								</td>
+								<td className="px-4 py-2.5">
+									{employee.value >= benchmarkData.productivity.top10Percent ? (
+										<span className="font-bold text-primary">TOP 10%</span>
+									) : employee.value >= benchmarkData.productivity.industryAvg ? (
+										<span className="text-secondary">ABOVE AVG</span>
+									) : (
+										<span className="text-muted-foreground">BELOW AVG</span>
+									)}
+								</td>
+							</tr>
+						))}
 					</tbody>
 				</table>
 			</div>
