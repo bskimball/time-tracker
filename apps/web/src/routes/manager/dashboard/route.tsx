@@ -37,7 +37,16 @@ async function getActiveTimeLogs() {
 export default async function Component() {
 	const { user } = await validateRequest();
 	if (!user) {
-		throw new Error("Not authenticated");
+		return (
+			<div className="flex min-h-[60vh] items-center justify-center">
+				<div className="text-center">
+					<h1 className="mb-3 text-2xl font-bold text-destructive">Session Required</h1>
+					<p className="text-sm text-muted-foreground">
+						Please sign in again to load the manager dashboard.
+					</p>
+				</div>
+			</div>
+		);
 	}
 	// Middleware ensures MANAGER or ADMIN role
 	const snapshotAt = new Date();
