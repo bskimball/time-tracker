@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDb } from "~/__tests__/setup";
-import { startSelfTaskAction } from "~/routes/time-clock/actions";
+import { clockIn, startSelfTaskAction } from "~/routes/time-clock/actions";
 import type { TaskAssignmentMode } from "~/lib/task-assignment-permissions";
 
 const { mockValidateRequest, mockGetTaskAssignmentMode } = vi.hoisted(() => ({
@@ -14,6 +14,10 @@ vi.mock("~/lib/auth", () => ({
 
 vi.mock("~/lib/operational-config", () => ({
 	getTaskAssignmentMode: mockGetTaskAssignmentMode,
+}));
+
+vi.mock("~/lib/ensure-operational-data", () => ({
+	ensureOperationalDataSeeded: vi.fn(() => Promise.resolve()),
 }));
 
 describe("startSelfTaskAction", () => {
@@ -78,4 +82,66 @@ describe("startSelfTaskAction", () => {
 			});
 		}
 	);
+});
+
+describe("floor action scoping", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockValidateRequest.mockResolvedValue({
+			user: { id: "worker-user-1", role: "WORKER", employeeId: "emp-1" },
+		});
+	});
+
+	it("blocks worker clock-in attempts for other employees", async () => {
+		const formData = new FormData();
+		formData.set("employeeId", "emp-2");
+		formData.set("stationId", "station-1");
+
+		const result = await clockIn(null, formData);
+
+		expect(result).toEqual({
+			success: false,
+			error: "Workers can only perform floor actions for themselves",
+		});
+		expect(mockDb.employee.findUnique).not.toHaveBeenCalled();
+	});
+
+	it("allows non-worker sessions to clock in selected employees", async () => {
+		mockValidateRequest.mockResolvedValue({
+			user: { id: "manager-user-1", role: "MANAGER" },
+		});
+		mockDb.employee.findUnique.mockResolvedValue({ id: "emp-1", status: "ACTIVE", name: "Alice" });
+		mockDb.station.findUnique.mockResolvedValue(null);
+		mockDb.timeLog.findFirst.mockResolvedValue(null);
+
+		const formData = new FormData();
+		formData.set("employeeId", "  emp-1  ");
+		formData.set("stationId", "station-1");
+
+		const result = await clockIn(null, formData);
+
+		expect(result).toEqual({
+			success: false,
+			error: "Station is not available",
+		});
+		expect(mockDb.employee.findUnique).toHaveBeenCalledWith({ where: { id: "emp-1" } });
+	});
+
+	it("treats whitespace-only employee id as missing", async () => {
+		mockValidateRequest.mockResolvedValue({
+			user: { id: "manager-user-1", role: "MANAGER" },
+		});
+
+		const formData = new FormData();
+		formData.set("employeeId", "   ");
+		formData.set("stationId", "station-1");
+
+		const result = await clockIn(null, formData);
+
+		expect(result).toEqual({
+			success: false,
+			error: "Employee is required",
+		});
+		expect(mockDb.employee.findUnique).not.toHaveBeenCalled();
+	});
 });
