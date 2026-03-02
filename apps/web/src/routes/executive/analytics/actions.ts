@@ -26,8 +26,18 @@ import type { AnalyticsDashboardData, LiveFloorData } from "./types";
 type AnalyticsTimeRange = "today" | "week" | "month" | "quarter";
 export type ComparisonBasis = "previous-period" | "last-year" | "rolling-30d";
 
-function getDateRange(timeRange: AnalyticsTimeRange) {
-	const now = new Date();
+async function getReferenceDate() {
+	const latestMetric = await db.performanceMetric.aggregate({
+		_max: {
+			date: true,
+		},
+	});
+
+	return latestMetric._max.date ?? new Date();
+}
+
+async function getDateRange(timeRange: AnalyticsTimeRange) {
+	const now = await getReferenceDate();
 	let startDate: Date;
 	let endDate: Date;
 
@@ -56,19 +66,19 @@ function getDateRange(timeRange: AnalyticsTimeRange) {
 	return { startDate, endDate };
 }
 
-function getComparisonDateRange(
+async function getComparisonDateRange(
 	timeRange: AnalyticsTimeRange,
 	basis: ComparisonBasis
-): {
+): Promise<{
 	currentStart: Date;
 	currentEnd: Date;
 	comparisonStart: Date;
 	comparisonEnd: Date;
-} {
-	const { startDate: currentStart, endDate: currentEnd } = getDateRange(timeRange);
+}> {
+	const { startDate: currentStart, endDate: currentEnd } = await getDateRange(timeRange);
 
 	if (basis === "rolling-30d") {
-		const rollingEnd = new Date();
+		const rollingEnd = currentEnd;
 		const rollingStart = subDays(rollingEnd, 30);
 		return {
 			currentStart: rollingStart,
@@ -149,7 +159,7 @@ export async function getComparativeAnalyticsData(
 	basis: ComparisonBasis = "previous-period"
 ) {
 	await ensureAnalyticsDataReady();
-	const { currentStart, currentEnd, comparisonStart, comparisonEnd } = getComparisonDateRange(
+	const { currentStart, currentEnd, comparisonStart, comparisonEnd } = await getComparisonDateRange(
 		timeRange,
 		basis
 	);
@@ -254,7 +264,7 @@ export async function getComparativeAnalyticsData(
  */
 export async function getProductivityTrendData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 
 	const cacheKey = getPerformanceTrendsCacheKey(startDate, endDate, "productivity");
 	const trends = await performanceCache.get(
@@ -280,7 +290,7 @@ export async function getProductivityTrendData(timeRange: AnalyticsTimeRange = "
  */
 export async function getLaborCostTrendData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 
 	const cacheKey = getPerformanceTrendsCacheKey(startDate, endDate, "cost");
 	const trends = await performanceCache.get(
@@ -306,7 +316,7 @@ export async function getLaborCostTrendData(timeRange: AnalyticsTimeRange = "wee
  */
 export async function getStationEfficiencyData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 
 	const cacheKey = getStationPerformanceCacheKey(startDate, endDate);
 	const stationData = await performanceCache.get(
@@ -332,7 +342,7 @@ export async function getStationEfficiencyData(timeRange: AnalyticsTimeRange = "
  */
 export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 
 	const grouped = await db.performanceMetric.groupBy({
 		by: ["employeeId"],
@@ -377,7 +387,7 @@ export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRan
  */
 export async function getCostBreakdownData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 
 	const cacheKey = getLaborCostAnalysisCacheKey(startDate, endDate);
 	const costData = await performanceCache.get(
@@ -459,7 +469,7 @@ export async function getStationOccupancyData() {
  */
 export async function getShiftProductivityData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 	const assignments = await db.taskAssignment.findMany({
 		where: {
 			startTime: { gte: startDate, lte: endDate },
@@ -515,7 +525,7 @@ export async function getShiftProductivityData(timeRange: AnalyticsTimeRange = "
  */
 export async function getTaskTypeEfficiencyData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 	const assignments = await db.taskAssignment.findMany({
 		where: {
 			startTime: { gte: startDate, lte: endDate },
@@ -569,7 +579,7 @@ export async function getTaskTypeEfficiencyData(timeRange: AnalyticsTimeRange = 
  */
 export async function getBenchmarkData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 	const [metricsInWindow, productivityTrend, costTrend] = await Promise.all([
 		db.performanceMetric.findMany({
 			where: { date: { gte: startDate, lte: endDate } },
@@ -638,7 +648,7 @@ export interface Anomaly {
  */
 export async function getAnomalyData(timeRange: AnalyticsTimeRange = "week"): Promise<Anomaly[]> {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 	const [stationWindow, stationBaseline] = await Promise.all([
 		getStationPerformance(startDate, endDate),
 		getStationPerformance(subDays(startDate, 30), subDays(startDate, 1)),
@@ -777,7 +787,7 @@ export async function getCapacityUtilizationData(_timeRange: AnalyticsTimeRange 
  */
 export async function getTrendAnalysisData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
-	const { startDate, endDate } = getDateRange(timeRange);
+	const { startDate, endDate } = await getDateRange(timeRange);
 	const periodLength = Math.max(1, differenceInCalendarDays(endDate, startDate) + 1);
 	const previousEnd = subDays(startDate, 1);
 	const previousStart = subDays(previousEnd, periodLength - 1);
