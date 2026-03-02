@@ -33,6 +33,7 @@ import { BarChart, LineChart, PieChart } from "~/routes/executive/charts";
 import WarehouseFloor from "./components/WarehouseFloor";
 import type { AnalyticsStationOverview } from "./types";
 import type {
+	AnalyticsData,
 	AnalyticsComparison,
 	AnalyticsRange,
 	AnalyticsSection,
@@ -375,6 +376,21 @@ function ProductivityEmployeeTable({
 	const { employeeProductivity, benchmarkData } = result.data;
 
 	return (
+		<ProductivityEmployeeTableContent
+			employeeProductivity={employeeProductivity}
+			benchmarkData={benchmarkData}
+		/>
+	);
+}
+
+export function ProductivityEmployeeTableContent({
+	employeeProductivity,
+	benchmarkData,
+}: {
+	employeeProductivity: AnalyticsData["employeeProductivity"];
+	benchmarkData: AnalyticsData["benchmarkData"];
+}) {
+	return (
 		<Card className="overflow-hidden">
 			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
 				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
@@ -388,7 +404,7 @@ function ProductivityEmployeeTable({
 							<th className="px-4 py-3 text-left font-medium">Employee</th>
 							<th className="px-4 py-3 text-right font-medium">Units</th>
 							<th className="px-4 py-3 text-right font-medium">Hours</th>
-							<th className="px-4 py-3 text-right font-medium">Rate (u/h)</th>
+							<th className="px-4 py-3 text-right font-medium">Rate</th>
 							<th className="px-4 py-3 text-left font-medium">Station</th>
 							<th className="px-4 py-3 text-left font-medium">Performance</th>
 						</tr>
@@ -399,8 +415,8 @@ function ProductivityEmployeeTable({
 								<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
 								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
 								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right font-bold text-foreground">
-									{employee.value}
+								<td className="px-4 py-2.5 text-right">
+									<span className="text-muted-foreground">Derived estimate</span>
 								</td>
 								<td className="px-4 py-2.5">
 									<Badge variant="secondary" className="h-5 text-[10px]">
@@ -421,6 +437,9 @@ function ProductivityEmployeeTable({
 					</tbody>
 				</table>
 			</div>
+			<p className="border-t border-border/40 px-4 py-2 text-[11px] font-mono text-muted-foreground">
+				Rate values are hidden when per-employee Units/Hours source data is unavailable.
+			</p>
 		</Card>
 	);
 }
