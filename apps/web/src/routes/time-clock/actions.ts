@@ -20,12 +20,13 @@ type FloorScopeResult = { ok: true; employeeId: string } | { ok: false; error: s
 
 async function resolveScopedEmployeeId(requestedEmployeeId: string): Promise<FloorScopeResult> {
 	const { user } = await validateRequest();
+	const normalizedRequestedEmployeeId = requestedEmployeeId.trim();
 
 	if (!user) {
-		if (!requestedEmployeeId) {
+		if (!normalizedRequestedEmployeeId) {
 			return { ok: false, error: "Employee is required" };
 		}
-		return { ok: true, employeeId: requestedEmployeeId };
+		return { ok: true, employeeId: normalizedRequestedEmployeeId };
 	}
 
 	if (user.role === "WORKER") {
@@ -33,17 +34,18 @@ async function resolveScopedEmployeeId(requestedEmployeeId: string): Promise<Flo
 			return { ok: false, error: "Worker session is not linked to an employee" };
 		}
 
-		if (requestedEmployeeId && requestedEmployeeId !== user.employeeId) {
+		if (normalizedRequestedEmployeeId && normalizedRequestedEmployeeId !== user.employeeId) {
 			return { ok: false, error: "Workers can only perform floor actions for themselves" };
 		}
 
 		return { ok: true, employeeId: user.employeeId };
 	}
 
-	return {
-		ok: false,
-		error: "Authenticated non-worker sessions cannot execute floor actions",
-	};
+	if (!normalizedRequestedEmployeeId) {
+		return { ok: false, error: "Employee is required" };
+	}
+
+	return { ok: true, employeeId: normalizedRequestedEmployeeId };
 }
 
 async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
