@@ -5,23 +5,25 @@ description: Employee time-clock workflows for floor and kiosk operations.
 
 This guide is for frontline users clocking work and breaks on shared or personal devices.
 
-## Where employees work
+## Employee workspace routes
 
-- `/floor`: full floor time clock UI.
-- `/floor/kiosk`: kiosk-focused experience for shared stations.
+- `/floor`: standard worker floor entry point.
+- `/time-clock`: compatibility route that maps to floor time-clock behavior.
+- `/floor/kiosk`: shared-device kiosk workflow.
+- `/floor/time-clock/mobile`: touch-first mobile time-clock variant.
 
-## Core workflows
+## Core worker workflows
 
-### 1) Clock in and clock out
+### 1) Start and end shift
 
-- Use **PIN Number** mode to clock with a 4-6 digit PIN.
-- Optionally choose a station, or use the last station when available.
-- Use **Select Employee** mode where PIN workflow is not used.
+- Clock in to an active station.
+- Clock out from your active session row.
+- If you are already clocked in, use break/task controls instead of creating a second work session.
 
 ### 2) Break management
 
-- Start break and end break directly from **Active Sessions**.
-- Break status is visible inline so supervisors can see active break state.
+- Start break and end break from your active session controls.
+- Break state is reflected in your status card and manager monitor views.
 
 ### 3) Task controls while clocked in
 
@@ -31,11 +33,35 @@ This guide is for frontline users clocking work and breaks on shared or personal
   - `SELF_ASSIGN_ALLOWED`: self-assignment is optional.
   - `SELF_ASSIGN_REQUIRED`: an active task is required while clocked in.
 
-## Kiosk usability features
+## Screen-by-screen behavior
+
+### Floor (`/floor`)
+
+- Worker `My Status` card surfaces current station, break state, and active task state.
+- `Access Terminal` card contains the interactive clock controls used for shift/break actions.
+- `My Task Controls` appears after clock-in and supports start/switch/end task actions.
+
+### Kiosk (`/floor/kiosk`)
+
+- Two-step PIN verification and clock action flow for shared devices.
+- Optional station selection when clocking in.
+- Local offline queue + sync indicators for unstable connectivity.
+
+### Mobile (`/floor/time-clock/mobile`)
+
+- Touch-first compact layout for handheld operation.
+- Mobile-specific action controls for clock, break, and task interactions.
+
+## Kiosk and device usability features
 
 - Kiosk mode can auto-focus PIN entry and prioritize touch-friendly actions.
 - Offline actions can queue and sync when connectivity returns.
 - Device API key can be stored locally for kiosk sync behavior.
+
+## Known worker UX gaps
+
+- `/floor` currently shows a PIN workflow for worker sessions that is server-blocked for workers. Tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44).
+- `/floor` manual select currently exposes full personnel roster options to worker sessions, but cross-employee actions are rejected server-side. Tracked in [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
 
 ## What employees should report immediately
 

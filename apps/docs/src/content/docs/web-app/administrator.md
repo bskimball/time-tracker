@@ -15,6 +15,11 @@ This guide is for platform owners, operations admins, and executive operators.
 - `/executive`
 - `/executive/analytics`
 
+Detailed route walkthroughs:
+
+- [Settings Guide](/web-app/settings)
+- [Executive Guide](/web-app/executive)
+
 ## Setup and governance workflow
 
 ### 1) Configure stations and workforce records
@@ -45,6 +50,7 @@ This guide is for platform owners, operations admins, and executive operators.
 - Use `/executive` for KPI snapshots and strategic alerts.
 - Use `/executive/analytics` for deeper trend and cost analysis.
 - Validate productivity, occupancy, overtime, and variance thresholds regularly.
+- Follow the section-level walkthrough in [Executive Guide](/web-app/executive).
 
 ## Permission-sensitive actions
 
