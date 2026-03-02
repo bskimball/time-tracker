@@ -17,6 +17,7 @@ import {
 	TabPanel,
 	SimpleSelect,
 	Badge,
+	Alert,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
@@ -118,6 +119,9 @@ export function TimesheetManager({
 	const hasNextPage = pagination.page < totalPages;
 	const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 	const [editingLog, setEditingLog] = useState<TimeLogWithDetails | null>(null);
+	const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
+		null
+	);
 	const [activeTab, setActiveTab] = useQueryState(
 		"tab",
 		parseAsStringEnum([...tabValues]).withDefault(
@@ -127,6 +131,12 @@ export function TimesheetManager({
 
 	const refreshLogs = () => {
 		navigate(0);
+	};
+
+	const refreshLogsAfterFeedback = () => {
+		window.setTimeout(() => {
+			refreshLogs();
+		}, 1200);
 	};
 
 	const goToPage = (nextPage: number) => {
@@ -184,27 +194,48 @@ export function TimesheetManager({
 	};
 
 	const handleEndShift = async (logId: string) => {
-		await closeTimeLog(logId);
-		refreshLogs();
+		setFeedback(null);
+
+		try {
+			await closeTimeLog(logId);
+			setFeedback({ type: "success", message: "Shift ended and saved." });
+			refreshLogsAfterFeedback();
+		} catch (error) {
+			setFeedback({
+				type: "error",
+				message: error instanceof Error ? error.message : "Unable to end shift.",
+			});
+		}
 	};
 
 	const handleCorrectionSubmit = async (data: TimeCorrectionPayload) => {
-		if (editingLog) {
-			await editTimeCorrection(editingLog.id, {
-				startTime: data.startTime,
-				endTime: data.endTime,
-				stationId: data.stationId,
-				type: data.type,
-				note: data.note,
-				reason: data.reason,
-			});
-		} else {
-			await createTimeCorrection(data);
-		}
+		setFeedback(null);
 
-		setShowCorrectionForm(false);
-		setEditingLog(null);
-		refreshLogs();
+		try {
+			if (editingLog) {
+				await editTimeCorrection(editingLog.id, {
+					startTime: data.startTime,
+					endTime: data.endTime,
+					stationId: data.stationId,
+					type: data.type,
+					note: data.note,
+					reason: data.reason,
+				});
+				setFeedback({ type: "success", message: "Time entry updated." });
+			} else {
+				await createTimeCorrection(data);
+				setFeedback({ type: "success", message: "Time entry added." });
+			}
+
+			setShowCorrectionForm(false);
+			setEditingLog(null);
+			refreshLogsAfterFeedback();
+		} catch (error) {
+			setFeedback({
+				type: "error",
+				message: error instanceof Error ? error.message : "Unable to save time entry.",
+			});
+		}
 	};
 
 	const assignedNotClockedInCount = floorActiveEmployees.filter(
@@ -213,12 +244,22 @@ export function TimesheetManager({
 
 	return (
 		<div className="space-y-6">
+			{feedback && (
+				<Alert
+					variant={feedback.type === "success" ? "success" : "error"}
+					onClose={() => setFeedback(null)}
+				>
+					{feedback.message}
+				</Alert>
+			)}
+
 			<PageHeader
 				title="Timesheet Management"
 				subtitle="View and manage employee time entries and corrections"
 				actions={
 					<Button
 						onClick={() => {
+							setFeedback(null);
 							setEditingLog(null);
 							setShowCorrectionForm(true);
 						}}
@@ -610,6 +651,8 @@ export function TimesheetManager({
 					employees={employees}
 					stations={stations}
 					initialLog={editingLog}
+					feedback={feedback}
+					onClearFeedback={() => setFeedback(null)}
 					onClose={() => {
 						setShowCorrectionForm(false);
 						setEditingLog(null);
@@ -656,12 +699,16 @@ function TimeCorrectionForm({
 	employees,
 	stations,
 	initialLog,
+	feedback,
+	onClearFeedback,
 	onClose,
 	onSubmit,
 }: {
 	employees: Employee[];
 	stations: { id: string; name: string }[];
 	initialLog: TimeLogWithDetails | null;
+	feedback: { type: "success" | "error"; message: string } | null;
+	onClearFeedback: () => void;
 	onClose: () => void;
 	onSubmit: (data: TimeCorrectionPayload) => Promise<void>;
 }) {
@@ -747,6 +794,14 @@ function TimeCorrectionForm({
 					</div>
 				</CardHeader>
 				<CardBody>
+					{feedback && (
+						<Alert
+							variant={feedback.type === "success" ? "success" : "error"}
+							onClose={onClearFeedback}
+						>
+							{feedback.message}
+						</Alert>
+					)}
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<SimpleSelect
 							label="Employee"
