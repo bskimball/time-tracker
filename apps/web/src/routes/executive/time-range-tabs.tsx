@@ -12,6 +12,22 @@ import {
 
 export type TimeRange = "today" | "week" | "month" | "quarter";
 
+export function normalizeComparisonForRange(
+	range: TimeRange,
+	compare: string | null
+): AnalyticsComparison {
+	const allowed = COMPARISON_COMPATIBILITY[range];
+	if (compare && allowed.includes(compare as AnalyticsComparison)) {
+		return compare as AnalyticsComparison;
+	}
+
+	if (allowed.includes(DEFAULT_COMPARE)) {
+		return DEFAULT_COMPARE;
+	}
+
+	return allowed[0];
+}
+
 interface TimeRangeTabsProps {
 	ranges?: readonly TimeRange[];
 	defaultRange?: TimeRange;
@@ -33,11 +49,8 @@ export function TimeRangeTabs({
 		const nextSearchParams = new URLSearchParams(searchParams);
 		nextSearchParams.set("range", nextRange);
 
-		const compareParam = searchParams.get("compare") as AnalyticsComparison | null;
-		const validComparisons = COMPARISON_COMPATIBILITY[nextRange];
-		if (!compareParam || !validComparisons.includes(compareParam)) {
-			nextSearchParams.set("compare", DEFAULT_COMPARE);
-		}
+		const compareParam = searchParams.get("compare");
+		nextSearchParams.set("compare", normalizeComparisonForRange(nextRange, compareParam));
 
 		startTransition(() => {
 			navigate(`?${nextSearchParams.toString()}`, { replace: false });
