@@ -390,7 +390,7 @@ export function ReportsManager({
 											Units
 										</th>
 										<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
-											Efficiency Index
+											Efficiency %
 										</th>
 										<th className="text-right p-4 font-heading uppercase text-xs tracking-wider text-muted-foreground font-medium">
 											Overtime
