@@ -214,6 +214,19 @@ export function ReportsManager({
 		}
 	};
 
+	const reportActionButtons = (
+		<>
+			<Button onClick={handleRefresh} variant="outline" disabled={loading} className="gap-2">
+				<LiaSyncSolid className={cn(loading && "animate-spin")} />
+				{loading ? "Syncing..." : "Refresh"}
+			</Button>
+			<Button onClick={handleExport} variant="outline" disabled={loading} className="gap-2">
+				<LiaDownloadSolid />
+				Export CSV
+			</Button>
+		</>
+	);
+
 	const renderSummaryReport = (reportData: ReportDataType) => {
 		const data = reportData;
 		const activeRatio =
@@ -712,19 +725,7 @@ export function ReportsManager({
 					subtitle="Operational intelligence and workforce metrics"
 					actions={
 						<div className="flex items-center gap-2">
-							<Button
-								onClick={handleRefresh}
-								variant="outline"
-								disabled={loading}
-								className="gap-2"
-							>
-								<LiaSyncSolid className={cn(loading && "animate-spin")} />
-								{loading ? "Syncing..." : "Refresh"}
-							</Button>
-							<Button onClick={handleExport} variant="outline" disabled={loading} className="gap-2">
-								<LiaDownloadSolid />
-								Export CSV
-							</Button>
+							{reportActionButtons}
 						</div>
 					}
 				/>
@@ -763,25 +764,28 @@ export function ReportsManager({
 					</TabList>
 				</Tabs>
 
-				{/* Date Range Picker */}
-				<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-xs border border-border/50">
-					<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
-					<div className="flex items-center gap-2">
-						<SimpleInput
-							name="startDate"
-							type="date"
-							value={startDate}
-							onChange={(e) => void setStartDate(e.target.value)}
-							className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
-						/>
-						<span className="text-muted-foreground text-xs">—</span>
-						<SimpleInput
-							name="endDate"
-							type="date"
-							value={endDate}
-							onChange={(e) => void setEndDate(e.target.value)}
-							className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
-						/>
+				<div className="flex w-full xl:w-auto flex-col sm:flex-row sm:items-center gap-3">
+					{hideHeader ? <div className="flex items-center gap-2">{reportActionButtons}</div> : null}
+					{/* Date Range Picker */}
+					<div className="flex items-center gap-3 bg-muted/30 p-2 rounded-xs border border-border/50">
+						<LiaCalendarAltSolid className="text-muted-foreground ml-2" />
+						<div className="flex items-center gap-2">
+							<SimpleInput
+								name="startDate"
+								type="date"
+								value={startDate}
+								onChange={(e) => void setStartDate(e.target.value)}
+								className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+							/>
+							<span className="text-muted-foreground text-xs">—</span>
+							<SimpleInput
+								name="endDate"
+								type="date"
+								value={endDate}
+								onChange={(e) => void setEndDate(e.target.value)}
+								className="h-8 w-auto text-xs font-mono border-0 bg-transparent focus:ring-0 px-1 shadow-none"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
