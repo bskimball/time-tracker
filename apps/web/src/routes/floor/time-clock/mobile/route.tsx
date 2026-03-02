@@ -1,7 +1,10 @@
 import { db } from "~/lib/db";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
-import { MobileTimeClock } from "~/routes/floor/mobile-time-clock/client";
+import {
+	MobileTimeClock,
+	type MobileTimeLogWithRelations,
+} from "~/routes/floor/mobile-time-clock/client";
 
 export default async function Component() {
 	await ensureOperationalDataSeeded();
@@ -15,16 +18,29 @@ export default async function Component() {
 		activeTaskTypes,
 		activeAssignments,
 	] = await Promise.all([
-		db.employee.findMany({ orderBy: { name: "asc" } }),
-		db.station.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+		db.employee.findMany({
+			orderBy: { name: "asc" },
+			select: { id: true, name: true },
+		}),
+		db.station.findMany({
+			where: { isActive: true },
+			orderBy: { name: "asc" },
+			select: { id: true, name: true },
+		}),
 		db.timeLog.findMany({
 			where: { endTime: null, type: "WORK", deletedAt: null },
-			include: { Employee: true, Station: true },
+			include: {
+				Employee: { select: { id: true, name: true } },
+				Station: { select: { id: true, name: true } },
+			},
 			orderBy: { startTime: "desc" },
 		}),
 		db.timeLog.findMany({
 			where: { endTime: null, type: "BREAK", deletedAt: null },
-			include: { Employee: true, Station: true },
+			include: {
+				Employee: { select: { id: true, name: true } },
+				Station: { select: { id: true, name: true } },
+			},
 			orderBy: { startTime: "desc" },
 		}),
 		getTaskAssignmentMode(),
@@ -63,7 +79,9 @@ export default async function Component() {
 		return acc;
 	}, {});
 
-	const toMobileLog = (log: (typeof activeLogs)[number] | (typeof activeBreaks)[number]) => ({
+	const toMobileLog = (
+		log: (typeof activeLogs)[number] | (typeof activeBreaks)[number]
+	): MobileTimeLogWithRelations => ({
 		id: log.id,
 		startTime: log.startTime,
 		endTime: log.endTime,
@@ -81,12 +99,8 @@ export default async function Component() {
 		station: log.Station,
 	});
 
-	const mobileActiveLogs = activeLogs.map(toMobileLog) as Parameters<
-		typeof MobileTimeClock
-	>[0]["activeLogs"];
-	const mobileActiveBreaks = activeBreaks.map(toMobileLog) as Parameters<
-		typeof MobileTimeClock
-	>[0]["activeBreaks"];
+	const mobileActiveLogs = activeLogs.map(toMobileLog);
+	const mobileActiveBreaks = activeBreaks.map(toMobileLog);
 
 	return (
 		<MobileTimeClock

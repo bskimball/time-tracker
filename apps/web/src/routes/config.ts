@@ -63,17 +63,17 @@ export function routes(): RSCRouteConfig {
 							index: true,
 							lazy: () => import("./floor/route.tsx"),
 						},
-						{
-							id: "floor-time-clock-mobile",
-							path: "time-clock/mobile",
-							lazy: () => import("./floor/time-clock/mobile/route.tsx"),
-						},
 					],
 				},
 				{
 					id: "floor-kiosk",
 					path: "floor/kiosk",
 					lazy: () => import("./floor/kiosk/route.tsx"),
+				},
+				{
+					id: "floor-time-clock-mobile",
+					path: "floor/time-clock/mobile",
+					lazy: () => import("./floor/time-clock/mobile/route.tsx"),
 				},
 
 				// Manager experience (MANAGER, ADMIN roles)
