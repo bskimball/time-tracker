@@ -217,8 +217,8 @@ export function ReportsManager({
 	const reportActionButtons = (
 		<>
 			<Button onClick={handleRefresh} variant="outline" disabled={loading} className="gap-2">
-				<LiaSyncSolid className={cn(loading && "animate-spin")} />
-				{loading ? "Syncing..." : "Refresh"}
+				<LiaSyncSolid className={cn(isNavigating && "animate-spin")} />
+				{isNavigating ? "Syncing..." : "Refresh"}
 			</Button>
 			<Button onClick={handleExport} variant="outline" disabled={loading} className="gap-2">
 				<LiaDownloadSolid />
