@@ -390,6 +390,10 @@ export function ProductivityEmployeeTableContent({
 	employeeProductivity: AnalyticsData["employeeProductivity"];
 	benchmarkData: AnalyticsData["benchmarkData"];
 }) {
+	const hasRowsWithHiddenRate = employeeProductivity.some(
+		(employee) => !employee.hasSourceData || employee.rate == null
+	);
+
 	return (
 		<Card className="overflow-hidden">
 			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
@@ -413,10 +417,18 @@ export function ProductivityEmployeeTableContent({
 						{employeeProductivity.map((employee, index) => (
 							<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
 								<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
+								<td className="px-4 py-2.5 text-right text-muted-foreground">
+									{employee.units == null ? "-" : employee.units.toLocaleString()}
+								</td>
+								<td className="px-4 py-2.5 text-right text-muted-foreground">
+									{employee.hours == null ? "-" : employee.hours.toFixed(1)}
+								</td>
 								<td className="px-4 py-2.5 text-right">
-									<span className="text-muted-foreground">Derived estimate</span>
+									{employee.rate == null ? (
+										<span className="text-muted-foreground">Derived estimate</span>
+									) : (
+										<span>{employee.rate.toFixed(1)} u/h</span>
+									)}
 								</td>
 								<td className="px-4 py-2.5">
 									<Badge variant="secondary" className="h-5 text-[10px]">
@@ -425,11 +437,17 @@ export function ProductivityEmployeeTableContent({
 								</td>
 								<td className="px-4 py-2.5">
 									{employee.value >= benchmarkData.productivity.top10Percent ? (
-										<span className="font-bold text-primary">TOP 10%</span>
+										<span className="inline-flex rounded px-1.5 py-0.5 font-semibold text-blue-800 dark:text-blue-200">
+											TOP 10%
+										</span>
 									) : employee.value >= benchmarkData.productivity.industryAvg ? (
-										<span className="text-secondary">ABOVE AVG</span>
+										<span className="inline-flex rounded px-1.5 py-0.5 font-semibold text-emerald-800 dark:text-emerald-200">
+											ABOVE AVG
+										</span>
 									) : (
-										<span className="text-muted-foreground">BELOW AVG</span>
+										<span className="inline-flex rounded px-1.5 py-0.5 font-semibold text-amber-800 dark:text-amber-200">
+											BELOW AVG
+										</span>
 									)}
 								</td>
 							</tr>
@@ -437,11 +455,29 @@ export function ProductivityEmployeeTableContent({
 					</tbody>
 				</table>
 			</div>
-			<p className="border-t border-border/40 px-4 py-2 text-[11px] font-mono text-muted-foreground">
-				Rate values are hidden when per-employee Units/Hours source data is unavailable.
-			</p>
+			{hasRowsWithHiddenRate ? (
+				<p className="border-t border-border/40 px-4 py-2 text-[11px] font-mono text-muted-foreground">
+					Rate values are hidden when per-employee Units/Hours source data is unavailable.
+				</p>
+			) : null}
 		</Card>
 	);
+}
+
+export function getStaffShortageTrend(staffShortage: number): {
+	direction: "up" | "down" | "neutral";
+	value: string;
+	label: string;
+} {
+	if (staffShortage <= 0) {
+		return { direction: "neutral", value: "On Target", label: "No shortage" };
+	}
+
+	if (staffShortage <= 2) {
+		return { direction: "up", value: "Watch", label: "Minor gap" };
+	}
+
+	return { direction: "down", value: "Critical", label: "Impact High" };
 }
 
 function LaborCostSection({
@@ -808,6 +844,7 @@ function CapacityKpis({
 	}
 
 	const { capacityData } = result.data;
+	const staffShortageTrend = getStaffShortageTrend(capacityData.overall.staffShortage);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -824,7 +861,7 @@ function CapacityKpis({
 				subtitle="Positions Needed"
 				icon="users"
 				animateCountUp={!isCached}
-				trend={{ direction: "down", value: "Critical", label: "Impact High" }}
+				trend={staffShortageTrend}
 			/>
 			<KPICard
 				title="Cost Impact"

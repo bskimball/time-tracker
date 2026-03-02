@@ -18,15 +18,18 @@ export async function addStation(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const nameValue = String(formData.get("name") || "");
+	const nameValue = String(formData.get("name") || "").trim();
 	const name = nameValue.toUpperCase() as Station_name;
+	const allowedStationNames = Object.values<string>(Station_name);
 
 	if (!nameValue) {
 		return { error: "Station name is required" };
 	}
 
-	if (!Object.values<string>(Station_name).includes(name)) {
-		return { error: "Invalid station name" };
+	if (!allowedStationNames.includes(name)) {
+		return {
+			error: `Invalid station name. Allowed values: ${allowedStationNames.join(", ")}`,
+		};
 	}
 
 	try {

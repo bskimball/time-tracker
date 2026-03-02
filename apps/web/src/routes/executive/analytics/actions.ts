@@ -334,6 +334,75 @@ export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRan
 	await ensureAnalyticsDataReady();
 	const { startDate, endDate } = getDateRange(timeRange);
 
+	const assignments = await db.taskAssignment.findMany({
+		where: {
+			startTime: { gte: startDate, lte: endDate },
+			endTime: { not: null },
+			unitsCompleted: { not: null },
+		},
+		select: {
+			employeeId: true,
+			startTime: true,
+			endTime: true,
+			unitsCompleted: true,
+			Employee: {
+				select: {
+					name: true,
+					defaultStation: {
+						select: { name: true },
+					},
+				},
+			},
+		},
+	});
+
+	const totals = new Map<
+		string,
+		{ employee: string; station: string; units: number; hours: number }
+	>();
+
+	for (const assignment of assignments) {
+		if (!assignment.endTime || assignment.unitsCompleted === null) continue;
+		const hours =
+			(new Date(assignment.endTime).getTime() - new Date(assignment.startTime).getTime()) /
+			(1000 * 60 * 60);
+		if (hours <= 0) continue;
+
+		const current = totals.get(assignment.employeeId) ?? {
+			employee: assignment.Employee.name,
+			station: assignment.Employee.defaultStation?.name ?? "UNASSIGNED",
+			units: 0,
+			hours: 0,
+		};
+		current.units += assignment.unitsCompleted;
+		current.hours += hours;
+		totals.set(assignment.employeeId, current);
+	}
+
+	const rankedBySourceData = Array.from(totals.values())
+		.map((row) => {
+			const units = Math.round(row.units);
+			const hours = Number(row.hours.toFixed(1));
+			const rate = row.hours > 0 ? Number((row.units / row.hours).toFixed(1)) : null;
+
+			return {
+				employee: row.employee,
+				station: row.station,
+				units,
+				hours,
+				rate,
+				value: rate ?? 0,
+				hasSourceData: rate !== null,
+			};
+		})
+		.filter((row) => row.rate !== null)
+		.sort((a, b) => (b.rate ?? 0) - (a.rate ?? 0))
+		.slice(0, 10);
+
+	if (rankedBySourceData.length > 0) {
+		return rankedBySourceData;
+	}
+
 	const grouped = await db.performanceMetric.groupBy({
 		by: ["employeeId"],
 		where: {
@@ -368,6 +437,10 @@ export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRan
 			employee: employee?.name ?? "Unknown",
 			value: Number((item._avg.efficiency ?? 0).toFixed(1)),
 			station: employee?.defaultStation?.name ?? "UNASSIGNED",
+			units: null,
+			hours: null,
+			rate: null,
+			hasSourceData: false,
 		};
 	});
 }
@@ -570,10 +643,22 @@ export async function getTaskTypeEfficiencyData(timeRange: AnalyticsTimeRange = 
 export async function getBenchmarkData(timeRange: AnalyticsTimeRange = "week") {
 	await ensureAnalyticsDataReady();
 	const { startDate, endDate } = getDateRange(timeRange);
-	const [metricsInWindow, productivityTrend, costTrend] = await Promise.all([
+	const [metricsInWindow, assignmentsInWindow, productivityTrend, costTrend] = await Promise.all([
 		db.performanceMetric.findMany({
 			where: { date: { gte: startDate, lte: endDate } },
 			select: { efficiency: true, qualityScore: true },
+		}),
+		db.taskAssignment.findMany({
+			where: {
+				startTime: { gte: startDate, lte: endDate },
+				endTime: { not: null },
+				unitsCompleted: { not: null },
+			},
+			select: {
+				startTime: true,
+				endTime: true,
+				unitsCompleted: true,
+			},
 		}),
 		getPerformanceTrends(startDate, endDate, "productivity"),
 		getPerformanceTrends(startDate, endDate, "cost"),
@@ -587,6 +672,18 @@ export async function getBenchmarkData(timeRange: AnalyticsTimeRange = "week") {
 		.map((metric) => metric.qualityScore ?? 0)
 		.filter((value) => value > 0)
 		.sort((a, b) => a - b);
+	const assignmentRates = assignmentsInWindow
+		.map((assignment) => {
+			if (!assignment.endTime || assignment.unitsCompleted === null) return 0;
+			const hours =
+				(new Date(assignment.endTime).getTime() - new Date(assignment.startTime).getTime()) /
+				(1000 * 60 * 60);
+			if (hours <= 0) return 0;
+			return assignment.unitsCompleted / hours;
+		})
+		.filter((value) => value > 0)
+		.sort((a, b) => a - b);
+	const productivitySamples = assignmentRates.length > 0 ? assignmentRates : efficiencies;
 
 	const percentile = (values: number[], p: number) => {
 		if (values.length === 0) return 0;
@@ -601,9 +698,9 @@ export async function getBenchmarkData(timeRange: AnalyticsTimeRange = "week") {
 	return {
 		productivity: {
 			current: Number(avgProductivity.toFixed(1)),
-			target: Number((percentile(efficiencies, 0.75) || avgProductivity).toFixed(1)),
-			industryAvg: Number((percentile(efficiencies, 0.5) || avgProductivity).toFixed(1)),
-			top10Percent: Number((percentile(efficiencies, 0.9) || avgProductivity).toFixed(1)),
+			target: Number((percentile(productivitySamples, 0.75) || avgProductivity).toFixed(1)),
+			industryAvg: Number((percentile(productivitySamples, 0.5) || avgProductivity).toFixed(1)),
+			top10Percent: Number((percentile(productivitySamples, 0.9) || avgProductivity).toFixed(1)),
 		},
 		costPerUnit: {
 			current: Number(avgCost.toFixed(2)),

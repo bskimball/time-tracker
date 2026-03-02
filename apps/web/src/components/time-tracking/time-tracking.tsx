@@ -67,14 +67,28 @@ const createId = () =>
 		? crypto.randomUUID()
 		: Math.random().toString(36).slice(2);
 
+export function getAvailableClockMethods(workerEmployee?: Employee | null): Array<"pin" | "select"> {
+	return workerEmployee ? ["select"] : ["pin", "select"];
+}
+
+export function getVisibleClockEmployees(employees: Employee[], workerEmployee?: Employee | null) {
+	if (workerEmployee) {
+		return [workerEmployee];
+	}
+
+	return employees;
+}
+
 function ClockInForm({
 	employees,
 	stations,
+	workerEmployee,
 	pinInputRef,
 	onOptimisticClockIn,
 }: {
 	employees: Employee[];
 	stations: Station[];
+	workerEmployee?: Employee | null;
 	pinInputRef: React.RefObject<HTMLInputElement | null>;
 	onOptimisticClockIn: (log: TimeLogWithRelations) => void;
 }) {
@@ -88,9 +102,14 @@ function ClockInForm({
 		apiKey,
 		saveApiKey,
 	} = useKioskContext();
-	const [method, setMethod] = useState<"pin" | "select">("pin");
+	const workerScopedEmployee = workerEmployee ?? null;
+	const availableMethods = getAvailableClockMethods(workerScopedEmployee);
+	const visibleEmployees = getVisibleClockEmployees(employees, workerScopedEmployee);
+	const [method, setMethod] = useState<"pin" | "select">(
+		availableMethods[0] ?? "select"
+	);
 	const [pin, setPin] = useState("");
-	const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+	const [selectedEmployeeId, setSelectedEmployeeId] = useState(workerScopedEmployee?.id ?? "");
 	const [selectedStationId, setSelectedStationId] = useState("");
 
 	const [pinState, pinFormAction] = useActionState<ClockActionState, FormData>(
@@ -149,7 +168,8 @@ function ClockInForm({
 	const handleSelectSubmit = useCallback(
 		(event: React.FormEvent<HTMLFormElement>) => {
 			const formData = new FormData(event.currentTarget);
-			const employeeId = (formData.get("employeeId") as string | null)?.trim();
+			const employeeId =
+				workerScopedEmployee?.id ?? (formData.get("employeeId") as string | null)?.trim();
 			const stationId = (formData.get("stationId") as string | null)?.trim();
 
 			if (!employeeId || !stationId) {
@@ -190,7 +210,7 @@ function ClockInForm({
 				event.currentTarget.reset();
 			}
 		},
-		[handleOfflineSubmit, employees, stations, onOptimisticClockIn]
+		[handleOfflineSubmit, employees, stations, onOptimisticClockIn, workerScopedEmployee]
 	);
 
 	const handleApiDialogOpenChange = useCallback(
@@ -225,6 +245,13 @@ function ClockInForm({
 			focusPinInput();
 		}
 	}, [kioskEnabled, focusPinInput]);
+
+	useEffect(() => {
+		if (workerScopedEmployee) {
+			setMethod("select");
+			setSelectedEmployeeId(workerScopedEmployee.id);
+		}
+	}, [workerScopedEmployee]);
 
 	useEffect(() => {
 		if (selectState?.success) {
@@ -341,32 +368,38 @@ function ClockInForm({
 					</div>
 				</div>
 
-				<div className="flex gap-1 w-full p-1 bg-muted/30 rounded-[2px] border border-border/50">
-					<button
-						type="button"
-						className={cn(
-							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
-							method === "pin"
-								? "bg-background text-foreground shadow-sm border border-border/50"
-								: "hover:bg-muted/50 text-muted-foreground"
-						)}
-						onClick={() => setMethod("pin")}
-					>
-						PIN Entry
-					</button>
-					<button
-						type="button"
-						className={cn(
-							"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
-							method === "select"
-								? "bg-background text-foreground shadow-sm border border-border/50"
-								: "hover:bg-muted/50 text-muted-foreground"
-						)}
-						onClick={() => setMethod("select")}
-					>
-						Manual Select
-					</button>
-				</div>
+				{availableMethods.length === 1 ? (
+					<p className="text-xs text-muted-foreground border border-border/50 bg-muted/30 rounded-[2px] p-3">
+						Worker sessions use personal controls only. Clock actions are scoped to your profile.
+					</p>
+				) : (
+					<div className="flex gap-1 w-full p-1 bg-muted/30 rounded-[2px] border border-border/50">
+						<button
+							type="button"
+							className={cn(
+								"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+								method === "pin"
+									? "bg-background text-foreground shadow-sm border border-border/50"
+									: "hover:bg-muted/50 text-muted-foreground"
+							)}
+							onClick={() => setMethod("pin")}
+						>
+							PIN Entry
+						</button>
+						<button
+							type="button"
+							className={cn(
+								"flex-1 text-sm font-medium py-2 rounded-[2px] transition-all duration-200",
+								method === "select"
+									? "bg-background text-foreground shadow-sm border border-border/50"
+									: "hover:bg-muted/50 text-muted-foreground"
+							)}
+							onClick={() => setMethod("select")}
+						>
+							Manual Select
+						</button>
+					</div>
+				)}
 
 				{method === "pin" ? (
 					<Form
@@ -438,17 +471,29 @@ function ClockInForm({
 					>
 						<div className="grid gap-4 md:grid-cols-2">
 							<div className="flex flex-col gap-2">
-								<label className="text-sm font-medium text-foreground">Personnel Roster</label>
-								<Select
-									name="employeeId"
-									options={[
-										{ value: "", label: "-- Select Personnel --" },
-										...employees.map((emp) => ({ value: emp.id, label: emp.name })),
-									]}
-									value={selectedEmployeeId}
-									onChange={setSelectedEmployeeId}
-									isDisabled={employees.length === 0}
-								/>
+								{workerScopedEmployee ? (
+									<>
+										<label className="text-sm font-medium text-foreground">Worker Profile</label>
+										<div className="rounded-[2px] border border-border/50 bg-muted/20 px-3 py-2 text-sm font-medium">
+											{workerScopedEmployee.name}
+										</div>
+										<input type="hidden" name="employeeId" value={workerScopedEmployee.id} />
+									</>
+								) : (
+									<>
+										<label className="text-sm font-medium text-foreground">Personnel Roster</label>
+										<Select
+											name="employeeId"
+											options={[
+												{ value: "", label: "-- Select Personnel --" },
+												...visibleEmployees.map((emp) => ({ value: emp.id, label: emp.name })),
+											]}
+											value={selectedEmployeeId}
+											onChange={setSelectedEmployeeId}
+											isDisabled={visibleEmployees.length === 0}
+										/>
+									</>
+								)}
 							</div>
 
 							<div className="flex flex-col gap-2">
@@ -1721,6 +1766,11 @@ export function TimeTracking({
 					<ClockInForm
 						employees={employees}
 						stations={stations}
+						workerEmployee={
+							workerEmployeeId
+								? employees.find((employee) => employee.id === workerEmployeeId) ?? null
+								: null
+						}
 						pinInputRef={pinInputRef}
 						onOptimisticClockIn={addOptimisticLog}
 					/>
