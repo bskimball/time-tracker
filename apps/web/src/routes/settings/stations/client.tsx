@@ -5,23 +5,36 @@ import { useFormStatus } from "react-dom";
 import { addStation, deleteStation } from "../actions";
 import type { Station } from "@prisma/client";
 import { Button } from "@monorepo/design-system";
-import { SimpleInput } from "@monorepo/design-system";
 import { Alert } from "@monorepo/design-system";
 import { Form } from "@monorepo/design-system";
 import { Card, CardBody, CardHeader, CardTitle } from "@monorepo/design-system";
+import { Select } from "@monorepo/design-system";
 
-function SubmitButton({ children }: { children: React.ReactNode }) {
+function SubmitButton({
+	children,
+	disabled,
+}: {
+	children: React.ReactNode;
+	disabled?: boolean;
+}) {
 	const { pending } = useFormStatus();
 	return (
-		<Button type="submit" disabled={pending}>
+		<Button type="submit" disabled={pending || disabled}>
 			{pending ? "Processing..." : children}
 		</Button>
 	);
 }
 
-export function StationManagement({ stations: initialStations }: { stations: Station[] }) {
+export function StationManagement({
+	stations: initialStations,
+	availableStationNames,
+}: {
+	stations: Station[];
+	availableStationNames: Station["name"][];
+}) {
 	const [addState, addAction] = useActionState(addStation, null);
 	const [deleteState, deleteAction] = useActionState(deleteStation, null);
+	const [newStationName, setNewStationName] = useState("");
 
 	// Track the current stations list in state
 	const [stations, setStations] = useState<Station[]>(initialStations);
@@ -31,6 +44,10 @@ export function StationManagement({ stations: initialStations }: { stations: Sta
 		if (addState?.stations) {
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setStations(addState.stations);
+		}
+		if (addState?.success) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setNewStationName("");
 		}
 	}, [addState]);
 
@@ -54,6 +71,10 @@ export function StationManagement({ stations: initialStations }: { stations: Sta
 		deleteAction(formData);
 	}
 
+	const creatableStationNames = availableStationNames.filter(
+		(stationName) => !stations.some((station) => station.name === stationName)
+	);
+
 	return (
 		<div className="space-y-6">
 			<Card>
@@ -61,16 +82,28 @@ export function StationManagement({ stations: initialStations }: { stations: Sta
 					<CardTitle>Add New Station</CardTitle>
 				</CardHeader>
 				<CardBody>
-					<Form action={addAction} className="flex flex-row gap-2">
-						<SimpleInput
+					<Form action={addAction} className="flex flex-row gap-2 items-end">
+						<Select
 							name="name"
-							placeholder="Station name (e.g., PACKING)"
-							className="flex-1"
-							aria-label="Station Name"
-							required
+							label="Station"
+							options={creatableStationNames.map((stationName) => ({
+								value: stationName,
+								label: stationName,
+							}))}
+							value={newStationName}
+							onChange={(value: string) => setNewStationName(value)}
+							placeholder="Choose a station"
+							containerClassName="flex-1"
+							isDisabled={creatableStationNames.length === 0}
+							isRequired
 						/>
-						<SubmitButton>Add Station</SubmitButton>
+						<SubmitButton disabled={creatableStationNames.length === 0}>
+							{creatableStationNames.length === 0 ? "All Stations Added" : "Add Station"}
+						</SubmitButton>
 					</Form>
+					<p className="mt-2 text-xs text-muted-foreground">
+						Station names are restricted to configured operational station types.
+					</p>
 					{addState?.error && (
 						<Alert variant="error" className="relative mt-4">
 							{addState.error}
