@@ -100,6 +100,22 @@ function toMetricTrendDirection(value: string): "up" | "down" | "neutral" {
 	return "neutral";
 }
 
+export function getStaffShortageTrend(staffShortage: number): {
+	direction: "up" | "down" | "neutral";
+	value: string;
+	label: string;
+} {
+	if (staffShortage <= 0) {
+		return { direction: "neutral", value: "On Target", label: "No shortage" };
+	}
+
+	if (staffShortage <= 2) {
+		return { direction: "neutral", value: "Watch", label: "Minor gap" };
+	}
+
+	return { direction: "down", value: "Critical", label: "Impact High" };
+}
+
 interface AnalyticsClientProps {
 	section: AnalyticsSection;
 	range: AnalyticsRange;
@@ -808,6 +824,7 @@ function CapacityKpis({
 	}
 
 	const { capacityData } = result.data;
+	const staffShortageTrend = getStaffShortageTrend(capacityData.overall.staffShortage);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -824,7 +841,7 @@ function CapacityKpis({
 				subtitle="Positions Needed"
 				icon="users"
 				animateCountUp={!isCached}
-				trend={{ direction: "down", value: "Critical", label: "Impact High" }}
+				trend={staffShortageTrend}
 			/>
 			<KPICard
 				title="Cost Impact"
