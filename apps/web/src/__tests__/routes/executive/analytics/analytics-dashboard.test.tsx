@@ -34,4 +34,20 @@ describe("getStaffShortageTrend", () => {
 			label: "No shortage",
 		});
 	});
+
+	it("marks small shortage as watch", () => {
+		expect(getStaffShortageTrend(2)).toEqual({
+			direction: "neutral",
+			value: "Watch",
+			label: "Minor gap",
+		});
+	});
+
+	it("marks larger shortage as critical", () => {
+		expect(getStaffShortageTrend(4)).toEqual({
+			direction: "down",
+			value: "Critical",
+			label: "Impact High",
+		});
+	});
 });

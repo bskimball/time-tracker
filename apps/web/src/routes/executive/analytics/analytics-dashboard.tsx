@@ -110,7 +110,7 @@ export function getStaffShortageTrend(staffShortage: number): {
 	}
 
 	if (staffShortage <= 2) {
-		return { direction: "up", value: "Watch", label: "Minor gap" };
+		return { direction: "neutral", value: "Watch", label: "Minor gap" };
 	}
 
 	return { direction: "down", value: "Critical", label: "Impact High" };
