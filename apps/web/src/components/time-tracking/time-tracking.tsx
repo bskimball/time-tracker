@@ -1548,6 +1548,7 @@ export function TimeTracking({
 	activeTasksByEmployee,
 	assignmentMode,
 	taskOptions,
+	workerEmployeeId,
 }: {
 	employees: Employee[];
 	stations: Station[];
@@ -1561,6 +1562,7 @@ export function TimeTracking({
 	>;
 	assignmentMode: TaskAssignmentMode;
 	taskOptions: TaskOption[];
+	workerEmployeeId?: string | null;
 }) {
 	const getStatusBarOffset = () => {
 		if (typeof document === "undefined") {
@@ -1598,6 +1600,10 @@ export function TimeTracking({
 	const apiKey =
 		typeof window !== "undefined" ? window.localStorage.getItem("timeClock:apiKey") || "" : "";
 	const { queue, enqueue, sync, status } = useOfflineActionQueue(apiKey);
+	const workerActiveLog = workerEmployeeId
+		? optimisticLogs.find((log) => log.employeeId === workerEmployeeId)
+		: null;
+	const workerActiveTask = workerEmployeeId ? activeTasksByEmployee?.[workerEmployeeId] : undefined;
 
 	useEffect(() => {
 		const unsub = subscribe((message, type) => {
@@ -1701,6 +1707,25 @@ export function TimeTracking({
 						pinInputRef={pinInputRef}
 						onOptimisticClockIn={addOptimisticLog}
 					/>
+
+					{workerEmployeeId && workerActiveLog && (
+						<Card className="mt-4 border-primary/40">
+							<CardHeader>
+								<CardTitle className="text-sm uppercase tracking-wider">My Task Controls</CardTitle>
+							</CardHeader>
+							<CardBody>
+								<p className="mb-3 text-xs text-muted-foreground">
+									Manage your own task directly from the primary floor screen.
+								</p>
+								<WorkerTaskControls
+									employeeId={workerEmployeeId}
+									activeTask={workerActiveTask}
+									assignmentMode={assignmentMode}
+									taskOptions={taskOptions}
+								/>
+							</CardBody>
+						</Card>
+					)}
 				</div>
 
 				{/* Drawer Overlay */}
