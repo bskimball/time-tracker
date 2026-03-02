@@ -70,7 +70,6 @@ const createId = () =>
 export function getAvailableClockMethods(workerEmployeeId?: string | null): Array<"pin" | "select"> {
 	return workerEmployeeId ? ["select"] : ["pin", "select"];
 }
-
 export function getVisibleClockEmployees<T extends { id: string }>(
 	employees: T[],
 	workerEmployeeId?: string | null
@@ -254,11 +253,13 @@ function ClockInForm({
 	}, [kioskEnabled, focusPinInput]);
 
 	useEffect(() => {
-		if (workerScopedEmployee) {
+		if (workerEmployeeId !== undefined) {
 			setMethod("select");
-			setSelectedEmployeeId(workerScopedEmployee.id);
 		}
-	}, [workerScopedEmployee]);
+		if (typeof workerEmployeeId === "string") {
+			setSelectedEmployeeId(workerEmployeeId);
+		}
+	}, [workerEmployeeId]);
 
 	useEffect(() => {
 		if (selectState?.success) {
@@ -478,13 +479,13 @@ function ClockInForm({
 					>
 						<div className="grid gap-4 md:grid-cols-2">
 							<div className="flex flex-col gap-2">
-								{workerScopedEmployee ? (
+								{typeof workerEmployeeId === "string" ? (
 									<>
 										<label className="text-sm font-medium text-foreground">Worker Profile</label>
 										<div className="rounded-[2px] border border-border/50 bg-muted/20 px-3 py-2 text-sm font-medium">
-											{workerScopedEmployee.name}
+											{visibleEmployees[0]?.name ?? "Linked worker"}
 										</div>
-										<input type="hidden" name="employeeId" value={workerScopedEmployee.id} />
+										<input type="hidden" name="employeeId" value={workerEmployeeId} />
 									</>
 								) : (
 									<>
