@@ -1170,12 +1170,10 @@ function TimeHistory({
 	employees: Employee[];
 }) {
 	const [startDate, setStartDate] = useState(() => {
-		const today = new Date();
-		return today.toISOString().split("T")[0];
+		return "";
 	});
 	const [endDate, setEndDate] = useState(() => {
-		const today = new Date();
-		return today.toISOString().split("T")[0];
+		return "";
 	});
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 	const [selectedStationId, setSelectedStationId] = useState("");
@@ -1209,8 +1207,12 @@ function TimeHistory({
 
 	const employeeOvertimeStatus = useMemo(() => {
 		const status: Record<string, { dailyOT: boolean; weeklyOT: boolean }> = {};
+		const selectedDay =
+			startDate ||
+			endDate ||
+			(filteredLogs[0] ? filteredLogs[0].startTime.toISOString().split("T")[0] : "");
 
-		const selectedDate = startDate ? new Date(startDate) : new Date();
+		const selectedDate = selectedDay ? new Date(selectedDay) : new Date();
 		const weekBounds = getWeekBounds(selectedDate);
 
 		employees.forEach((employee) => {
@@ -1218,12 +1220,12 @@ function TimeHistory({
 
 			const dailyWorkLogs = employeeLogs.filter((log) => {
 				const logDate = new Date(log.startTime).toISOString().split("T")[0];
-				return log.type === "WORK" && logDate === startDate;
+				return log.type === "WORK" && logDate === selectedDay;
 			});
 
 			const dailyBreakLogs = employeeLogs.filter((log) => {
 				const logDate = new Date(log.startTime).toISOString().split("T")[0];
-				return log.type === "BREAK" && logDate === startDate;
+				return log.type === "BREAK" && logDate === selectedDay;
 			});
 
 			const weeklyWorkLogs = employeeLogs.filter((log) => {
@@ -1254,7 +1256,7 @@ function TimeHistory({
 		});
 
 		return status;
-	}, [filteredLogs, employees, startDate]);
+	}, [endDate, filteredLogs, employees, startDate]);
 
 	const totalWorkLogs = filteredLogs.filter((log) => log.type === "WORK");
 	const totalBreakLogs = filteredLogs.filter((log) => log.type === "BREAK");
@@ -1275,7 +1277,10 @@ function TimeHistory({
 
 	const selectedEmployee = employees.find((emp) => emp.id === selectedEmployeeId);
 	const dailyLimit = selectedEmployee?.dailyHoursLimit ?? DEFAULT_DAILY_LIMIT;
-	const showOvertimeWarning = selectedEmployeeId && netHours > dailyLimit;
+	const selectedDayForOvertime = startDate || endDate;
+	const showOvertimeWarning = Boolean(
+		selectedEmployeeId && selectedDayForOvertime && netHours > dailyLimit
+	);
 
 	return (
 		<Card className="mt-4 flex flex-col overflow-hidden">
