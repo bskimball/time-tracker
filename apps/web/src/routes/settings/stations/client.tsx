@@ -93,7 +93,7 @@ export function StationManagement({
 							value={newStationName}
 							onChange={(value: string) => setNewStationName(value)}
 							placeholder="Choose a station"
-							className="flex-1"
+							containerClassName="flex-1"
 							isDisabled={creatableStationNames.length === 0}
 							isRequired
 						/>
