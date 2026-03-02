@@ -23,6 +23,7 @@ import {
 	Tab,
 	TabPanel,
 	Badge,
+	Alert,
 } from "@monorepo/design-system";
 import { PageHeader } from "~/components/page-header";
 import { cn } from "~/lib/cn";
@@ -209,6 +210,10 @@ export function TaskManager({
 		);
 
 	const [localTaskTypes, setLocalTaskTypes] = useState(taskTypes);
+	const [latestTaskFeedback, setLatestTaskFeedback] = useState<{
+		type: "success" | "error";
+		message: string;
+	} | null>(null);
 
 	// Local state to maintain the list of assignments across server actions
 	// This ensures updates "stick" after the optimistic period ends but before a full page reload
@@ -230,6 +235,9 @@ export function TaskManager({
 		if (assignState?.success && assignState.activeAssignments) {
 			setLocalAssignments(assignState.activeAssignments);
 			lastSyncedAtRef.current = new Date();
+			setLatestTaskFeedback({ type: "success", message: "Task assigned successfully." });
+		} else if (assignState?.error) {
+			setLatestTaskFeedback({ type: "error", message: assignState.error });
 		}
 	}, [assignState]);
 
@@ -237,6 +245,9 @@ export function TaskManager({
 		if (completeState?.success && completeState.activeAssignments) {
 			setLocalAssignments(completeState.activeAssignments);
 			lastSyncedAtRef.current = new Date();
+			setLatestTaskFeedback({ type: "success", message: "Task completed successfully." });
+		} else if (completeState?.error) {
+			setLatestTaskFeedback({ type: "error", message: completeState.error });
 		}
 	}, [completeState]);
 
@@ -244,6 +255,9 @@ export function TaskManager({
 		if (switchState?.success && switchState.activeAssignments) {
 			setLocalAssignments(switchState.activeAssignments);
 			lastSyncedAtRef.current = new Date();
+			setLatestTaskFeedback({ type: "success", message: "Task switched successfully." });
+		} else if (switchState?.error) {
+			setLatestTaskFeedback({ type: "error", message: switchState.error });
 		}
 	}, [switchState]);
 
@@ -404,20 +418,6 @@ export function TaskManager({
 
 	const activeTaskTypes = localTaskTypes.filter((taskType) => taskType.isActive);
 
-	const latestActionError =
-		assignState?.error ||
-		completeState?.error ||
-		switchState?.error ||
-		createTypeState?.error ||
-		updateTypeState?.error ||
-		setTaskTypeActiveState?.error;
-	const latestActionSuccessMessage = assignState?.success
-		? "Task assigned successfully."
-		: completeState?.success
-			? "Task completed successfully."
-			: switchState?.success
-				? "Task switched successfully."
-				: null;
 	const anyTaskMutationPending = isAssignPending || isCompletePending || isSwitchPending;
 
 	const handleTaskTypeStatusToggle = (taskType: TaskType, nextIsActive: boolean) => {
@@ -598,15 +598,13 @@ export function TaskManager({
 							</Button>
 						</CardHeader>
 						<CardBody>
-							{latestActionError && (
-								<div className="mb-4 rounded-[2px] border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-									{latestActionError}
-								</div>
-							)}
-							{latestActionSuccessMessage && !latestActionError && (
-								<div className="mb-4 rounded-[2px] border border-success/60 bg-success/10 px-3 py-2 text-sm text-success">
-									{latestActionSuccessMessage}
-								</div>
+							{latestTaskFeedback && (
+								<Alert
+									variant={latestTaskFeedback.type === "success" ? "success" : "error"}
+									onClose={() => setLatestTaskFeedback(null)}
+								>
+									{latestTaskFeedback.message}
+								</Alert>
 							)}
 							{filteredAssignments.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-border bg-muted/5 py-12 text-center">
