@@ -71,6 +71,21 @@ export function getAvailableClockMethods(workerEmployeeId?: string | null): Arra
 	return workerEmployeeId ? ["select"] : ["pin", "select"];
 }
 
+export function getVisibleClockEmployees<T extends { id: string }>(
+	employees: T[],
+	workerEmployeeId?: string | null
+) {
+	if (workerEmployeeId === undefined) {
+		return employees;
+	}
+
+	if (workerEmployeeId === null) {
+		return [];
+	}
+
+	return employees.filter((employee) => employee.id === workerEmployeeId);
+}
+
 function ClockInForm({
 	employees,
 	stations,
@@ -102,6 +117,7 @@ function ClockInForm({
 	const [pin, setPin] = useState("");
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(workerEmployeeId ?? "");
 	const [selectedStationId, setSelectedStationId] = useState("");
+	const visibleEmployees = getVisibleClockEmployees(employees, workerEmployeeId);
 
 	const [pinState, pinFormAction] = useActionState<ClockActionState, FormData>(
 		pinToggleClock,
@@ -477,11 +493,11 @@ function ClockInForm({
 											name="employeeId"
 											options={[
 												{ value: "", label: "-- Select Personnel --" },
-												...employees.map((emp) => ({ value: emp.id, label: emp.name })),
+												...visibleEmployees.map((emp) => ({ value: emp.id, label: emp.name })),
 											]}
 											value={selectedEmployeeId}
 											onChange={setSelectedEmployeeId}
-											isDisabled={employees.length === 0}
+											isDisabled={visibleEmployees.length === 0}
 										/>
 									</>
 								)}
