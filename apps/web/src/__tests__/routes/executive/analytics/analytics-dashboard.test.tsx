@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { ProductivityEmployeeTableContent } from "~/routes/executive/analytics/analytics-dashboard";
+import {
+	getStaffShortageTrend,
+	ProductivityEmployeeTableContent,
+} from "~/routes/executive/analytics/analytics-dashboard";
 
 describe("Analytics productivity employee table", () => {
 	it("renders derived estimate fallback when per-employee volume inputs are unavailable", () => {
@@ -20,5 +23,15 @@ describe("Analytics productivity employee table", () => {
 		const row = employeeCell.closest("tr");
 		expect(row).toBeTruthy();
 		expect(within(row as HTMLElement).getByText("Derived estimate")).toBeInTheDocument();
+	});
+});
+
+describe("getStaffShortageTrend", () => {
+	it("marks zero shortage as on target", () => {
+		expect(getStaffShortageTrend(0)).toEqual({
+			direction: "neutral",
+			value: "On Target",
+			label: "No shortage",
+		});
 	});
 });
