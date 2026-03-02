@@ -163,13 +163,13 @@ export function FloorMonitor({
 	const visibleStationIds = new Set(filteredStations.map((station) => station.id));
 	const filteredWorkLogs = workLogs.filter((log) => {
 		if (!log.Station?.id) {
-			return statusFilters.includes("ACTIVE") || statusFilters.includes("IDLE");
+			return true;
 		}
 		return visibleStationIds.has(log.Station.id);
 	});
 	const filteredBreakLogs = breakLogs.filter((log) => {
 		if (!log.Station?.id) {
-			return statusFilters.includes("ACTIVE") || statusFilters.includes("IDLE");
+			return true;
 		}
 		return visibleStationIds.has(log.Station.id);
 	});
@@ -185,6 +185,11 @@ export function FloorMonitor({
 			startTime: task.startTime,
 			taskName: task.taskTypeName,
 		}));
+	const visibleEmployeeIds = new Set([
+		...filteredWorkLogs.map((log) => log.Employee.id),
+		...filteredBreakLogs.map((log) => log.Employee.id),
+		...taskOnlyWorkers.map((worker) => worker.id),
+	]);
 
 	return (
 		<div className="space-y-8">
@@ -416,7 +421,7 @@ export function FloorMonitor({
 					<div className="flex items-center justify-between border-b border-border pb-2">
 						<h3 className="font-heading font-semibold text-lg">PERSONNEL MANIFEST</h3>
 						<Badge variant="secondary" className="font-mono">
-							VISIBLE: {filteredWorkLogs.length + filteredBreakLogs.length + taskOnlyWorkers.length}
+							VISIBLE: {visibleEmployeeIds.size}
 						</Badge>
 					</div>
 
@@ -501,8 +506,7 @@ export function FloorMonitor({
 								</div>
 							))}
 
-							{filteredWorkLogs.length + filteredBreakLogs.length + taskOnlyWorkers.length ===
-								0 && (
+							{visibleEmployeeIds.size === 0 && (
 								<div className="py-12 text-center text-muted-foreground text-sm">
 									No personnel match the selected status filters
 								</div>
