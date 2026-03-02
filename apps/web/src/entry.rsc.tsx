@@ -62,6 +62,8 @@ function fetchServer(request: Request) {
 
 export default async function handler(request: Request) {
 	const url = new URL(request.url);
+	const isRSCDataRequest = url.pathname.endsWith(".rsc");
+	const requestPath = isRSCDataRequest ? url.pathname.slice(0, -4) || "/" : url.pathname;
 
 	// Handle logout as a top-level redirect before RSC rendering
 	if (url.pathname === "/logout") {
@@ -85,7 +87,7 @@ export default async function handler(request: Request) {
 	const { user } = await validateRequest(request);
 
 	// Handle home page and dashboard redirects based on user role
-	if (url.pathname === "/" || url.pathname === "/dashboard") {
+	if (requestPath === "/" || requestPath === "/dashboard") {
 		const destination = user ? getPortalHomeForRole(user.role) : "/login";
 
 		return new Response(null, {
@@ -95,28 +97,32 @@ export default async function handler(request: Request) {
 	}
 
 	// Protect /manager/* routes - require MANAGER role only
-	if (url.pathname.startsWith("/manager")) {
+	if (requestPath.startsWith("/manager")) {
 		if (!user) {
-			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
-			return new Response(null, {
-				status: 302,
-				headers: { Location: `/login${redirectParam}` },
-			});
+			if (!isRSCDataRequest) {
+				const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
+				return new Response(null, {
+					status: 302,
+					headers: { Location: `/login${redirectParam}` },
+				});
+			}
 		}
 
-		if (user.role !== "MANAGER") {
+		if (user && user.role !== "MANAGER") {
 			const defaultRoute = getPortalHomeForRole(user.role);
-			return new Response(null, {
-				status: 302,
-				headers: { Location: defaultRoute },
-			});
+			if (!isRSCDataRequest) {
+				return new Response(null, {
+					status: 302,
+					headers: { Location: defaultRoute },
+				});
+			}
 		}
 	}
 
 	// Protect /executive/* routes - require ADMIN role
-	if (url.pathname.startsWith("/executive")) {
+	if (requestPath.startsWith("/executive")) {
 		if (!user) {
-			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
+			const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
 			return new Response(null, {
 				status: 302,
 				headers: { Location: `/login${redirectParam}` },
@@ -134,7 +140,7 @@ export default async function handler(request: Request) {
 
 	// Restrict /floor/* for authenticated non-worker roles.
 	// Safe default: preserve public/worker floor usage, prevent manager/admin cross-role execution.
-	if (url.pathname.startsWith("/floor") && user && user.role !== "WORKER") {
+	if (requestPath.startsWith("/floor") && user && user.role !== "WORKER") {
 		const destination = getPortalHomeForRole(user.role);
 		return new Response(null, {
 			status: 302,
@@ -143,9 +149,9 @@ export default async function handler(request: Request) {
 	}
 
 	// Protect /settings and /todo routes - require any authenticated user
-	if (url.pathname.startsWith("/settings") || url.pathname.startsWith("/todo")) {
+	if (requestPath.startsWith("/settings") || requestPath.startsWith("/todo")) {
 		if (!user) {
-			const redirectParam = `?redirect=${encodeURIComponent(url.pathname)}`;
+			const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
 			return new Response(null, {
 				status: 302,
 				headers: { Location: `/login${redirectParam}` },
@@ -153,7 +159,7 @@ export default async function handler(request: Request) {
 		}
 
 		// Redirect /settings to /settings/stations
-		if (url.pathname === "/settings") {
+		if (requestPath === "/settings") {
 			return new Response(null, {
 				status: 302,
 				headers: { Location: "/settings/stations" },
@@ -162,7 +168,7 @@ export default async function handler(request: Request) {
 	}
 
 	// Handle mobile redirect for /floor route
-	if (url.pathname === "/floor") {
+	if (requestPath === "/floor") {
 		const userAgent = request.headers.get("user-agent") || "";
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
 			userAgent

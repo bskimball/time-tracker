@@ -31,7 +31,18 @@ type EmployeeWithBreakData = EmployeeWithBreakPolicy & {
 export async function getActiveAlerts(): Promise<Alert[]> {
 	const { user } = await validateRequest();
 	if (!user) {
-		throw new Error("Unauthorized");
+		return [
+			{
+				id: "system-session-required",
+				type: "SYSTEM",
+				severity: "LOW",
+				title: "Session Required",
+				description: "Sign in again to load manager alerts.",
+				createdAt: new Date(),
+				requiresAction: true,
+				actionUrl: "/login",
+			},
+		];
 	}
 
 	const alerts: Alert[] = [];
