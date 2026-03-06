@@ -18,6 +18,26 @@ type WorkerSelfTaskContext = { ok: true; employeeId: string } | { ok: false; err
 
 type FloorScopeResult = { ok: true; employeeId: string } | { ok: false; error: string };
 
+function normalizeEmployeeCode(value: FormDataEntryValue | null): string {
+	return String(value || "")
+		.trim()
+		.toUpperCase();
+}
+
+async function getActiveEmployeeByCode(employeeCode: string) {
+	if (!employeeCode) {
+		return null;
+	}
+
+	return db.employee.findFirst({
+		where: {
+			employeeCode,
+			status: "ACTIVE",
+			pinHash: { not: null },
+		},
+	});
+}
+
 async function resolveScopedEmployeeId(requestedEmployeeId: string): Promise<FloorScopeResult> {
 	const { user } = await validateRequest();
 	const normalizedRequestedEmployeeId = requestedEmployeeId.trim();
@@ -579,7 +599,12 @@ export async function checkPinStatus(_prevState: ClockActionState, formData: For
 		};
 	}
 
+	const employeeCode = normalizeEmployeeCode(formData.get("employeeCode"));
 	const pin = String(formData.get("pin") || "").trim();
+
+	if (!employeeCode) {
+		return { success: false, error: "Employee code is required" };
+	}
 
 	if (!/^\d{4,6}$/.test(pin)) {
 		return { success: false, error: "PIN must be 4-6 digits" };
@@ -587,32 +612,20 @@ export async function checkPinStatus(_prevState: ClockActionState, formData: For
 
 	await ensureOperationalDataSeeded();
 
-	const employees = await db.employee.findMany({
-		where: {
-			status: "ACTIVE",
-			pinHash: { not: null },
-		},
-	});
+	const employee = await getActiveEmployeeByCode(employeeCode);
 
-	let matchedEmployee: (typeof employees)[number] | null = null;
-	for (const employee of employees) {
-		if (!employee.pinHash) {
-			continue;
-		}
-		const isMatch = await bcrypt.compare(pin, employee.pinHash);
-		if (isMatch) {
-			matchedEmployee = employee;
-			break;
-		}
+	if (!employee?.pinHash) {
+		return { success: false, error: "Invalid employee code or PIN" };
 	}
 
-	if (!matchedEmployee) {
-		return { success: false, error: "Invalid PIN" };
+	const isMatch = await bcrypt.compare(pin, employee.pinHash);
+	if (!isMatch) {
+		return { success: false, error: "Invalid employee code or PIN" };
 	}
 
 	const activeWorkLog = await db.timeLog.findFirst({
 		where: {
-			employeeId: matchedEmployee.id,
+			employeeId: employee.id,
 			type: "WORK",
 			endTime: null,
 			deletedAt: null,
@@ -622,11 +635,12 @@ export async function checkPinStatus(_prevState: ClockActionState, formData: For
 
 	return {
 		success: true,
-		employeeId: matchedEmployee.id,
-		employeeName: matchedEmployee.name,
+		employeeId: employee.id,
+		employeeName: employee.name,
 		isClockedIn: !!activeWorkLog,
-		lastStationId: matchedEmployee.lastStationId,
-		defaultStationId: matchedEmployee.defaultStationId,
+		lastStationId: employee.lastStationId,
+		defaultStationId: employee.defaultStationId,
+		employeeCode,
 		pin, // Send pin back to include in the final form
 	};
 }
@@ -643,8 +657,13 @@ export async function pinToggleClock(
 		};
 	}
 
+	const employeeCode = normalizeEmployeeCode(formData.get("employeeCode"));
 	const pin = String(formData.get("pin") || "").trim();
 	const selectedStationId = String(formData.get("stationId") || "").trim();
+
+	if (!employeeCode) {
+		return { success: false, error: "Employee code is required" };
+	}
 
 	if (!/^\d{4,6}$/.test(pin)) {
 		return { success: false, error: "PIN must be 4-6 digits" };
@@ -652,8 +671,9 @@ export async function pinToggleClock(
 
 	await ensureOperationalDataSeeded();
 
-	const employees = await db.employee.findMany({
+	const employee = await db.employee.findFirst({
 		where: {
+			employeeCode,
 			status: "ACTIVE",
 			pinHash: { not: null },
 		},
@@ -663,25 +683,18 @@ export async function pinToggleClock(
 		},
 	});
 
-	let matchedEmployee: (typeof employees)[number] | null = null;
-	for (const employee of employees) {
-		if (!employee.pinHash) {
-			continue;
-		}
-		const isMatch = await bcrypt.compare(pin, employee.pinHash);
-		if (isMatch) {
-			matchedEmployee = employee;
-			break;
-		}
+	if (!employee?.pinHash) {
+		return { success: false, error: "Invalid employee code or PIN" };
 	}
 
-	if (!matchedEmployee) {
-		return { success: false, error: "Invalid PIN" };
+	const isMatch = await bcrypt.compare(pin, employee.pinHash);
+	if (!isMatch) {
+		return { success: false, error: "Invalid employee code or PIN" };
 	}
 
 	const activeWorkLog = await db.timeLog.findFirst({
 		where: {
-			employeeId: matchedEmployee.id,
+			employeeId: employee.id,
 			type: "WORK",
 			endTime: null,
 			deletedAt: null,
@@ -698,7 +711,7 @@ export async function pinToggleClock(
 
 			await tx.timeLog.updateMany({
 				where: {
-					employeeId: matchedEmployee!.id,
+					employeeId: employee.id,
 					type: "BREAK",
 					endTime: null,
 					deletedAt: null,
@@ -709,23 +722,23 @@ export async function pinToggleClock(
 
 		publishManagerRealtimeEvent("time_log_changed", "monitor", {
 			reason: "pin_clock_out",
-			employeeId: matchedEmployee.id,
+			employeeId: employee.id,
 			timeLogId: activeWorkLog.id,
 		});
 		publishManagerRealtimeEvent("break_changed", "monitor", {
 			reason: "pin_clock_out_closed_breaks",
-			employeeId: matchedEmployee.id,
+			employeeId: employee.id,
 		});
 		publishManagerRealtimeEvent("worker_status_changed", "monitor", {
 			reason: "pin_clock_out",
-			employeeId: matchedEmployee.id,
+			employeeId: employee.id,
 		});
 
-		return { success: true, message: `${matchedEmployee.name} clocked out` };
+		return { success: true, message: `${employee.name} clocked out` };
 	}
 
 	const stationId =
-		selectedStationId || matchedEmployee.lastStationId || matchedEmployee.defaultStationId || null;
+		selectedStationId || employee.lastStationId || employee.defaultStationId || null;
 
 	if (!stationId) {
 		return {
@@ -742,7 +755,7 @@ export async function pinToggleClock(
 	await db.$transaction(async (tx) => {
 		await tx.timeLog.create({
 			data: {
-				employeeId: matchedEmployee!.id,
+				employeeId: employee.id,
 				stationId,
 				type: "WORK",
 				startTime: new Date(),
@@ -752,19 +765,19 @@ export async function pinToggleClock(
 		});
 
 		await tx.employee.update({
-			where: { id: matchedEmployee!.id },
+			where: { id: employee.id },
 			data: { lastStationId: stationId },
 		});
 	});
 
 	publishManagerRealtimeEvent("time_log_changed", "monitor", {
 		reason: "pin_clock_in",
-		employeeId: matchedEmployee.id,
+		employeeId: employee.id,
 	});
 	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
 		reason: "pin_clock_in",
-		employeeId: matchedEmployee.id,
+		employeeId: employee.id,
 	});
 
-	return { success: true, message: `${matchedEmployee.name} clocked in at ${station.name}` };
+	return { success: true, message: `${employee.name} clocked in at ${station.name}` };
 }

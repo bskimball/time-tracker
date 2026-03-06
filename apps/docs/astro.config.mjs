@@ -49,6 +49,16 @@ export default defineConfig({
 					]
 				},
 				{
+					label: "Operating Shift Pulse",
+					items: [
+						{ label: "Operations Overview", slug: "operations" },
+						{ label: "On-Prem Operations Handbook", slug: "operations/on-prem-operations" },
+						{ label: "Authentication and Access Setup", slug: "operations/authentication-and-access-setup" },
+						{ label: "Backup and Restore", slug: "operations/backup-and-restore" },
+						{ label: "Release Validation", slug: "operations/release-validation" }
+					]
+				},
+				{
 					label: "API",
 					items: [
 						{ label: "REST API and OpenAPI", slug: "api/rest-openapi" },
@@ -59,7 +69,13 @@ export default defineConfig({
 				},
 				{
 					label: "Reference",
-					items: [{ label: "Release Notes", slug: "reference/release-notes" }]
+					items: [
+						{ label: "Environment Variables", slug: "reference/environment-variables" },
+						{ label: "Roles and Permissions", slug: "reference/roles-and-permissions" },
+						{ label: "Operational Config Reference", slug: "reference/operational-config-reference" },
+						{ label: "Documentation Roadmap", slug: "reference/documentation-roadmap" },
+						{ label: "Release Notes", slug: "reference/release-notes" }
+					]
 				}
 			]
 		})

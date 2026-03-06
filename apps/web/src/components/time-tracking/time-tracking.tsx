@@ -67,7 +67,9 @@ const createId = () =>
 		? crypto.randomUUID()
 		: Math.random().toString(36).slice(2);
 
-export function getAvailableClockMethods(workerEmployeeId?: string | null): Array<"pin" | "select"> {
+export function getAvailableClockMethods(
+	workerEmployeeId?: string | null
+): Array<"pin" | "select"> {
 	return workerEmployeeId ? ["select"] : ["pin", "select"];
 }
 export function getVisibleClockEmployees<T extends { id: string }>(
@@ -109,11 +111,12 @@ function ClockInForm({
 		saveApiKey,
 	} = useKioskContext();
 	const workerScopedEmployee = workerEmployeeId
-		? employees.find((employee) => employee.id === workerEmployeeId) ?? null
+		? (employees.find((employee) => employee.id === workerEmployeeId) ?? null)
 		: null;
 	const availableMethods = getAvailableClockMethods(workerEmployeeId);
 	const [method, setMethod] = useState<"pin" | "select">(availableMethods[0] ?? "select");
 	const [pin, setPin] = useState("");
+	const [employeeCode, setEmployeeCode] = useState("");
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(workerEmployeeId ?? "");
 	const [selectedStationId, setSelectedStationId] = useState("");
 	const visibleEmployees = getVisibleClockEmployees(employees, workerEmployeeId);
@@ -149,21 +152,26 @@ function ClockInForm({
 			// We can't easily do optimistic UI for PIN because we don't know WHO the employee is
 			// without a server roundtrip. So we just let the action run.
 			const formData = new FormData(event.currentTarget);
+			const employeeCodeValue = (formData.get("employeeCode") as string | null)
+				?.trim()
+				.toUpperCase();
 			const pinValue = (formData.get("pin") as string | null)?.trim();
 			const stationValue = (formData.get("stationId") as string | null) || "";
-			if (!pinValue) {
+			if (!employeeCodeValue || !pinValue) {
 				return;
 			}
 			const queued = handleOfflineSubmit(
 				event,
 				"pinToggle",
 				{
+					employeeCode: employeeCodeValue,
 					pin: pinValue,
 					stationId: stationValue || null,
 				},
 				"Clock action queued for sync"
 			);
 			if (queued) {
+				setEmployeeCode("");
 				setPin("");
 				focusPinInput();
 			}
@@ -236,6 +244,8 @@ function ClockInForm({
 
 	useEffect(() => {
 		if (pinState?.success) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setEmployeeCode("");
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setPin("");
 			focusPinInput();
@@ -418,6 +428,27 @@ function ClockInForm({
 						<div className="grid gap-4 md:grid-cols-2">
 							<div className="flex flex-col gap-2">
 								<label className="text-sm font-medium text-foreground flex justify-between">
+									<span>Employee Code</span>
+									<span className="text-muted-foreground font-normal">Badge or roster code</span>
+								</label>
+								<Input
+									type="text"
+									name="employeeCode"
+									value={employeeCode}
+									onChange={(e) =>
+										setEmployeeCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+									}
+									placeholder="ABC123"
+									className="h-10 text-center text-base font-mono tracking-[0.2em]"
+									autoComplete="off"
+									spellCheck={false}
+									maxLength={12}
+									required
+								/>
+							</div>
+
+							<div className="flex flex-col gap-2">
+								<label className="text-sm font-medium text-foreground flex justify-between">
 									<span>Security PIN</span>
 									<span className="text-muted-foreground font-normal">4-6 digits</span>
 								</label>
@@ -444,7 +475,7 @@ function ClockInForm({
 								</div>
 							</div>
 
-							<div className="flex flex-col gap-2">
+							<div className="flex flex-col gap-2 md:col-span-2">
 								<label className="text-sm font-medium text-foreground">Location Override</label>
 								<Select
 									name="stationId"

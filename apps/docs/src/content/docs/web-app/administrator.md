@@ -3,7 +3,7 @@ title: Administrator Guide
 description: Administration workflows for system setup, permissions, integrations, and KPI controls.
 ---
 
-This guide is for platform owners, operations admins, and executive operators.
+This guide is for platform owners and operations administrators. Executive-role users may share some configuration responsibilities, but route access differs from full admin behavior.
 
 ## Administration surfaces
 
@@ -12,8 +12,8 @@ This guide is for platform owners, operations admins, and executive operators.
 - `/settings/users`
 - `/settings/api-keys`
 - `/settings/operational-config`
-- `/executive`
-- `/executive/analytics`
+- `/executive` (`ADMIN` route access in current app behavior)
+- `/executive/analytics` (`ADMIN` route access in current app behavior)
 
 Detailed route walkthroughs:
 
@@ -32,6 +32,7 @@ Detailed route walkthroughs:
 
 - Assign roles (`WORKER`, `MANAGER`, `EXECUTIVE`, `ADMIN`) to enforce least privilege.
 - Revoke stale user access as staffing changes.
+- Use [Roles and Permissions](/reference/roles-and-permissions) when validating what each role can actually do.
 
 ### 3) Manage API integrations
 

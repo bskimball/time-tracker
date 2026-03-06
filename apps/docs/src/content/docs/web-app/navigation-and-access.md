@@ -9,7 +9,8 @@ This page maps core URLs to user experiences and explains who should use each ar
 
 - **Employee workflows** are centered on floor routes and kiosk entry points.
 - **Manager workflows** run in the manager portal.
-- **Administrator workflows** run in system settings and executive analytics.
+- **Administrator workflows** run in system settings and the executive portal.
+- **Executive-role users** may have configuration permissions without full executive-route access in the current implementation.
 - Access is role-based and should be provisioned using least privilege.
 
 ## Route map
@@ -50,8 +51,8 @@ This page maps core URLs to user experiences and explains who should use each ar
 - `/settings/users`: role assignment and user access.
 - `/settings/api-keys`: API key generation and revocation.
 - `/settings/operational-config`: KPI thresholds and business constants.
-- `/executive`: executive KPI dashboard.
-- `/executive/analytics`: deep analytics by section and time range.
+- `/executive`: executive KPI dashboard (`ADMIN` route access in current app behavior).
+- `/executive/analytics`: deep analytics by section and time range (`ADMIN` route access in current app behavior).
 
 Settings route details are documented in [Settings Guide](/web-app/settings).
 
@@ -61,5 +62,6 @@ Executive analysis details are documented in [Executive Guide](/web-app/executiv
 
 - Reserve administrator access for system owners and finance/ops leads.
 - Assign manager access to shift supervisors and floor leads.
+- Verify `EXECUTIVE` behavior in staging before assigning it broadly; route access and config permissions are not identical.
 - Keep floor endpoints available where employee clock activity occurs.
 - Revisit role assignments periodically in [Administrator Guide](/web-app/administrator).

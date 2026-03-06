@@ -69,6 +69,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 	useAutoRefresh(true, 30000);
 
 	const [pin, setPin] = useState<string>("");
+	const [employeeCode, setEmployeeCode] = useState<string>("");
 	const [stationId, setStationId] = useState<string>("");
 	const [step, setStep] = useState<1 | 2>(1);
 	const [isProcessing, startTransition] = React.useTransition();
@@ -83,6 +84,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 	const handleCancel = useCallback(() => {
 		setStep(1);
 		setPin("");
+		setEmployeeCode("");
 		setStationId("");
 		setVerifiedUser(null);
 		setErrorMsg(null);
@@ -95,7 +97,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 			setErrorMsg(null);
 
 			if (typeof navigator !== "undefined" && !navigator.onLine) {
-				enqueue("pinToggle", { pin, stationId: null });
+				enqueue("pinToggle", { employeeCode, pin, stationId: null });
 				const id = createId();
 				window.setTimeout(() => {
 					setNotifications((prev) => [
@@ -109,6 +111,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 
 			startTransition(async () => {
 				const formData = new FormData();
+				formData.append("employeeCode", employeeCode);
 				formData.append("pin", pin);
 				const result = await checkPinAction(null, formData);
 				if (
@@ -128,13 +131,13 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 					}
 					setStep(2);
 				} else {
-					setErrorMsg(result?.error || "Invalid PIN");
+					setErrorMsg(result?.error || "Invalid employee code or PIN");
 					setPin("");
 					setTimeout(() => pinInputRef.current?.focus(), 100);
 				}
 			});
 		},
-		[pin, enqueue]
+		[employeeCode, pin, enqueue]
 	);
 
 	const handleToggleSubmit = useCallback(
@@ -143,7 +146,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 			setErrorMsg(null);
 
 			if (typeof navigator !== "undefined" && !navigator.onLine) {
-				enqueue("pinToggle", { pin, stationId });
+				enqueue("pinToggle", { employeeCode, pin, stationId });
 				const id = createId();
 				window.setTimeout(() => {
 					setNotifications((prev) => [
@@ -157,6 +160,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 
 			startTransition(async () => {
 				const formData = new FormData();
+				formData.append("employeeCode", employeeCode);
 				formData.append("pin", pin);
 				if (stationId) {
 					formData.append("stationId", stationId);
@@ -180,7 +184,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 				}
 			});
 		},
-		[pin, stationId, enqueue, handleCancel]
+		[employeeCode, pin, stationId, enqueue, handleCancel]
 	);
 
 	useEffect(() => {
@@ -251,7 +255,25 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 								{step === 1 ? (
 									<form onSubmit={handlePinSubmit} className="space-y-6">
 										<div className="flex flex-col gap-2">
-											<label className="text-sm font-bold text-foreground">Employee PIN</label>
+											<label className="text-sm font-bold text-foreground">Employee Code</label>
+											<SimpleInput
+												type="text"
+												name="employeeCode"
+												value={employeeCode}
+												onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+													setEmployeeCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+												}
+												placeholder="ABC123"
+												autoComplete="off"
+												spellCheck={false}
+												maxLength={12}
+												required
+												className="h-16 text-2xl text-center font-mono tracking-[0.25em] bg-background border-2 focus-visible:border-primary transition-all uppercase"
+											/>
+										</div>
+
+										<div className="flex flex-col gap-2">
+											<label className="text-sm font-bold text-foreground">Security PIN</label>
 											<SimpleInput
 												type="password"
 												name="pin"
@@ -272,6 +294,9 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 												required
 												className="text-3xl text-center h-20 tracking-widest bg-background border-2 focus-visible:border-primary transition-all"
 											/>
+											<p className="text-xs text-muted-foreground">
+												Enter your assigned employee code and 4-6 digit PIN.
+											</p>
 										</div>
 
 										<Button
@@ -279,7 +304,7 @@ export function KioskTimeClock({ employees: _employees, stations }: KioskTimeClo
 											variant="primary"
 											size="lg"
 											className="w-full py-6 text-xl font-bold uppercase transition-all"
-											disabled={isProcessing || !pin.trim()}
+											disabled={isProcessing || !employeeCode.trim() || !pin.trim()}
 										>
 											{isProcessing ? (
 												<div className="flex items-center gap-3">

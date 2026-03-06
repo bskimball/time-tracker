@@ -6,6 +6,34 @@ import { validateRequest } from "~/lib/auth";
 import { EmployeeStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
+function isValidEmployeePin(pin: string) {
+	return /^\d{4,6}$/.test(pin);
+}
+
+async function assertPinIsUnique(pin: string, excludeEmployeeId?: string) {
+	const employeesWithPins = await db.employee.findMany({
+		where: {
+			pinHash: { not: null },
+			...(excludeEmployeeId ? { NOT: { id: excludeEmployeeId } } : {}),
+		},
+		select: {
+			id: true,
+			pinHash: true,
+		},
+	});
+
+	for (const employee of employeesWithPins) {
+		if (!employee.pinHash) {
+			continue;
+		}
+
+		const isMatch = await bcrypt.compare(pin, employee.pinHash);
+		if (isMatch) {
+			throw new Error("PIN already in use");
+		}
+	}
+}
+
 export async function getEmployees(search?: string, status?: EmployeeStatus, page = 1, limit = 25) {
 	const skip = (page - 1) * limit;
 	const where: Prisma.EmployeeWhereInput = {};
@@ -132,7 +160,12 @@ export async function createEmployee(data: {
 
 	// Hash PIN if provided
 	let pinHash = null;
-	if (data.pin && data.pin.length >= 4) {
+	if (data.pin) {
+		if (!isValidEmployeePin(data.pin)) {
+			throw new Error("PIN must be 4-6 digits");
+		}
+
+		await assertPinIsUnique(data.pin);
 		pinHash = await bcrypt.hash(data.pin, 12);
 	}
 
@@ -176,10 +209,15 @@ export async function updateEmployee(
 
 	// Handle PIN update separately
 	if (pin !== undefined) {
-		if (pin.length >= 4) {
-			updateData.pinHash = await bcrypt.hash(pin, 12);
-		} else if (pin === "") {
+		if (pin === "") {
 			updateData.pinHash = null; // Remove PIN
+		} else {
+			if (!isValidEmployeePin(pin)) {
+				throw new Error("PIN must be 4-6 digits");
+			}
+
+			await assertPinIsUnique(pin, id);
+			updateData.pinHash = await bcrypt.hash(pin, 12);
 		}
 	}
 

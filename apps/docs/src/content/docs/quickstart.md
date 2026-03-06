@@ -22,6 +22,8 @@ description: Start using Shift Pulse in hosted or on-premise environments.
 3. Configure environment variables, authentication, and TLS.
 4. Validate application access and API health checks.
 
+For the full maintainer workflow, continue immediately with [On-Prem Operations Handbook](/operations/on-prem-operations).
+
 ## Validate core workflows
 
 - User sign-in and role access
@@ -34,5 +36,6 @@ description: Start using Shift Pulse in hosted or on-premise environments.
 
 - Review [Navigation and Access](/web-app/navigation-and-access).
 - Review [Employee Guide](/web-app/employee), [Manager Guide](/web-app/manager), and [Administrator Guide](/web-app/administrator).
+- If you operate the environment, review [Operations Overview](/operations) and [Authentication and Access Setup](/operations/authentication-and-access-setup).
 - Review [REST API and OpenAPI](/api/rest-openapi) for integrations.
 - Keep [Troubleshooting](/web-app/troubleshooting) bookmarked for day-one rollout support.

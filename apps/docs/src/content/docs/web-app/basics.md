@@ -9,7 +9,8 @@ Shift Pulse is organized around warehouse operations and role-specific access.
 
 - **Employee (Floor)**: clock in/out, breaks, and active task controls.
 - **Manager (Portal)**: monitor floor activity, manage timesheets, run reports, and coordinate assignments.
-- **Administrator (Settings + Executive)**: configure system behavior, access, and integration settings.
+- **Administrator (Settings + Executive)**: configure system behavior, access, analytics, and integration settings.
+- **Executive role**: currently best treated as a restricted configuration/reporting role, not a full substitute for `ADMIN` route access.
 
 ## Core navigation areas
 

@@ -59,8 +59,8 @@ export function EmployeeForm({
 			newErrors.email = "Please enter a valid email";
 		}
 
-		if (employee.pin && employee.pin.length < 4) {
-			newErrors.pin = "PIN must be at least 4 digits";
+		if (employee.pin && !/^\d{4,6}$/.test(employee.pin)) {
+			newErrors.pin = "PIN must be 4-6 digits";
 		}
 
 		if (employee.dailyHoursLimit < 0) {
@@ -218,9 +218,11 @@ export function EmployeeForm({
 									onChange={(e) => updateEmployee("pin", e.target.value)}
 									error={errors.pin}
 									placeholder="Leave empty to remove PIN"
+									maxLength={6}
+									pattern="\d{4,6}"
 								/>
 								<p className="text-xs text-muted-foreground mt-1">
-									4+ digit PIN for floor kiosk access. Leave empty for no PIN access.
+									4-6 digit PIN for floor kiosk access. Leave empty for no PIN access.
 								</p>
 							</div>
 

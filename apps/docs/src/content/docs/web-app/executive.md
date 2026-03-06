@@ -3,7 +3,7 @@ title: Executive Guide
 description: Strategic monitoring workflows for the Executive Dashboard and Analytics sections.
 ---
 
-This guide is for administrators and executive operators responsible for KPI oversight, trend analysis, and capacity planning.
+This guide describes the executive portal feature set. In the current application behavior, the `/executive` routes are `ADMIN`-only even though a separate `EXECUTIVE` role exists elsewhere in the system.
 
 ## Executive workspace
 
@@ -11,6 +11,11 @@ Primary executive routes:
 
 - `/executive`
 - `/executive/analytics`
+
+## Access note
+
+- Route access is currently limited to `ADMIN`.
+- If your organization uses the `EXECUTIVE` role, verify its expected behavior against [Roles and Permissions](/reference/roles-and-permissions).
 
 ## Executive Dashboard (`/executive`)
 
