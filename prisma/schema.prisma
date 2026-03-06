@@ -70,7 +70,7 @@ model Session {
 
 model Station {
   id          String       @id @default(cuid())
-  name        Station_name @unique
+  name        String       @unique
   description String?                      // NEW: Station details
   capacity    Int?                         // NEW: Max employees
   isActive    Boolean      @default(true)  // NEW: Station availability
@@ -307,16 +307,6 @@ model ApiKey {
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-}
-
-enum Station_name {
-  PICKING
-  PACKING
-  FILLING
-  RECEIVING    // NEW
-  SHIPPING     // NEW
-  QUALITY      // NEW
-  INVENTORY    // NEW
 }
 
 enum TimeLog_type {

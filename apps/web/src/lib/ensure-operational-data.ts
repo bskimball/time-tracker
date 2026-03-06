@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import { addDays, subDays } from "date-fns";
-import { Station_name } from "@prisma/client";
 import { db } from "~/lib/db";
 import { ensureOperationalConfigSeeded } from "~/lib/operational-config";
 
@@ -8,7 +7,7 @@ type SeedEmployee = {
 	name: string;
 	email: string;
 	employeeCode: string;
-	defaultStationName: Station_name;
+	defaultStationName: string;
 	status?: "ACTIVE" | "ON_LEAVE" | "INACTIVE";
 };
 

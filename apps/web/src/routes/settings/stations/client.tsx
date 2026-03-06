@@ -8,7 +8,7 @@ import { Button } from "@monorepo/design-system";
 import { Alert } from "@monorepo/design-system";
 import { Form } from "@monorepo/design-system";
 import { Card, CardBody, CardHeader, CardTitle } from "@monorepo/design-system";
-import { Select } from "@monorepo/design-system";
+import { Input } from "@monorepo/design-system";
 
 function SubmitButton({
 	children,
@@ -27,10 +27,8 @@ function SubmitButton({
 
 export function StationManagement({
 	stations: initialStations,
-	availableStationNames,
 }: {
 	stations: Station[];
-	availableStationNames: Station["name"][];
 }) {
 	const [addState, addAction] = useActionState(addStation, null);
 	const [deleteState, deleteAction] = useActionState(deleteStation, null);
@@ -71,10 +69,6 @@ export function StationManagement({
 		deleteAction(formData);
 	}
 
-	const creatableStationNames = availableStationNames.filter(
-		(stationName) => !stations.some((station) => station.name === stationName)
-	);
-
 	return (
 		<div className="space-y-6">
 			<Card>
@@ -83,26 +77,19 @@ export function StationManagement({
 				</CardHeader>
 				<CardBody>
 					<Form action={addAction} className="flex flex-row gap-2 items-end">
-						<Select
+						<Input
 							name="name"
-							label="Station"
-							options={creatableStationNames.map((stationName) => ({
-								value: stationName,
-								label: stationName,
-							}))}
+							label="Station name"
 							value={newStationName}
-							onChange={(value: string) => setNewStationName(value)}
-							placeholder="Choose a station"
+							onChange={(event) => setNewStationName(event.target.value)}
+							placeholder="Enter a station name"
 							containerClassName="flex-1"
-							isDisabled={creatableStationNames.length === 0}
-							isRequired
+							required
 						/>
-						<SubmitButton disabled={creatableStationNames.length === 0}>
-							{creatableStationNames.length === 0 ? "All Stations Added" : "Add Station"}
-						</SubmitButton>
+						<SubmitButton disabled={!newStationName.trim()}>Add Station</SubmitButton>
 					</Form>
 					<p className="mt-2 text-xs text-muted-foreground">
-						Station names are restricted to configured operational station types.
+						Add any station type you need. Station names must be unique.
 					</p>
 					{addState?.error && (
 						<Alert variant="error" className="relative mt-4">

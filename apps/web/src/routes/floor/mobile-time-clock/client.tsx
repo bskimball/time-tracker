@@ -12,7 +12,7 @@ import {
 	MobileHeader,
 } from "./components/mobile-layout";
 import { Alert } from "@monorepo/design-system";
-import type { Station_name, TimeLog } from "@prisma/client";
+import type { TimeLog } from "@prisma/client";
 import { clockIn, clockOut, startBreak, endBreak, pinToggleClock } from "../../time-clock/actions";
 import { useOnlineStatus, useOfflineActionQueue } from "~/lib/offline-support";
 import { notify } from "~/components/time-tracking/notifications";
@@ -33,7 +33,7 @@ export type MobileEmployee = {
 
 export type MobileStation = {
 	id: string;
-	name: Station_name;
+	name: string;
 };
 
 export type MobileTimeLogWithRelations = TimeLog & {
@@ -62,6 +62,7 @@ export function MobileTimeClock({
 	taskOptions: TaskOption[];
 }) {
 	const [method, setMethod] = React.useState<"pin" | "select">("pin");
+	const [employeeCode, setEmployeeCode] = React.useState("");
 	const [pin, setPin] = React.useState("");
 	const [selectedEmployee, setSelectedEmployee] = React.useState("");
 	const [selectedStation, setSelectedStation] = React.useState("");
@@ -81,7 +82,7 @@ export function MobileTimeClock({
 
 	const handlePinSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!pin.trim()) return;
+		if (!employeeCode.trim() || !pin.trim()) return;
 
 		setProcessing(true);
 		setError("");
@@ -89,14 +90,17 @@ export function MobileTimeClock({
 		try {
 			if (!isOnline) {
 				enqueue("pinToggle", {
+					employeeCode: employeeCode.trim().toUpperCase(),
 					pin: pin.trim(),
 					stationId: selectedStation || null,
 				});
 				notify("Clock action queued for sync", "warning");
+				setEmployeeCode("");
 				setPin("");
 				setSuccess("Action queued for next sync");
 			} else {
 				const formData = new FormData();
+				formData.set("employeeCode", employeeCode.trim().toUpperCase());
 				formData.set("pin", pin.trim());
 				formData.set("stationId", selectedStation || "");
 
@@ -105,6 +109,7 @@ export function MobileTimeClock({
 				if (result?.error) {
 					setError(result.error);
 				} else {
+					setEmployeeCode("");
 					setPin("");
 					setSelectedStation("");
 					setSuccess(result?.message || "Action completed successfully");
@@ -327,6 +332,32 @@ export function MobileTimeClock({
 
 					{method === "pin" ? (
 						<form onSubmit={handlePinSubmit} className="space-y-4">
+							<TouchInput
+								label="Employee Code"
+								type="text"
+								value={employeeCode}
+								onChange={(value) => setEmployeeCode(value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+								placeholder="ABC123"
+								maxLength={12}
+								autoComplete="off"
+								icon={
+									<svg
+										className="w-6 h-6"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+										/>
+									</svg>
+								}
+							/>
+
 							<TouchInput
 								label="Enter PIN"
 								type="password"

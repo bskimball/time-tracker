@@ -4,7 +4,6 @@ import { db } from "../../lib/db";
 import bcrypt from "bcryptjs";
 import { validateRequest } from "../../lib/auth";
 
-import { Station_name } from "@prisma/client";
 import type { Station } from "@prisma/client";
 import { redirect } from "react-router";
 
@@ -19,23 +18,21 @@ export async function addStation(
 	formData: FormData
 ): Promise<SettingsState> {
 	const nameValue = String(formData.get("name") || "").trim();
-	const name = nameValue.toUpperCase() as Station_name;
-	const allowedStationNames = Object.values<string>(Station_name);
 
 	if (!nameValue) {
 		return { error: "Station name is required" };
 	}
 
-	if (!allowedStationNames.includes(name)) {
-		return {
-			error: `Invalid station name. Allowed values: ${allowedStationNames.join(", ")}`,
-		};
-	}
+	const name = nameValue;
 
 	try {
-		// Check if station already exists
-		const existing = await db.station.findUnique({
-			where: { name },
+		const existing = await db.station.findFirst({
+			where: {
+				name: {
+					equals: name,
+					mode: "insensitive",
+				},
+			},
 		});
 
 		if (existing) {
