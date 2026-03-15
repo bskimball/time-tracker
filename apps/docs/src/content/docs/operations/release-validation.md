@@ -28,10 +28,12 @@ Catch regressions in:
 
 - `/login` loads
 - Admin sign-in succeeds
+- Executive sign-in succeeds
 - Manager sign-in succeeds
 - Worker floor access behaves as expected
 - `ADMIN` can access `/executive`
-- `EXECUTIVE` behavior is verified explicitly, since this role currently differs from `ADMIN` in route access
+- `EXECUTIVE` can access `/executive`
+- `EXECUTIVE` is redirected away from `/settings`
 
 ### Floor workflows
 
@@ -57,6 +59,8 @@ Catch regressions in:
 - `/settings/api-keys` loads
 - `/settings/operational-config` loads current values
 - Config updates validate correctly for one numeric key and `TASK_ASSIGNMENT_MODE`
+- `/settings/employees` shows employee codes and supports employee PIN maintenance
+- kiosk/mobile employee code + PIN clock flow succeeds for a known employee
 
 ### API
 

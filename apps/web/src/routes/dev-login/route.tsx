@@ -19,7 +19,7 @@ export default async function Component() {
 			<title>Development Login</title>
 			<meta
 				name="description"
-				content="Create a new admin user or login as an existing user (development only)"
+				content="Create a development admin, executive, or manager user, or login as an existing user"
 			/>
 
 			<main className="min-h-screen flex items-center justify-center bg-dot-grid-pattern p-4">
@@ -29,7 +29,7 @@ export default async function Component() {
 						<IndustrialHeader title="DEV LOGIN" subtitle="Development Access" className="mb-0" />
 						<div className="p-8">
 							<p className="text-sm text-muted-foreground mb-6">
-								Create a new admin user or login as an existing user (development only)
+								Create a development admin, executive, or manager user, or login as an existing user
 							</p>
 
 							<CreateAdminForm />

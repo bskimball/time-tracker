@@ -723,11 +723,7 @@ export function ReportsManager({
 				<PageHeader
 					title="Reports & Analytics"
 					subtitle="Operational intelligence and workforce metrics"
-					actions={
-						<div className="flex items-center gap-2">
-							{reportActionButtons}
-						</div>
-					}
+					actions={<div className="flex items-center gap-2">{reportActionButtons}</div>}
 				/>
 			)}
 
@@ -753,7 +749,7 @@ export function ReportsManager({
 										"h-7 px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-xs flex items-center justify-center gap-2 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer",
 										isSelected
 											? "bg-primary text-primary-foreground shadow-sm"
-											: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+											: "text-foreground/72 hover:text-foreground hover:bg-muted/50 dark:text-muted-foreground"
 									)
 								}
 							>

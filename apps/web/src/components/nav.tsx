@@ -8,7 +8,11 @@ export function Nav({ userRole }: { userRole: string | null }) {
 
 	// Determine dashboard link based on role
 	const dashboardLink =
-		userRole === "ADMIN" ? "/executive" : userRole === "MANAGER" ? "/manager" : "/floor";
+		userRole === "ADMIN" || userRole === "EXECUTIVE"
+			? "/executive"
+			: userRole === "MANAGER"
+				? "/manager"
+				: "/floor";
 
 	return (
 		<nav className="flex space-x-4">

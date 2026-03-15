@@ -119,7 +119,7 @@ export default async function handler(request: Request) {
 		}
 	}
 
-	// Protect /executive/* routes - require ADMIN role
+	// Protect /executive/* routes - require executive visibility roles
 	if (requestPath.startsWith("/executive")) {
 		if (!user) {
 			const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
@@ -129,7 +129,7 @@ export default async function handler(request: Request) {
 			});
 		}
 
-		if (user.role !== "ADMIN") {
+		if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
 			const defaultRoute = getPortalHomeForRole(user.role);
 			return new Response(null, {
 				status: 302,
@@ -148,8 +148,27 @@ export default async function handler(request: Request) {
 		});
 	}
 
-	// Protect /settings and /todo routes - require any authenticated user
-	if (requestPath.startsWith("/settings") || requestPath.startsWith("/todo")) {
+	// Protect /settings routes - require admin role
+	if (requestPath.startsWith("/settings")) {
+		if (!user) {
+			const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
+			return new Response(null, {
+				status: 302,
+				headers: { Location: `/login${redirectParam}` },
+			});
+		}
+
+		if (user.role !== "ADMIN") {
+			const defaultRoute = getPortalHomeForRole(user.role);
+			return new Response(null, {
+				status: 302,
+				headers: { Location: defaultRoute },
+			});
+		}
+	}
+
+	// Protect /todo routes - require any authenticated user
+	if (requestPath.startsWith("/todo")) {
 		if (!user) {
 			const redirectParam = `?redirect=${encodeURIComponent(requestPath)}`;
 			return new Response(null, {

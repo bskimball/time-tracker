@@ -9,8 +9,9 @@ Use this page for quick triage before escalating to engineering support.
 
 ### PIN does not work
 
+- Confirm the employee code is entered correctly.
 - Confirm the PIN is 4-6 digits.
-- Confirm the employee record has a PIN set in `/settings/employees`.
+- Confirm the employee record has both an employee code and a PIN set in `/settings/employees`.
 - If using kiosk mode, verify the selected station or retry with "Use last station".
 
 ### Clock action does not complete
@@ -61,7 +62,7 @@ Use this page for quick triage before escalating to engineering support.
 
 ### Operational config update rejected
 
-- Confirm user role is `ADMIN` or `EXECUTIVE` for updates.
+- Confirm user role is `ADMIN` for updates.
 - Ensure value type and range match the field validation.
 - For enum values, use one of the allowed options exactly.
 

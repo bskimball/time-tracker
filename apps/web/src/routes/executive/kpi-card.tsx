@@ -140,14 +140,17 @@ export function KPICard({
 
 	if (loading) {
 		return (
-			<Card className="h-full">
+			<Card className="h-full bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)]">
 				<CardBody
-					className={`${isDense ? "p-3 gap-2" : "p-4 gap-4"} flex flex-col h-full justify-between`}
+					className={`${isDense ? "p-3 gap-2" : "p-4 gap-4"} flex flex-col h-full justify-between relative`}
 				>
-					<div className="flex items-start justify-between">
-						<Metric label={title} value={String(value)} className="flex-1" />
+					<div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-border/50 via-border/10 to-transparent" />
+					<div className="flex items-start justify-between gap-4">
+						<div className="relative flex-1 flex flex-col rounded-[2px] bg-background/40 p-3 shadow-[inset_0_2px_12px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40">
+							<Metric label={title} value={String(value)} className="relative z-10" />
+						</div>
 						{Icon && (
-							<div className="p-2 bg-muted/50 rounded-xs text-muted-foreground opacity-50">
+							<div className="p-2 bg-muted/20 border border-border/40 rounded-sm text-muted-foreground opacity-50 mt-3 mr-1">
 								<Icon className="h-5 w-5" aria-hidden="true" />
 							</div>
 						)}
@@ -162,7 +165,7 @@ export function KPICard({
 
 	return (
 		<Card
-			className={`h-full group transition-all duration-300 relative overflow-hidden ${
+			className={`h-full group transition-all duration-300 relative overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ${
 				dominant
 					? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
 					: ""
@@ -171,21 +174,24 @@ export function KPICard({
 			<CardBody
 				className={`${isDense ? "p-3 gap-2" : "p-4 gap-4"} flex flex-col h-full justify-between relative z-10`}
 			>
-				<div className="flex items-start justify-between">
-					<div className={`flex-1 flex flex-col`}>
+				<div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-border/50 via-border/10 to-transparent" />
+				<div className="flex items-start justify-between gap-4">
+					<div className="relative flex-1 flex flex-col rounded-[2px] bg-background/40 p-3 shadow-[inset_0_2px_12px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40 transition-colors duration-300 group-hover:bg-background/60">
+						<div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/20 pointer-events-none" />
 						<Metric
 							label={title}
 							value={animatedValue}
 							trend={trend?.value}
 							trendDirection={trend?.direction}
+							className="relative z-10"
 						/>
 					</div>
 					{Icon && (
 						<div
-							className={`p-2 rounded-xs transition-colors duration-300 ${
+							className={`p-2 rounded-sm border transition-all duration-300 mt-3 mr-1 ${
 								dominant
-									? "bg-primary/20 text-primary"
-									: "bg-muted/50 text-muted-foreground group-hover:text-primary"
+									? "bg-primary/10 border-primary/30 text-primary"
+									: "bg-muted/20 border-border/40 text-muted-foreground group-hover:bg-muted/40 group-hover:text-foreground group-hover:border-border/60"
 							}`}
 						>
 							<Icon className={`${isDense ? "h-4 w-4" : "h-5 w-5"}`} aria-hidden="true" />
@@ -194,11 +200,17 @@ export function KPICard({
 				</div>
 
 				{subtitle && (
-					<div className={`pt-2 border-t mt-1 border-border/50`}>
-						<p className={`text-[10px] font-mono truncate text-muted-foreground`}>
+					<div className={`pt-3 border-t mt-1 border-border/40 flex items-center justify-between`}>
+						<p
+							className={`text-[10px] font-mono truncate text-muted-foreground group-hover:text-foreground/80 transition-colors duration-300`}
+						>
 							{subtitle}
 							{trend?.label && <span className="opacity-70 ml-1">({trend.label})</span>}
 						</p>
+						<div className="flex gap-[2px] opacity-20 group-hover:opacity-40 transition-opacity">
+							<div className="h-1 w-1 rounded-full bg-foreground" />
+							<div className="h-1 w-1 rounded-full bg-foreground" />
+						</div>
 					</div>
 				)}
 			</CardBody>

@@ -5,36 +5,15 @@ import bcrypt from "bcryptjs";
 import { validateRequest } from "~/lib/auth";
 import { EmployeeStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import { backfillLegacyEmployeeCodes, generateUniqueEmployeeCode } from "~/lib/employee-codes";
 
 function isValidEmployeePin(pin: string) {
 	return /^\d{4,6}$/.test(pin);
 }
 
-async function assertPinIsUnique(pin: string, excludeEmployeeId?: string) {
-	const employeesWithPins = await db.employee.findMany({
-		where: {
-			pinHash: { not: null },
-			...(excludeEmployeeId ? { NOT: { id: excludeEmployeeId } } : {}),
-		},
-		select: {
-			id: true,
-			pinHash: true,
-		},
-	});
-
-	for (const employee of employeesWithPins) {
-		if (!employee.pinHash) {
-			continue;
-		}
-
-		const isMatch = await bcrypt.compare(pin, employee.pinHash);
-		if (isMatch) {
-			throw new Error("PIN already in use");
-		}
-	}
-}
-
 export async function getEmployees(search?: string, status?: EmployeeStatus, page = 1, limit = 25) {
+	await backfillLegacyEmployeeCodes();
+
 	const skip = (page - 1) * limit;
 	const where: Prisma.EmployeeWhereInput = {};
 
@@ -84,6 +63,8 @@ export async function getEmployees(search?: string, status?: EmployeeStatus, pag
 }
 
 export async function getEmployeeById(id: string) {
+	await backfillLegacyEmployeeCodes();
+
 	return await db.employee.findUnique({
 		where: { id },
 		include: {
@@ -150,13 +131,7 @@ export async function createEmployee(data: {
 		throw new Error("Email already in use");
 	}
 
-	// Generate employee code if not provided
-	const employeeCode =
-		data.name
-			.toLowerCase()
-			.replace(/[^a-z0-9]/g, "")
-			.substring(0, 3)
-			.toUpperCase() + Math.floor(Math.random() * 1000);
+	const employeeCode = await generateUniqueEmployeeCode(data.name);
 
 	// Hash PIN if provided
 	let pinHash = null;
@@ -165,7 +140,6 @@ export async function createEmployee(data: {
 			throw new Error("PIN must be 4-6 digits");
 		}
 
-		await assertPinIsUnique(data.pin);
 		pinHash = await bcrypt.hash(data.pin, 12);
 	}
 
@@ -216,7 +190,6 @@ export async function updateEmployee(
 				throw new Error("PIN must be 4-6 digits");
 			}
 
-			await assertPinIsUnique(pin, id);
 			updateData.pinHash = await bcrypt.hash(pin, 12);
 		}
 	}

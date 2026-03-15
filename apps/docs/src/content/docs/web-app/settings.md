@@ -37,13 +37,20 @@ Use this page to maintain workstation/station definitions used by floor and anal
 
 ## Employees (`/settings/employees`)
 
-Use this page to manage worker records used in floor operations and reporting.
+Use this page to manage employee records used in floor operations and reporting.
 
 ### Key components
 
 - **Add New Employee** form (`name`, `email`, optional `pin`).
 - **Current Employees** list.
-- Per-employee actions: **Set PIN** and **Delete**.
+- Read-only employee code display for each employee.
+- Per-employee actions: **Save PIN** and **Delete**.
+
+### Employee clocking model
+
+- Shared-device kiosk and mobile clock workflows use **employee code + PIN**.
+- Employee codes are generated and shown on the employee record.
+- PINs remain 4-6 digits and can be removed by leaving the PIN field blank when updating.
 
 ## Users (`/settings/users`)
 
@@ -52,8 +59,14 @@ Use this page to manage authenticated user accounts and role assignments.
 ### Key components
 
 - **Add New User** form (`email`, `name`, `role`).
-- **User Management** list with role selector and update action per user.
-- Role options include `WORKER`, `MANAGER`, `EXECUTIVE`, and `ADMIN`.
+- **User Management** list with role selector, update action, and delete action per user.
+- Role options include `MANAGER`, `EXECUTIVE`, and `ADMIN`.
+
+### Important boundary
+
+- Do not use `/settings/users` to create floor employees.
+- Floor personnel are created in `/settings/employees`.
+- If employee-linked worker sessions exist in your deployment, treat them as an internal application mechanism rather than a role assigned from settings.
 
 ## API Keys (`/settings/api-keys`)
 

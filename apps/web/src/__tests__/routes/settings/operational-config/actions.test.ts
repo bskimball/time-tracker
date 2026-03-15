@@ -90,4 +90,21 @@ describe("updateOperationalConfig", () => {
 			},
 		]);
 	});
+
+	it("rejects executive users from updating operational config", async () => {
+		mockValidateRequest.mockResolvedValue({
+			user: { id: "exec-1", role: "EXECUTIVE" },
+		});
+
+		const formData = new FormData();
+		formData.set("key", "TASK_ASSIGNMENT_MODE");
+		formData.set("value", "SELF_ASSIGN_ALLOWED");
+
+		const result = await updateOperationalConfig(null, formData);
+
+		expect(result).toEqual({
+			error: "Only ADMIN users can update operational config",
+		});
+		expect(mockDb.$executeRaw).not.toHaveBeenCalled();
+	});
 });

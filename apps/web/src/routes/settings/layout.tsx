@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { AppLayout } from "~/components/app-layout";
 import { PageHeader } from "~/components/page-header";
+import { validateRequest } from "~/lib/auth";
 
 // Settings navigation links
 const settingsNavLinks = [
@@ -12,13 +13,20 @@ const settingsNavLinks = [
 	{ to: "/executive", label: "Executive", icon: "crown" as const },
 ];
 
-export default function Component() {
+export default async function Component() {
+	const { user } = await validateRequest();
+
 	return (
 		<>
 			<title>Settings</title>
 			<meta name="description" content="Manage warehouse settings and users" />
 
-			<AppLayout title="System Settings" brandHref="/settings" navLinks={settingsNavLinks}>
+			<AppLayout
+				title="System Settings"
+				brandHref="/settings"
+				navLinks={settingsNavLinks}
+				currentUser={user}
+			>
 				<PageHeader
 					title="System Settings"
 					subtitle="Manage stations, employees, API keys, and system configuration"

@@ -46,7 +46,7 @@
 
 	/* Subtle Surfaces */
 	--color-muted: oklch(0.967 0.003 264.5);
-	--color-muted-foreground: oklch(0.552 0.029 264.5);
+	--color-muted-foreground: oklch(0.442 0.029 264.5);
 	--color-accent: oklch(0.967 0.003 264.5);
 	--color-accent-foreground: oklch(0.21 0.014 264.5);
 

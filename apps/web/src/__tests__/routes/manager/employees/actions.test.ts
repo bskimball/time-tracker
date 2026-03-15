@@ -51,25 +51,32 @@ describe("manager employee actions", () => {
 				data: expect.objectContaining({
 					name: "Alice Johnson",
 					email: "alice@example.com",
+					employeeCode: "AJO001",
 					pinHash: "$2b$10$hashedpassword",
 				}),
 			})
 		);
 	});
 
-	it("rejects createEmployee when the pin is already assigned", async () => {
-		mockDb.employee.findMany.mockResolvedValue([{ id: "emp-2", pinHash: "$2b$10$existing" }]);
-		mockedBcrypt.compare.mockImplementationOnce(async () => true);
+	it("increments the employee code suffix for matching name prefixes", async () => {
+		mockDb.employee.findMany.mockResolvedValue([
+			{ employeeCode: "AJO001" },
+			{ employeeCode: "AJO002" },
+		]);
+		mockDb.employee.create.mockResolvedValue({ id: "emp-1" });
 
-		await expect(
-			createEmployee({
-				name: "Alice Johnson",
-				email: "alice@example.com",
-				pin: "1234",
+		await createEmployee({
+			name: "Alice Johnson",
+			email: "alice@example.com",
+		});
+
+		expect(mockDb.employee.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					employeeCode: "AJO003",
+				}),
 			})
-		).rejects.toThrow("PIN already in use");
-
-		expect(mockDb.employee.create).not.toHaveBeenCalled();
+		);
 	});
 
 	it("updates an employee and clears pin hash when pin is emptied", async () => {
@@ -94,17 +101,21 @@ describe("manager employee actions", () => {
 		);
 	});
 
-	it("rejects updateEmployee when the pin is already assigned", async () => {
-		mockDb.employee.findMany.mockResolvedValue([{ id: "emp-2", pinHash: "$2b$10$existing" }]);
-		mockedBcrypt.compare.mockImplementationOnce(async () => true);
+	it("allows reusing a pin on update", async () => {
+		mockDb.employee.update.mockResolvedValue({ id: "emp-1" });
 
-		await expect(
-			updateEmployee("emp-1", {
-				pin: "1234",
+		await updateEmployee("emp-1", {
+			pin: "1234",
+		});
+
+		expect(mockDb.employee.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { id: "emp-1" },
+				data: expect.objectContaining({
+					pinHash: "$2b$10$hashedpassword",
+				}),
 			})
-		).rejects.toThrow("PIN already in use");
-
-		expect(mockDb.employee.update).not.toHaveBeenCalled();
+		);
 	});
 
 	it("blocks deleting an employee who is currently clocked in", async () => {

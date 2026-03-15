@@ -32,17 +32,17 @@ Follow this order in a new environment.
 
 Current role options exposed in the product are:
 
-- `WORKER`
 - `MANAGER`
 - `EXECUTIVE`
 - `ADMIN`
 
 Recommended assignment pattern:
 
-- `WORKER`: floor-only activity where possible
 - `MANAGER`: shift supervision and operational corrections
-- `EXECUTIVE`: KPI and analytics review with limited config authority where approved
+- `EXECUTIVE`: KPI and analytics review
 - `ADMIN`: system ownership, user administration, and sensitive configuration
+
+`WORKER` still exists in parts of the application model for employee-linked floor sessions, but it is not a role you assign from `/settings/users`.
 
 ## First administrator
 
@@ -65,13 +65,19 @@ After first login:
 3. Assign the minimum required role.
 4. Remove stale access promptly when staffing changes.
 
+Role options in `/settings/users` are:
+
+- `MANAGER`
+- `EXECUTIVE`
+- `ADMIN`
+
 Do not share admin accounts. Shared accounts make incident review and access audits materially harder.
 
 ## Employee access versus user access
 
 Keep these distinct:
 
-- **Employees** in `/settings/employees` support floor workflows such as PIN-based clock actions.
+- **Employees** in `/settings/employees` support floor workflows such as employee code + PIN clock actions.
 - **Users** in `/settings/users` control authenticated portal access and role-based navigation.
 
 An employee record alone does not imply manager or admin portal access.

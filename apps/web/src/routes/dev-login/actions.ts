@@ -8,15 +8,26 @@ export type DevLoginState = {
 	error?: string;
 };
 
-export async function createAdminUser(
+const DEV_LOGIN_ROLES = ["ADMIN", "EXECUTIVE", "MANAGER"] as const;
+
+function isDevLoginRole(role: string): role is (typeof DEV_LOGIN_ROLES)[number] {
+	return DEV_LOGIN_ROLES.includes(role as (typeof DEV_LOGIN_ROLES)[number]);
+}
+
+export async function createDevUser(
 	_prevState: DevLoginState,
 	formData: FormData
 ): Promise<DevLoginState | Response> {
 	const email = formData.get("email") as string;
 	const name = formData.get("name") as string;
+	const role = String(formData.get("role") || "");
 
 	if (!email || !name) {
 		return { error: "Email and name are required" };
+	}
+
+	if (!isDevLoginRole(role)) {
+		return { error: "Role is required" };
 	}
 
 	try {
@@ -30,7 +41,7 @@ export async function createAdminUser(
 				id: crypto.randomUUID(),
 				email,
 				name,
-				role: "ADMIN",
+				role,
 				updatedAt: new Date(),
 			},
 		});
@@ -60,7 +71,7 @@ export async function loginAsUser(formData: FormData) {
 
 	// Redirect based on user role
 	let location = "/floor";
-	if (user.role === "ADMIN") {
+	if (user.role === "ADMIN" || user.role === "EXECUTIVE") {
 		location = "/executive";
 	} else if (user.role === "MANAGER") {
 		location = "/manager";

@@ -57,8 +57,8 @@ export async function updateOperationalConfig(
 		return { error: "Unauthorized" };
 	}
 
-	if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
-		return { error: "Only ADMIN or EXECUTIVE users can update operational config" };
+	if (user.role !== "ADMIN") {
+		return { error: "Only ADMIN users can update operational config" };
 	}
 
 	const key = String(formData.get("key") || "");

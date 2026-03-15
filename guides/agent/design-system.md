@@ -133,5 +133,6 @@ Never use tinted backgrounds. Use the **Left Border Strip** pattern.
 - **ALWAYS** use `font-mono` for numbers and technical data.
 - **PREFER** uppercase for short technical labels with wide tracking.
 - **REUSE** the `@monorepo/design-system` components; do not build local versions of buttons or cards.
-- **NO CORNERS**: The legacy `corner-machined` or `corner-accent` DIV elements have been removed. Do not add them back.
+- **NO CORNERS OR CROSSHAIRS**: The legacy `corner-machined` or `corner-accent` DIV elements have been removed. Do not add them back, and do not create corner brackets or crosshairs using custom DIVs.
+- **NO FAUX-TECHNICAL DECORATION**: Do not add fake technical labels (like `SYS.OP.ACTIVE`, `SYS.VER`, or scanning animations) unless explicitly requested. The aesthetic should be functional and clean, not "cyberpunk" or "tactical".
 - **STRICT HEIGHTS**: Ensure all form inputs and buttons share the `h-10` class and align perfectly.

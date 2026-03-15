@@ -26,6 +26,7 @@ export default async function Component() {
 			brandHref="/manager"
 			navLinks={getManagerNavLinks(user)}
 			statusBarSlot={<ManagerRealtimeTopbarIndicator />}
+			currentUser={user}
 		>
 			<Outlet />
 		</AppLayout>

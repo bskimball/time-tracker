@@ -3,16 +3,16 @@ title: Employee Guide
 description: Employee time-clock workflows for floor and kiosk operations.
 ---
 
-This guide is for frontline users clocking work and breaks on shared or personal devices.
+This guide is for frontline employees clocking work and breaks on shared or personal devices.
 
 ## Employee workspace routes
 
-- `/floor`: standard worker floor entry point.
+- `/floor`: standard employee floor entry point.
 - `/time-clock` (legacy; no longer routed): use `/floor` as the current entry point.
 - `/floor/kiosk`: shared-device kiosk workflow.
 - `/floor/time-clock/mobile`: touch-first mobile time-clock variant.
 
-## Core worker workflows
+## Core employee workflows
 
 ### 1) Start and end shift
 
@@ -43,13 +43,14 @@ This guide is for frontline users clocking work and breaks on shared or personal
 
 ### Kiosk (`/floor/kiosk`)
 
-- Two-step PIN verification and clock action flow for shared devices.
+- Two-step employee code + PIN verification and clock action flow for shared devices.
 - Optional station selection when clocking in.
 - Local offline queue + sync indicators for unstable connectivity.
 
 ### Mobile (`/floor/time-clock/mobile`)
 
 - Touch-first compact layout for handheld operation.
+- Employee code + PIN entry for shared-device style clocking.
 - Mobile-specific action controls for clock, break, and task interactions.
 
 ## Kiosk and device usability features
@@ -58,7 +59,7 @@ This guide is for frontline users clocking work and breaks on shared or personal
 - Offline actions can queue and sync when connectivity returns.
 - Device API key can be stored locally for kiosk sync behavior.
 
-## Known worker UX gaps
+## Known employee UX gaps
 
 - `/floor` currently shows a PIN workflow for worker sessions that is server-blocked for workers. Tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44).
 - `/floor` manual select currently exposes full personnel roster options to worker sessions, but cross-employee actions are rejected server-side. Tracked in [Issue #45](https://github.com/bskimball/time-tracker/issues/45).

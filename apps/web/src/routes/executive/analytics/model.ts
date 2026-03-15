@@ -7,6 +7,18 @@ export type AnalyticsComparison = ComparisonBasis;
 
 export const DEFAULT_COMPARE: AnalyticsComparison = "previous-period";
 
+export function getAnalyticsComparisonLabel(compare: AnalyticsComparison): string {
+	switch (compare) {
+		case "last-year":
+			return "Last Year";
+		case "rolling-30d":
+			return "Rolling 30 Days";
+		case "previous-period":
+		default:
+			return "Previous Period";
+	}
+}
+
 export const COMPARISON_COMPATIBILITY: Record<AnalyticsRange, AnalyticsComparison[]> = {
 	today: ["previous-period", "last-year"],
 	week: ["previous-period", "last-year"],
@@ -22,8 +34,12 @@ export type AnalyticsData = {
 	shiftProductivity: Awaited<ReturnType<typeof import("./actions").getShiftProductivityData>>;
 	taskTypeEfficiency: Awaited<ReturnType<typeof import("./actions").getTaskTypeEfficiencyData>>;
 	benchmarkData: Awaited<ReturnType<typeof import("./actions").getBenchmarkData>>;
+	stationBenchmarkComparison: Awaited<
+		ReturnType<typeof import("./actions").getStationBenchmarkComparisonData>
+	>;
 	anomalyData: Anomaly[];
 	capacityData: Awaited<ReturnType<typeof import("./actions").getCapacityUtilizationData>>;
+	capacityComparisonData: Awaited<ReturnType<typeof import("./actions").getCapacityComparisonData>>;
 	trendData: Awaited<ReturnType<typeof import("./actions").getTrendAnalysisData>>;
 	employeeProductivity: Awaited<
 		ReturnType<typeof import("./actions").getEmployeeProductivityRanking>
@@ -97,10 +113,13 @@ type TrendsDisplays = {
 };
 
 type CapacityDisplays = {
-	kpis: Promise<AnalyticsLoadResult<{ capacityData: AnalyticsData["capacityData"] }>>;
+	kpis: Promise<
+		AnalyticsLoadResult<{ capacityComparisonData: AnalyticsData["capacityComparisonData"] }>
+	>;
 	floor: Promise<
 		AnalyticsLoadResult<{
 			capacityData: AnalyticsData["capacityData"];
+			capacityComparisonData: AnalyticsData["capacityComparisonData"];
 			liveFloorData: AnalyticsData["liveFloorData"];
 		}>
 	>;
@@ -111,7 +130,7 @@ type BenchmarkDisplays = {
 	charts: Promise<AnalyticsLoadResult<{ benchmarkData: AnalyticsData["benchmarkData"] }>>;
 	stationTable: Promise<
 		AnalyticsLoadResult<{
-			stationSnapshots: AnalyticsData["dashboardData"]["stations"];
+			stationBenchmarkComparison: AnalyticsData["stationBenchmarkComparison"];
 			benchmarkData: AnalyticsData["benchmarkData"];
 		}>
 	>;

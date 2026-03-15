@@ -8,13 +8,13 @@ export default async function Component() {
 
 	// If no user, this component won't render (middleware should handle redirects)
 	// But for RSC compatibility, we check here too
-	if (!user || user.role !== "ADMIN") {
+	if (!user || (user.role !== "ADMIN" && user.role !== "EXECUTIVE")) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
 					<p className="text-muted-foreground">
-						You need administrator privileges to access this area.
+						You need executive or administrator privileges to access this area.
 					</p>
 				</div>
 			</div>
@@ -26,6 +26,7 @@ export default async function Component() {
 			title="Executive Portal"
 			brandHref="/executive"
 			navLinks={getExecutiveNavLinks(user)}
+			currentUser={user}
 		>
 			<Outlet />
 		</AppLayout>

@@ -3,7 +3,7 @@ title: Administrator Guide
 description: Administration workflows for system setup, permissions, integrations, and KPI controls.
 ---
 
-This guide is for platform owners and operations administrators. Executive-role users may share some configuration responsibilities, but route access differs from full admin behavior.
+This guide is for platform owners and operations administrators. `ADMIN` owns system settings, user access, integration keys, and operational configuration.
 
 ## Administration surfaces
 
@@ -12,8 +12,8 @@ This guide is for platform owners and operations administrators. Executive-role 
 - `/settings/users`
 - `/settings/api-keys`
 - `/settings/operational-config`
-- `/executive` (`ADMIN` route access in current app behavior)
-- `/executive/analytics` (`ADMIN` route access in current app behavior)
+- `/executive`
+- `/executive/analytics`
 
 Detailed route walkthroughs:
 
@@ -25,12 +25,12 @@ Detailed route walkthroughs:
 ### 1) Configure stations and workforce records
 
 - Create and maintain stations for physical work areas.
-- Create employee records and maintain PIN readiness.
+- Create employee records, confirm employee codes, and maintain PIN readiness.
 - Keep user accounts aligned to role responsibilities.
 
 ### 2) Manage system access
 
-- Assign roles (`WORKER`, `MANAGER`, `EXECUTIVE`, `ADMIN`) to enforce least privilege.
+- Assign roles (`MANAGER`, `EXECUTIVE`, `ADMIN`) to enforce least privilege in `/settings/users`.
 - Revoke stale user access as staffing changes.
 - Use [Roles and Permissions](/reference/roles-and-permissions) when validating what each role can actually do.
 
@@ -55,8 +55,9 @@ Detailed route walkthroughs:
 
 ## Permission-sensitive actions
 
-- Operational config updates are restricted to `ADMIN` and `EXECUTIVE` users.
-- Executive portal is an admin-only access path in the current app behavior.
+- `/settings/*` actions are restricted to `ADMIN`.
+- Operational config updates are restricted to `ADMIN`.
+- Executive portal is available to `EXECUTIVE` and `ADMIN`, but only `ADMIN` can manage settings.
 - API keys should be treated like credentials and rotated as needed.
 
 ## Recommended operating cadence

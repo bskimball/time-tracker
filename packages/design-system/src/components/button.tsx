@@ -24,7 +24,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 	outline:
 		"border border-border/60 bg-background text-foreground shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-accent hover:text-foreground active:bg-accent/90 active:shadow-none active:translate-y-[1px]",
 	ghost:
-		"text-muted-foreground border border-transparent hover:bg-accent hover:text-foreground active:bg-accent/90",
+		"text-foreground/72 dark:text-muted-foreground border border-transparent hover:bg-accent hover:text-foreground active:bg-accent/90",
 	error:
 		"bg-destructive border border-white/15 text-destructive-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-destructive/90 active:bg-destructive/80 active:shadow-none active:translate-y-[1px]",
 };
@@ -58,7 +58,6 @@ export function Button({
 
 	return (
 		<AriaButton type={type} isDisabled={disabled} className={buttonClass} {...props}>
-
 			{children}
 		</AriaButton>
 	);

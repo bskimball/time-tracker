@@ -64,6 +64,8 @@ interface LineChartData {
 		label: string;
 		data: number[];
 		color: string;
+		strokeDasharray?: string;
+		hideArea?: boolean;
 	}>;
 }
 
@@ -183,17 +185,20 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 								fontFamily: "var(--font-mono)",
 							}}
 						/>
-						{data.datasets.map((dataset, index) => (
-							<Area
-								key={`${dataset.label}-area`}
-								type="monotone"
-								dataKey={dataset.label}
-								fill={`url(#${chartId}-area-${index})`}
-								stroke="none"
-								dot={false}
-								activeDot={false}
-							/>
-						))}
+						{data.datasets.map((dataset, index) =>
+							dataset.hideArea ? null : (
+								<Area
+									key={`${dataset.label}-area`}
+									type="monotone"
+									dataKey={dataset.label}
+									fill={`url(#${chartId}-area-${index})`}
+									stroke="none"
+									dot={false}
+									activeDot={false}
+									legendType="none"
+								/>
+							)
+						)}
 						{data.datasets.map((dataset) => (
 							<Line
 								key={dataset.label}
@@ -201,6 +206,7 @@ export function LineChart({ title, data, height = 250 }: LineChartProps) {
 								dataKey={dataset.label}
 								stroke={dataset.color}
 								strokeWidth={2}
+								strokeDasharray={dataset.strokeDasharray}
 								dot={{ r: 3, fill: dataset.color, strokeWidth: 0 }}
 								activeDot={{ r: 5, fill: dataset.color, strokeWidth: 0 }}
 							/>
@@ -294,14 +300,30 @@ export function PieChart({ title, data, height = 250 }: PieChartProps) {
 	const chartId = normalizeGradientId(useId());
 
 	return (
-		<Card className="h-full flex flex-col">
-			<CardHeader className="bg-muted/30 border-b border-border/50 py-3">
-				<CardTitle className="uppercase tracking-widest font-industrial text-sm text-muted-foreground">
-					{title}
-				</CardTitle>
+		<Card className="h-full flex flex-col overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<CardHeader className="relative border-b border-border/50 bg-muted/20 py-3 px-4">
+				<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<div className="grid grid-cols-2 gap-[2px] opacity-30">
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+						</div>
+						<CardTitle className="uppercase tracking-[0.18em] font-industrial text-xs text-muted-foreground/80 font-bold">
+							{title}
+						</CardTitle>
+					</div>
+					<div className="flex gap-1 opacity-20">
+						<div className="h-[2px] w-4 bg-foreground" />
+						<div className="h-[2px] w-2 bg-foreground" />
+					</div>
+				</div>
 			</CardHeader>
-			<CardBody className="p-4 flex-1">
-				<ResponsiveContainer width="100%" height={height}>
+			<CardBody className="p-4 flex-1 relative">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+				<ResponsiveContainer width="100%" height={height} className="relative z-10">
 					<RechartsPieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
 						<defs>
 							{data.map((entry, index) => (

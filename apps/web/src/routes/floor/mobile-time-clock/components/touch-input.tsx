@@ -68,14 +68,14 @@ export function TouchInput({
 
 	return (
 		<div className={`relative ${className}`}>
-			<label className="block text-sm font-industrial uppercase tracking-wider text-muted-foreground mb-2">
+			<label className="mb-2 block text-sm font-industrial uppercase tracking-wider text-foreground/72 dark:text-muted-foreground">
 				{label}
 				{required && <span className="text-destructive ml-1">*</span>}
 			</label>
 
 			<div className="relative">
 				{icon && (
-					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 z-10">
+					<div className="absolute left-4 top-1/2 z-10 -translate-y-1/2 transform text-foreground/55 dark:text-muted-foreground/70">
 						{icon}
 					</div>
 				)}
@@ -100,7 +100,7 @@ export function TouchInput({
             border-[1px] rounded-[2px]
             ${isFocused ? "border-primary ring-1 ring-primary/20" : "border-border"}
             ${error ? "border-destructive ring-1 ring-destructive/20" : ""}
-            ${disabled ? "bg-muted/10 cursor-not-allowed text-muted-foreground" : "bg-card text-foreground"}
+            ${disabled ? "bg-muted/10 cursor-not-allowed text-foreground/60 dark:text-muted-foreground" : "bg-card text-foreground"}
             transition-all duration-150
             focus:outline-none
             ${className}
@@ -114,7 +114,7 @@ export function TouchInput({
 					<button
 						type="button"
 						onClick={() => setShowPassword(!showPassword)}
-						className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+						className="absolute right-4 top-1/2 -translate-y-1/2 transform text-foreground/55 transition-colors hover:text-foreground dark:text-muted-foreground/70"
 					>
 						{showPassword ? (
 							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,14 +210,14 @@ export function TouchSelect({
 
 	return (
 		<div className={`relative ${className}`} ref={selectRef}>
-			<label className="block text-sm font-industrial uppercase tracking-wider text-muted-foreground mb-2">
+			<label className="mb-2 block text-sm font-industrial uppercase tracking-wider text-foreground/72 dark:text-muted-foreground">
 				{label}
 				{required && <span className="text-destructive ml-1">*</span>}
 			</label>
 
 			<div className="relative">
 				{icon && (
-					<div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50 z-10">
+					<div className="absolute left-4 top-1/2 z-10 -translate-y-1/2 transform text-foreground/55 dark:text-muted-foreground/70">
 						{icon}
 					</div>
 				)}
@@ -234,16 +234,22 @@ export function TouchSelect({
             border-[1px] rounded-[2px]
             ${isOpen ? "border-primary ring-1 ring-primary/20" : "border-border"}
             ${error ? "border-destructive ring-1 ring-destructive/20" : ""}
-            ${disabled ? "bg-muted/10 cursor-not-allowed text-muted-foreground" : "bg-card text-foreground hover:border-primary/50"}
+            ${disabled ? "bg-muted/10 cursor-not-allowed text-foreground/60 dark:text-muted-foreground" : "bg-card text-foreground hover:border-primary/50"}
             transition-all duration-150
             focus:outline-none
           `}
 				>
-					<span className={selectedOption ? "text-foreground" : "text-muted-foreground/50"}>
+					<span
+						className={
+							selectedOption
+								? "text-foreground"
+								: "text-foreground/60 dark:text-muted-foreground/80"
+						}
+					>
 						{selectedOption ? selectedOption.label : placeholder}
 					</span>
 
-					<div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground/50">
+					<div className="absolute right-4 top-1/2 -translate-y-1/2 transform text-foreground/55 dark:text-muted-foreground/70">
 						<svg
 							className={`w-6 h-6 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
 							fill="none"

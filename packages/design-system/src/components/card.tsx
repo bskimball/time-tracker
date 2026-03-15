@@ -40,7 +40,7 @@ export function Card({ children, className = "" }: CardProps) {
 				"border border-zinc-200 ring-1 ring-inset ring-black/5",
 				"transition-all duration-300 ease-out",
 				"hover:border-zinc-300 hover:from-zinc-100 hover:to-zinc-200/80",
-				"[--color-foreground:var(--color-zinc-900)] [--color-muted-foreground:var(--color-zinc-500)] [--color-border:var(--color-zinc-200)]",
+				"[--color-foreground:var(--color-zinc-900)] [--color-muted-foreground:var(--color-zinc-600)] [--color-border:var(--color-zinc-200)]",
 				// Dark mode
 				"dark:bg-zinc-900 dark:bg-gradient-to-b dark:from-zinc-800 dark:to-zinc-950 dark:text-zinc-50",
 				"dark:border-zinc-700 dark:ring-white/10",
@@ -51,7 +51,7 @@ export function Card({ children, className = "" }: CardProps) {
 		>
 			{/* Material Simulation Overlay for all cards */}
 			<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-black/[0.03] dark:from-white/[0.05] via-transparent to-transparent pointer-events-none" />
-			
+
 			<div className="relative z-10">{children}</div>
 		</div>
 	);

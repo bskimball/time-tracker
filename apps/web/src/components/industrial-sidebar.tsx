@@ -133,7 +133,7 @@ function IndustrialSidebarHeader({ title, brandHref }: IndustrialSidebarHeaderPr
 						<span className="text-lg font-display font-bold tracking-tight text-foreground leading-none uppercase">
 							{title}
 						</span>
-						<span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase mt-1">
+						<span className="mt-1 text-[9px] font-mono tracking-widest uppercase text-foreground/65 dark:text-muted-foreground">
 							Sys.Ver 2.0.4
 						</span>
 					</div>
@@ -181,7 +181,7 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 					isCollapsed ? "justify-center h-10 w-10 mx-auto" : "h-10 px-3",
 					isActive
 						? "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-						: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+						: "text-foreground/72 hover:bg-muted/60 hover:text-foreground dark:text-muted-foreground"
 				)}
 			>
 				{isActive && (
@@ -206,7 +206,7 @@ function IndustrialSidebarItem({ to, label, icon, className }: IndustrialSidebar
 					<span
 						className={cn(
 							"text-xs font-industrial uppercase tracking-wider font-medium truncate",
-							isActive ? "opacity-100" : "opacity-80 group-hover:opacity-100"
+							isActive ? "opacity-100" : "opacity-100"
 						)}
 					>
 						{label}
@@ -255,7 +255,7 @@ function IndustrialSidebarCollapseButton({ className }: IndustrialSidebarCollaps
 			size="sm"
 			onPress={() => setIsCollapsed((prev) => !prev)}
 			className={cn(
-				"w-full flex items-center justify-center border border-border/30 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-background transition-all duration-200",
+				"w-full flex items-center justify-center border border-border/30 bg-muted/20 text-foreground/72 hover:text-foreground hover:border-primary/40 hover:bg-background transition-all duration-200 dark:text-muted-foreground",
 				isCollapsed ? "h-9 w-9 p-0 mx-auto" : "h-9",
 				className
 			)}
@@ -368,7 +368,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 
 			<div className="flex items-center gap-3">
 				{children ? <div className="flex items-center">{children}</div> : null}
-				<div className="font-mono text-xs text-muted-foreground tabular-nums tracking-wide">
+				<div className="font-mono text-xs text-foreground/70 tabular-nums tracking-wide dark:text-muted-foreground">
 					{now
 						? now.toLocaleString("en-US", {
 								hour: "2-digit",
@@ -378,7 +378,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 							})
 						: "--:--:--"}
 				</div>
-				<div className="font-mono text-xs text-muted-foreground border-l border-border/50 pl-3">
+				<div className="border-l border-border/50 pl-3 font-mono text-xs text-foreground/70 dark:text-muted-foreground">
 					{now
 						? now.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase()
 						: "-- ---"}

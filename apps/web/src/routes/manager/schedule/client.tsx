@@ -500,18 +500,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										)}
 									</div>
 									<div className="mt-3 flex gap-2">
-										<Button
-											variant="outline"
-											size="sm"
-											disabled
-										>
+										<Button variant="outline" size="sm" disabled>
 											Swap
 										</Button>
-										<Button
-											variant="primary"
-											size="sm"
-											disabled
-										>
+										<Button variant="primary" size="sm" disabled>
 											Notify
 										</Button>
 									</div>
@@ -576,18 +568,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 											</td>
 											<td className="p-3">
 												<div className="flex gap-2">
-													<Button
-														variant="outline"
-														size="sm"
-														disabled
-													>
+													<Button variant="outline" size="sm" disabled>
 														Reassign
 													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														disabled
-													>
+													<Button variant="ghost" size="sm" disabled>
 														Message
 													</Button>
 												</div>
@@ -697,18 +681,10 @@ export function ScheduleView({ schedule, stations, activeEmployees }: ScheduleVi
 										</p>
 									</div>
 									<div className="mt-3 flex gap-2">
-										<Button
-											variant="outline"
-											size="sm"
-											disabled
-										>
+										<Button variant="outline" size="sm" disabled>
 											Adjust
 										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											disabled
-										>
+										<Button variant="ghost" size="sm" disabled>
 											Message
 										</Button>
 									</div>

@@ -10,13 +10,7 @@ import { Form } from "@monorepo/design-system";
 import { Card, CardBody, CardHeader, CardTitle } from "@monorepo/design-system";
 import { Input } from "@monorepo/design-system";
 
-function SubmitButton({
-	children,
-	disabled,
-}: {
-	children: React.ReactNode;
-	disabled?: boolean;
-}) {
+function SubmitButton({ children, disabled }: { children: React.ReactNode; disabled?: boolean }) {
 	const { pending } = useFormStatus();
 	return (
 		<Button type="submit" disabled={pending || disabled}>
@@ -25,11 +19,7 @@ function SubmitButton({
 	);
 }
 
-export function StationManagement({
-	stations: initialStations,
-}: {
-	stations: Station[];
-}) {
+export function StationManagement({ stations: initialStations }: { stations: Station[] }) {
 	const [addState, addAction] = useActionState(addStation, null);
 	const [deleteState, deleteAction] = useActionState(deleteStation, null);
 	const [newStationName, setNewStationName] = useState("");

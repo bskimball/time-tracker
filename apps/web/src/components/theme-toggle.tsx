@@ -64,7 +64,7 @@ export function ThemeToggle() {
 			variant="ghost"
 			size="sm"
 			onPress={toggleTheme}
-			className="w-9 px-0 relative z-50 text-muted-foreground hover:text-foreground border border-transparent"
+			className="relative z-50 w-9 border border-transparent px-0 text-foreground/72 hover:text-foreground dark:text-muted-foreground"
 			aria-pressed={isDark}
 			aria-label="Toggle theme"
 		>

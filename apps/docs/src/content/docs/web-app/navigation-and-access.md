@@ -9,8 +9,8 @@ This page maps core URLs to user experiences and explains who should use each ar
 
 - **Employee workflows** are centered on floor routes and kiosk entry points.
 - **Manager workflows** run in the manager portal.
-- **Administrator workflows** run in system settings and the executive portal.
-- **Executive-role users** may have configuration permissions without full executive-route access in the current implementation.
+- **Executive workflows** run in the executive portal.
+- **Administrator workflows** own system settings, access control, and sensitive configuration.
 - Access is role-based and should be provisioned using least privilege.
 
 ## Route map
@@ -24,7 +24,7 @@ This page maps core URLs to user experiences and explains who should use each ar
 ### Employee and floor routes
 
 - `/floor`: standard floor time clock workflow.
-- `/floor/kiosk`: kiosk-optimized touch workflow.
+- `/floor/kiosk`: kiosk-optimized touch workflow using employee code + PIN.
 - `/floor/time-clock/mobile`: touch-first mobile time clock route.
 - `/time-clock`: legacy compatibility route that may be disabled in current deployments; use `/floor` and related routes.
 - Current worker-session behavior gaps on `/floor` are tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44) and [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
@@ -46,13 +46,13 @@ This page maps core URLs to user experiences and explains who should use each ar
 ### Administrator and executive routes
 
 - `/settings`: settings portal overview and admin navigation hub.
-- `/settings/stations`: station lifecycle and configuration.
-- `/settings/employees`: employee records and PIN management.
-- `/settings/users`: role assignment and user access.
-- `/settings/api-keys`: API key generation and revocation.
-- `/settings/operational-config`: KPI thresholds and business constants.
-- `/executive`: executive KPI dashboard (`ADMIN` route access in current app behavior).
-- `/executive/analytics`: deep analytics by section and time range (`ADMIN` route access in current app behavior).
+- `/settings/stations`: station lifecycle and configuration (`ADMIN` only).
+- `/settings/employees`: employee records, employee codes, and PIN management (`ADMIN` only).
+- `/settings/users`: role assignment and user access (`ADMIN` only).
+- `/settings/api-keys`: API key generation and revocation (`ADMIN` only).
+- `/settings/operational-config`: KPI thresholds and business constants (`ADMIN` only).
+- `/executive`: executive KPI dashboard (`EXECUTIVE` and `ADMIN`).
+- `/executive/analytics`: deep analytics by section and time range (`EXECUTIVE` and `ADMIN`).
 
 Settings route details are documented in [Settings Guide](/web-app/settings).
 
@@ -62,6 +62,6 @@ Executive analysis details are documented in [Executive Guide](/web-app/executiv
 
 - Reserve administrator access for system owners and finance/ops leads.
 - Assign manager access to shift supervisors and floor leads.
-- Verify `EXECUTIVE` behavior in staging before assigning it broadly; route access and config permissions are not identical.
+- Assign executive access to read/reporting stakeholders who should not manage system settings.
 - Keep floor endpoints available where employee clock activity occurs.
 - Revisit role assignments periodically in [Administrator Guide](/web-app/administrator).

@@ -1,8 +1,11 @@
 "use server";
 
 import { db } from "../../lib/db";
-import bcrypt from "bcryptjs";
 import { validateRequest } from "../../lib/auth";
+import {
+	createEmployee as createManagedEmployee,
+	updateEmployee as updateManagedEmployee,
+} from "../manager/employees/actions";
 
 import type { Station } from "@prisma/client";
 import { redirect } from "react-router";
@@ -13,10 +16,35 @@ export type SettingsState = {
 	stations?: Station[];
 } | null;
 
+const SETTINGS_MANAGED_USER_ROLES = ["ADMIN", "MANAGER", "EXECUTIVE"] as const;
+type SettingsManagedUserRole = (typeof SETTINGS_MANAGED_USER_ROLES)[number];
+
+function isSettingsManagedUserRole(role: string): role is SettingsManagedUserRole {
+	return SETTINGS_MANAGED_USER_ROLES.includes(role as SettingsManagedUserRole);
+}
+
+async function requireAdminSettingsAccess() {
+	const { user } = await validateRequest();
+	if (!user) {
+		return { error: "Unauthorized" } as const;
+	}
+
+	if (user.role !== "ADMIN") {
+		return { error: "Unauthorized: Admin access required" } as const;
+	}
+
+	return { user } as const;
+}
+
 export async function addStation(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+
 	const nameValue = String(formData.get("name") || "").trim();
 
 	if (!nameValue) {
@@ -59,6 +87,11 @@ export async function deleteStation(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+
 	const id = formData.get("id") as string;
 
 	if (!id) {
@@ -92,36 +125,24 @@ export async function addEmployee(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const name = formData.get("name") as string;
-	const email = formData.get("email") as string;
-	const pin = formData.get("pin") as string;
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+
+	const name = String(formData.get("name") || "").trim();
+	const email = String(formData.get("email") || "").trim();
+	const pin = String(formData.get("pin") || "").trim();
 
 	if (!name || !email) {
 		return { error: "Name and email are required" };
 	}
 
-	if (pin && (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin))) {
-		return { error: "PIN must be 4-6 digits" };
-	}
-
 	try {
-		const existing = await db.employee.findUnique({
-			where: { email },
-		});
-
-		if (existing) {
-			return { error: "Employee with this email already exists" };
-		}
-
-		const pinHash = pin ? await bcrypt.hash(pin, 10) : null;
-
-		await db.employee.create({
-			data: {
-				id: crypto.randomUUID(),
-				name,
-				email,
-				pinHash,
-			},
+		await createManagedEmployee({
+			name,
+			email,
+			pin: pin || undefined,
 		});
 
 		redirect("/settings/employees");
@@ -136,23 +157,21 @@ export async function updateEmployeePin(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+
 	const id = formData.get("id") as string;
-	const pin = formData.get("pin") as string;
+	const pin = String(formData.get("pin") || "").trim();
 
 	if (!id) {
 		return { error: "Employee ID is required" };
 	}
 
-	if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-		return { error: "PIN must be 4-6 digits" };
-	}
-
 	try {
-		const pinHash = await bcrypt.hash(pin, 10);
-
-		await db.employee.update({
-			where: { id },
-			data: { pinHash },
+		await updateManagedEmployee(id, {
+			pin,
 		});
 
 		redirect("/settings/employees");
@@ -167,6 +186,11 @@ export async function deleteEmployee(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+
 	const id = formData.get("id") as string;
 
 	if (!id) {
@@ -198,10 +222,11 @@ export async function addApiKey(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const { user } = await validateRequest();
-	if (!user) {
-		return { error: "Unauthorized" };
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
 	}
+	const { user } = auth;
 
 	const name = formData.get("name") as string;
 
@@ -233,10 +258,11 @@ export async function deleteApiKey(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const { user } = await validateRequest();
-	if (!user) {
-		return { error: "Unauthorized" };
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
 	}
+	const { user } = auth;
 
 	const id = formData.get("id") as string;
 
@@ -261,21 +287,21 @@ export async function updateUserRole(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const { user } = await validateRequest();
-	if (!user) {
-		return { error: "Unauthorized" };
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
 	}
-
-	// Only admins or executives can change roles
-	if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
-		return { error: "Unauthorized: Insufficient permissions" };
-	}
+	const { user } = auth;
 
 	const userId = formData.get("userId") as string;
 	const role = formData.get("role") as string;
 
 	if (!userId || !role) {
 		return { error: "User ID and role are required" };
+	}
+
+	if (!isSettingsManagedUserRole(role)) {
+		return { error: "Invalid role" };
 	}
 
 	try {
@@ -286,7 +312,7 @@ export async function updateUserRole(
 
 		await db.user.update({
 			where: { id: userId },
-			data: { role: role as "ADMIN" | "MANAGER" | "WORKER" | "EXECUTIVE" },
+			data: { role },
 		});
 
 		redirect("/settings/users");
@@ -301,14 +327,9 @@ export async function addUser(
 	_prevState: SettingsState,
 	formData: FormData
 ): Promise<SettingsState> {
-	const { user } = await validateRequest();
-	if (!user) {
-		return { error: "Unauthorized" };
-	}
-
-	// Only admins or executives can add users
-	if (user.role !== "ADMIN" && user.role !== "EXECUTIVE") {
-		return { error: "Unauthorized: Insufficient permissions" };
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
 	}
 
 	const email = formData.get("email") as string;
@@ -317,6 +338,10 @@ export async function addUser(
 
 	if (!email) {
 		return { error: "Email is required" };
+	}
+
+	if (!isSettingsManagedUserRole(role)) {
+		return { error: "Invalid role" };
 	}
 
 	try {
@@ -333,7 +358,7 @@ export async function addUser(
 				id: crypto.randomUUID(),
 				email,
 				name: name || null,
-				role: (role as "ADMIN" | "MANAGER" | "WORKER" | "EXECUTIVE") || "WORKER",
+				role,
 				updatedAt: new Date(),
 			},
 		});
@@ -343,5 +368,37 @@ export async function addUser(
 	} catch (error) {
 		console.error("Error adding user:", error);
 		return { error: "Failed to add user" };
+	}
+}
+
+export async function deleteUser(
+	_prevState: SettingsState,
+	formData: FormData
+): Promise<SettingsState> {
+	const auth = await requireAdminSettingsAccess();
+	if ("error" in auth) {
+		return auth;
+	}
+	const { user } = auth;
+
+	const userId = String(formData.get("userId") || "");
+	if (!userId) {
+		return { error: "User ID is required" };
+	}
+
+	if (userId === user.id) {
+		return { error: "Cannot delete your own account" };
+	}
+
+	try {
+		await db.user.delete({
+			where: { id: userId },
+		});
+
+		redirect("/settings/users");
+		return { success: true };
+	} catch (error) {
+		console.error("Error deleting user:", error);
+		return { error: "Failed to delete user" };
 	}
 }

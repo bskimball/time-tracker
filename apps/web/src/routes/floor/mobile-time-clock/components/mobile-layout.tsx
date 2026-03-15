@@ -78,7 +78,7 @@ export function MobileNavigation({ currentRoute, className = "" }: MobileNavigat
             ${
 							currentRoute === item.route
 								? "text-primary bg-primary/10 border border-primary/20"
-								: "text-muted-foreground hover:bg-muted/50 active:bg-muted"
+								: "text-foreground/72 hover:bg-muted/50 active:bg-muted dark:text-muted-foreground"
 						}
           `}
 				>

@@ -25,7 +25,7 @@ export function LoginClient() {
 
 					<div className="p-8 pt-10 bg-industrial-card-gradient">
 						<div className="flex items-center justify-center mb-6">
-							<p className="text-xs text-muted-foreground font-mono uppercase tracking-widest flex items-center gap-2">
+							<p className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-foreground/70 dark:text-muted-foreground">
 								<span className="w-2 h-px bg-primary/50" />
 								Select Auth Protocol
 								<span className="w-2 h-px bg-primary/50" />
@@ -67,7 +67,7 @@ export function LoginClient() {
 								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">
 									Google Workspace
 								</span>
-								<span className="font-mono text-[10px] text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all">
+								<span className="font-mono text-[10px] text-foreground/65 transition-all group-hover:text-primary dark:text-muted-foreground">
 									[G-AUTH]
 								</span>
 							</Link>
@@ -94,7 +94,7 @@ export function LoginClient() {
 								<span className="flex-1 text-left uppercase tracking-tight text-sm font-industrial">
 									Microsoft Entra
 								</span>
-								<span className="font-mono text-[10px] text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all">
+								<span className="font-mono text-[10px] text-foreground/65 transition-all group-hover:text-primary dark:text-muted-foreground">
 									[M-AUTH]
 								</span>
 							</Link>

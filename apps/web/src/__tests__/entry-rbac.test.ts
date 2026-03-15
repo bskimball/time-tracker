@@ -69,4 +69,13 @@ describe("entry RBAC redirects", () => {
 		expect(response.status).toBe(302);
 		expect(response.headers.get("Location")).toBe("/manager");
 	});
+
+	it("redirects executive role away from settings routes to executive home", async () => {
+		mockValidateRequest.mockResolvedValue({ user: { role: "EXECUTIVE" } });
+
+		const response = await handler(new Request("http://localhost/settings/users"));
+
+		expect(response.status).toBe(302);
+		expect(response.headers.get("Location")).toBe("/executive");
+	});
 });

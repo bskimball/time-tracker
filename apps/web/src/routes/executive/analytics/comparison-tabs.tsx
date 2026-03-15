@@ -79,7 +79,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 			<TabList
 				aria-label="Select comparison window"
 				className={cn(
-					"inline-flex w-auto justify-start gap-1 rounded-[2px] p-0.5 bg-card border border-border/40",
+					"inline-flex w-full flex-wrap justify-start gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
 					className
 				)}
 			>
@@ -89,14 +89,24 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 						id={option.id}
 						className={({ isSelected }) =>
 							cn(
-								"h-10 min-w-[92px] px-3 text-xs uppercase tracking-widest font-bold transition-all rounded-[2px] flex items-center justify-center outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+								"group relative flex h-10 min-w-[92px] flex-1 items-center justify-center overflow-hidden rounded-[1px] px-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
 								isSelected
-									? "bg-primary text-primary-foreground shadow-sm"
-									: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+									? "bg-card/80 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.15)] ring-1 ring-border"
+									: "bg-transparent text-muted-foreground/70 hover:bg-card/40 hover:text-foreground"
 							)
 						}
 					>
-						{option.label}
+						{({ isSelected }) => (
+							<>
+								<span className="relative z-10">{option.label}</span>
+								{isSelected && (
+									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary shadow-[0_-2px_8px_var(--color-primary)]" />
+								)}
+								{!isSelected && (
+									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-border/40 transition-colors duration-300 group-hover:bg-border/80" />
+								)}
+							</>
+						)}
 					</Tab>
 				))}
 			</TabList>

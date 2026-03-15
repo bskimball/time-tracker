@@ -285,7 +285,7 @@ export function TimesheetManager({
 								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 								isSelected
 									? "bg-primary text-primary-foreground shadow-sm"
-									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+									: "text-foreground/72 hover:bg-muted/50 hover:text-foreground dark:text-muted-foreground"
 							)
 						}
 					>
@@ -298,7 +298,7 @@ export function TimesheetManager({
 								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 								isSelected
 									? "bg-primary text-primary-foreground shadow-sm"
-									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+									: "text-foreground/72 hover:bg-muted/50 hover:text-foreground dark:text-muted-foreground"
 							)
 						}
 					>
@@ -311,7 +311,7 @@ export function TimesheetManager({
 								"flex h-7 items-center justify-center rounded-[2px] px-3 text-xs font-bold uppercase tracking-widest transition-all outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 								isSelected
 									? "bg-primary text-primary-foreground shadow-sm"
-									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+									: "text-foreground/72 hover:bg-muted/50 hover:text-foreground dark:text-muted-foreground"
 							)
 						}
 					>

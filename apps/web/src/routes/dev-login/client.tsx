@@ -2,33 +2,39 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { createAdminUser, type DevLoginState } from "./actions";
+import { createDevUser, type DevLoginState } from "./actions";
 import { Alert } from "@monorepo/design-system";
 import { Button } from "@monorepo/design-system";
 import { SimpleInput } from "@monorepo/design-system";
+import { Select } from "@monorepo/design-system";
+
+const DEV_LOGIN_ROLES = [
+	{ value: "ADMIN", label: "Admin" },
+	{ value: "EXECUTIVE", label: "Executive" },
+	{ value: "MANAGER", label: "Manager" },
+];
 
 export function CreateAdminForm() {
 	const [state, formAction] = useActionState<DevLoginState, FormData>(
 		// Type assertion needed because server actions can return Response for redirects,
 		// but useActionState types don't reflect this capability yet
-		createAdminUser as (state: DevLoginState, payload: FormData) => Promise<DevLoginState>,
+		createDevUser as (state: DevLoginState, payload: FormData) => Promise<DevLoginState>,
 		{}
 	);
 
 	return (
 		<div className="space-y-4">
-			<h2 className="text-xl font-bold font-industrial uppercase tracking-wide">
-				Create Admin User
-			</h2>
+			<h2 className="text-xl font-bold font-industrial uppercase tracking-wide">Create Dev User</h2>
 			<form action={formAction} className="space-y-4">
 				<div>
 					<label className="block text-sm font-medium mb-1">Name</label>
-					<SimpleInput type="text" name="name" placeholder="Admin Name" required />
+					<SimpleInput type="text" name="name" placeholder="User Name" required />
 				</div>
 				<div>
 					<label className="block text-sm font-medium mb-1">Email</label>
-					<SimpleInput type="email" name="email" placeholder="admin@example.com" required />
+					<SimpleInput type="email" name="email" placeholder="user@example.com" required />
 				</div>
+				<Select name="role" label="Role" options={DEV_LOGIN_ROLES} defaultValue="ADMIN" />
 				{state.error && <Alert variant="error">{state.error}</Alert>}
 				<SubmitButton />
 			</form>
@@ -40,7 +46,7 @@ function SubmitButton() {
 	const { pending } = useFormStatus();
 	return (
 		<Button type="submit" disabled={pending}>
-			{pending ? "Creating..." : "Create Admin"}
+			{pending ? "Creating..." : "Create User"}
 		</Button>
 	);
 }

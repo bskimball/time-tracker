@@ -2,8 +2,14 @@ export type MetricType = "occupancy" | "efficiency";
 
 export interface AnalyticsCostSummary {
 	regular: number;
+	comparisonRegular: number;
+	regularChangePercent: number;
 	overtime: number;
+	comparisonOvertime: number;
+	overtimeChangePercent: number;
 	total: number;
+	comparisonTotal: number;
+	totalChangePercent: number;
 	variance: number;
 	variancePercent: number;
 }

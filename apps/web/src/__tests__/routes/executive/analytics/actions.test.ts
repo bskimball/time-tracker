@@ -30,9 +30,17 @@ describe("executive analytics actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		(
-			mockDb as unknown as { performanceMetric: { count: ReturnType<typeof vi.fn> } }
+			mockDb as unknown as {
+				performanceMetric: {
+					count: ReturnType<typeof vi.fn>;
+					aggregate: ReturnType<typeof vi.fn>;
+				};
+			}
 		).performanceMetric = {
 			count: vi.fn().mockResolvedValue(1),
+			aggregate: vi.fn().mockResolvedValue({
+				_max: { date: new Date("2025-02-10T00:00:00.000Z") },
+			}),
 		};
 		mockGetStationPerformance.mockResolvedValue([]);
 		mockGetLaborCostAnalysis.mockResolvedValue({
@@ -48,7 +56,12 @@ describe("executive analytics actions", () => {
 
 	it("builds comparative chart payload and seeds data when metrics are empty", async () => {
 		(
-			mockDb as unknown as { performanceMetric: { count: ReturnType<typeof vi.fn> } }
+			mockDb as unknown as {
+				performanceMetric: {
+					count: ReturnType<typeof vi.fn>;
+					aggregate: ReturnType<typeof vi.fn>;
+				};
+			}
 		).performanceMetric.count.mockResolvedValue(0);
 		mockGetPerformanceTrends
 			.mockResolvedValueOnce([

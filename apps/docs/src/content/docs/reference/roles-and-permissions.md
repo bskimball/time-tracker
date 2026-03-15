@@ -7,51 +7,51 @@ This page reflects current route and action behavior in the application code.
 
 ## Roles
 
-- `WORKER`
 - `MANAGER`
 - `EXECUTIVE`
 - `ADMIN`
 
+`WORKER` still exists in the application model for employee-linked floor sessions, but it is no longer a role administrators create or assign from `/settings/users`.
+
 ## Route access matrix
 
-| Surface | WORKER | MANAGER | EXECUTIVE | ADMIN |
-| --- | --- | --- | --- | --- |
-| `/floor`, `/floor/kiosk`, `/floor/time-clock/mobile` | Yes | Redirected away when authenticated | Redirected away when authenticated | Redirected away when authenticated |
-| `/manager/*` | No | Yes | Redirected to `/executive` | Redirected to `/executive` at the top-level router, even though some manager layout components also allow admin |
-| `/executive/*` | No | No | No | Yes |
-| `/settings/*` | Requires authentication; page-level actions vary by feature | Requires authentication; page-level actions vary by feature | Requires authentication; page-level actions vary by feature | Requires authentication; page-level actions vary by feature |
-| `/todo` | Requires authentication | Requires authentication | Requires authentication | Requires authentication |
-| `/api/realtime/manager-stream` | No | Yes | No | Yes |
+| Surface                                              | Manager                            | Executive                          | Admin                                                                                                           |
+| ---------------------------------------------------- | ---------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `/floor`, `/floor/kiosk`, `/floor/time-clock/mobile` | Redirected away when authenticated | Redirected away when authenticated | Redirected away when authenticated                                                                              |
+| `/manager/*`                                         | Yes                                | Redirected to `/executive`         | Redirected to `/executive` at the top-level router, even though some manager layout components also allow admin |
+| `/executive/*`                                       | No                                 | Yes                                | Yes                                                                                                             |
+| `/settings/*`                                        | No                                 | No                                 | Yes                                                                                                             |
+| `/todo`                                              | Requires authentication            | Requires authentication            | Requires authentication                                                                                         |
+| `/api/realtime/manager-stream`                       | Yes                                | No                                 | Yes                                                                                                             |
 
 ## Important current behavior
 
-- `EXECUTIVE` users are redirected to `/executive` as their default home, but the `/executive/*` route itself currently requires `ADMIN`.
-- `MANAGER` users can access manager routes.
-- `ADMIN` users are routed toward the executive area by default and are blocked from top-level `/floor/*` access.
-- Floor routes remain available for unauthenticated worker-style/PIN flows.
+- `EXECUTIVE` users are routed to `/executive` as their default home and can access executive routes.
+- `ADMIN` users own `/settings/*` and are also routed toward the executive area by default.
+- `MANAGER` users can access manager routes but not `/settings/*`.
+- Floor routes remain available for unauthenticated employee code + PIN clock flows.
 
 ## Sensitive action matrix
 
-| Action | WORKER | MANAGER | EXECUTIVE | ADMIN |
-| --- | --- | --- | --- | --- |
-| View settings pages | Auth required; access depends on route navigation | Auth required | Auth required | Auth required |
-| Create or update users and roles in `/settings/users` | No | No | Yes | Yes |
-| Update operational config | No | No | Yes | Yes |
-| Generate personal app API keys in `/settings/api-keys` | Any authenticated user | Any authenticated user | Any authenticated user | Any authenticated user |
-| Use protected REST API with `x-api-key` | Not role-based | Not role-based | Not role-based | Not role-based |
-| Access realtime manager stream | No | Yes | No | Yes |
-| Manage manager task assignments | No | Yes | Yes | Yes |
-| Worker self-assign tasks | Only when task-assignment mode allows it and the user is linked to a worker identity | No | No | No |
+| Action                                                 | Manager        | Executive      | Admin          |
+| ------------------------------------------------------ | -------------- | -------------- | -------------- |
+| View settings pages                                    | No             | No             | Yes            |
+| Create, update, or delete users in `/settings/users`   | No             | No             | Yes            |
+| Update operational config                              | No             | No             | Yes            |
+| Generate personal app API keys in `/settings/api-keys` | No             | No             | Yes            |
+| Use protected REST API with `x-api-key`                | Not role-based | Not role-based | Not role-based |
+| Access realtime manager stream                         | Yes            | No             | Yes            |
+| Manage manager task assignments                        | Yes            | Yes            | Yes            |
 
-## Worker task-assignment policy
+## Employee-linked worker behavior
 
-Worker self-task behavior is controlled by `TASK_ASSIGNMENT_MODE`.
+Some authenticated floor sessions still operate through a user account linked to an employee record. That employee-linked worker behavior is controlled by `TASK_ASSIGNMENT_MODE`.
 
-| Mode | Worker behavior |
-| --- | --- |
-| `MANAGER_ONLY` | Workers cannot self-assign tasks |
-| `SELF_ASSIGN_ALLOWED` | Workers can start, switch, and end their own task assignments while clocked in |
-| `SELF_ASSIGN_REQUIRED` | Workers must maintain an active task while clocked in |
+| Mode                   | Worker behavior                                                                |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `MANAGER_ONLY`         | Workers cannot self-assign tasks                                               |
+| `SELF_ASSIGN_ALLOWED`  | Workers can start, switch, and end their own task assignments while clocked in |
+| `SELF_ASSIGN_REQUIRED` | Workers must maintain an active task while clocked in                          |
 
 Manager-side task assignment permissions currently include:
 
@@ -61,7 +61,7 @@ Manager-side task assignment permissions currently include:
 
 ## Recommendation
 
-Because `EXECUTIVE` route access and `EXECUTIVE` config permissions are currently split, treat this role as a special-case permission set and verify expected behavior in staging before assigning it broadly.
+Treat `EXECUTIVE` as a reporting and analytics role, not a settings/configuration role. Use `ADMIN` for system ownership and access control changes.
 
 ## Related docs
 

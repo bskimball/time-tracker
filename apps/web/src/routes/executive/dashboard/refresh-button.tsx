@@ -17,7 +17,7 @@ export function RefreshButton({ action, lastSyncedAt }: RefreshButtonProps) {
 
 	return (
 		<form action={action} className="flex items-center gap-2">
-			<span className="text-[10px] font-mono text-muted-foreground/50 tracking-wide tabular-nums hidden sm:inline">
+			<span className="hidden text-[10px] font-mono tracking-wide tabular-nums text-foreground/65 dark:text-muted-foreground sm:inline">
 				{syncLabel}
 			</span>
 			<Button variant="outline" size="sm" type="submit">

@@ -56,12 +56,16 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 							<label className="block text-sm font-medium mb-1">PIN (optional)</label>
 							<SimpleInput
 								name="pin"
-								type="text"
+								type="password"
 								placeholder="4-6 digit PIN (optional)"
 								aria-label="PIN"
 								pattern="[0-9]{4,6}"
 								maxLength={6}
+								inputMode="numeric"
 							/>
+							<p className="mt-1 text-xs text-muted-foreground">
+								A 4-6 digit PIN enables kiosk/mobile PIN clocking.
+							</p>
 						</div>
 						<div className="flex justify-end">
 							<SubmitButton>Add Employee</SubmitButton>
@@ -100,6 +104,12 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 												{employee.name}
 											</p>
 											<p className="text-sm text-muted-foreground">{employee.email}</p>
+											<p className="mt-1 text-xs text-muted-foreground">
+												Employee Code:{" "}
+												<code className="font-mono-industrial tracking-wide">
+													{employee.employeeCode || "Not assigned"}
+												</code>
+											</p>
 											<p className="font-mono-industrial text-xs text-muted-foreground mt-1">
 												{employee.pinHash ? "✓ PIN SET" : "⚠ NO PIN"}
 											</p>
@@ -127,15 +137,15 @@ export function EmployeeManagement({ employees }: { employees: Employee[] }) {
 											<input type="hidden" name="id" value={employee.id} />
 											<SimpleInput
 												name="pin"
-												placeholder="Enter 4-6 digit PIN"
-												type="text"
+												placeholder="Enter 4-6 digit PIN or leave blank to remove"
+												type="password"
 												pattern="[0-9]{4,6}"
 												maxLength={6}
 												className="flex-1"
 												aria-label="PIN"
-												required
+												inputMode="numeric"
 											/>
-											<SubmitButton>Update PIN</SubmitButton>
+											<SubmitButton>Save PIN</SubmitButton>
 										</form>
 									)}
 								</div>
