@@ -34,12 +34,12 @@ async function main() {
 	await prisma.taskType.deleteMany();
 	await prisma.session.deleteMany();
 	await prisma.oAuthAccount.deleteMany();
-	
+
 	// Unlink employees from users so we can delete employees safely
 	await prisma.user.updateMany({
 		data: { employeeId: null },
 	});
-	
+
 	// Delete all users except admin and manager
 	await prisma.user.deleteMany({
 		where: {
@@ -324,7 +324,7 @@ async function main() {
 
 	console.log(`✅ Created ${taskTypes.length} task types`);
 	const now = new Date();
-	const daysToSeed = 30;
+	const daysToSeed = 730;
 	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
 	const taskTypeByStation = new Map(taskTypes.map((taskType) => [taskType.stationId, taskType]));
 
@@ -345,7 +345,7 @@ async function main() {
 		[stationIdByName.get("INVENTORY") ?? "", "Stock Associate"],
 	]);
 
-	console.log("🗓️ Creating shifts for the last 30 days...");
+	console.log("🗓️ Creating shifts for the last 730 days...");
 	const shiftRows: Array<{
 		stationId: string;
 		startTime: Date;
@@ -496,11 +496,19 @@ async function main() {
 	}
 
 	if (shiftAssignmentRows.length > 0) {
-		await prisma.shiftAssignment.createMany({ data: shiftAssignmentRows });
+		const chunkSize = 5000;
+		for (let i = 0; i < shiftAssignmentRows.length; i += chunkSize) {
+			const chunk = shiftAssignmentRows.slice(i, i + chunkSize);
+			await prisma.shiftAssignment.createMany({ data: chunk });
+		}
 	}
 
 	if (callOutRows.length > 0) {
-		await prisma.callOut.createMany({ data: callOutRows });
+		const chunkSize = 5000;
+		for (let i = 0; i < callOutRows.length; i += chunkSize) {
+			const chunk = callOutRows.slice(i, i + chunkSize);
+			await prisma.callOut.createMany({ data: chunk });
+		}
 	}
 
 	const activeShiftAssignmentCount = shiftAssignmentRows.filter(
@@ -524,6 +532,17 @@ async function main() {
 	};
 
 	const createdTasks: CreatedTaskRecord[] = [];
+	const taskRows: Array<{
+		id: string;
+		employeeId: string;
+		taskTypeId: string;
+		source: "MANAGER" | "WORKER";
+		assignedByUserId: string;
+		startTime: Date;
+		endTime: Date | null;
+		unitsCompleted: number;
+		notes: string;
+	}> = [];
 
 	for (const [rowIndex, row] of scheduleRows.entries()) {
 		const stationTaskType = taskTypeByStation.get(row.stationId);
@@ -538,26 +557,24 @@ async function main() {
 			? Math.max(10, Math.round(hoursWorked * (10 + (rowIndex % 5))))
 			: Math.max(40, Math.round(hoursWorked * (18 + (rowIndex % 8))));
 
-		const task = await prisma.taskAssignment.create({
-			data: {
-				employeeId: row.employeeId,
-				taskTypeId: selectedTaskType.id,
-				source: "MANAGER",
-				assignedByUserId: managerUser.id,
-				startTime: taskStart,
-				endTime: taskEnd,
-				unitsCompleted,
-				notes: row.inProgress
-					? `In progress - ${selectedTaskType.name}`
-					: `Completed - ${selectedTaskType.name}`,
-			},
-			select: {
-				id: true,
-			},
+		const taskId = crypto.randomUUID();
+
+		taskRows.push({
+			id: taskId,
+			employeeId: row.employeeId,
+			taskTypeId: selectedTaskType.id,
+			source: "MANAGER",
+			assignedByUserId: managerUser.id,
+			startTime: taskStart,
+			endTime: taskEnd,
+			unitsCompleted,
+			notes: row.inProgress
+				? `In progress - ${selectedTaskType.name}`
+				: `Completed - ${selectedTaskType.name}`,
 		});
 
 		createdTasks.push({
-			id: task.id,
+			id: taskId,
 			employeeId: row.employeeId,
 			stationId: row.stationId,
 			startTime: taskStart,
@@ -566,6 +583,15 @@ async function main() {
 			employeeIndex: row.employeeIndex,
 			dayOffset: row.dayOffset,
 		});
+	}
+
+	if (taskRows.length > 0) {
+		// Batch insert tasks in chunks of 5000
+		const chunkSize = 5000;
+		for (let i = 0; i < taskRows.length; i += chunkSize) {
+			const chunk = taskRows.slice(i, i + chunkSize);
+			await prisma.taskAssignment.createMany({ data: chunk });
+		}
 	}
 
 	const activeTaskCount = createdTasks.filter((task) => task.endTime === null).length;
@@ -586,13 +612,17 @@ async function main() {
 	}));
 
 	if (timeLogRows.length > 0) {
-		await prisma.timeLog.createMany({ data: timeLogRows });
+		const chunkSize = 5000;
+		for (let i = 0; i < timeLogRows.length; i += chunkSize) {
+			const chunk = timeLogRows.slice(i, i + chunkSize);
+			await prisma.timeLog.createMany({ data: chunk });
+		}
 	}
 
 	const activeTimeLogCount = timeLogRows.filter((log) => log.endTime === null).length;
 	console.log(`✅ Created ${timeLogRows.length} time logs (${activeTimeLogCount} active)`);
 
-	console.log("📈 Creating last-30-days performance metrics...");
+	console.log("📈 Creating last-730-days performance metrics...");
 	const activeEmployeesForMetrics = employees.filter((employee) => employee.status === "ACTIVE");
 	const stationBaselineRate = new Map<string, number>([
 		["PICKING", 28],
@@ -655,9 +685,11 @@ async function main() {
 	}
 
 	if (metricRows.length > 0) {
-		await prisma.performanceMetric.createMany({
-			data: metricRows,
-		});
+		const chunkSize = 5000;
+		for (let i = 0; i < metricRows.length; i += chunkSize) {
+			const chunk = metricRows.slice(i, i + chunkSize);
+			await prisma.performanceMetric.createMany({ data: chunk });
+		}
 	}
 
 	console.log(`✅ Created ${metricRows.length} performance metric rows`);
