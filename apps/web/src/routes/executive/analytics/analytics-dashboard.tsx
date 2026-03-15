@@ -32,6 +32,7 @@ import { KPICard } from "~/routes/executive/kpi-card";
 import { BarChart, LineChart, PieChart } from "~/routes/executive/charts";
 import WarehouseFloor from "./components/WarehouseFloor";
 import type { AnalyticsStationOverview } from "./types";
+import { getAnalyticsComparisonLabel } from "./model";
 import type {
 	AnalyticsData,
 	AnalyticsComparison,
@@ -100,6 +101,59 @@ function toMetricTrendDirection(value: string): "up" | "down" | "neutral" {
 	return "neutral";
 }
 
+function getComparisonTrendLabel(compare: AnalyticsComparison) {
+	return `vs ${getAnalyticsComparisonLabel(compare).toLowerCase()}`;
+}
+
+function getCostTrendDirection(changePercent: number): "up" | "down" | "neutral" {
+	if (changePercent === 0) return "neutral";
+	return changePercent < 0 ? "up" : "down";
+}
+
+const wholeCurrencyFormatter = new Intl.NumberFormat(undefined, {
+	style: "currency",
+	currency: "USD",
+	maximumFractionDigits: 0,
+});
+
+const preciseCurrencyFormatter = new Intl.NumberFormat(undefined, {
+	style: "currency",
+	currency: "USD",
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2,
+});
+
+const compactNumberFormatter = new Intl.NumberFormat(undefined, {
+	minimumFractionDigits: 0,
+	maximumFractionDigits: 1,
+});
+
+function formatSignedNumber(value: number, suffix = "", fractionDigits = 1) {
+	const formatter = new Intl.NumberFormat(undefined, {
+		minimumFractionDigits: fractionDigits,
+		maximumFractionDigits: fractionDigits,
+	});
+	const absolute = formatter.format(Math.abs(value));
+	const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+	return `${sign}${absolute}${suffix}`;
+}
+
+function formatSignedCurrency(value: number, precise = false) {
+	const formatter = precise ? preciseCurrencyFormatter : wholeCurrencyFormatter;
+	const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+	return `${sign}${formatter.format(Math.abs(value))}`;
+}
+
+function getPositiveDirection(delta: number): "up" | "down" | "neutral" {
+	if (delta === 0) return "neutral";
+	return delta > 0 ? "up" : "down";
+}
+
+function getInverseDirection(delta: number): "up" | "down" | "neutral" {
+	if (delta === 0) return "neutral";
+	return delta < 0 ? "up" : "down";
+}
+
 export function getStaffShortageTrend(staffShortage: number): {
 	direction: "up" | "down" | "neutral";
 	value: string;
@@ -114,6 +168,46 @@ export function getStaffShortageTrend(staffShortage: number): {
 	}
 
 	return { direction: "down", value: "Critical", label: "Impact High" };
+}
+
+export function HardwareCardHeader({
+	title,
+	subtitle,
+	rightElement,
+}: {
+	title: ReactNode;
+	subtitle?: ReactNode;
+	rightElement?: ReactNode;
+}) {
+	return (
+		<CardHeader className="relative border-b border-border/50 bg-muted/20 py-3 px-4">
+			<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
+			<div className="flex items-start justify-between gap-3">
+				<div>
+					<div className="flex items-center gap-3">
+						<div className="grid grid-cols-2 gap-[2px] opacity-30 mt-0.5">
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+						</div>
+						<CardTitle className="uppercase tracking-[0.18em] font-industrial text-xs text-muted-foreground/80 font-bold">
+							{title}
+						</CardTitle>
+					</div>
+					{subtitle && <div className="mt-1 ml-6 text-xs text-muted-foreground">{subtitle}</div>}
+				</div>
+				{rightElement ? (
+					rightElement
+				) : (
+					<div className="flex gap-1 opacity-20 mt-1">
+						<div className="h-[2px] w-4 bg-foreground" />
+						<div className="h-[2px] w-2 bg-foreground" />
+					</div>
+				)}
+			</div>
+		</CardHeader>
+	);
 }
 
 interface AnalyticsClientProps {
@@ -146,7 +240,7 @@ export function AnalyticsClient({ section, range, compare, displays }: Analytics
 			return <AnalyticsErrorCard message="No productivity analytics data available." />;
 		}
 
-		return withCache(<ProductivitySection displays={displays.productivity} />);
+		return withCache(<ProductivitySection displays={displays.productivity} compare={compare} />);
 	}
 
 	if (section === "labor-cost") {
@@ -154,7 +248,7 @@ export function AnalyticsClient({ section, range, compare, displays }: Analytics
 			return <AnalyticsErrorCard message="No labor cost analytics data available." />;
 		}
 
-		return withCache(<LaborCostSection displays={displays["labor-cost"]} />);
+		return withCache(<LaborCostSection displays={displays["labor-cost"]} compare={compare} />);
 	}
 
 	if (section === "trends") {
@@ -162,7 +256,7 @@ export function AnalyticsClient({ section, range, compare, displays }: Analytics
 			return <AnalyticsErrorCard message="No trend analytics data available." />;
 		}
 
-		return withCache(<TrendsSection displays={displays.trends} />);
+		return withCache(<TrendsSection displays={displays.trends} compare={compare} />);
 	}
 
 	if (section === "capacity") {
@@ -170,29 +264,31 @@ export function AnalyticsClient({ section, range, compare, displays }: Analytics
 			return <AnalyticsErrorCard message="No capacity analytics data available." />;
 		}
 
-		return withCache(<CapacitySection displays={displays.capacity} />);
+		return withCache(<CapacitySection displays={displays.capacity} compare={compare} />);
 	}
 
 	if (!displays.benchmarks) {
 		return <AnalyticsErrorCard message="No benchmark analytics data available." />;
 	}
 
-	return withCache(<BenchmarksSection displays={displays.benchmarks} />);
+	return withCache(<BenchmarksSection displays={displays.benchmarks} compare={compare} />);
 }
 
 function ProductivitySection({
 	displays,
+	compare,
 }: {
 	displays: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>;
+	compare: AnalyticsComparison;
 }) {
 	return (
 		<div className="space-y-6">
 			<Suspense fallback={<ProductivityKpiRowSkeleton />}>
-				<ProductivityKpiRow promise={displays.kpis} />
+				<ProductivityKpiRow promise={displays.kpis} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<ProductivityChartsSkeleton />}>
-				<ProductivityCharts promise={displays.charts} />
+				<ProductivityCharts promise={displays.charts} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<ProductivityStationCardsSkeleton />}>
@@ -208,8 +304,10 @@ function ProductivitySection({
 
 function ProductivityKpiRow({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["kpis"];
+	compare: AnalyticsComparison;
 }) {
 	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
@@ -217,6 +315,7 @@ function ProductivityKpiRow({
 	}
 
 	const { benchmarkData, trendData } = result.data;
+	const comparisonTrendLabel = getComparisonTrendLabel(compare);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -234,7 +333,7 @@ function ProductivityKpiRow({
 								? "down"
 								: "neutral",
 					value: `${trendData.productivity.changePercent > 0 ? "+" : ""}${trendData.productivity.changePercent}%`,
-					label: "vs last period",
+					label: comparisonTrendLabel,
 				}}
 			/>
 			<KPICard
@@ -276,8 +375,10 @@ function ProductivityKpiRow({
 
 function ProductivityCharts({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["productivity"]>["charts"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
@@ -286,17 +387,34 @@ function ProductivityCharts({
 
 	const { productivityTrends, stationEfficiency, taskTypeEfficiency, shiftProductivity } =
 		result.data;
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
 
 	return (
 		<>
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-				<LineChart title="Productivity Trends Over Time" data={productivityTrends} height={320} />
-				<BarChart title="Station Efficiency Comparison" data={stationEfficiency} height={320} />
+				<LineChart
+					title={`Productivity Trend vs ${comparisonLabel}`}
+					data={productivityTrends}
+					height={320}
+				/>
+				<BarChart
+					title={`Station Efficiency vs ${comparisonLabel}`}
+					data={stationEfficiency}
+					height={320}
+				/>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
-				<BarChart title="Task Type Efficiency" data={taskTypeEfficiency} height={320} />
-				<BarChart title="Shift Productivity" data={shiftProductivity} height={320} />
+			<div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+				<BarChart
+					title={`Task Type Efficiency vs ${comparisonLabel}`}
+					data={taskTypeEfficiency}
+					height={320}
+				/>
+				<BarChart
+					title={`Shift Productivity vs ${comparisonLabel}`}
+					data={shiftProductivity}
+					height={320}
+				/>
 			</div>
 		</>
 	);
@@ -321,39 +439,56 @@ function ProductivityStationCards({
 			</h3>
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 				{stationSnapshots.map((station: AnalyticsStationOverview) => (
-					<Card key={station.name} className="overflow-hidden">
-						<CardHeader className="border-b border-border/50 bg-muted/30 py-2">
+					<Card
+						key={station.name}
+						className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40"
+					>
+						<CardHeader className="relative border-b border-border/50 bg-muted/20 py-2.5 px-3">
+							<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
 							<div className="flex items-center justify-between">
-								<CardTitle className="text-xs font-industrial uppercase tracking-widest">
+								<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.15em] text-muted-foreground/90">
 									{station.name}
 								</CardTitle>
-								<div
-									className={`h-2 w-2 rounded-full ${
-										station.occupancy > 85
-											? "bg-destructive"
-											: station.occupancy > 70
-												? "bg-primary"
-												: "bg-secondary"
-									}`}
-								/>
+								<div className="flex items-center gap-2">
+									<div className="grid grid-cols-2 gap-[2px] opacity-20">
+										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
+										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
+										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
+										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
+									</div>
+									<div
+										className={`h-2 w-2 rounded-full ring-2 ring-offset-1 ring-offset-transparent ${
+											station.occupancy > 85
+												? "bg-destructive ring-destructive/30 animate-pulse"
+												: station.occupancy > 70
+													? "bg-primary ring-primary/30"
+													: "bg-secondary ring-secondary/30"
+										}`}
+									/>
+								</div>
 							</div>
 						</CardHeader>
-						<CardBody className="space-y-3 p-4">
-							<div className="grid grid-cols-2 gap-2">
-								<div>
-									<div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+						<CardBody className="relative space-y-3 p-4">
+							<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-background/15 to-transparent pointer-events-none" />
+							<div className="relative z-10 grid grid-cols-2 gap-2">
+								<div className="rounded-[2px] bg-background/30 p-2 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] ring-1 ring-inset ring-border/40">
+									<div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
 										Eff.
 									</div>
-									<div className="text-lg font-mono font-bold">{station.efficiency}</div>
+									<div className="mt-1 text-lg font-mono font-bold text-foreground/90">
+										{station.efficiency}
+									</div>
 								</div>
-								<div>
-									<div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+								<div className="rounded-[2px] bg-background/30 p-2 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] ring-1 ring-inset ring-border/40">
+									<div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
 										Occ.
 									</div>
-									<div className="text-lg font-mono font-bold">{station.occupancy}%</div>
+									<div className="mt-1 text-lg font-mono font-bold text-foreground/90">
+										{station.occupancy}%
+									</div>
 								</div>
 							</div>
-							<div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/50">
+							<div className="relative z-10 h-1.5 w-full overflow-hidden rounded-full bg-muted/40 ring-1 ring-inset ring-border/20">
 								<div
 									className={`h-full rounded-full ${
 										station.efficiency > 30
@@ -365,9 +500,20 @@ function ProductivityStationCards({
 									style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
 								/>
 							</div>
-							<div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
-								<span>{station.employees} Staff</span>
-								<span>
+							<div className="relative z-10 flex items-center justify-between text-[10px] font-mono font-medium text-muted-foreground">
+								<span className="flex items-center gap-1.5">
+									<span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+									{station.employees} Staff
+								</span>
+								<span
+									className={
+										station.occupancy < 60
+											? "text-warning"
+											: station.occupancy > 85
+												? "text-destructive"
+												: "text-primary"
+									}
+								>
 									{station.occupancy < 60 ? "LOW" : station.occupancy > 85 ? "HIGH" : "OK"}
 								</span>
 							</div>
@@ -389,72 +535,79 @@ function ProductivityEmployeeTable({
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load employee rankings."} />;
 	}
 
-	const { employeeProductivity, benchmarkData } = result.data;
+	const { employeeProductivity } = result.data;
 
 	return (
 		<ProductivityEmployeeTableContent
 			employeeProductivity={employeeProductivity}
-			benchmarkData={benchmarkData}
 		/>
 	);
 }
 
 export function ProductivityEmployeeTableContent({
 	employeeProductivity,
-	benchmarkData,
 }: {
 	employeeProductivity: AnalyticsData["employeeProductivity"];
-	benchmarkData: AnalyticsData["benchmarkData"];
 }) {
 	return (
-		<Card className="overflow-hidden">
-			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
-				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
-					Employee Productivity Rankings
-				</CardTitle>
-			</CardHeader>
+		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<HardwareCardHeader title="Employee Productivity Rankings" />
 			<div className="overflow-x-auto">
 				<table className="w-full">
 					<thead>
 						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-3 text-left font-medium">Employee</th>
+							<th className="px-4 py-3 text-left font-medium">Station</th>
 							<th className="px-4 py-3 text-right font-medium">Units</th>
 							<th className="px-4 py-3 text-right font-medium">Hours</th>
-							<th className="px-4 py-3 text-right font-medium">Rate</th>
-							<th className="px-4 py-3 text-left font-medium">Station</th>
-							<th className="px-4 py-3 text-left font-medium">Performance</th>
+							<th className="px-4 py-3 text-right font-medium">Rate (U/H)</th>
+							<th className="px-4 py-3 text-right font-medium">Vs Station Avg</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-border/30">
-						{employeeProductivity.map((employee, index) => (
-							<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
-								<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right text-muted-foreground">-</td>
-								<td className="px-4 py-2.5 text-right">
-									<span className="text-muted-foreground">Derived estimate</span>
-								</td>
-								<td className="px-4 py-2.5">
-									<Badge variant="secondary" className="h-5 text-[10px]">
-										{employee.station}
-									</Badge>
-								</td>
-								<td className="px-4 py-2.5">
-									{employee.value >= benchmarkData.productivity.top10Percent ? (
-										<span className="font-bold text-primary">TOP 10%</span>
-									) : employee.value >= benchmarkData.productivity.industryAvg ? (
-										<span className="text-secondary">ABOVE AVG</span>
-									) : (
-										<span className="text-muted-foreground">BELOW AVG</span>
-									)}
+						{employeeProductivity.length > 0 ? (
+							employeeProductivity.map((employee, index) => (
+								<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
+									<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
+									<td className="px-4 py-2.5">
+										<Badge variant="secondary" className="h-5 text-[10px]">
+											{employee.station}
+										</Badge>
+									</td>
+									<td className="px-4 py-2.5 text-right font-medium">{employee.units}</td>
+									<td className="px-4 py-2.5 text-right text-muted-foreground">{employee.hours}</td>
+									<td className="px-4 py-2.5 text-right font-medium">{employee.rate}</td>
+									<td className="px-4 py-2.5 text-right">
+										<div className="flex justify-end gap-2">
+											{employee.value >= 105 ? (
+												<Badge variant="primary">
+													Top Performer
+												</Badge>
+											) : employee.value >= 100 ? (
+												<Badge variant="success">
+													Above Avg
+												</Badge>
+											) : (
+												<Badge variant="outline" className="text-muted-foreground">
+													Below Avg
+												</Badge>
+											)}
+										</div>
+									</td>
+								</tr>
+							))
+						) : (
+							<tr>
+								<td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+									No productivity ranking data available for this period.
 								</td>
 							</tr>
-						))}
+						)}
 					</tbody>
 				</table>
 			</div>
 			<p className="border-t border-border/40 px-4 py-2 text-[11px] font-mono text-muted-foreground">
-				Rate values are hidden when per-employee Units/Hours source data is unavailable.
+				Rankings based on individual performance vs specific station averages.
 			</p>
 		</Card>
 	);
@@ -462,17 +615,19 @@ export function ProductivityEmployeeTableContent({
 
 function LaborCostSection({
 	displays,
+	compare,
 }: {
 	displays: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>;
+	compare: AnalyticsComparison;
 }) {
 	return (
 		<div className="space-y-6">
 			<Suspense fallback={<LaborCostKpiRowSkeleton />}>
-				<LaborCostKpiRow promise={displays.kpis} />
+				<LaborCostKpiRow promise={displays.kpis} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<LaborCostChartsSkeleton />}>
-				<LaborCostCharts promise={displays.charts} />
+				<LaborCostCharts promise={displays.charts} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<LaborCostStationTableSkeleton />}>
@@ -484,8 +639,10 @@ function LaborCostSection({
 
 function LaborCostKpiRow({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>["kpis"];
+	compare: AnalyticsComparison;
 }) {
 	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
@@ -493,30 +650,45 @@ function LaborCostKpiRow({
 	}
 
 	const { costSummary } = result.data;
+	const comparisonTrendLabel = getComparisonTrendLabel(compare);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 			<KPICard
-				title="Regular Hours"
+				title="Regular Cost"
 				value={`$${costSummary.regular.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-				subtitle="840 Hours Logged"
+				subtitle={`Baseline $${costSummary.comparisonRegular.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				icon="clock"
 				animateCountUp={!isCached}
+				trend={{
+					direction: getCostTrendDirection(costSummary.regularChangePercent),
+					value: `${costSummary.regularChangePercent > 0 ? "+" : ""}${costSummary.regularChangePercent}%`,
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<KPICard
 				title="Overtime Cost"
 				value={`$${costSummary.overtime.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-				subtitle="95 Hours Logged"
+				subtitle={`Baseline $${costSummary.comparisonOvertime.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				icon="dollar"
 				animateCountUp={!isCached}
-				trend={{ direction: "down", value: "-5%", label: "vs last period" }}
+				trend={{
+					direction: getCostTrendDirection(costSummary.overtimeChangePercent),
+					value: `${costSummary.overtimeChangePercent > 0 ? "+" : ""}${costSummary.overtimeChangePercent}%`,
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<KPICard
-				title="Total Cost"
+				title="Total Labor Cost"
 				value={`$${costSummary.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-				subtitle="Combined Labor"
+				subtitle={`Baseline $${costSummary.comparisonTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
 				icon="dollar"
 				animateCountUp={!isCached}
+				trend={{
+					direction: getCostTrendDirection(costSummary.totalChangePercent),
+					value: `${costSummary.totalChangePercent > 0 ? "+" : ""}${costSummary.totalChangePercent}%`,
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<Card
 				className={`h-full border-l-4 ${
@@ -552,8 +724,10 @@ function LaborCostKpiRow({
 
 function LaborCostCharts({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["labor-cost"]>["charts"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
@@ -561,18 +735,89 @@ function LaborCostCharts({
 	}
 
 	const { laborCostTrends, shiftProductivity, costBreakdown } = result.data;
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
+	const totalCost = costBreakdown.reduce((sum, item) => sum + item.value, 0);
+	const overtimeCost = costBreakdown.find((item) => item.name === "Overtime")?.value ?? 0;
+	const regularCost = costBreakdown.find((item) => item.name === "Regular Hours")?.value ?? 0;
+	const overtimeShare = totalCost > 0 ? (overtimeCost / totalCost) * 100 : 0;
+	const regularShare = totalCost > 0 ? (regularCost / totalCost) * 100 : 0;
 
 	return (
 		<>
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-				<LineChart title="Labor Cost Trends (Cost per Unit)" data={laborCostTrends} height={320} />
-				<BarChart title="Shift Productivity vs Cost" data={shiftProductivity} height={320} />
+				<LineChart
+					title={`Labor Cost Trend vs ${comparisonLabel}`}
+					data={laborCostTrends}
+					height={320}
+				/>
+				<BarChart
+					title={`Shift Productivity vs ${comparisonLabel}`}
+					data={shiftProductivity}
+					height={320}
+				/>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-6">
-				<div className="lg:col-span-1">
-					<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
-				</div>
+			<div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+				<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
+				<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+					<HardwareCardHeader
+						title="Cost Composition Brief"
+						subtitle="Use the spend mix to determine whether variance is driven by staffing depth or overtime pressure."
+						rightElement={
+							<div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+								Updated with current window
+							</div>
+						}
+					/>
+					<CardBody className="space-y-4 p-4 relative">
+						<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+						<div className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
+							<div className="rounded-[2px] border border-border/40 bg-background/80 p-3">
+								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
+									Regular Share
+								</div>
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+									{regularShare.toFixed(1)}%
+								</div>
+								<div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
+									<div className="h-full bg-primary" style={{ width: `${regularShare}%` }} />
+								</div>
+							</div>
+							<div className="rounded-[2px] border border-border/40 bg-background/80 p-3">
+								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
+									Overtime Share
+								</div>
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+									{overtimeShare.toFixed(1)}%
+								</div>
+								<div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
+									<div className="h-full bg-warning" style={{ width: `${overtimeShare}%` }} />
+								</div>
+							</div>
+						</div>
+
+						<div className="grid gap-3 rounded-[2px] border border-border/40 bg-background/70 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+							<div>
+								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
+									Interpretation
+								</div>
+								<p className="mt-2 text-sm text-muted-foreground">
+									{overtimeShare > 12
+										? "Overtime is becoming a visible share of total spend, so schedule stabilization should be prioritized before adding more raw hours."
+										: "Most labor spend is still regular-hour based, which suggests staffing coverage is carrying the current load without severe overtime drag."}
+								</p>
+							</div>
+							<div className="text-right">
+								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
+									Total Spend
+								</div>
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+									${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+								</div>
+							</div>
+						</div>
+					</CardBody>
+				</Card>
 			</div>
 		</>
 	);
@@ -591,14 +836,11 @@ function LaborCostStationTable({
 	const { stationSnapshots, benchmarkData } = result.data;
 
 	return (
-		<Card className="h-full flex flex-col">
-			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
-				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
-					Cost Analysis by Station
-				</CardTitle>
-			</CardHeader>
-			<div className="flex-1 overflow-x-auto">
-				<table className="w-full">
+		<Card className="h-full flex flex-col bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<HardwareCardHeader title="Cost Analysis by Station" />
+			<div className="flex-1 overflow-x-auto relative">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
+				<table className="w-full relative z-10">
 					<thead>
 						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-2 text-left">Station</th>
@@ -614,7 +856,9 @@ function LaborCostStationTable({
 							const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
 							const totalHours = regularHours + overtimeHours;
 							const totalCost = totalHours * 18.55;
-							const costPerUnit = totalCost / ((station.efficiency * totalHours) / 8);
+							const estimatedUnits = (station.efficiency * totalHours) / 8;
+							const costPerUnit =
+								estimatedUnits > 0 ? Number((totalCost / estimatedUnits).toFixed(2)) : null;
 
 							return (
 								<tr
@@ -632,9 +876,17 @@ function LaborCostStationTable({
 									>
 										{overtimeHours.toFixed(1)}
 									</td>
-									<td className="px-4 py-2 text-right font-bold">${costPerUnit.toFixed(2)}</td>
+									<td className="px-4 py-2 text-right font-bold">
+										{costPerUnit === null ? (
+											<span className="text-muted-foreground">N/A</span>
+										) : (
+											`$${costPerUnit.toFixed(2)}`
+										)}
+									</td>
 									<td className="px-4 py-2">
-										{costPerUnit > benchmarkData.costPerUnit.target ? (
+										{costPerUnit === null ? (
+											<span className="text-muted-foreground">NO OUTPUT</span>
+										) : costPerUnit > benchmarkData.costPerUnit.target ? (
 											<span className="font-bold text-destructive">OVER</span>
 										) : (
 											<span className="text-primary">OK</span>
@@ -652,8 +904,10 @@ function LaborCostStationTable({
 
 function TrendsSection({
 	displays,
+	compare,
 }: {
 	displays: NonNullable<AnalyticsSectionDisplayPromises["trends"]>;
+	compare: AnalyticsComparison;
 }) {
 	return (
 		<div className="space-y-6">
@@ -662,7 +916,7 @@ function TrendsSection({
 			</Suspense>
 
 			<Suspense fallback={<TrendChartsSkeleton />}>
-				<TrendCharts promise={displays.charts} />
+				<TrendCharts promise={displays.charts} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<TrendAnomalyTableSkeleton />}>
@@ -710,8 +964,10 @@ function TrendKpis({
 
 function TrendCharts({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["trends"]>["charts"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
@@ -719,11 +975,20 @@ function TrendCharts({
 	}
 
 	const { productivityTrends, laborCostTrends } = result.data;
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
 
 	return (
 		<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-			<LineChart title="Productivity Momentum" data={productivityTrends} height={320} />
-			<LineChart title="Cost Efficiency" data={laborCostTrends} height={320} />
+			<LineChart
+				title={`Productivity Momentum vs ${comparisonLabel}`}
+				data={productivityTrends}
+				height={320}
+			/>
+			<LineChart
+				title={`Cost Efficiency vs ${comparisonLabel}`}
+				data={laborCostTrends}
+				height={320}
+			/>
 		</div>
 	);
 }
@@ -740,15 +1005,31 @@ function TrendAnomalyTable({
 
 	const { anomalyData } = result.data;
 
+	if (anomalyData.length === 0) {
+		return (
+			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+				<HardwareCardHeader title="Detected Anomalies & Alerts" />
+				<CardBody className="p-8 text-center relative">
+					<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+					<div className="relative z-10">
+						<div className="text-xs font-bold font-industrial uppercase tracking-widest text-primary">
+							No Active Anomalies
+						</div>
+						<p className="mt-2 text-sm font-mono text-muted-foreground">
+							No anomalies were detected for the selected comparison window.
+						</p>
+					</div>
+				</CardBody>
+			</Card>
+		);
+	}
+
 	return (
-		<Card className="overflow-hidden">
-			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
-				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
-					Detected Anomalies & Alerts
-				</CardTitle>
-			</CardHeader>
-			<div className="overflow-x-auto">
-				<table className="w-full">
+		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<HardwareCardHeader title="Detected Anomalies & Alerts" />
+			<div className="overflow-x-auto relative">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
+				<table className="w-full relative z-10">
 					<thead>
 						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-3 text-left">Severity</th>
@@ -792,22 +1073,25 @@ function TrendAnomalyTable({
 
 function CapacitySection({
 	displays,
+	compare,
 }: {
 	displays: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>;
+	compare: AnalyticsComparison;
 }) {
 	return (
 		<div className="space-y-6">
 			<p className="text-xs font-mono text-muted-foreground">
-				Utilization is calculated as active staff divided by configured station capacity; staff
-				shortage compares active staffing against currently scheduled required headcount.
+				Windowed capacity planning is now compared against{" "}
+				{getAnalyticsComparisonLabel(compare).toLowerCase()}; the floor map remains a live
+				operational snapshot.
 			</p>
 
 			<Suspense fallback={<CapacityKpisSkeleton />}>
-				<CapacityKpis promise={displays.kpis} />
+				<CapacityKpis promise={displays.kpis} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<CapacityFloorSkeleton />}>
-				<CapacityFloor promise={displays.floor} />
+				<CapacityFloor promise={displays.floor} compare={compare} />
 			</Suspense>
 		</div>
 	);
@@ -815,47 +1099,69 @@ function CapacitySection({
 
 function CapacityKpis({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>["kpis"];
+	compare: AnalyticsComparison;
 }) {
 	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load capacity KPIs."} />;
 	}
 
-	const { capacityData } = result.data;
-	const staffShortageTrend = getStaffShortageTrend(capacityData.overall.staffShortage);
+	const { capacityComparisonData } = result.data;
+	const comparisonTrendLabel = getComparisonTrendLabel(compare);
+	const { overall } = capacityComparisonData;
 
 	return (
-		<div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 			<KPICard
 				title="Overall Utilization"
-				value={`${capacityData.overall.currentUtilization}%`}
-				subtitle={`Target: ${capacityData.overall.optimalUtilization}%`}
+				value={`${overall.currentUtilization}%`}
+				subtitle={`Target: ${overall.optimalUtilization}%`}
 				icon="industry"
 				animateCountUp={!isCached}
+				trend={{
+					direction: getPositiveDirection(overall.utilizationDelta),
+					value: formatSignedNumber(overall.utilizationDelta, " pts"),
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<KPICard
-				title="Staff Shortage"
-				value={capacityData.overall.staffShortage}
-				subtitle="Positions Needed"
+				title="Staffing Coverage"
+				value={`${overall.currentCoverage}%`}
+				subtitle={`${compactNumberFormatter.format(overall.currentStaffShortage)} roles uncovered`}
 				icon="users"
 				animateCountUp={!isCached}
-				trend={staffShortageTrend}
+				trend={{
+					direction: getPositiveDirection(overall.coverageDelta),
+					value: formatSignedNumber(overall.coverageDelta, " pts"),
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<KPICard
-				title="Cost Impact"
-				value={`$${capacityData.overall.costImpact.toLocaleString()}`}
-				subtitle="Weekly Opportunity"
+				title="Opportunity Cost"
+				value={wholeCurrencyFormatter.format(overall.currentCostImpact)}
+				subtitle={`Baseline ${wholeCurrencyFormatter.format(overall.comparisonCostImpact)}`}
 				icon="dollar"
 				animateCountUp={!isCached}
+				trend={{
+					direction: getInverseDirection(overall.costImpactDelta),
+					value: formatSignedCurrency(overall.costImpactDelta),
+					label: comparisonTrendLabel,
+				}}
 			/>
 			<KPICard
-				title="Bottlenecks"
-				value={capacityData.stations.filter((station) => station.utilization < 60).length}
-				subtitle="Stations Underutilized"
+				title="Pressure Stations"
+				value={overall.currentBottlenecks}
+				subtitle="Coverage or utilization below target"
 				icon="chart"
 				animateCountUp={!isCached}
+				trend={{
+					direction: getInverseDirection(overall.bottleneckDelta),
+					value: `${overall.bottleneckDelta > 0 ? "+" : ""}${overall.bottleneckDelta}`,
+					label: comparisonTrendLabel,
+				}}
 			/>
 		</div>
 	);
@@ -863,84 +1169,162 @@ function CapacityKpis({
 
 function CapacityFloor({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["capacity"]>["floor"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("floor", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load warehouse floor."} />;
 	}
 
-	const { capacityData, liveFloorData } = result.data;
+	const { capacityData, capacityComparisonData, liveFloorData } = result.data;
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
+	const liveByName = new Map(capacityData.stations.map((station) => [station.name, station]));
+	const rankedStations = [...capacityComparisonData.stations].sort(
+		(a, b) => b.currentGap - a.currentGap || a.coverageDelta - b.coverageDelta
+	);
+	const utilizationComparisonChart = {
+		labels: rankedStations.map((station) => station.name),
+		datasets: [
+			{
+				label: "Current",
+				data: rankedStations.map((station) => station.currentUtilization),
+				color: "#e07426",
+			},
+			{
+				label: comparisonLabel,
+				data: rankedStations.map((station) => station.comparisonUtilization),
+				color: "#cbd5e1",
+			},
+		],
+	};
 
 	return (
-		<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-			<div className="lg:col-span-2">
+		<div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+			<div className="space-y-6">
 				<WarehouseFloor data={liveFloorData} metric="occupancy" />
+				<BarChart
+					title={`Station Utilization vs ${comparisonLabel}`}
+					data={utilizationComparisonChart}
+					height={300}
+				/>
 			</div>
-			<div className="space-y-4 lg:col-span-1">
-				{capacityData.stations.slice(0, 3).map((station) => (
-					<Card key={station.name} className="overflow-hidden">
-						<CardHeader className="border-b border-border/50 bg-muted/30 py-2">
-							<div className="flex items-center justify-between">
-								<CardTitle className="text-xs font-industrial uppercase tracking-widest">
-									{station.name}
-								</CardTitle>
-								<span
-									className={`text-[10px] font-mono font-bold ${
-										station.utilization > 90
-											? "text-destructive"
-											: station.utilization > 70
-												? "text-primary"
-												: "text-muted-foreground"
-									}`}
+			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+				<HardwareCardHeader
+					title="Coverage Pressure Board"
+					subtitle={`Selected window vs ${comparisonLabel.toLowerCase()} by station.`}
+					rightElement={
+						<div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">
+							Delta View
+						</div>
+					}
+				/>
+				<CardBody className="space-y-3 p-3 relative">
+					<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+					<div className="relative z-10 space-y-3">
+						{rankedStations.slice(0, 6).map((station) => {
+							const liveStation = liveByName.get(station.name);
+							const status =
+								station.currentGap > 0.5
+									? { label: "Critical", variant: "destructive" as const }
+									: station.coverageDelta < 0
+										? { label: "Watch", variant: "secondary" as const }
+										: { label: "Stable", variant: "secondary" as const };
+
+							return (
+								<div
+									key={station.name}
+									className="rounded-[2px] border border-border/50 bg-background/70 p-3"
 								>
-									{station.utilization}% UTIL
-								</span>
-							</div>
-						</CardHeader>
-						<CardBody className="space-y-2 p-3">
-							<div className="flex justify-between text-xs font-mono">
-								<span className="text-muted-foreground">Staffing:</span>
-								<span>
-									{station.currentStaff} / {station.requiredStaff}
-								</span>
-							</div>
-							<div className="flex justify-between text-xs font-mono">
-								<span className="text-muted-foreground">Rec:</span>
-								<span className="font-bold text-primary">
-									{station.recommendedStaff} (+
-									{station.recommendedStaff - station.currentStaff})
-								</span>
-							</div>
-							<div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted/50">
-								<div className="h-full bg-primary" style={{ width: `${station.utilization}%` }} />
-							</div>
-						</CardBody>
-					</Card>
-				))}
-			</div>
+									<div className="flex items-start justify-between gap-3">
+										<div className="min-w-0">
+											<div className="text-xs font-bold font-industrial uppercase tracking-[0.16em] text-foreground">
+												{station.name}
+											</div>
+											<div className="mt-1 text-[10px] font-mono text-muted-foreground">
+												Live {liveStation?.currentStaff ?? 0} /{" "}
+												{liveStation?.requiredStaff ?? station.recommendedStaff} · target{" "}
+												{station.recommendedStaff}
+											</div>
+										</div>
+										<Badge
+											variant={status.variant}
+											className={
+												status.variant === "secondary"
+													? "border-border/60 bg-muted/40 text-foreground"
+													: undefined
+											}
+										>
+											{status.label}
+										</Badge>
+									</div>
+									<div className="mt-3 grid grid-cols-3 gap-3 text-[11px] font-mono">
+										<div>
+											<div className="text-muted-foreground">Coverage</div>
+											<div className="mt-1 font-semibold">{station.currentCoverage}%</div>
+										</div>
+										<div>
+											<div className="text-muted-foreground">Baseline</div>
+											<div className="mt-1">{station.comparisonCoverage}%</div>
+										</div>
+										<div>
+											<div className="text-muted-foreground">Gap</div>
+											<div
+												className={`mt-1 font-semibold ${station.currentGap > 0 ? "text-destructive" : "text-primary"}`}
+											>
+												{compactNumberFormatter.format(station.currentGap)}
+											</div>
+										</div>
+									</div>
+									<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+										<div
+											className={`h-full ${station.currentCoverage >= station.comparisonCoverage ? "bg-primary" : "bg-destructive"}`}
+											style={{ width: `${Math.max(6, Math.min(100, station.currentCoverage))}%` }}
+										/>
+									</div>
+									<div className="mt-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+										<span>Δ {formatSignedNumber(station.coverageDelta, " pts")}</span>
+										<span>
+											Util {station.currentUtilization}% / {station.comparisonUtilization}%
+										</span>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				</CardBody>
+			</Card>
 		</div>
 	);
 }
 
 function BenchmarksSection({
 	displays,
+	compare,
 }: {
 	displays: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>;
+	compare: AnalyticsComparison;
 }) {
 	return (
 		<div className="space-y-6">
+			<p className="text-xs font-mono text-muted-foreground">
+				Benchmark ladders now show how the selected window moved against{" "}
+				{getAnalyticsComparisonLabel(compare).toLowerCase()} while staying anchored to industry and
+				target bands.
+			</p>
+
 			<Suspense fallback={<BenchmarkKpisSkeleton />}>
-				<BenchmarkKpis promise={displays.kpis} />
+				<BenchmarkKpis promise={displays.kpis} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<BenchmarkChartsSkeleton />}>
-				<BenchmarkCharts promise={displays.charts} />
+				<BenchmarkCharts promise={displays.charts} compare={compare} />
 			</Suspense>
 
 			<Suspense fallback={<BenchmarkStationTableSkeleton />}>
-				<BenchmarkStationTable promise={displays.stationTable} />
+				<BenchmarkStationTable promise={displays.stationTable} compare={compare} />
 			</Suspense>
 		</div>
 	);
@@ -948,8 +1332,10 @@ function BenchmarksSection({
 
 function BenchmarkKpis({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["kpis"];
+	compare: AnalyticsComparison;
 }) {
 	const { data: result, isCached } = useCachedDisplayState("kpis", promise);
 	if (result.error || !result.data) {
@@ -957,14 +1343,10 @@ function BenchmarkKpis({
 	}
 
 	const { benchmarkData } = result.data;
-	const productivityDeltaVsIndustry =
-		benchmarkData.productivity.current - benchmarkData.productivity.industryAvg;
-	const costDeltaVsIndustry =
-		benchmarkData.costPerUnit.current - benchmarkData.costPerUnit.industryAvg;
-	const qualityDeltaVsIndustry = benchmarkData.quality.current - benchmarkData.quality.industryAvg;
+	const comparisonTrendLabel = getComparisonTrendLabel(compare);
 
 	return (
-		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 			<KPICard
 				title="Productivity Position"
 				value={`${benchmarkData.productivity.current} u/h`}
@@ -972,21 +1354,21 @@ function BenchmarkKpis({
 				icon="chart"
 				animateCountUp={!isCached}
 				trend={{
-					direction: productivityDeltaVsIndustry >= 0 ? "up" : "down",
-					value: `${productivityDeltaVsIndustry >= 0 ? "+" : ""}${productivityDeltaVsIndustry.toFixed(1)} u/h`,
-					label: "vs industry avg",
+					direction: getPositiveDirection(benchmarkData.productivity.change),
+					value: formatSignedNumber(benchmarkData.productivity.change, " u/h"),
+					label: comparisonTrendLabel,
 				}}
 			/>
 			<KPICard
 				title="Cost Position"
-				value={`$${benchmarkData.costPerUnit.current.toFixed(2)}`}
-				subtitle={`Target: $${benchmarkData.costPerUnit.target.toFixed(2)}`}
+				value={preciseCurrencyFormatter.format(benchmarkData.costPerUnit.current)}
+				subtitle={`Target: ${preciseCurrencyFormatter.format(benchmarkData.costPerUnit.target)}`}
 				icon="dollar"
 				animateCountUp={!isCached}
 				trend={{
-					direction: costDeltaVsIndustry <= 0 ? "up" : "down",
-					value: `${costDeltaVsIndustry >= 0 ? "+" : ""}${costDeltaVsIndustry.toFixed(2)}`,
-					label: "vs industry avg",
+					direction: getInverseDirection(benchmarkData.costPerUnit.change),
+					value: formatSignedCurrency(benchmarkData.costPerUnit.change, true),
+					label: comparisonTrendLabel,
 				}}
 			/>
 			<KPICard
@@ -996,19 +1378,131 @@ function BenchmarkKpis({
 				icon="percent"
 				animateCountUp={!isCached}
 				trend={{
-					direction: qualityDeltaVsIndustry >= 0 ? "up" : "down",
-					value: `${qualityDeltaVsIndustry >= 0 ? "+" : ""}${qualityDeltaVsIndustry.toFixed(1)} pts`,
-					label: "vs industry avg",
+					direction: getPositiveDirection(benchmarkData.quality.change),
+					value: formatSignedNumber(benchmarkData.quality.change, " pts"),
+					label: comparisonTrendLabel,
 				}}
 			/>
 		</div>
 	);
 }
 
+function BenchmarkLadderCard({
+	title,
+	metrics,
+	lowerIsBetter = false,
+	formatValue = (v: number) => String(v),
+}: {
+	title: string;
+	metrics: Array<{
+		label: string;
+		value: number;
+		type: "current" | "baseline" | "target" | "industry" | "top";
+	}>;
+	lowerIsBetter?: boolean;
+	formatValue?: (v: number) => string;
+}) {
+	const sortedMetrics = [...metrics].sort((a, b) =>
+		lowerIsBetter ? a.value - b.value : b.value - a.value
+	);
+
+	return (
+		<Card className="group relative flex h-full flex-col overflow-hidden bg-card/40 backdrop-blur-sm transition-all duration-500 hover:bg-card/60">
+			<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+			<CardHeader className="relative border-b border-border/40 bg-muted/20 py-4 px-5">
+				<div className="flex items-center justify-between">
+					<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.2em] text-muted-foreground/80 group-hover:text-foreground/90 transition-colors duration-300">
+						{title}
+					</CardTitle>
+					{lowerIsBetter && (
+						<div className="rounded-[2px] border border-border/40 bg-background/50 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+							Lower is Better
+						</div>
+					)}
+				</div>
+			</CardHeader>
+			<CardBody className="relative flex-1 p-5">
+				<div className="relative flex h-full flex-col justify-center space-y-3">
+					{/* Vertical track line for the ladder effect */}
+					<div className="absolute left-[31px] top-4 bottom-4 w-px bg-border/40" />
+
+					{sortedMetrics.map((m, i) => {
+						const isCurrent = m.type === "current";
+						const isBaseline = m.type === "baseline";
+						const isTop = m.type === "top";
+						const isTarget = m.type === "target";
+
+						return (
+							<div
+								key={m.label}
+								className={`relative z-10 flex items-center justify-between rounded-[2px] border p-3 transition-all duration-300 ${
+									isCurrent
+										? "border-primary/40 bg-primary/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_4px_12px_rgba(0,0,0,0.1)] ring-1 ring-primary/20"
+										: isBaseline
+											? "border-border/60 bg-muted/30"
+											: "border-transparent bg-background/40 hover:bg-muted/30 hover:border-border/50"
+								}`}
+							>
+								<div className="flex items-center gap-4">
+									<div className="flex w-6 justify-center">
+										<div
+											className={`text-[10px] font-mono ${isCurrent ? "font-bold text-primary" : "text-muted-foreground/50"}`}
+										>
+											{String(i + 1).padStart(2, "0")}
+										</div>
+									</div>
+									<div className="relative flex h-3 w-3 items-center justify-center">
+										{isCurrent && (
+											<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-40" />
+										)}
+										<div
+											className={`h-2 w-2 rounded-full ring-2 ring-offset-1 ring-offset-transparent ${
+												isCurrent
+													? "bg-primary ring-primary/30"
+													: isTop
+														? "bg-chart-2 ring-chart-2/20"
+														: isTarget
+															? "bg-foreground/80 ring-border"
+															: isBaseline
+																? "bg-muted-foreground/50 ring-transparent"
+																: "bg-border ring-transparent"
+											}`}
+										/>
+									</div>
+									<span
+										className={`text-[11px] font-bold font-industrial uppercase tracking-widest ${
+											isCurrent ? "text-foreground" : "text-muted-foreground"
+										}`}
+									>
+										{m.label}
+									</span>
+								</div>
+								<div
+									className={`text-sm font-mono tracking-tight ${
+										isCurrent
+											? "font-bold text-primary"
+											: isBaseline
+												? "text-muted-foreground line-through decoration-muted-foreground/30"
+												: "text-foreground/90 font-medium"
+									}`}
+								>
+									{formatValue(m.value)}
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			</CardBody>
+		</Card>
+	);
+}
+
 function BenchmarkCharts({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["charts"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("charts", promise);
 	if (result.error || !result.data) {
@@ -1016,50 +1510,51 @@ function BenchmarkCharts({
 	}
 
 	const { benchmarkData } = result.data;
-
-	const productivityBenchmarkChart = {
-		labels: ["Industry Avg", "Current", "Target", "Top 10%"],
-		datasets: [
-			{
-				label: "Units per Hour",
-				data: [
-					benchmarkData.productivity.industryAvg,
-					benchmarkData.productivity.current,
-					benchmarkData.productivity.target,
-					benchmarkData.productivity.top10Percent,
-				],
-				color: "#e07426",
-			},
-		],
-	};
-
-	const costBenchmarkChart = {
-		labels: ["Bottom 10%", "Target", "Current", "Industry Avg"],
-		datasets: [
-			{
-				label: "Cost per Unit",
-				data: [
-					benchmarkData.costPerUnit.bottom10Percent,
-					benchmarkData.costPerUnit.target,
-					benchmarkData.costPerUnit.current,
-					benchmarkData.costPerUnit.industryAvg,
-				],
-				color: "#ef4444",
-			},
-		],
-	};
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
 
 	return (
-		<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-			<BarChart
-				title="Productivity Benchmark Ladder"
-				data={productivityBenchmarkChart}
-				height={300}
+		<div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+			<BenchmarkLadderCard
+				title={`Productivity vs ${comparisonLabel}`}
+				metrics={[
+					{
+						label: comparisonLabel,
+						value: benchmarkData.productivity.comparison,
+						type: "baseline",
+					},
+					{ label: "Current", value: benchmarkData.productivity.current, type: "current" },
+					{
+						label: "Industry Avg",
+						value: benchmarkData.productivity.industryAvg,
+						type: "industry",
+					},
+					{ label: "Target", value: benchmarkData.productivity.target, type: "target" },
+					{ label: "Top 10%", value: benchmarkData.productivity.top10Percent, type: "top" },
+				]}
+				formatValue={(v) => `${v.toFixed(1)} u/h`}
 			/>
-			<BarChart
-				title="Cost Benchmark Ladder (Lower Is Better)"
-				data={costBenchmarkChart}
-				height={300}
+			<BenchmarkLadderCard
+				title={`Cost vs ${comparisonLabel}`}
+				lowerIsBetter={true}
+				metrics={[
+					{ label: "Bottom 10%", value: benchmarkData.costPerUnit.bottom10Percent, type: "top" },
+					{ label: "Target", value: benchmarkData.costPerUnit.target, type: "target" },
+					{ label: comparisonLabel, value: benchmarkData.costPerUnit.comparison, type: "baseline" },
+					{ label: "Current", value: benchmarkData.costPerUnit.current, type: "current" },
+					{ label: "Industry Avg", value: benchmarkData.costPerUnit.industryAvg, type: "industry" },
+				]}
+				formatValue={(v) => preciseCurrencyFormatter.format(v)}
+			/>
+			<BenchmarkLadderCard
+				title={`Quality vs ${comparisonLabel}`}
+				metrics={[
+					{ label: comparisonLabel, value: benchmarkData.quality.comparison, type: "baseline" },
+					{ label: "Current", value: benchmarkData.quality.current, type: "current" },
+					{ label: "Industry Avg", value: benchmarkData.quality.industryAvg, type: "industry" },
+					{ label: "Target", value: benchmarkData.quality.target, type: "target" },
+					{ label: "Top 10%", value: benchmarkData.quality.top10Percent, type: "top" },
+				]}
+				formatValue={(v) => `${v.toFixed(1)}%`}
 			/>
 		</div>
 	);
@@ -1067,20 +1562,22 @@ function BenchmarkCharts({
 
 function BenchmarkStationTable({
 	promise,
+	compare,
 }: {
 	promise: NonNullable<AnalyticsSectionDisplayPromises["benchmarks"]>["stationTable"];
+	compare: AnalyticsComparison;
 }) {
 	const result = useCachedDisplay("station-table", promise);
 	if (result.error || !result.data) {
 		return <AnalyticsErrorCard message={result.error ?? "Unable to load benchmark table."} />;
 	}
 
-	const { stationSnapshots, benchmarkData } = result.data;
+	const { stationBenchmarkComparison, benchmarkData } = result.data;
+	const comparisonLabel = getAnalyticsComparisonLabel(compare);
 
-	const stationBenchmarkRows = stationSnapshots
+	const stationBenchmarkRows = stationBenchmarkComparison
 		.map((station) => {
 			const vsIndustry = station.efficiency - benchmarkData.productivity.industryAvg;
-			const vsTarget = station.efficiency - benchmarkData.productivity.target;
 
 			let status: "TOP 10%" | "ABOVE AVG" | "BELOW AVG" = "BELOW AVG";
 			if (station.efficiency >= benchmarkData.productivity.top10Percent) {
@@ -1092,27 +1589,24 @@ function BenchmarkStationTable({
 			return {
 				...station,
 				vsIndustry,
-				vsTarget,
 				status,
 			};
 		})
 		.sort((a, b) => b.efficiency - a.efficiency);
 
 	return (
-		<Card className="overflow-hidden">
-			<CardHeader className="border-b border-border/50 bg-muted/30 py-3">
-				<CardTitle className="text-sm font-industrial uppercase tracking-widest text-muted-foreground">
-					Station Benchmark Positioning
-				</CardTitle>
-			</CardHeader>
-			<div className="overflow-x-auto">
-				<table className="w-full">
+		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<HardwareCardHeader title={`Station Positioning vs ${comparisonLabel}`} />
+			<div className="overflow-x-auto relative">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
+				<table className="w-full relative z-10">
 					<thead>
 						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-3 text-left font-medium">Station</th>
-							<th className="px-4 py-3 text-right font-medium">Efficiency</th>
+							<th className="px-4 py-3 text-right font-medium">Current</th>
+							<th className="px-4 py-3 text-right font-medium">Baseline</th>
+							<th className="px-4 py-3 text-right font-medium">Δ vs Base</th>
 							<th className="px-4 py-3 text-right font-medium">Vs Industry</th>
-							<th className="px-4 py-3 text-right font-medium">Vs Target</th>
 							<th className="px-4 py-3 text-left font-medium">Tier</th>
 						</tr>
 					</thead>
@@ -1127,6 +1621,17 @@ function BenchmarkStationTable({
 									<td className="px-4 py-2.5 text-right font-bold">
 										{station.efficiency.toFixed(1)}
 									</td>
+									<td className="px-4 py-2.5 text-right text-muted-foreground">
+										{station.comparisonEfficiency.toFixed(1)}
+									</td>
+									<td
+										className={`px-4 py-2.5 text-right ${
+											station.delta >= 0 ? "text-primary" : "text-destructive"
+										}`}
+									>
+										{station.delta >= 0 ? "+" : ""}
+										{station.delta.toFixed(1)}
+									</td>
 									<td
 										className={`px-4 py-2.5 text-right ${
 											station.vsIndustry >= 0 ? "text-primary" : "text-destructive"
@@ -1134,14 +1639,6 @@ function BenchmarkStationTable({
 									>
 										{station.vsIndustry >= 0 ? "+" : ""}
 										{station.vsIndustry.toFixed(1)}
-									</td>
-									<td
-										className={`px-4 py-2.5 text-right ${
-											station.vsTarget >= 0 ? "text-primary" : "text-muted-foreground"
-										}`}
-									>
-										{station.vsTarget >= 0 ? "+" : ""}
-										{station.vsTarget.toFixed(1)}
 									</td>
 									<td className="px-4 py-2.5">
 										{station.status === "TOP 10%" ? (
@@ -1157,7 +1654,7 @@ function BenchmarkStationTable({
 						) : (
 							<tr>
 								<td
-									colSpan={5}
+									colSpan={6}
 									className="px-4 py-6 text-center text-xs font-mono text-muted-foreground"
 								>
 									No station benchmark data available for the selected window.

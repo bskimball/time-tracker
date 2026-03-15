@@ -34,7 +34,18 @@ async function main() {
 	await prisma.taskType.deleteMany();
 	await prisma.session.deleteMany();
 	await prisma.oAuthAccount.deleteMany();
-	await prisma.user.deleteMany();
+	
+	// Unlink employees from users so we can delete employees safely
+	await prisma.user.updateMany({
+		data: { employeeId: null },
+	});
+	
+	// Delete all users except admin and manager
+	await prisma.user.deleteMany({
+		where: {
+			email: { notIn: ["admin@warehouse.com", "manager@warehouse.com"] },
+		},
+	});
 	await prisma.employee.deleteMany();
 	await prisma.breakPolicy.deleteMany();
 	await prisma.station.deleteMany();
@@ -206,11 +217,18 @@ async function main() {
 
 	console.log(`✅ Created ${employees.length} employees`);
 
-	// Create Admin User
-	console.log("👤 Creating admin user...");
+	// Update Admin User
+	console.log("👤 Updating admin user...");
 	const adminEmployee = employees[0]; // John Smith as admin
-	const adminUser = await prisma.user.create({
-		data: {
+	const adminUser = await prisma.user.upsert({
+		where: { email: "admin@warehouse.com" },
+		update: {
+			name: "Admin User",
+			role: "ADMIN",
+			employeeId: adminEmployee.id,
+			updatedAt: new Date(),
+		},
+		create: {
 			email: "admin@warehouse.com",
 			name: "Admin User",
 			role: "ADMIN",
@@ -219,13 +237,20 @@ async function main() {
 		},
 	});
 
-	console.log(`✅ Created admin user: ${adminUser.email}`);
+	console.log(`✅ Updated admin user: ${adminUser.email}`);
 
-	// Create Manager User
-	console.log("👤 Creating manager user...");
+	// Update Manager User
+	console.log("👤 Updating manager user...");
 	const managerEmployee = employees[1]; // Sarah Johnson as manager
-	const managerUser = await prisma.user.create({
-		data: {
+	const managerUser = await prisma.user.upsert({
+		where: { email: "manager@warehouse.com" },
+		update: {
+			name: "Manager User",
+			role: "MANAGER",
+			employeeId: managerEmployee.id,
+			updatedAt: new Date(),
+		},
+		create: {
 			email: "manager@warehouse.com",
 			name: "Manager User",
 			role: "MANAGER",
@@ -234,22 +259,7 @@ async function main() {
 		},
 	});
 
-	console.log(`✅ Created manager user: ${managerUser.email}`);
-
-	// Create Worker User
-	console.log("👤 Creating worker user...");
-	const workerEmployee = employees[2]; // Michael Chen as worker
-	const workerUser = await prisma.user.create({
-		data: {
-			email: "worker@warehouse.com",
-			name: "Worker User",
-			role: "WORKER",
-			employeeId: workerEmployee.id,
-			updatedAt: new Date(),
-		},
-	});
-
-	console.log(`✅ Created worker user: ${workerUser.email}`);
+	console.log(`✅ Updated manager user: ${managerUser.email}`);
 
 	// Create Task Types
 	console.log("📋 Creating task types...");
@@ -667,11 +677,10 @@ async function main() {
 	console.log(`   - Task Assignments: ${createdTasks.length} (${activeTaskCount} active)`);
 	console.log(`   - Time Logs: ${timeLogRows.length} (${activeTimeLogCount} active)`);
 	console.log(`   - Performance Metrics: ${metricRows.length}`);
-	console.log(`   - Users: 3 (Admin, Manager, Worker)`);
+	console.log(`   - Users: 2 (Admin, Manager)`);
 	console.log("\n🔑 Login Information:");
 	console.log(`   - Admin: admin@warehouse.com`);
 	console.log(`   - Manager: manager@warehouse.com`);
-	console.log(`   - Worker: worker@warehouse.com`);
 	console.log(`   - Employee PIN for all: 1234`);
 }
 

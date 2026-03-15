@@ -6,23 +6,20 @@ import {
 } from "~/routes/executive/analytics/analytics-dashboard";
 
 describe("Analytics productivity employee table", () => {
-	it("renders derived estimate fallback when per-employee volume inputs are unavailable", () => {
+	it("renders employee data correctly", () => {
 		render(
 			<ProductivityEmployeeTableContent
-				employeeProductivity={[{ employee: "Alice", value: 28, station: "PICKING" }] as any}
-				benchmarkData={
-					{
-						productivity: { current: 20, industryAvg: 18, top10Percent: 30 },
-						quality: { current: 95 },
-					} as any
-				}
+				employeeProductivity={[
+					{ employee: "Alice", value: 115, station: "PICKING", units: 300, hours: 10, rate: 30 },
+				]}
 			/>
 		);
 
 		const employeeCell = screen.getByText("Alice");
 		const row = employeeCell.closest("tr");
 		expect(row).toBeTruthy();
-		expect(within(row as HTMLElement).getByText("Derived estimate")).toBeInTheDocument();
+		expect(within(row as HTMLElement).getByText("30")).toBeInTheDocument(); // rate
+		expect(within(row as HTMLElement).getByText("TOP PERFORMER")).toBeInTheDocument();
 	});
 });
 
