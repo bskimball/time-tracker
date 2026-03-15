@@ -537,11 +537,7 @@ function ProductivityEmployeeTable({
 
 	const { employeeProductivity } = result.data;
 
-	return (
-		<ProductivityEmployeeTableContent
-			employeeProductivity={employeeProductivity}
-		/>
-	);
+	return <ProductivityEmployeeTableContent employeeProductivity={employeeProductivity} />;
 }
 
 export function ProductivityEmployeeTableContent({
@@ -580,13 +576,9 @@ export function ProductivityEmployeeTableContent({
 									<td className="px-4 py-2.5 text-right">
 										<div className="flex justify-end gap-2">
 											{employee.value >= 105 ? (
-												<Badge variant="primary">
-													Top Performer
-												</Badge>
+												<Badge variant="primary">Top Performer</Badge>
 											) : employee.value >= 100 ? (
-												<Badge variant="success">
-													Above Avg
-												</Badge>
+												<Badge variant="success">Above Avg</Badge>
 											) : (
 												<Badge variant="outline" className="text-muted-foreground">
 													Below Avg

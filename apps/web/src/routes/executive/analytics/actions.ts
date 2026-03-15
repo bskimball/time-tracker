@@ -551,7 +551,13 @@ export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRan
 			stationId: { not: null },
 			efficiency: { not: null },
 		},
-		select: { employeeId: true, stationId: true, efficiency: true, unitsProcessed: true, hoursWorked: true },
+		select: {
+			employeeId: true,
+			stationId: true,
+			efficiency: true,
+			unitsProcessed: true,
+			hoursWorked: true,
+		},
 	});
 
 	if (rawMetrics.length === 0) return [];
@@ -574,22 +580,37 @@ export async function getEmployeeProductivityRanking(timeRange: AnalyticsTimeRan
 	}
 
 	// Group by employee and calculate their normalized score (100 = average for their station)
-	const employeeMetrics = new Map<string, { sumNormalized: number; count: number; primaryStation: string | null; totalUnits: number; totalHours: number }>();
+	const employeeMetrics = new Map<
+		string,
+		{
+			sumNormalized: number;
+			count: number;
+			primaryStation: string | null;
+			totalUnits: number;
+			totalHours: number;
+		}
+	>();
 	for (const m of rawMetrics) {
 		if (!m.stationId || m.efficiency === null) continue;
-		
+
 		if (!employeeMetrics.has(m.employeeId)) {
-			employeeMetrics.set(m.employeeId, { sumNormalized: 0, count: 0, primaryStation: m.stationId, totalUnits: 0, totalHours: 0 });
+			employeeMetrics.set(m.employeeId, {
+				sumNormalized: 0,
+				count: 0,
+				primaryStation: m.stationId,
+				totalUnits: 0,
+				totalHours: 0,
+			});
 		}
 		const e = employeeMetrics.get(m.employeeId)!;
-		
+
 		const stationAvg = stationAverages.get(m.stationId);
 		if (stationAvg && stationAvg > 0) {
 			const normalizedScore = (m.efficiency / stationAvg) * 100;
 			e.sumNormalized += normalizedScore;
 			e.count += 1;
 		}
-		
+
 		if (m.unitsProcessed != null) e.totalUnits += m.unitsProcessed;
 		if (m.hoursWorked != null) e.totalHours += m.hoursWorked;
 	}
