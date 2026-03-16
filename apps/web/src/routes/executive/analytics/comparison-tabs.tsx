@@ -79,7 +79,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 			<TabList
 				aria-label="Select comparison window"
 				className={cn(
-					"grid w-full grid-cols-1 sm:grid-cols-3 gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
+					"grid w-full grid-cols-1 sm:grid-cols-3 gap-px bg-border/60 p-px border-2 border-border/80",
 					className
 				)}
 			>
@@ -89,10 +89,10 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 						id={option.id}
 						className={({ isSelected }) =>
 							cn(
-								"group relative flex h-10 items-center justify-center overflow-hidden rounded-[1px] px-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
+								"group relative flex h-10 items-center justify-center overflow-hidden px-3 text-[10px] font-mono font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
 								isSelected
-									? "bg-card/80 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.15)] ring-1 ring-border"
-									: "bg-transparent text-muted-foreground/70 hover:bg-card/40 hover:text-foreground"
+									? "bg-card text-foreground"
+									: "bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground"
 							)
 						}
 					>
@@ -100,10 +100,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 							<>
 								<span className="relative z-10">{option.label}</span>
 								{isSelected && (
-									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary shadow-[0_-2px_8px_var(--color-primary)]" />
-								)}
-								{!isSelected && (
-									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-border/40 transition-colors duration-300 group-hover:bg-border/80" />
+									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
 								)}
 							</>
 						)}

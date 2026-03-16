@@ -44,7 +44,7 @@ export function SectionTabs({
 			<TabList
 				aria-label="Select analytics section"
 				className={cn(
-					"grid w-full grid-cols-2 lg:grid-cols-5 gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
+					"grid w-full grid-cols-2 lg:grid-cols-5 gap-px bg-border/60 p-px border-2 border-border/80",
 					className
 				)}
 			>
@@ -54,10 +54,10 @@ export function SectionTabs({
 						key={id}
 						className={({ isSelected }) =>
 							cn(
-								"group relative flex h-10 items-center justify-center overflow-hidden rounded-[1px] px-4 text-[11px] font-bold font-industrial uppercase tracking-[0.16em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
+								"group relative flex h-10 items-center justify-center overflow-hidden px-4 text-[11px] font-mono font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
 								isSelected
-									? "bg-card/80 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.15)] ring-1 ring-border"
-									: "bg-transparent text-muted-foreground/70 hover:bg-card/40 hover:text-foreground"
+									? "bg-card text-foreground"
+									: "bg-muted/30 text-muted-foreground/70 hover:bg-muted/60 hover:text-foreground"
 							)
 						}
 					>
@@ -65,10 +65,7 @@ export function SectionTabs({
 							<>
 								<span className="relative z-10">{label}</span>
 								{isSelected && (
-									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary shadow-[0_-2px_8px_var(--color-primary)]" />
-								)}
-								{!isSelected && (
-									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-border/40 transition-colors duration-300 group-hover:bg-border/80" />
+									<span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
 								)}
 							</>
 						)}
