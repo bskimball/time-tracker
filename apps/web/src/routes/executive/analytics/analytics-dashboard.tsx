@@ -453,11 +453,12 @@ function ProductivityStationCards({
 				{stationSnapshots.map((station: AnalyticsStationOverview) => (
 					<Card
 						key={station.name}
-						className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1"
+						className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40"
 					>
-						<CardHeader className="relative border-b-2 border-primary/20 bg-primary/5 py-2.5 px-3">
+						<CardHeader className="relative border-b border-border/50 bg-muted/20 py-2.5 px-3">
+							<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
 							<div className="flex items-center justify-between">
-								<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.15em] text-foreground/90">
+								<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.15em] text-muted-foreground/90">
 									{station.name}
 								</CardTitle>
 								<div className="flex items-center gap-2">
@@ -479,7 +480,8 @@ function ProductivityStationCards({
 								</div>
 							</div>
 						</CardHeader>
-						<CardBody className="relative space-y-3 p-4 bg-background/30">
+						<CardBody className="relative space-y-3 p-4">
+							<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-background/15 to-transparent pointer-events-none" />
 							<div className="relative z-10 grid grid-cols-2 gap-2">
 								<div className="border border-primary/20 bg-background/50 p-2">
 									<div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -556,12 +558,12 @@ export function ProductivityEmployeeTableContent({
 	employeeProductivity: AnalyticsData["employeeProductivity"];
 }) {
 	return (
-		<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
+		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] ring-1 ring-inset ring-border/40">
 			<HardwareCardHeader title="Employee Productivity Rankings" />
 			<div className="overflow-x-auto">
 				<table className="w-full">
 					<thead>
-						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-3 text-left font-bold">Employee</th>
 							<th className="px-4 py-3 text-left font-bold">Station</th>
 							<th className="px-4 py-3 text-right font-bold">Units</th>
@@ -570,10 +572,10 @@ export function ProductivityEmployeeTableContent({
 							<th className="px-4 py-3 text-right font-bold">Vs Station Avg</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-primary/10">
+					<tbody className="divide-y divide-border/30">
 						{employeeProductivity.length > 0 ? (
 							employeeProductivity.map((employee, index) => (
-								<tr key={index} className="text-xs font-mono transition-colors hover:bg-primary/5">
+								<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
 									<td className="px-4 py-2.5 font-bold text-foreground/90">{employee.employee}</td>
 									<td className="px-4 py-2.5">
 										<span className="inline-flex items-center px-2 py-0.5 border border-primary/20 text-[10px] font-bold text-foreground uppercase tracking-wider bg-background/50">
@@ -769,7 +771,7 @@ function LaborCostCharts({
 
 			<div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
 				<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
-				<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1">
+				<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40">
 					<HardwareCardHeader
 						title="Cost Composition Brief"
 						subtitle="Use the spend mix to determine whether variance is driven by staffing depth or overtime pressure."
@@ -848,12 +850,12 @@ function LaborCostStationTable({
 	const { stationSnapshots, benchmarkData } = result.data;
 
 	return (
-		<Card className="h-full flex flex-col border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
+		<Card className="h-full flex flex-col bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40">
 			<HardwareCardHeader title="Cost Analysis by Station" />
 			<div className="flex-1 overflow-x-auto relative bg-background/50">
 				<table className="w-full relative z-10">
 					<thead>
-						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-2 text-left font-bold">Station</th>
 							<th className="px-4 py-2 text-right font-bold">Total Hours</th>
 							<th className="px-4 py-2 text-right font-bold">OT Hours</th>
@@ -861,7 +863,7 @@ function LaborCostStationTable({
 							<th className="px-4 py-2 text-left font-bold">Status</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-primary/10">
+					<tbody className="divide-y divide-border/30">
 						{stationSnapshots.map((station) => {
 							const regularHours = 156.8;
 							const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
@@ -874,7 +876,7 @@ function LaborCostStationTable({
 							return (
 								<tr
 									key={station.name}
-									className="text-xs font-mono transition-colors hover:bg-primary/5"
+									className="text-xs font-mono transition-colors hover:bg-muted/20"
 								>
 									<td className="px-4 py-2 font-bold text-foreground/90">{station.name}</td>
 									<td className="px-4 py-2 text-right text-muted-foreground">
@@ -1024,7 +1026,7 @@ function TrendAnomalyTable({
 
 	if (anomalyData.length === 0) {
 		return (
-			<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
+			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] ring-1 ring-inset ring-border/40">
 				<HardwareCardHeader title="Detected Anomalies & Alerts" />
 				<CardBody className="p-8 text-center relative bg-background/50">
 					<div className="relative z-10">
@@ -1227,7 +1229,7 @@ function CapacityFloor({
 					height={300}
 				/>
 			</div>
-			<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1">
+			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40">
 				<HardwareCardHeader
 					title="Coverage Pressure Board"
 					subtitle={`Selected window vs ${comparisonLabel.toLowerCase()} by station.`}
@@ -1426,9 +1428,9 @@ function BenchmarkLadderCard({
 	);
 
 	return (
-		<Card className="group relative flex h-full flex-col overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-500 hover:-translate-y-1">
+		<Card className="group relative flex h-full flex-col overflow-hidden bg-card/40 backdrop-blur-sm transition-all duration-500 hover:bg-card/60 ring-1 ring-inset ring-border/40">
 			<div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-			<CardHeader className="relative border-b-2 border-primary/20 bg-primary/5 py-4 px-5">
+			<CardHeader className="relative border-b border-border/40 bg-muted/20 py-4 px-5">
 				<div className="flex items-center justify-between">
 					<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.2em] text-foreground/80 group-hover:text-primary transition-colors duration-300">
 						{title}
@@ -1440,7 +1442,7 @@ function BenchmarkLadderCard({
 					)}
 				</div>
 			</CardHeader>
-			<CardBody className="relative flex-1 p-5 bg-background/30">
+			<CardBody className="relative flex-1 p-5">
 				<div className="relative flex h-full flex-col justify-center space-y-3">
 					{/* Vertical track line for the ladder effect */}
 					<div className="absolute left-[31px] top-4 bottom-4 w-0.5 bg-primary/20" />
@@ -1614,12 +1616,13 @@ function BenchmarkStationTable({
 		.sort((a, b) => b.efficiency - a.efficiency);
 
 	return (
-		<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
+		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] ring-1 ring-inset ring-border/40">
 			<HardwareCardHeader title={`Station Positioning vs ${comparisonLabel}`} />
-			<div className="overflow-x-auto relative bg-background/50">
+			<div className="overflow-x-auto relative">
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
 				<table className="w-full relative z-10">
 					<thead>
-						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
 							<th className="px-4 py-3 text-left font-bold">Station</th>
 							<th className="px-4 py-3 text-right font-bold">Current</th>
 							<th className="px-4 py-3 text-right font-bold">Baseline</th>
@@ -1628,12 +1631,12 @@ function BenchmarkStationTable({
 							<th className="px-4 py-3 text-left font-bold">Tier</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-primary/10">
+					<tbody className="divide-y divide-border/30">
 						{stationBenchmarkRows.length > 0 ? (
 							stationBenchmarkRows.map((station) => (
 								<tr
 									key={station.name}
-									className="text-xs font-mono transition-colors hover:bg-primary/5"
+									className="text-xs font-mono transition-colors hover:bg-muted/20"
 								>
 									<td className="px-4 py-2.5 font-bold text-foreground/90">{station.name}</td>
 									<td className="px-4 py-2.5 text-right font-bold">
