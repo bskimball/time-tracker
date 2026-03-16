@@ -37,7 +37,7 @@ This guide is for frontline employees clocking work and breaks on shared or pers
 
 ### Floor (`/floor`)
 
-- Worker `My Status` card surfaces current station, break state, and active task state.
+- Employee `My Status` card surfaces current station, break state, and active task state.
 - `Access Terminal` card contains the interactive clock controls used for shift/break actions.
 - `My Task Controls` appears after clock-in and supports start/switch/end task actions.
 
@@ -61,8 +61,8 @@ This guide is for frontline employees clocking work and breaks on shared or pers
 
 ## Known employee UX gaps
 
-- `/floor` currently shows a PIN workflow for worker sessions that is server-blocked for workers. Tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44).
-- `/floor` manual select currently exposes full personnel roster options to worker sessions, but cross-employee actions are rejected server-side. Tracked in [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
+- `/floor` currently shows a PIN workflow for employee sessions that is server-blocked for employees. Tracked in [Issue #44](https://github.com/bskimball/time-tracker/issues/44).
+- `/floor` manual select currently exposes full personnel roster options to employee sessions, but cross-employee actions are rejected server-side. Tracked in [Issue #45](https://github.com/bskimball/time-tracker/issues/45).
 
 ## What employees should report immediately
 

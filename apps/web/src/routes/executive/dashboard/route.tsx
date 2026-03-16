@@ -38,10 +38,12 @@ import { Suspense } from "react";
 
 function SectionHeading({ index, label }: { index: string; label: string }) {
 	return (
-		<div className="flex items-center gap-3 mb-4">
-			<span className="font-mono text-[10px] text-primary/60 tabular-nums">{index}</span>
-			<div className="flex-1 h-px bg-linear-to-r from-border/40 to-transparent" />
-			<h2 className="text-[10px] font-industrial font-bold text-muted-foreground uppercase tracking-widest">
+		<div className="flex items-center gap-3 mb-6">
+			<span className="font-mono text-[10px] text-primary tabular-nums border border-primary/30 bg-primary/10 px-1.5 py-0.5">
+				{index}
+			</span>
+			<div className="flex-1 h-px bg-linear-to-r from-border/80 to-transparent" />
+			<h2 className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">
 				{label}
 			</h2>
 		</div>

@@ -79,7 +79,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 			<TabList
 				aria-label="Select comparison window"
 				className={cn(
-					"inline-flex w-full flex-wrap justify-start gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
+					"grid w-full grid-cols-1 sm:grid-cols-3 gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
 					className
 				)}
 			>
@@ -89,7 +89,7 @@ export function ComparisonTabs({ className, availableOptions }: ComparisonTabsPr
 						id={option.id}
 						className={({ isSelected }) =>
 							cn(
-								"group relative flex h-10 min-w-[92px] flex-1 items-center justify-center overflow-hidden rounded-[1px] px-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
+								"group relative flex h-10 items-center justify-center overflow-hidden rounded-[1px] px-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
 								isSelected
 									? "bg-card/80 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.15)] ring-1 ring-border"
 									: "bg-transparent text-muted-foreground/70 hover:bg-card/40 hover:text-foreground"

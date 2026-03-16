@@ -44,7 +44,7 @@ export function SectionTabs({
 			<TabList
 				aria-label="Select analytics section"
 				className={cn(
-					"inline-flex w-full justify-start gap-1 overflow-x-auto rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
+					"grid w-full grid-cols-2 lg:grid-cols-5 gap-1 rounded-[2px] bg-background/40 p-1 shadow-[inset_0_2px_12px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-border/50",
 					className
 				)}
 			>
@@ -54,7 +54,7 @@ export function SectionTabs({
 						key={id}
 						className={({ isSelected }) =>
 							cn(
-								"group relative flex h-10 min-w-[130px] items-center justify-center overflow-hidden rounded-[1px] px-4 text-[11px] font-bold font-industrial uppercase tracking-[0.16em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
+								"group relative flex h-10 items-center justify-center overflow-hidden rounded-[1px] px-4 text-[11px] font-bold font-industrial uppercase tracking-[0.16em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1",
 								isSelected
 									? "bg-card/80 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.15)] ring-1 ring-border"
 									: "bg-transparent text-muted-foreground/70 hover:bg-card/40 hover:text-foreground"

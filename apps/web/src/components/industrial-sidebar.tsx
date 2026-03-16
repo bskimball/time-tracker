@@ -98,11 +98,12 @@ function IndustrialSidebarSidebar({ children, className }: IndustrialSidebarSide
 		<aside
 			data-collapsed={isCollapsed}
 			className={cn(
-				"relative flex flex-col border-r border-border transition-all duration-300 z-20 shrink-0 overflow-hidden bg-background",
+				"relative flex flex-col border-r-2 border-border/80 transition-all duration-300 z-20 shrink-0 overflow-hidden bg-muted/10",
 				isCollapsed ? "w-16" : "w-72",
 				className
 			)}
 		>
+			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
 			{children}
 		</aside>
 	);
@@ -118,22 +119,22 @@ function IndustrialSidebarHeader({ title, brandHref }: IndustrialSidebarHeaderPr
 	const href = brandHref ?? contextHref;
 
 	return (
-		<div className="relative border-b border-border bg-muted/10 p-5 overflow-hidden group">
-			<div className="absolute inset-0 bg-noise opacity-50 pointer-events-none" />
+		<div className="relative border-b-2 border-border/80 bg-muted/20 p-5 overflow-hidden group">
+			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
 			<Link
 				to={href}
 				className="relative flex items-center gap-4 z-10 hover:opacity-80 transition-opacity"
 			>
-				<div className="relative z-10 w-7 h-7 border border-primary/60 bg-primary/10 flex items-center justify-center text-primary font-mono text-xs font-bold tracking-wider shrink-0">
+				<div className="relative z-10 w-8 h-8 border-2 border-primary/60 bg-primary/10 flex items-center justify-center text-primary font-mono text-sm font-bold tracking-wider shrink-0 shadow-[inset_0_0_8px_rgba(245,110,32,0.2)]">
 					SP
 				</div>
 
 				{!isCollapsed && (
 					<div className="flex flex-col">
-						<span className="text-lg font-display font-bold tracking-tight text-foreground leading-none uppercase">
+						<span className="text-xl font-display font-black tracking-tight text-foreground leading-none uppercase">
 							{title}
 						</span>
-						<span className="mt-1 text-[9px] font-mono tracking-widest uppercase text-foreground/65 dark:text-muted-foreground">
+						<span className="mt-1 text-[9px] font-mono tracking-widest uppercase text-primary font-bold">
 							Sys.Ver 2.0.4
 						</span>
 					</div>
@@ -358,17 +359,18 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 		<div
 			id="app-status-bar"
 			className={cn(
-				"bg-background/80 backdrop-blur-sm px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b border-border",
+				"bg-muted/10 backdrop-blur-md px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b-2 border-border/80 relative",
 				className
 			)}
 		>
-			<div className="flex items-center gap-4">
+			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
+			<div className="flex items-center gap-4 relative z-10">
 				<IndustrialLoader variant="processing" className="opacity-60" isAnimated={isAnimating} />
 			</div>
 
-			<div className="flex items-center gap-3">
+			<div className="flex items-center gap-3 relative z-10">
 				{children ? <div className="flex items-center">{children}</div> : null}
-				<div className="font-mono text-xs text-foreground/70 tabular-nums tracking-wide dark:text-muted-foreground">
+				<div className="font-mono text-[10px] uppercase font-bold text-foreground/70 tabular-nums tracking-widest dark:text-muted-foreground">
 					{now
 						? now.toLocaleString("en-US", {
 								hour: "2-digit",
@@ -378,7 +380,7 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 							})
 						: "--:--:--"}
 				</div>
-				<div className="border-l border-border/50 pl-3 font-mono text-xs text-foreground/70 dark:text-muted-foreground">
+				<div className="border-l-2 border-border/80 pl-3 font-mono text-[10px] uppercase font-bold text-foreground/70 tracking-widest dark:text-muted-foreground">
 					{now
 						? now.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase()
 						: "-- ---"}

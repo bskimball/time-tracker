@@ -15,10 +15,13 @@
 	--sl-color-bg-nav: var(--color-background);
 	--sl-color-bg-sidebar: var(--color-background);
 	--sl-color-bg-inline-code: var(--color-muted);
+	--sl-color-bg-custom: var(--color-background);
 
 	/* Borders */
 	--sl-color-hairline-light: var(--color-border);
 	--sl-color-hairline: var(--color-border);
+	--sl-color-hairline-shade: var(--color-border);
+	--sl-nav-height: 3.5rem;
 
 	/* Text */
 	--sl-color-white: var(--color-foreground);
@@ -26,8 +29,9 @@
 	--sl-color-gray-2: var(--color-muted-foreground);
 	--sl-color-gray-3: var(--color-muted-foreground);
 	--sl-color-gray-4: var(--color-muted-foreground);
-	--sl-color-gray-5: var(--color-muted-foreground);
+	--sl-color-gray-5: var(--color-border);
 	--sl-color-gray-6: var(--color-muted);
+	--sl-color-text: var(--color-foreground);
 
 	/* Accent / Links */
 	/* Active item background - make it very subtle zinc/primary mix so text pops */
@@ -38,47 +42,18 @@
 	/* Links */
 	--sl-color-text-accent: var(--color-primary);
 	--sl-color-text-invert: var(--color-primary-foreground);
+
+	/* New font weights for a bolder aesthetic */
+	--sl-font-weight-normal: 400;
+	--sl-font-weight-medium: 600;
+	--sl-font-weight-bold: 800;
+	
+	/* Tighter line heights */
+	--sl-line-height-headings: 1.1;
+	--sl-line-height: 1.6;
 }
 
-/* ── Dark Mode Compatibility ─────────────────────────────────────────────── */
-/* Starlight uses data-theme="dark", Design System uses .dark class.
-   We explicitly map the variables here so we don't need a JS sync script. */
 
-[data-theme='dark'] {
-	--color-background: oklch(0.141 0.01 264.5);
-	--color-foreground: oklch(0.985 0.002 247.8);
-	--color-card: oklch(0.21 0.014 264.5);
-	--color-card-foreground: oklch(0.985 0.002 247.8);
-
-	--color-primary: oklch(68% 0.16 45);
-	--color-primary-foreground: oklch(18% 0 0);
-
-	--color-secondary: oklch(0.27 0.02 264.5);
-	--color-secondary-foreground: oklch(0.985 0 0);
-
-	--color-destructive: oklch(45% 0.16 25);
-	--color-destructive-foreground: oklch(98% 0 0);
-
-	--color-success: oklch(70% 0.14 150);
-	--color-success-foreground: oklch(18% 0 0);
-
-	--color-warning: oklch(78% 0.16 85);
-	--color-warning-foreground: oklch(18% 0 0);
-
-	--color-border: oklch(0.27 0.02 264.5);
-	--color-input-background: oklch(0.141 0.005 285.8);
-	--color-input: oklch(0.37 0.025 264.5);
-	--color-input-hover: oklch(0.442 0.029 264.5);
-	--color-muted: oklch(0.21 0.014 264.5);
-	--color-muted-foreground: oklch(0.705 0.021 264.5);
-	--color-accent: oklch(0.27 0.02 264.5);
-	--color-ring: oklch(68% 0.16 45);
-
-	--color-led-off: oklch(0.37 0.025 264.5);
-	--color-led-on: oklch(68% 0.16 45);
-
-	color-scheme: dark;
-}
 
 /* ── Precision Industrial Tweaks ─────────────────────────────────────────── */
 
@@ -95,10 +70,27 @@
 	background-color: var(--color-background) !important;
 }
 
+.right-sidebar-panel {
+	border-left: 1px solid var(--color-border) !important;
+}
+
 /* Code blocks */
 .expressive-code .frame {
 	border-radius: 2px !important;
 	border: 1px solid var(--color-border) !important;
+	box-shadow: none !important;
+	background-color: var(--color-background) !important;
+}
+
+.expressive-code pre {
+	border-radius: 2px !important;
+	background-color: var(--color-background) !important;
+}
+
+.expressive-code .frame .header {
+	border-bottom: 1px solid var(--color-border) !important;
+	background-color: var(--color-muted) !important;
+	border-radius: 2px 2px 0 0 !important;
 }
 
 /* Main content adjustments */
@@ -110,13 +102,203 @@
 /* Typography tweaks for docs readability */
 .sl-markdown-content p {
 	font-family: var(--font-body);
-	line-height: 1.7;
+	line-height: var(--sl-line-height);
+	margin-bottom: 1.5em;
+	color: var(--color-foreground);
 }
 
 .sl-markdown-content h1,
 .sl-markdown-content h2,
 .sl-markdown-content h3 {
 	font-family: var(--font-heading);
-	letter-spacing: -0.02em;
-	text-transform: none; /* Starlight defaults are fine, but ensure heading font */
+	letter-spacing: -0.03em;
+	font-weight: 800;
+	margin-top: 2em;
+	margin-bottom: 0.75em;
+	color: var(--color-foreground);
+}
+
+.sl-markdown-content h1 {
+	font-size: clamp(2.5rem, 5vw, 4rem);
+	line-height: 1;
+	letter-spacing: -0.05em;
+	margin-bottom: 0.5em;
+}
+
+.sl-markdown-content a {
+	color: var(--color-primary);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.sl-markdown-content a:hover {
+	border-bottom-color: var(--color-primary);
+	opacity: 0.8;
+}
+
+/* Make tables look sharp and industrial */
+.sl-markdown-content table {
+	border-collapse: collapse;
+	width: 100%;
+	margin-top: 2em;
+	margin-bottom: 2em;
+	border: 1px solid var(--color-border);
+}
+
+.sl-markdown-content th,
+.sl-markdown-content td {
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--color-border);
+	text-align: left;
+}
+
+.sl-markdown-content th {
+	background-color: var(--color-muted);
+	font-weight: 600;
+	font-size: 0.875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.sl-markdown-content tr:last-child td {
+	border-bottom: none;
+}
+
+/* Callouts/Asides */
+.starlight-aside {
+	border-radius: 2px !important;
+	border: 1px solid var(--color-border) !important;
+	border-left-width: 4px !important;
+	background-color: var(--color-card) !important;
+	box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1);
+	color: var(--color-card-foreground) !important;
+}
+
+.starlight-aside__title {
+	font-family: var(--font-industrial);
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	font-size: 0.75rem;
+}
+
+/* Link Cards / Card Grid */
+.sl-link-card {
+	border-radius: 2px !important;
+	border: 1px solid var(--color-border) !important;
+	background-color: var(--color-card) !important;
+	box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.05) !important;
+	transition: all 0.2s ease !important;
+}
+
+.sl-link-card:hover {
+	border-color: var(--color-primary) !important;
+	background-color: var(--color-background) !important;
+	box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1) !important;
+	transform: translateY(-1px) !important;
+}
+
+.sl-link-card h2 {
+	font-family: var(--font-heading) !important;
+	font-weight: 700 !important;
+	letter-spacing: -0.02em !important;
+}
+
+.sl-link-card .description {
+	font-family: var(--font-body) !important;
+	color: var(--color-muted-foreground) !important;
+}
+
+/* Code blocks inline */
+.sl-markdown-content :not(pre) > code {
+	background-color: var(--color-muted);
+	color: var(--color-foreground);
+	border: 1px solid var(--color-border);
+	padding: 0.15em 0.3em;
+	border-radius: 2px;
+	font-size: 0.85em;
+	font-family: var(--font-mono);
+}
+
+/* Sidebar nav */
+.sidebar-content {
+	font-family: var(--font-body);
+	font-size: 0.875rem;
+}
+
+.sidebar-content details summary {
+	font-family: var(--font-industrial);
+	font-weight: 700;
+	color: var(--color-muted-foreground);
+	text-transform: uppercase;
+	font-size: 0.7rem;
+	letter-spacing: 0.1em;
+	padding-top: 1rem;
+	padding-bottom: 0.5rem;
+}
+
+.sidebar-content a {
+	border-radius: 2px !important;
+	color: var(--color-muted-foreground) !important;
+	transition: all 0.2s ease;
+	font-weight: 500;
+}
+
+.sidebar-content a:hover {
+	background-color: var(--color-muted) !important;
+	color: var(--color-foreground) !important;
+}
+
+.sidebar-content a[aria-current="page"] {
+	background-color: var(--color-primary) !important;
+	color: var(--color-primary-foreground) !important;
+	font-weight: 700;
+
+}
+
+/* Top header */
+site-header {
+	border-bottom: 2px solid var(--color-border) !important;
+	background-color: var(--color-background) !important;
+	height: 3.5rem !important;
+}
+
+site-header > .flex {
+	height: 100%;
+}
+
+.site-title {
+	font-family: var(--font-heading) !important;
+	font-weight: 700 !important;
+	letter-spacing: -0.04em !important;
+	text-transform: none !important;
+	color: var(--color-foreground) !important;
+	font-size: 1.5rem !important;
+	display: flex;
+	align-items: center;
+}
+
+.site-title a {
+	padding-left: 0 !important;
+	margin-left: -0.75rem !important;
+}
+
+.site-title::before {
+	content: '';
+	display: none;
+}
+
+/* Base App Overrides */
+html, body {
+	background-color: var(--color-background);
+	color: var(--color-foreground);
+}
+
+.sl-markdown-content h1 {
+	font-size: clamp(2rem, 4vw, 3rem);
+	line-height: 1.1;
+	letter-spacing: -0.04em;
+	margin-bottom: 0.5em;
+	font-weight: 700;
 }

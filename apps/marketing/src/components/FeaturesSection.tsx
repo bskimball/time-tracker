@@ -5,113 +5,149 @@ import {
 	LiaSyncAltSolid,
 	LiaShieldAltSolid,
 	LiaCloudSolid,
-	LiaCogSolid
+	LiaCogSolid,
 } from "react-icons/lia";
 
+const features = [
+	{
+		icon: LiaClockSolid,
+		title: "Real-Time Workforce Monitoring",
+		description:
+			"Track employee activity, task assignments, and station throughput in real time across every floor, dock, and fulfillment lane.",
+		benefits: ["Live dashboard updates", "Automated time tracking", "Performance alerts"],
+		group: "Monitoring",
+	},
+	{
+		icon: LiaChartBarSolid,
+		title: "Advanced Analytics & KPIs",
+		description:
+			"Turn raw labor data into executive signals with custom reporting, utilization trends, and operational scorecards.",
+		benefits: ["Custom report builder", "KPI tracking", "Executive dashboards"],
+		group: "Analytics",
+	},
+	{
+		icon: LiaSyncAltSolid,
+		title: "Offline Reliability",
+		description:
+			"Keep production moving during outages with resilient local capture and automatic sync the moment connectivity returns.",
+		benefits: ["Offline data collection", "Automatic synchronization", "Data integrity guarantees"],
+		group: "Continuity",
+	},
+	{
+		icon: LiaShieldAltSolid,
+		title: "Enterprise Security",
+		description:
+			"Protect workforce data with strict access controls, hardened transport, and compliance-aligned operational safeguards.",
+		benefits: ["AES-256 encryption", "SOC 2 certified", "Role-based access"],
+		group: "Security",
+	},
+	{
+		icon: LiaCloudSolid,
+		title: "Flexible Deployment",
+		description:
+			"Launch on-prem, in the cloud, or in hybrid mode without compromising telemetry, reporting, or policy enforcement.",
+		benefits: ["Multi-cloud support", "On-premise option", "Hybrid deployment"],
+		group: "Infrastructure",
+	},
+	{
+		icon: LiaCogSolid,
+		title: "OpenAPI Compliant",
+		description:
+			"Integrate scheduling, HRIS, payroll, and floor systems with a clean API surface, webhooks, and documented contracts.",
+		benefits: ["200+ API endpoints", "Complete documentation", "SDKs & webhooks"],
+		group: "Platform",
+	},
+];
+
 export default function FeaturesSection() {
-	const features = [
-		{
-			icon: LiaClockSolid,
-			title: "Real-Time Workforce Monitoring",
-			description: "Track employee activities, task assignments, and productivity metrics in real-time across all production stations and fulfillment centers.",
-			benefits: ["Live dashboard updates", "Automated time tracking", "Performance alerts"]
-		},
-		{
-			icon: LiaChartBarSolid,
-			title: "Advanced Analytics & KPIs",
-			description: "Make data-driven decisions with comprehensive reporting, custom dashboards, and key performance indicators tailored for industrial operations.",
-			benefits: ["Custom report builder", "KPI tracking", "Executive dashboards"]
-		},
-		{
-			icon: LiaSyncAltSolid,
-			title: "Offline Reliability",
-			description: "Continue operations seamlessly during network outages with automatic data synchronization when connectivity returns, ensuring no productivity loss.",
-			benefits: ["Offline data collection", "Automatic synchronization", "Data integrity guarantees"]
-		},
-		{
-			icon: LiaShieldAltSolid,
-			title: "Enterprise Security",
-			description: "Bank-level encryption, SOC 2 compliance, and role-based access control ensure your workforce data remains secure and compliant.",
-			benefits: ["AES-256 encryption", "SOC 2 certified", "Role-based access"]
-		},
-		{
-			icon: LiaCloudSolid,
-			title: "Flexible Deployment",
-			description: "Deploy on-premises, in the cloud, or hybrid. Choose AWS, Azure, GCP, or your own infrastructure with full control over your data.",
-			benefits: ["Multi-cloud support", "On-premise option", "Hybrid deployment"]
-		},
-		{
-			icon: LiaCogSolid,
-			title: "OpenAPI Compliant",
-			description: "RESTful API with complete OpenAPI documentation. Integrate with your existing systems using webhooks, SDKs, and custom integrations.",
-			benefits: ["200+ API endpoints", "Complete documentation", "SDKs & webhooks"]
-		}
-	];
-
 	return (
-		<section className="py-20 relative overflow-hidden bg-noise">
-			{/* Textured Background */}
-			<div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-muted/30 to-primary/8 pointer-events-none" />
-			<div className="absolute inset-0 bg-tactical-grid opacity-10 pointer-events-none" aria-hidden="true" />
+		<section className="relative overflow-hidden border-y border-border/70 bg-muted/20 py-20">
+			<div className="absolute inset-0 bg-noise opacity-25 pointer-events-none" />
+			<div className="absolute inset-0 bg-tactical-grid opacity-[0.08] pointer-events-none" aria-hidden="true" />
 
-			{/* Decorative Elements */}
-			<div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" aria-hidden="true" />
-			<div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-border to-transparent opacity-50" aria-hidden="true" />
+			<div className="container mx-auto px-4 md:px-8 relative">
+				<div className="mb-12 grid gap-10 border-b border-border/60 pb-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+					<div>
+						<div className="mb-4 inline-flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+							<span className="inline-flex items-center rounded-[2px] border border-primary/20 bg-primary/10 px-2 py-1">01</span>
+							Capabilities Matrix
+						</div>
+						<h2 className="max-w-3xl font-display text-4xl font-black tracking-[-0.04em] text-foreground md:text-5xl leading-tight">
+							Built to run the floor like the dashboard looks.
+						</h2>
+						<p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
+							Every module mirrors the discipline of the web app: clear hierarchy, fast readouts,
+							and practical tools for leaders operating under real production pressure.
+						</p>
+					</div>
 
-			<div className="container mx-auto px-6 md:px-8 relative">
-				{/* Section Header */}
-				<div className="text-center mb-16 px-4">
-					<h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-4 animate-fade-in-up text-pretty">
-						Enterprise-Grade Workforce Management
-					</h2>
-					<p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up animate-delay-100 text-pretty">
-						Built specifically for fulfillment warehouses, manufacturing facilities, and industrial operations
-						where precision, reliability, and scalability matter most.
-					</p>
+					<IndustrialPanel className="bg-card/90 p-5 shadow-industrial border-2 border-border/80">
+						<div className="flex items-center justify-between gap-3 border-b-2 border-border/60 pb-3">
+							<span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+								Command summary
+							</span>
+							<span className="led-indicator active" aria-hidden="true" />
+						</div>
+						<div className="mt-4 space-y-3 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/72">
+							<div className="flex items-center justify-between"><span className="text-muted-foreground">Modules online</span><span className="font-bold">06</span></div>
+							<div className="flex items-center justify-between"><span className="text-muted-foreground">Sync policy</span><span className="font-bold">Automatic</span></div>
+							<div className="flex items-center justify-between"><span className="text-muted-foreground">Alerting</span><span className="font-bold">Threshold-based</span></div>
+							<div className="flex items-center justify-between"><span className="text-muted-foreground">API mode</span><span className="font-bold">Open</span></div>
+						</div>
+					</IndustrialPanel>
 				</div>
 
-				{/* Features Grid */}
-				<div className="grid lg:grid-cols-3 gap-8 mb-16">
+				<div className="grid gap-5 lg:grid-cols-3 relative">
+					<div className="absolute top-1/2 left-0 w-full h-px bg-border/40 pointer-events-none hidden lg:block" aria-hidden="true"></div>
+					<div className="absolute top-0 left-1/3 w-px h-full bg-border/40 pointer-events-none hidden lg:block" aria-hidden="true"></div>
+					<div className="absolute top-0 right-1/3 w-px h-full bg-border/40 pointer-events-none hidden lg:block" aria-hidden="true"></div>
+					
 					{features.map((feature, index) => (
 						<IndustrialPanel
-							key={index}
-							variant="default"
-							className="p-8 animate-fade-in-up relative group bg-noise hover:border-primary/50 transition-colors"
-							style={{ animationDelay: `${index * 100 + 200}ms` }}
+							key={feature.title}
+							className="group flex h-full flex-col border-2 border-border/70 bg-card p-6 shadow-industrial hover:border-primary/60 hover:shadow-industrial-hover transition-all duration-300 relative z-10"
 						>
-							<div className="text-center mb-8">
-								<div className="text-6xl mb-6 text-primary flex justify-center animate-scale-in group-hover:scale-110 transition-transform" style={{ animationDelay: `${index * 100 + 400}ms` }} aria-hidden="true">
-									<feature.icon />
+							<div className="mb-5 flex items-start justify-between gap-4 border-b border-border/60 pb-4">
+								<div className="flex items-start gap-4">
+									<div className="flex h-12 w-12 items-center justify-center rounded-[2px] border border-primary/25 bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-105">
+										<feature.icon className="h-6 w-6" aria-hidden="true" />
+									</div>
+									<div>
+										<p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+											0{index + 1} // {feature.group}
+										</p>
+										<h3 className="mt-2 font-display text-2xl font-bold leading-tight text-foreground">
+											{feature.title}
+										</h3>
+									</div>
 								</div>
-								<h3 className="text-2xl font-heading font-bold mb-4 tracking-tight">{feature.title}</h3>
-								<p className="text-muted-foreground leading-relaxed text-sm">{feature.description}</p>
 							</div>
 
-							{/* Divider line */}
-							<div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" aria-hidden="true" />
+							<p className="mb-6 flex-1 text-sm leading-7 text-foreground/70">{feature.description}</p>
 
-							<ul className="space-y-4">
-								{feature.benefits.map((benefit, i) => (
-									<li key={i} className="flex items-center gap-3 group/item">
-										<span className="w-1.5 h-1.5 bg-primary/40 group-hover/item:bg-primary rounded-full flex-shrink-0 transition-colors"></span>
-										<span className="text-sm text-foreground/80 group-hover/item:text-foreground transition-colors">{benefit}</span>
-									</li>
+							<div className="space-y-3 border-t border-border/60 pt-5">
+								{feature.benefits.map((benefit) => (
+									<div key={benefit} className="flex items-center justify-between gap-3">
+										<div className="flex items-center gap-3">
+											<span className="h-1.5 w-1.5 rounded-full bg-primary" />
+											<span className="text-[11px] font-mono uppercase tracking-[0.16em] text-foreground/72">
+												{benefit}
+											</span>
+										</div>
+										<span className="text-xs text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100">→</span>
+									</div>
 								))}
-							</ul>
+							</div>
 						</IndustrialPanel>
 					))}
 				</div>
 
-				{/* CTA */}
-				<div className="text-center animate-fade-in-up animate-delay-500">
+				<div className="mt-10 flex justify-center">
 					<a href="/features">
-						<Button size="lg" className="hover:scale-105 transition-transform shadow-lg shadow-primary/10">
-							Explore All Features
-						</Button>
+						<Button size="lg" className="btn-mechanical px-8">Explore All Features</Button>
 					</a>
 				</div>
 			</div>
 		</section>
-
 	);
 }

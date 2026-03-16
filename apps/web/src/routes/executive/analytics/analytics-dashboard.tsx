@@ -180,22 +180,26 @@ export function HardwareCardHeader({
 	rightElement?: ReactNode;
 }) {
 	return (
-		<CardHeader className="relative border-b border-border/50 bg-muted/20 py-3 px-4">
-			<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
-			<div className="flex items-start justify-between gap-3">
+		<CardHeader className="relative border-b-2 border-border/80 bg-muted/20 py-3 px-4 z-10">
+			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
+			<div className="flex items-start justify-between gap-3 relative z-10">
 				<div>
 					<div className="flex items-center gap-3">
 						<div className="grid grid-cols-2 gap-[2px] opacity-30 mt-0.5">
-							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
-							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
-							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
-							<div className="h-[3px] w-[3px] bg-foreground rounded-full" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-none" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-none" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-none" />
+							<div className="h-[3px] w-[3px] bg-foreground rounded-none" />
 						</div>
-						<CardTitle className="uppercase tracking-[0.18em] font-industrial text-xs text-muted-foreground/80 font-bold">
+						<CardTitle className="uppercase tracking-[0.18em] font-mono text-[10px] text-muted-foreground font-bold">
 							{title}
 						</CardTitle>
 					</div>
-					{subtitle && <div className="mt-1 ml-6 text-xs text-muted-foreground">{subtitle}</div>}
+					{subtitle && (
+						<div className="mt-1 ml-6 text-[10px] font-mono tracking-wide text-muted-foreground">
+							{subtitle}
+						</div>
+					)}
 				</div>
 				{rightElement ? (
 					rightElement
@@ -352,19 +356,27 @@ function ProductivityKpiRow({
 				animateCountUp={!isCached}
 				trend={{ direction: "neutral", value: "95%", label: "Target" }}
 			/>
-			<Card className="h-full border-l-4 border-l-destructive bg-destructive/5">
-				<CardBody className="flex h-full flex-col justify-between p-4">
+			<Card className="h-full border-2 border-destructive bg-card overflow-hidden relative">
+				<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay z-0" />
+				<div className="absolute top-0 right-0 p-2 z-10">
+					<div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+				</div>
+				<CardBody className="flex h-full flex-col justify-between p-5 relative z-10">
 					<div>
-						<div className="mb-1 text-xs font-industrial uppercase tracking-widest text-destructive">
+						<div className="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest text-destructive">
 							Bottleneck Alert
 						</div>
-						<div className="font-data text-2xl font-bold text-foreground">RECEIVING</div>
-						<div className="mt-1 text-xs font-mono text-muted-foreground">45% Utilization</div>
+						<div className="font-display text-3xl font-black tracking-tight text-foreground uppercase">
+							RECEIVING
+						</div>
+						<div className="mt-1 text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
+							45% Utilization
+						</div>
 					</div>
-					<div className="mt-4 border-t border-destructive/20 pt-3">
-						<div className="flex items-center gap-2 text-xs font-medium text-destructive">
-							<span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
-							Requires Attention
+					<div className="mt-4 border-t-2 border-border/80 pt-3 flex items-center justify-between">
+						<div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest text-destructive">
+							<span className="h-1 w-4 bg-destructive" />
+							Action Required
 						</div>
 					</div>
 				</CardBody>
@@ -441,37 +453,35 @@ function ProductivityStationCards({
 				{stationSnapshots.map((station: AnalyticsStationOverview) => (
 					<Card
 						key={station.name}
-						className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)] ring-1 ring-inset ring-border/40"
+						className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1"
 					>
-						<CardHeader className="relative border-b border-border/50 bg-muted/20 py-2.5 px-3">
-							<div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-border/40 to-transparent" />
+						<CardHeader className="relative border-b-2 border-primary/20 bg-primary/5 py-2.5 px-3">
 							<div className="flex items-center justify-between">
-								<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.15em] text-muted-foreground/90">
+								<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.15em] text-foreground/90">
 									{station.name}
 								</CardTitle>
 								<div className="flex items-center gap-2">
 									<div className="grid grid-cols-2 gap-[2px] opacity-20">
-										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
-										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
-										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
-										<div className="h-[2px] w-[2px] bg-foreground rounded-full" />
+										<div className="h-[2px] w-[2px] bg-foreground" />
+										<div className="h-[2px] w-[2px] bg-foreground" />
+										<div className="h-[2px] w-[2px] bg-foreground" />
+										<div className="h-[2px] w-[2px] bg-foreground" />
 									</div>
 									<div
-										className={`h-2 w-2 rounded-full ring-2 ring-offset-1 ring-offset-transparent ${
+										className={`h-2 w-2 ${
 											station.occupancy > 85
-												? "bg-destructive ring-destructive/30 animate-pulse"
+												? "bg-destructive animate-pulse"
 												: station.occupancy > 70
-													? "bg-primary ring-primary/30"
-													: "bg-secondary ring-secondary/30"
+													? "bg-primary"
+													: "bg-secondary"
 										}`}
 									/>
 								</div>
 							</div>
 						</CardHeader>
-						<CardBody className="relative space-y-3 p-4">
-							<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-background/15 to-transparent pointer-events-none" />
+						<CardBody className="relative space-y-3 p-4 bg-background/30">
 							<div className="relative z-10 grid grid-cols-2 gap-2">
-								<div className="rounded-[2px] bg-background/30 p-2 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] ring-1 ring-inset ring-border/40">
+								<div className="border border-primary/20 bg-background/50 p-2">
 									<div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
 										Eff.
 									</div>
@@ -479,7 +489,7 @@ function ProductivityStationCards({
 										{station.efficiency}
 									</div>
 								</div>
-								<div className="rounded-[2px] bg-background/30 p-2 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] ring-1 ring-inset ring-border/40">
+								<div className="border border-primary/20 bg-background/50 p-2">
 									<div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
 										Occ.
 									</div>
@@ -488,31 +498,31 @@ function ProductivityStationCards({
 									</div>
 								</div>
 							</div>
-							<div className="relative z-10 h-1.5 w-full overflow-hidden rounded-full bg-muted/40 ring-1 ring-inset ring-border/20">
+							<div className="relative z-10 h-2 w-full overflow-hidden border border-primary/30 bg-background/50">
 								<div
-									className={`h-full rounded-full ${
+									className={`h-full ${
 										station.efficiency > 30
 											? "bg-primary"
 											: station.efficiency > 20
 												? "bg-secondary"
-												: "bg-destructive"
+												: "bg-destructive animate-pulse"
 									}`}
 									style={{ width: `${Math.min(station.efficiency * 2, 100)}%` }}
 								/>
 							</div>
 							<div className="relative z-10 flex items-center justify-between text-[10px] font-mono font-medium text-muted-foreground">
-								<span className="flex items-center gap-1.5">
-									<span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+								<span className="flex items-center gap-1.5 font-bold">
+									<span className="h-1 w-1 bg-muted-foreground/50" />
 									{station.employees} Staff
 								</span>
 								<span
-									className={
+									className={`inline-flex items-center px-1.5 py-0.5 border text-[9px] font-bold uppercase tracking-wider ${
 										station.occupancy < 60
-											? "text-warning"
+											? "border-warning/50 text-warning bg-warning/10"
 											: station.occupancy > 85
-												? "text-destructive"
-												: "text-primary"
-									}
+												? "border-destructive text-destructive bg-destructive/10 animate-pulse"
+												: "border-primary/50 text-primary bg-primary/10"
+									}`}
 								>
 									{station.occupancy < 60 ? "LOW" : station.occupancy > 85 ? "HIGH" : "OK"}
 								</span>
@@ -546,43 +556,47 @@ export function ProductivityEmployeeTableContent({
 	employeeProductivity: AnalyticsData["employeeProductivity"];
 }) {
 	return (
-		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+		<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
 			<HardwareCardHeader title="Employee Productivity Rankings" />
 			<div className="overflow-x-auto">
 				<table className="w-full">
 					<thead>
-						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
-							<th className="px-4 py-3 text-left font-medium">Employee</th>
-							<th className="px-4 py-3 text-left font-medium">Station</th>
-							<th className="px-4 py-3 text-right font-medium">Units</th>
-							<th className="px-4 py-3 text-right font-medium">Hours</th>
-							<th className="px-4 py-3 text-right font-medium">Rate (U/H)</th>
-							<th className="px-4 py-3 text-right font-medium">Vs Station Avg</th>
+						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+							<th className="px-4 py-3 text-left font-bold">Employee</th>
+							<th className="px-4 py-3 text-left font-bold">Station</th>
+							<th className="px-4 py-3 text-right font-bold">Units</th>
+							<th className="px-4 py-3 text-right font-bold">Hours</th>
+							<th className="px-4 py-3 text-right font-bold">Rate (U/H)</th>
+							<th className="px-4 py-3 text-right font-bold">Vs Station Avg</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-border/30">
+					<tbody className="divide-y divide-primary/10">
 						{employeeProductivity.length > 0 ? (
 							employeeProductivity.map((employee, index) => (
-								<tr key={index} className="text-xs font-mono transition-colors hover:bg-muted/20">
-									<td className="px-4 py-2.5 font-medium">{employee.employee}</td>
+								<tr key={index} className="text-xs font-mono transition-colors hover:bg-primary/5">
+									<td className="px-4 py-2.5 font-bold text-foreground/90">{employee.employee}</td>
 									<td className="px-4 py-2.5">
-										<Badge variant="secondary" className="h-5 text-[10px]">
+										<span className="inline-flex items-center px-2 py-0.5 border border-primary/20 text-[10px] font-bold text-foreground uppercase tracking-wider bg-background/50">
 											{employee.station}
-										</Badge>
+										</span>
 									</td>
-									<td className="px-4 py-2.5 text-right font-medium">{employee.units}</td>
+									<td className="px-4 py-2.5 text-right font-bold">{employee.units}</td>
 									<td className="px-4 py-2.5 text-right text-muted-foreground">{employee.hours}</td>
-									<td className="px-4 py-2.5 text-right font-medium">{employee.rate}</td>
+									<td className="px-4 py-2.5 text-right font-bold">{employee.rate}</td>
 									<td className="px-4 py-2.5 text-right">
 										<div className="flex justify-end gap-2">
 											{employee.value >= 105 ? (
-												<Badge variant="primary">Top Performer</Badge>
+												<span className="inline-flex items-center px-2 py-0.5 border-2 border-primary text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/10">
+													Top Performer
+												</span>
 											) : employee.value >= 100 ? (
-												<Badge variant="success">Above Avg</Badge>
+												<span className="inline-flex items-center px-2 py-0.5 border border-success/50 text-[10px] font-bold text-success uppercase tracking-wider bg-success/10">
+													Above Avg
+												</span>
 											) : (
-												<Badge variant="outline" className="text-muted-foreground">
+												<span className="inline-flex items-center px-2 py-0.5 border border-muted-foreground/30 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/10">
 													Below Avg
-												</Badge>
+												</span>
 											)}
 										</div>
 									</td>
@@ -683,28 +697,32 @@ function LaborCostKpiRow({
 				}}
 			/>
 			<Card
-				className={`h-full border-l-4 ${
-					costSummary.variance > 0
-						? "border-l-destructive bg-destructive/5"
-						: "border-l-primary bg-primary/5"
-				}`}
+				className={`h-full border-2 ${
+					costSummary.variance > 0 ? "border-destructive" : "border-primary"
+				} bg-card overflow-hidden relative`}
 			>
-				<CardBody className="flex h-full flex-col justify-between p-4">
+				<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay z-0" />
+				{costSummary.variance > 0 && (
+					<div className="absolute top-0 right-0 p-2 z-10">
+						<div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+					</div>
+				)}
+				<CardBody className="flex h-full flex-col justify-between p-5 relative z-10">
 					<div>
 						<div
-							className={`mb-1 text-xs font-industrial uppercase tracking-widest ${
+							className={`mb-2 text-[10px] font-mono font-bold uppercase tracking-widest ${
 								costSummary.variance > 0 ? "text-destructive" : "text-primary"
 							}`}
 						>
 							Budget Variance
 						</div>
-						<div className="font-data text-2xl font-bold text-foreground">
+						<div className="font-display text-3xl font-black tracking-tight text-foreground uppercase">
 							{costSummary.variance > 0 ? "+" : ""}
 							{costSummary.variance.toLocaleString(undefined, {
 								maximumFractionDigits: 0,
 							})}
 						</div>
-						<div className="mt-1 text-xs font-mono text-muted-foreground">
+						<div className="mt-1 text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
 							{costSummary.variancePercent}% vs budget
 						</div>
 					</div>
@@ -751,59 +769,61 @@ function LaborCostCharts({
 
 			<div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
 				<PieChart title="Labor Cost Breakdown" data={costBreakdown} height={300} />
-				<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+				<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1">
 					<HardwareCardHeader
 						title="Cost Composition Brief"
 						subtitle="Use the spend mix to determine whether variance is driven by staffing depth or overtime pressure."
 						rightElement={
-							<div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+							<div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground bg-background/50 px-2 py-1 border border-primary/20">
 								Updated with current window
 							</div>
 						}
 					/>
-					<CardBody className="space-y-4 p-4 relative">
-						<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+					<CardBody className="space-y-4 p-4 relative bg-background/30">
 						<div className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
-							<div className="rounded-[2px] border border-border/40 bg-background/80 p-3">
+							<div className="border border-primary/20 bg-background/50 p-3">
 								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
 									Regular Share
 								</div>
-								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground/90">
 									{regularShare.toFixed(1)}%
 								</div>
-								<div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
+								<div className="mt-3 h-2 overflow-hidden border border-primary/30 bg-background/50">
 									<div className="h-full bg-primary" style={{ width: `${regularShare}%` }} />
 								</div>
 							</div>
-							<div className="rounded-[2px] border border-border/40 bg-background/80 p-3">
+							<div className="border border-primary/20 bg-background/50 p-3">
 								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
 									Overtime Share
 								</div>
-								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground/90">
 									{overtimeShare.toFixed(1)}%
 								</div>
-								<div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/40">
-									<div className="h-full bg-warning" style={{ width: `${overtimeShare}%` }} />
+								<div className="mt-3 h-2 overflow-hidden border border-warning/30 bg-background/50">
+									<div
+										className="h-full bg-warning animate-pulse"
+										style={{ width: `${overtimeShare}%` }}
+									/>
 								</div>
 							</div>
 						</div>
 
-						<div className="grid gap-3 rounded-[2px] border border-border/40 bg-background/70 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+						<div className="grid gap-3 border border-primary/20 bg-background/50 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 							<div>
-								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
+								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-primary">
 									Interpretation
 								</div>
-								<p className="mt-2 text-sm text-muted-foreground">
+								<p className="mt-2 text-sm text-muted-foreground font-mono">
 									{overtimeShare > 12
-										? "Overtime is becoming a visible share of total spend, so schedule stabilization should be prioritized before adding more raw hours."
-										: "Most labor spend is still regular-hour based, which suggests staffing coverage is carrying the current load without severe overtime drag."}
+										? "> ALERT: Overtime is becoming a visible share of total spend. Schedule stabilization recommended."
+										: "> STATUS: Most labor spend is still regular-hour based. Staffing coverage is carrying the current load."}
 								</p>
 							</div>
 							<div className="text-right">
 								<div className="text-[10px] font-bold font-industrial uppercase tracking-[0.18em] text-muted-foreground">
 									Total Spend
 								</div>
-								<div className="mt-2 text-2xl font-mono font-semibold text-foreground">
+								<div className="mt-2 text-2xl font-mono font-semibold text-foreground/90">
 									${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
 								</div>
 							</div>
@@ -828,21 +848,20 @@ function LaborCostStationTable({
 	const { stationSnapshots, benchmarkData } = result.data;
 
 	return (
-		<Card className="h-full flex flex-col bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+		<Card className="h-full flex flex-col border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
 			<HardwareCardHeader title="Cost Analysis by Station" />
-			<div className="flex-1 overflow-x-auto relative">
-				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
+			<div className="flex-1 overflow-x-auto relative bg-background/50">
 				<table className="w-full relative z-10">
 					<thead>
-						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
-							<th className="px-4 py-2 text-left">Station</th>
-							<th className="px-4 py-2 text-right">Total Hours</th>
-							<th className="px-4 py-2 text-right">OT Hours</th>
-							<th className="px-4 py-2 text-right">Cost/Unit</th>
-							<th className="px-4 py-2 text-left">Status</th>
+						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+							<th className="px-4 py-2 text-left font-bold">Station</th>
+							<th className="px-4 py-2 text-right font-bold">Total Hours</th>
+							<th className="px-4 py-2 text-right font-bold">OT Hours</th>
+							<th className="px-4 py-2 text-right font-bold">Cost/Unit</th>
+							<th className="px-4 py-2 text-left font-bold">Status</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-border/30">
+					<tbody className="divide-y divide-primary/10">
 						{stationSnapshots.map((station) => {
 							const regularHours = 156.8;
 							const overtimeHours = station.name === "FILLING" ? 25.5 : 12.5;
@@ -855,9 +874,9 @@ function LaborCostStationTable({
 							return (
 								<tr
 									key={station.name}
-									className="text-xs font-mono transition-colors hover:bg-muted/20"
+									className="text-xs font-mono transition-colors hover:bg-primary/5"
 								>
-									<td className="px-4 py-2 font-medium">{station.name}</td>
+									<td className="px-4 py-2 font-bold text-foreground/90">{station.name}</td>
 									<td className="px-4 py-2 text-right text-muted-foreground">
 										{totalHours.toFixed(1)}
 									</td>
@@ -877,11 +896,17 @@ function LaborCostStationTable({
 									</td>
 									<td className="px-4 py-2">
 										{costPerUnit === null ? (
-											<span className="text-muted-foreground">NO OUTPUT</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border border-muted-foreground/30 text-[9px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/10">
+												NO OUTPUT
+											</span>
 										) : costPerUnit > benchmarkData.costPerUnit.target ? (
-											<span className="font-bold text-destructive">OVER</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border-2 border-destructive text-[9px] font-bold text-destructive uppercase tracking-wider bg-destructive/10 animate-pulse">
+												OVER
+											</span>
 										) : (
-											<span className="text-primary">OK</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border border-primary/50 text-[9px] font-bold text-primary uppercase tracking-wider bg-primary/10">
+												OK
+											</span>
 										)}
 									</td>
 								</tr>
@@ -999,10 +1024,9 @@ function TrendAnomalyTable({
 
 	if (anomalyData.length === 0) {
 		return (
-			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
 				<HardwareCardHeader title="Detected Anomalies & Alerts" />
-				<CardBody className="p-8 text-center relative">
-					<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+				<CardBody className="p-8 text-center relative bg-background/50">
 					<div className="relative z-10">
 						<div className="text-xs font-bold font-industrial uppercase tracking-widest text-primary">
 							No Active Anomalies
@@ -1203,18 +1227,17 @@ function CapacityFloor({
 					height={300}
 				/>
 			</div>
-			<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+			<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-300 hover:-translate-y-1">
 				<HardwareCardHeader
 					title="Coverage Pressure Board"
 					subtitle={`Selected window vs ${comparisonLabel.toLowerCase()} by station.`}
 					rightElement={
-						<div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">
+						<div className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground border border-primary/20 bg-background/50 px-2 py-0.5 mt-1">
 							Delta View
 						</div>
 					}
 				/>
-				<CardBody className="space-y-3 p-3 relative">
-					<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-background/40 to-transparent pointer-events-none" />
+				<CardBody className="space-y-3 p-3 relative bg-background/30">
 					<div className="relative z-10 space-y-3">
 						{rankedStations.slice(0, 6).map((station) => {
 							const liveStation = liveByName.get(station.name);
@@ -1222,17 +1245,14 @@ function CapacityFloor({
 								station.currentGap > 0.5
 									? { label: "Critical", variant: "destructive" as const }
 									: station.coverageDelta < 0
-										? { label: "Watch", variant: "secondary" as const }
-										: { label: "Stable", variant: "secondary" as const };
+										? { label: "Watch", variant: "warning" as const }
+										: { label: "Stable", variant: "primary" as const };
 
 							return (
-								<div
-									key={station.name}
-									className="rounded-[2px] border border-border/50 bg-background/70 p-3"
-								>
+								<div key={station.name} className="border border-primary/20 bg-background/50 p-3">
 									<div className="flex items-start justify-between gap-3">
 										<div className="min-w-0">
-											<div className="text-xs font-bold font-industrial uppercase tracking-[0.16em] text-foreground">
+											<div className="text-xs font-bold font-industrial uppercase tracking-[0.16em] text-foreground/90">
 												{station.name}
 											</div>
 											<div className="mt-1 text-[10px] font-mono text-muted-foreground">
@@ -1241,42 +1261,49 @@ function CapacityFloor({
 												{station.recommendedStaff}
 											</div>
 										</div>
-										<Badge
-											variant={status.variant}
-											className={
-												status.variant === "secondary"
-													? "border-border/60 bg-muted/40 text-foreground"
-													: undefined
-											}
+										<span
+											className={`inline-flex items-center px-1.5 py-0.5 border text-[9px] font-bold uppercase tracking-wider ${
+												status.variant === "destructive"
+													? "border-destructive text-destructive bg-destructive/10 animate-pulse"
+													: status.variant === "warning"
+														? "border-warning text-warning bg-warning/10"
+														: "border-primary/50 text-primary bg-primary/10"
+											}`}
 										>
 											{status.label}
-										</Badge>
+										</span>
 									</div>
-									<div className="mt-3 grid grid-cols-3 gap-3 text-[11px] font-mono">
+									<div className="mt-3 grid grid-cols-3 gap-3 text-[11px] font-mono font-bold">
 										<div>
-											<div className="text-muted-foreground">Coverage</div>
-											<div className="mt-1 font-semibold">{station.currentCoverage}%</div>
+											<div className="text-muted-foreground text-[9px] uppercase tracking-widest">
+												Coverage
+											</div>
+											<div className="mt-1 text-foreground/90">{station.currentCoverage}%</div>
 										</div>
 										<div>
-											<div className="text-muted-foreground">Baseline</div>
-											<div className="mt-1">{station.comparisonCoverage}%</div>
+											<div className="text-muted-foreground text-[9px] uppercase tracking-widest">
+												Baseline
+											</div>
+											<div className="mt-1 text-foreground/90">{station.comparisonCoverage}%</div>
 										</div>
 										<div>
-											<div className="text-muted-foreground">Gap</div>
+											<div className="text-muted-foreground text-[9px] uppercase tracking-widest">
+												Gap
+											</div>
 											<div
-												className={`mt-1 font-semibold ${station.currentGap > 0 ? "text-destructive" : "text-primary"}`}
+												className={`mt-1 ${station.currentGap > 0 ? "text-destructive" : "text-primary"}`}
 											>
 												{compactNumberFormatter.format(station.currentGap)}
 											</div>
 										</div>
 									</div>
-									<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+									<div className="mt-3 h-2 w-full overflow-hidden border border-primary/30 bg-background/50">
 										<div
-											className={`h-full ${station.currentCoverage >= station.comparisonCoverage ? "bg-primary" : "bg-destructive"}`}
+											className={`h-full ${station.currentCoverage >= station.comparisonCoverage ? "bg-primary" : "bg-destructive animate-pulse"}`}
 											style={{ width: `${Math.max(6, Math.min(100, station.currentCoverage))}%` }}
 										/>
 									</div>
-									<div className="mt-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+									<div className="mt-2 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground">
 										<span>Δ {formatSignedNumber(station.coverageDelta, " pts")}</span>
 										<span>
 											Util {station.currentUtilization}% / {station.comparisonUtilization}%
@@ -1399,24 +1426,24 @@ function BenchmarkLadderCard({
 	);
 
 	return (
-		<Card className="group relative flex h-full flex-col overflow-hidden bg-card/40 backdrop-blur-sm transition-all duration-500 hover:bg-card/60">
-			<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-			<CardHeader className="relative border-b border-border/40 bg-muted/20 py-4 px-5">
+		<Card className="group relative flex h-full flex-col overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] transition-all duration-500 hover:-translate-y-1">
+			<div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+			<CardHeader className="relative border-b-2 border-primary/20 bg-primary/5 py-4 px-5">
 				<div className="flex items-center justify-between">
-					<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.2em] text-muted-foreground/80 group-hover:text-foreground/90 transition-colors duration-300">
+					<CardTitle className="text-xs font-bold font-industrial uppercase tracking-[0.2em] text-foreground/80 group-hover:text-primary transition-colors duration-300">
 						{title}
 					</CardTitle>
 					{lowerIsBetter && (
-						<div className="rounded-[2px] border border-border/40 bg-background/50 px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+						<div className="border border-primary/20 bg-background/50 px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-widest text-muted-foreground">
 							Lower is Better
 						</div>
 					)}
 				</div>
 			</CardHeader>
-			<CardBody className="relative flex-1 p-5">
+			<CardBody className="relative flex-1 p-5 bg-background/30">
 				<div className="relative flex h-full flex-col justify-center space-y-3">
 					{/* Vertical track line for the ladder effect */}
-					<div className="absolute left-[31px] top-4 bottom-4 w-px bg-border/40" />
+					<div className="absolute left-[31px] top-4 bottom-4 w-0.5 bg-primary/20" />
 
 					{sortedMetrics.map((m, i) => {
 						const isCurrent = m.type === "current";
@@ -1427,37 +1454,37 @@ function BenchmarkLadderCard({
 						return (
 							<div
 								key={m.label}
-								className={`relative z-10 flex items-center justify-between rounded-[2px] border p-3 transition-all duration-300 ${
+								className={`relative z-10 flex items-center justify-between border p-3 transition-all duration-300 ${
 									isCurrent
-										? "border-primary/40 bg-primary/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_4px_12px_rgba(0,0,0,0.1)] ring-1 ring-primary/20"
+										? "border-2 border-primary bg-primary/10 shadow-[4px_4px_0px_0px_rgba(var(--primary),0.2)]"
 										: isBaseline
-											? "border-border/60 bg-muted/30"
-											: "border-transparent bg-background/40 hover:bg-muted/30 hover:border-border/50"
+											? "border-muted-foreground/30 bg-muted/10 opacity-70"
+											: "border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/40"
 								}`}
 							>
 								<div className="flex items-center gap-4">
 									<div className="flex w-6 justify-center">
 										<div
-											className={`text-[10px] font-mono ${isCurrent ? "font-bold text-primary" : "text-muted-foreground/50"}`}
+											className={`text-[10px] font-mono font-bold ${isCurrent ? "text-primary" : "text-muted-foreground"}`}
 										>
 											{String(i + 1).padStart(2, "0")}
 										</div>
 									</div>
-									<div className="relative flex h-3 w-3 items-center justify-center">
+									<div className="relative flex h-3 w-3 items-center justify-center bg-background/80">
 										{isCurrent && (
-											<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-40" />
+											<span className="absolute inline-flex h-full w-full animate-ping bg-primary opacity-40" />
 										)}
 										<div
-											className={`h-2 w-2 rounded-full ring-2 ring-offset-1 ring-offset-transparent ${
+											className={`h-2 w-2 ${
 												isCurrent
-													? "bg-primary ring-primary/30"
+													? "bg-primary animate-pulse"
 													: isTop
-														? "bg-chart-2 ring-chart-2/20"
+														? "bg-chart-2"
 														: isTarget
-															? "bg-foreground/80 ring-border"
+															? "bg-foreground"
 															: isBaseline
-																? "bg-muted-foreground/50 ring-transparent"
-																: "bg-border ring-transparent"
+																? "bg-muted-foreground/50"
+																: "bg-primary/50"
 											}`}
 										/>
 									</div>
@@ -1470,12 +1497,12 @@ function BenchmarkLadderCard({
 									</span>
 								</div>
 								<div
-									className={`text-sm font-mono tracking-tight ${
+									className={`text-sm font-mono tracking-tight font-bold ${
 										isCurrent
-											? "font-bold text-primary"
+											? "text-primary text-base"
 											: isBaseline
 												? "text-muted-foreground line-through decoration-muted-foreground/30"
-												: "text-foreground/90 font-medium"
+												: "text-foreground/90"
 									}`}
 								>
 									{formatValue(m.value)}
@@ -1587,29 +1614,28 @@ function BenchmarkStationTable({
 		.sort((a, b) => b.efficiency - a.efficiency);
 
 	return (
-		<Card className="overflow-hidden bg-card/80 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.15)]">
+		<Card className="overflow-hidden border-2 border-primary/20 bg-noise rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
 			<HardwareCardHeader title={`Station Positioning vs ${comparisonLabel}`} />
-			<div className="overflow-x-auto relative">
-				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-background/20 to-transparent pointer-events-none" />
+			<div className="overflow-x-auto relative bg-background/50">
 				<table className="w-full relative z-10">
 					<thead>
-						<tr className="border-b border-border/50 bg-muted/10 text-[10px] font-industrial uppercase tracking-widest text-muted-foreground">
-							<th className="px-4 py-3 text-left font-medium">Station</th>
-							<th className="px-4 py-3 text-right font-medium">Current</th>
-							<th className="px-4 py-3 text-right font-medium">Baseline</th>
-							<th className="px-4 py-3 text-right font-medium">Δ vs Base</th>
-							<th className="px-4 py-3 text-right font-medium">Vs Industry</th>
-							<th className="px-4 py-3 text-left font-medium">Tier</th>
+						<tr className="border-b-2 border-primary/20 bg-primary/5 text-[10px] font-industrial uppercase tracking-widest text-foreground">
+							<th className="px-4 py-3 text-left font-bold">Station</th>
+							<th className="px-4 py-3 text-right font-bold">Current</th>
+							<th className="px-4 py-3 text-right font-bold">Baseline</th>
+							<th className="px-4 py-3 text-right font-bold">Δ vs Base</th>
+							<th className="px-4 py-3 text-right font-bold">Vs Industry</th>
+							<th className="px-4 py-3 text-left font-bold">Tier</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-border/30">
+					<tbody className="divide-y divide-primary/10">
 						{stationBenchmarkRows.length > 0 ? (
 							stationBenchmarkRows.map((station) => (
 								<tr
 									key={station.name}
-									className="text-xs font-mono transition-colors hover:bg-muted/20"
+									className="text-xs font-mono transition-colors hover:bg-primary/5"
 								>
-									<td className="px-4 py-2.5 font-medium">{station.name}</td>
+									<td className="px-4 py-2.5 font-bold text-foreground/90">{station.name}</td>
 									<td className="px-4 py-2.5 text-right font-bold">
 										{station.efficiency.toFixed(1)}
 									</td>
@@ -1617,7 +1643,7 @@ function BenchmarkStationTable({
 										{station.comparisonEfficiency.toFixed(1)}
 									</td>
 									<td
-										className={`px-4 py-2.5 text-right ${
+										className={`px-4 py-2.5 text-right font-bold ${
 											station.delta >= 0 ? "text-primary" : "text-destructive"
 										}`}
 									>
@@ -1625,7 +1651,7 @@ function BenchmarkStationTable({
 										{station.delta.toFixed(1)}
 									</td>
 									<td
-										className={`px-4 py-2.5 text-right ${
+										className={`px-4 py-2.5 text-right font-bold ${
 											station.vsIndustry >= 0 ? "text-primary" : "text-destructive"
 										}`}
 									>
@@ -1634,11 +1660,17 @@ function BenchmarkStationTable({
 									</td>
 									<td className="px-4 py-2.5">
 										{station.status === "TOP 10%" ? (
-											<span className="font-bold text-primary">TOP 10%</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border-2 border-primary text-[9px] font-bold text-primary uppercase tracking-wider bg-primary/10 shadow-[2px_2px_0px_0px_rgba(var(--primary),0.3)]">
+												TOP 10%
+											</span>
 										) : station.status === "ABOVE AVG" ? (
-											<span className="text-secondary">ABOVE AVG</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border border-success/50 text-[9px] font-bold text-success uppercase tracking-wider bg-success/10">
+												ABOVE AVG
+											</span>
 										) : (
-											<span className="text-muted-foreground">BELOW AVG</span>
+											<span className="inline-flex items-center px-1.5 py-0.5 border border-muted-foreground/30 text-[9px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/10">
+												BELOW AVG
+											</span>
 										)}
 									</td>
 								</tr>
@@ -1662,10 +1694,11 @@ function BenchmarkStationTable({
 
 function AnalyticsErrorCard({ message }: { message: string }) {
 	return (
-		<Card className="border-destructive/50 bg-destructive/5">
-			<CardBody className="p-6">
+		<Card className="border-2 border-destructive bg-destructive/10 rounded-none shadow-[4px_4px_0px_0px_rgba(var(--destructive),0.3)] bg-noise">
+			<CardBody className="p-6 relative">
+				<div className="absolute top-0 left-0 w-full h-1 bg-destructive animate-pulse" />
 				<div className="text-xs font-bold font-industrial uppercase tracking-widest text-destructive">
-					Data Load Error
+					[!] Data Load Error
 				</div>
 				<p className="mt-2 text-sm font-mono text-muted-foreground">{message}</p>
 			</CardBody>

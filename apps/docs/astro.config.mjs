@@ -18,10 +18,17 @@ export default defineConfig({
 		react(),
 		// @ts-ignore - Astro type duplication across workspace installs
 		starlight({
-			title: "Shift Pulse Docs",
+			title: "Shift Pulse",
 			description: "Customer documentation for the Shift Pulse application and API.",
 			disable404Route: true,
 			customCss: ["./src/styles/global.css"],
+			expressiveCode: {
+				themes: ['github-dark', 'github-light'],
+				styleOverrides: {
+					borderRadius: '2px',
+					borderWidth: '1px',
+				}
+			},
 			social: [
 				{
 					icon: "github",

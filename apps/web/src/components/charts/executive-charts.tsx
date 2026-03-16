@@ -158,10 +158,10 @@ export function ProductivityTrendChart({
 					fill={`url(#${trendFillId})`}
 					dot={{ r: 3, fill: "var(--color-primary)", strokeWidth: 0 }}
 					activeDot={{
-						r: 5,
+						r: 6,
 						fill: "var(--color-primary)",
-						stroke: "var(--color-card)",
-						strokeWidth: 2,
+						stroke: "var(--color-background)",
+						strokeWidth: 3,
 					}}
 				/>
 			</RechartsAreaChart>

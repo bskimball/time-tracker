@@ -33,45 +33,52 @@ const { title } = Astro.props;
 			document.documentElement.classList.toggle("dark", theme === "dark");
 		</script>
 	</head>
-	<body class="bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground">
+	<body class="bg-background text-foreground font-body antialiased selection:bg-primary/30 selection:text-foreground relative">
+		<!-- Global Industrial Background -->
+		<div class="fixed inset-0 z-[-1] pointer-events-none opacity-[0.03] dark:opacity-[0.07] bg-noise mix-blend-overlay"></div>
+		
 		<!-- Header -->
-		<header class="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm transition-colors duration-200">
-			<div class="safety-stripes" aria-hidden="true"></div>
-			<nav class="container mx-auto px-4 py-4">
+		<header class="border-b-2 border-border/80 bg-background/90 backdrop-blur-xl sticky top-0 z-50 transition-colors duration-200 shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)]">
+			<div class="safety-stripes opacity-80 h-1 absolute top-0 left-0 w-full" aria-hidden="true"></div>
+			<nav class="container mx-auto px-4 py-3 md:py-4 mt-1">
 				<div class="flex items-center justify-between">
 					<!-- Logo -->
-					<a href="/" class="flex items-center gap-3 group transition-transform duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm outline-none">
-						<div class="w-10 h-10 bg-primary flex items-center justify-center font-display font-bold text-primary-foreground rounded-sm shadow-sm group-hover:shadow-primary/20 transition-shadow">
+					<a href="/" class="flex items-center gap-3.5 group transition-transform duration-200 hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-[2px] outline-none">
+						<div class="w-10 h-10 md:w-11 md:h-11 bg-primary flex items-center justify-center font-display font-black text-primary-foreground rounded-[2px] shadow-sm relative overflow-hidden group-hover:shadow-[0_0_15px_rgba(var(--color-primary),0.3)] transition-shadow">
+							<div class="absolute inset-0 bg-gradient-to-tr from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 							SP
 						</div>
-						<div>
-							<div class="font-display font-bold text-lg text-foreground leading-none uppercase tracking-tight">
+						<div class="flex flex-col justify-center">
+							<div class="font-display font-black text-lg md:text-xl text-foreground leading-none uppercase tracking-[-0.02em] group-hover:text-primary transition-colors">
 								ShiftPulse
 							</div>
-							<div class="font-data text-[10px] text-muted-foreground leading-none">
-								Workforce Management
+							<div class="font-mono text-[9px] md:text-[10px] text-muted-foreground leading-none tracking-[0.2em] mt-1 uppercase">
+								Workforce Mgmt
 							</div>
 						</div>
 					</a>
 
 					<!-- Desktop Navigation -->
-					<div class="hidden md:flex items-center gap-8">
-						<a href="/features" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
-							Features
-						</a>
-						<a href="/pricing" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
-							Pricing
-						</a>
-						<a href="/about" class="text-muted-foreground hover:text-primary transition-colors font-heading text-sm focus-visible:text-primary outline-none">
-							About
-						</a>
+					<div class="hidden md:flex items-center gap-6">
+						<div class="flex items-center gap-6 mr-4 border-r-2 border-border/60 pr-8">
+							<a href="/features" class="text-foreground/80 hover:text-foreground transition-colors font-mono text-xs uppercase tracking-wider focus-visible:text-primary outline-none relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-px after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left font-bold">
+								Features
+							</a>
+							<a href="/pricing" class="text-foreground/80 hover:text-foreground transition-colors font-mono text-xs uppercase tracking-wider focus-visible:text-primary outline-none relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-px after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left font-bold">
+								Pricing
+							</a>
+							<a href="/about" class="text-foreground/80 hover:text-foreground transition-colors font-mono text-xs uppercase tracking-wider focus-visible:text-primary outline-none relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-px after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left font-bold">
+								About
+							</a>
+						</div>
+						
+						<ThemeToggle client:load />
 						<a
 							href="/pricing"
-							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-colors px-6 py-2 font-heading font-semibold text-sm rounded-sm shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-all px-5 py-2.5 font-display font-bold text-sm uppercase tracking-wide rounded-[2px] shadow-[0_2px_0_0_oklch(48%_0.14_42)] hover:translate-y-[1px] hover:shadow-[0_1px_0_0_oklch(48%_0.14_42)] active:translate-y-[2px] active:shadow-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
 						>
-							Get Started
+							Deploy
 						</a>
-						<ThemeToggle client:load />
 					</div>
 
 					<!-- Mobile Menu Button -->
@@ -93,63 +100,69 @@ const { title } = Astro.props;
 		</main>
 
 		<!-- Footer -->
-		<footer class="bg-muted border-t border-border mt-20 relative overflow-hidden">
-			<div class="absolute inset-0 bg-noise opacity-20 pointer-events-none" aria-hidden="true"></div>
-			<div class="safety-stripes" aria-hidden="true"></div>
+		<footer class="bg-card border-t-2 border-border/80 mt-32 relative overflow-hidden">
+			<div class="absolute inset-0 z-0 opacity-5 dark:opacity-10 bg-[linear-gradient(to_right,rgba(var(--color-foreground),0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(var(--color-foreground),0.05)_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+			<div class="safety-stripes opacity-80 h-1.5 w-full absolute top-0 left-0" aria-hidden="true"></div>
 
 			<div class="container mx-auto px-4 py-16 relative z-10">
 				<!-- Footer Grid -->
-				<div class="grid md:grid-cols-5 gap-12 mb-12">
+				<div class="grid md:grid-cols-5 gap-12 mb-16 border-b-2 border-border/60 pb-16">
 					<!-- Brand Column -->
-					<div class="md:col-span-2">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 bg-primary flex items-center justify-center font-display font-bold text-primary-foreground rounded-sm">
-								SP
+					<div class="md:col-span-2 flex flex-col justify-between">
+						<div>
+							<div class="flex items-center gap-3 mb-6">
+								<div class="w-10 h-10 bg-primary flex items-center justify-center font-display font-black text-primary-foreground rounded-[2px] shadow-[0_0_10px_rgba(var(--color-primary),0.2)]">
+									SP
+								</div>
+								<div class="font-display font-black text-xl text-foreground uppercase tracking-[-0.02em]">
+									ShiftPulse
+								</div>
 							</div>
-							<div class="font-display font-bold text-xl text-foreground uppercase tracking-tight">
-								ShiftPulse
+							<p class="text-foreground/70 text-sm leading-relaxed mb-8 max-w-sm font-body">
+								Enterprise workforce management for fulfillment warehouses and manufacturing facilities. Built for industrial excellence with precision telemetry.
+							</p>
+						</div>
+						<div class="bg-muted/50 border border-border/80 rounded-[2px] p-4 max-w-sm relative overflow-hidden group">
+							<div class="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-muted/80 to-transparent pointer-events-none"></div>
+							<div class="flex items-center gap-3 mb-2">
+								<span class="relative flex h-2.5 w-2.5">
+									<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+									<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success shadow-[0_0_8px_oklch(62%_0.14_150)]"></span>
+								</span>
+								<span class="font-mono text-[10px] text-foreground uppercase tracking-[0.15em] font-bold">
+									System Status: Nominal
+								</span>
 							</div>
-						</div>
-						<p class="text-muted-foreground text-sm leading-relaxed mb-6 max-w-md">
-							Enterprise workforce management for fulfillment warehouses and manufacturing facilities.
-							Built for industrial excellence with precision time tracking and advanced analytics.
-						</p>
-						<div class="flex items-center gap-3 mb-4">
-							<span class="led-indicator active" aria-hidden="true"></span>
-							<span class="font-data text-xs text-muted-foreground uppercase tracking-wider">
-								System Operational
-							</span>
-						</div>
-						<div class="text-sm text-muted-foreground">
-							Trusted by <span class="text-primary font-display font-bold">500+</span> facilities worldwide
+							<div class="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+								v4.0.2 // Core Systems Online
+							</div>
 						</div>
 					</div>
 
-
 					<!-- Product Column -->
 					<div>
-						<h4 class="font-industrial text-foreground text-xs mb-4">
-							Product
+						<h4 class="font-display font-bold text-foreground text-sm uppercase tracking-wide mb-6 flex items-center gap-2">
+							<span class="w-1 h-4 bg-primary rounded-[1px]"></span> Product
 						</h4>
-						<ul class="space-y-3 text-sm">
+						<ul class="space-y-4 text-sm font-mono uppercase tracking-wider">
 							<li>
-								<a href="/features" class="text-muted-foreground hover:text-primary transition-colors">
-									Features
+								<a href="/features" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Features
 								</a>
 							</li>
 							<li>
-								<a href="/pricing" class="text-muted-foreground hover:text-primary transition-colors">
-									Pricing
+								<a href="/pricing" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Pricing
 								</a>
 							</li>
 							<li>
-								<a href="/about" class="text-muted-foreground hover:text-primary transition-colors">
-									About
+								<a href="/about" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> About
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Documentation
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Docs
 								</a>
 							</li>
 						</ul>
@@ -157,28 +170,28 @@ const { title } = Astro.props;
 
 					<!-- Support Column -->
 					<div>
-						<h4 class="font-industrial text-foreground text-xs mb-4">
-							Support
+						<h4 class="font-display font-bold text-foreground text-sm uppercase tracking-wide mb-6 flex items-center gap-2">
+							<span class="w-1 h-4 bg-primary rounded-[1px]"></span> Support
 						</h4>
-						<ul class="space-y-3 text-sm">
+						<ul class="space-y-4 text-sm font-mono uppercase tracking-wider">
 							<li>
-								<a href="mailto:support@shiftpulse.com" class="text-muted-foreground hover:text-primary transition-colors">
-									Email Support
+								<a href="mailto:support@shiftpulse.com" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Email
 								</a>
 							</li>
 							<li>
-								<a href="tel:+1-800-SHIFTPULSE" class="text-muted-foreground hover:text-primary transition-colors">
-									1-800-SHIFTPULSE
+								<a href="tel:+1-800-SHIFTPULSE" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Call
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Help Center
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Help Center
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									API Reference
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> API Ref
 								</a>
 							</li>
 						</ul>
@@ -186,28 +199,28 @@ const { title } = Astro.props;
 
 					<!-- Company Column -->
 					<div>
-						<h4 class="font-industrial text-foreground text-xs mb-4">
-							Company
+						<h4 class="font-display font-bold text-foreground text-sm uppercase tracking-wide mb-6 flex items-center gap-2">
+							<span class="w-1 h-4 bg-primary rounded-[1px]"></span> Company
 						</h4>
-						<ul class="space-y-3 text-sm">
+						<ul class="space-y-4 text-sm font-mono uppercase tracking-wider">
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Careers
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Careers
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Privacy Policy
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Privacy
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Terms of Service
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Terms
 								</a>
 							</li>
 							<li>
-								<a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-									Security
+								<a href="#" class="text-muted-foreground hover:text-foreground transition-colors relative group w-fit flex items-center gap-2">
+									<span class="w-0 h-0.5 bg-primary group-hover:w-2 transition-all duration-300"></span> Security
 								</a>
 							</li>
 						</ul>
@@ -215,36 +228,30 @@ const { title } = Astro.props;
 				</div>
 
 				<!-- Footer Bottom -->
-				<div class="border-t border-border pt-8 relative z-10">
-					<div class="flex flex-col md:flex-row justify-between items-center gap-6">
-						<div class="text-sm text-muted-foreground">
+				<div class="relative z-10">
+					<div class="flex flex-col md:flex-row justify-between items-center gap-8">
+						<div class="text-xs font-mono text-muted-foreground uppercase tracking-widest">
 							&copy; 2025 ShiftPulse. All rights reserved.
 						</div>
 
 						<!-- Compliance Badges -->
-						<div class="flex items-center gap-6 flex-wrap justify-center">
-							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
+						<div class="flex items-center gap-4 flex-wrap justify-center">
+							<div class="font-mono text-[9px] text-foreground/80 flex items-center gap-2 px-3 py-1.5 border border-border/60 rounded-[2px] bg-background/50 uppercase tracking-widest">
+								<div class="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_4px_rgba(var(--color-primary),0.5)]" aria-hidden="true"></div>
 								SOC 2 Type II
 							</div>
-							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
+							<div class="font-mono text-[9px] text-foreground/80 flex items-center gap-2 px-3 py-1.5 border border-border/60 rounded-[2px] bg-background/50 uppercase tracking-widest">
+								<div class="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_4px_rgba(var(--color-primary),0.5)]" aria-hidden="true"></div>
 								99.9% Uptime SLA
 							</div>
-							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
-								Enterprise Security
-							</div>
-							<div class="font-data text-xs text-muted-foreground flex items-center gap-2">
-								<div class="w-2 h-2 bg-secondary rounded-full" aria-hidden="true"></div>
+							<div class="font-mono text-[9px] text-foreground/80 flex items-center gap-2 px-3 py-1.5 border border-border/60 rounded-[2px] bg-background/50 uppercase tracking-widest">
+								<div class="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_4px_rgba(var(--color-primary),0.5)]" aria-hidden="true"></div>
 								GDPR Compliant
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-
-			<div class="safety-stripes" aria-hidden="true"></div>
 		</footer>
 	</body>
 </html>

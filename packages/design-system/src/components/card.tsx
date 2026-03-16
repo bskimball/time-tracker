@@ -34,25 +34,14 @@ export function Card({ children, className = "" }: CardProps) {
 	return (
 		<div
 			className={cn(
-				"rounded-[2px] relative group overflow-hidden",
-				// Light mode
-				"bg-white bg-gradient-to-b from-zinc-50 to-zinc-100/80 text-zinc-900",
-				"border border-zinc-200 ring-1 ring-inset ring-black/5",
-				"transition-all duration-300 ease-out",
-				"hover:border-zinc-300 hover:from-zinc-100 hover:to-zinc-200/80",
-				"[--color-foreground:var(--color-zinc-900)] [--color-muted-foreground:var(--color-zinc-600)] [--color-border:var(--color-zinc-200)]",
-				// Dark mode
-				"dark:bg-zinc-900 dark:bg-gradient-to-b dark:from-zinc-800 dark:to-zinc-950 dark:text-zinc-50",
-				"dark:border-zinc-700 dark:ring-white/10",
-				"dark:hover:border-zinc-600 dark:hover:from-zinc-700/80 dark:hover:to-zinc-900",
-				"dark:[--color-foreground:var(--color-zinc-50)] dark:[--color-muted-foreground:var(--color-zinc-400)] dark:[--color-border:var(--color-zinc-700)]",
+				"rounded-none relative group overflow-hidden border-2 border-border/70 shadow-sm",
+				"bg-card text-foreground transition-all duration-300 ease-out",
+				"hover:border-primary/40 hover:-translate-y-[1px] hover:shadow-[0_4px_10px_-4px_rgba(0,0,0,0.1)]",
 				className
 			)}
 		>
-			{/* Material Simulation Overlay for all cards */}
-			<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-black/[0.03] dark:from-white/[0.05] via-transparent to-transparent pointer-events-none" />
-
-			<div className="relative z-10">{children}</div>
+			<div className="absolute top-0 left-0 w-full h-1 bg-border/40 group-hover:bg-primary/20 transition-colors pointer-events-none" />
+			<div className="relative z-10 h-full flex flex-col">{children}</div>
 		</div>
 	);
 }
@@ -65,9 +54,7 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
 	return (
 		<div
 			className={cn(
-				"p-5 border-b border-black/5 bg-black/[0.02]",
-				"dark:border-white/10 dark:bg-white/5",
-				"transition-colors duration-150 relative z-10",
+				"px-6 py-4 border-b-2 border-border/60 bg-muted/20 relative z-10",
 				className
 			)}
 		>
@@ -81,7 +68,7 @@ export function CardHeader({ children, className = "" }: CardHeaderProps) {
  */
 export function CardTitle({ children, className = "" }: CardTitleProps) {
 	return (
-		<h2 className={cn("text-lg font-heading font-semibold tracking-tight text-inherit", className)}>
+		<h2 className={cn("text-lg font-display font-bold uppercase tracking-wider text-foreground leading-none", className)}>
 			{children}
 		</h2>
 	);
@@ -92,7 +79,7 @@ export function CardTitle({ children, className = "" }: CardTitleProps) {
  * Standard padding: p-5 (20px)
  */
 export function CardBody({ children, className = "" }: CardBodyProps) {
-	return <div className={cn("p-5", className)}>{children}</div>;
+	return <div className={cn("p-6 flex-1", className)}>{children}</div>;
 }
 
 /**
@@ -100,5 +87,6 @@ export function CardBody({ children, className = "" }: CardBodyProps) {
  * Standard padding: p-5 (20px), pt-0 to sit flush with body.
  */
 export function CardFooter({ children, className = "" }: CardFooterProps) {
-	return <div className={cn("p-5 pt-0 flex items-center", className)}>{children}</div>;
+	return <div className={cn("px-6 py-4 pt-0 flex items-center border-t-2 border-border/60 mt-auto bg-muted/10", className)}>{children}</div>;
 }
+

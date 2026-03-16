@@ -140,20 +140,23 @@ export function KPICard({
 
 	if (loading) {
 		return (
-			<Card className="h-full">
+			<Card className="h-full border-2 border-border/60 bg-muted/10">
 				<CardBody
-					className={`${isDense ? "p-3 gap-2" : "p-4 gap-4"} flex flex-col h-full justify-between`}
+					className={`${isDense ? "p-4 gap-3" : "p-6 gap-6"} flex flex-col h-full justify-between relative`}
 				>
-					<div className="flex items-start justify-between">
+					<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
+					<div className="flex items-start justify-between relative z-10">
 						<Metric label={title} value={String(value)} className="flex-1" />
 						{Icon && (
-							<div className="p-2 bg-white/5 rounded-xs text-zinc-500 opacity-50">
+							<div className="p-2 border border-border/50 bg-background/50 rounded-xs text-muted-foreground opacity-50">
 								<Icon className="h-5 w-5" aria-hidden="true" />
 							</div>
 						)}
 					</div>
-					<div className={`pt-4 border-t border-white/10 ${isDense ? "mt-1" : "mt-2"}`}>
-						<div className="h-3 bg-white/10 rounded w-2/3 animate-pulse" />
+					<div
+						className={`pt-4 border-t-2 border-border/50 ${isDense ? "mt-2" : "mt-4"} relative z-10`}
+					>
+						<div className="h-3 bg-muted rounded-none w-2/3 animate-pulse" />
 					</div>
 				</CardBody>
 			</Card>
@@ -162,14 +165,22 @@ export function KPICard({
 
 	return (
 		<Card
-			className={`h-full group transition-all duration-300 relative overflow-hidden ${
+			className={`h-full group transition-all duration-300 relative overflow-hidden border-2 shadow-sm ${
 				dominant
-					? "ring-2 ring-inset ring-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-					: ""
+					? "border-primary/50 bg-primary/5 hover:bg-primary/10"
+					: "border-border/70 hover:border-primary/40 bg-card hover:-translate-y-[2px] hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)]"
 			}`}
 		>
+			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
+			{dominant && (
+				<div className="absolute left-0 top-0 bottom-0 w-1 bg-primary group-hover:bg-primary-hover transition-colors" />
+			)}
+			{!dominant && (
+				<div className="absolute left-0 top-0 bottom-0 w-1 bg-border/40 group-hover:bg-primary/30 transition-colors" />
+			)}
+
 			<CardBody
-				className={`${isDense ? "p-3 gap-2" : "p-4 gap-4"} flex flex-col h-full justify-between relative z-10`}
+				className={`${isDense ? "p-4 gap-3" : "p-6 gap-6"} flex flex-col h-full justify-between relative z-10`}
 			>
 				<div className="flex items-start justify-between">
 					<div className={`flex-1 flex flex-col`}>
@@ -182,10 +193,10 @@ export function KPICard({
 					</div>
 					{Icon && (
 						<div
-							className={`p-2 rounded-xs transition-colors duration-300 ${
+							className={`p-2 border border-border/50 rounded-none transition-colors duration-300 shadow-sm ${
 								dominant
-									? "bg-primary/20 text-primary"
-									: "bg-white/5 text-zinc-400 group-hover:text-primary"
+									? "bg-primary/20 text-primary border-primary/30"
+									: "bg-muted/30 text-muted-foreground group-hover:text-primary group-hover:border-primary/30"
 							}`}
 						>
 							<Icon className={`${isDense ? "h-4 w-4" : "h-5 w-5"}`} aria-hidden="true" />
@@ -194,8 +205,8 @@ export function KPICard({
 				</div>
 
 				{subtitle && (
-					<div className={`pt-2 border-t mt-1 border-white/10`}>
-						<p className={`text-[10px] font-mono truncate text-zinc-400`}>
+					<div className={`pt-3 border-t-2 mt-2 border-border/50`}>
+						<p className={`text-[10px] font-mono truncate text-muted-foreground tracking-wide`}>
 							{subtitle}
 							{trend?.label && <span className="opacity-70 ml-1">({trend.label})</span>}
 						</p>
