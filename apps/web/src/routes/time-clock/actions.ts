@@ -5,8 +5,19 @@ import { db } from "~/lib/db";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { validateRequest } from "~/lib/auth";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
-import { getWorkerSelfAssignmentAccess } from "~/lib/task-assignment-permissions";
 import { publishManagerRealtimeEvent } from "~/lib/manager-realtime";
+import {
+	getActiveEmployeeByCode,
+	getWorkerSelfTaskContext as resolveWorkerSelfTaskContext,
+	normalizeEmployeeCode,
+	resolveFloorEmployeeId,
+} from "~/lib/domain/employee-work-eligibility";
+import {
+	clockInWorkSession,
+	endWorkerTask,
+	startWorkerTask,
+	switchWorkerTask,
+} from "~/lib/domain/work-session";
 
 export type ClockActionState = {
 	error?: string;
@@ -14,96 +25,15 @@ export type ClockActionState = {
 	message?: string;
 } | null;
 
-type WorkerSelfTaskContext = { ok: true; employeeId: string } | { ok: false; error: string };
-
-type FloorScopeResult = { ok: true; employeeId: string } | { ok: false; error: string };
-
-function normalizeEmployeeCode(value: FormDataEntryValue | null): string {
-	return String(value || "")
-		.trim()
-		.toUpperCase();
-}
-
-async function getActiveEmployeeByCode(employeeCode: string) {
-	if (!employeeCode) {
-		return null;
-	}
-
-	return db.employee.findFirst({
-		where: {
-			employeeCode,
-			status: "ACTIVE",
-			pinHash: { not: null },
-		},
-	});
-}
-
-async function resolveScopedEmployeeId(requestedEmployeeId: string): Promise<FloorScopeResult> {
+async function resolveScopedEmployeeId(requestedEmployeeId: string) {
 	const { user } = await validateRequest();
-	const normalizedRequestedEmployeeId = requestedEmployeeId.trim();
-
-	if (!user) {
-		if (!normalizedRequestedEmployeeId) {
-			return { ok: false, error: "Employee is required" };
-		}
-		return { ok: true, employeeId: normalizedRequestedEmployeeId };
-	}
-
-	if (user.role === "WORKER") {
-		if (!user.employeeId) {
-			return { ok: false, error: "Worker session is not linked to an employee" };
-		}
-
-		if (normalizedRequestedEmployeeId && normalizedRequestedEmployeeId !== user.employeeId) {
-			return { ok: false, error: "Workers can only perform floor actions for themselves" };
-		}
-
-		return { ok: true, employeeId: user.employeeId };
-	}
-
-	if (!normalizedRequestedEmployeeId) {
-		return { ok: false, error: "Employee is required" };
-	}
-
-	return { ok: true, employeeId: normalizedRequestedEmployeeId };
+	return resolveFloorEmployeeId(user, requestedEmployeeId);
 }
 
-async function getWorkerSelfTaskContext(): Promise<WorkerSelfTaskContext> {
+async function getWorkerSelfTaskContext() {
 	const { user } = await validateRequest();
 	const mode = await getTaskAssignmentMode();
-	const access = getWorkerSelfAssignmentAccess(user, mode);
-
-	if (!access.ok) {
-		return { ok: false, error: access.error };
-	}
-
-	const employee = await db.employee.findUnique({
-		where: { id: access.employeeId },
-		select: { id: true, status: true },
-	});
-
-	if (!employee || employee.status !== "ACTIVE") {
-		return { ok: false, error: "Linked employee is not active" };
-	}
-
-	return { ok: true, employeeId: employee.id };
-}
-
-async function hasActiveWorkLog(employeeId: string) {
-	const activeWorkLog = await db.timeLog.findFirst({
-		where: { employeeId, type: "WORK", endTime: null, deletedAt: null },
-		select: { id: true },
-	});
-
-	return Boolean(activeWorkLog);
-}
-
-async function getActiveAssignments(employeeId: string) {
-	return db.taskAssignment.findMany({
-		where: { employeeId, endTime: null },
-		orderBy: { startTime: "desc" },
-		select: { id: true, taskTypeId: true },
-	});
+	return resolveWorkerSelfTaskContext(db, user, mode);
 }
 
 export async function startSelfTaskAction(
@@ -123,47 +53,7 @@ export async function startSelfTaskAction(
 		return { success: false, error: "Task type is required" };
 	}
 
-	const [taskType, activeWorkLog, activeAssignments] = await Promise.all([
-		db.taskType.findUnique({
-			where: { id: taskTypeId },
-			select: { id: true, isActive: true, name: true },
-		}),
-		hasActiveWorkLog(context.employeeId),
-		getActiveAssignments(context.employeeId),
-	]);
-
-	if (!taskType || !taskType.isActive) {
-		return { success: false, error: "Task type is not available" };
-	}
-
-	if (!activeWorkLog) {
-		return { success: false, error: "Clock in before starting a task" };
-	}
-
-	if (activeAssignments.length > 0) {
-		return { success: false, error: "End or switch your active task before starting a new one" };
-	}
-
-	await db.taskAssignment.create({
-		data: {
-			employeeId: context.employeeId,
-			taskTypeId,
-			source: "WORKER",
-			notes,
-			startTime: new Date(),
-		},
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "worker_started_task",
-		employeeId: context.employeeId,
-	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "worker_task_started",
-		employeeId: context.employeeId,
-	});
-
-	return { success: true, message: `Started task: ${taskType.name}` };
+	return startWorkerTask(db, { employeeId: context.employeeId, taskTypeId, notes });
 }
 
 export async function switchSelfTaskAction(
@@ -185,66 +75,7 @@ export async function switchSelfTaskAction(
 		return { success: false, error: "New task type is required" };
 	}
 
-	const [taskType, activeWorkLog, activeAssignments] = await Promise.all([
-		db.taskType.findUnique({
-			where: { id: taskTypeId },
-			select: { id: true, isActive: true, name: true },
-		}),
-		hasActiveWorkLog(context.employeeId),
-		getActiveAssignments(context.employeeId),
-	]);
-
-	if (!taskType || !taskType.isActive) {
-		return { success: false, error: "Task type is not available" };
-	}
-
-	if (!activeWorkLog) {
-		return { success: false, error: "Clock in before switching tasks" };
-	}
-
-	if (activeAssignments.length === 0) {
-		return { success: false, error: "No active task to switch" };
-	}
-
-	if (activeAssignments.length > 1) {
-		return {
-			success: false,
-			error: "Multiple active task assignments found; manager intervention required",
-		};
-	}
-
-	const [currentAssignment] = activeAssignments;
-	if (currentAssignment.taskTypeId === taskTypeId) {
-		return { success: false, error: "You are already assigned to this task" };
-	}
-
-	await db.$transaction(async (tx) => {
-		await tx.taskAssignment.update({
-			where: { id: currentAssignment.id },
-			data: { endTime: new Date() },
-		});
-
-		await tx.taskAssignment.create({
-			data: {
-				employeeId: context.employeeId,
-				taskTypeId,
-				source: "WORKER",
-				notes: reason,
-				startTime: new Date(),
-			},
-		});
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "worker_switched_task",
-		employeeId: context.employeeId,
-	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "worker_task_switched",
-		employeeId: context.employeeId,
-	});
-
-	return { success: true, message: `Switched to task: ${taskType.name}` };
+	return switchWorkerTask(db, { employeeId: context.employeeId, taskTypeId, reason });
 }
 
 export async function endSelfTaskAction(
@@ -259,50 +90,7 @@ export async function endSelfTaskAction(
 	const notesRaw = formData.get("notes");
 	const notes = notesRaw ? String(notesRaw).trim() : "";
 
-	const activeAssignments = await db.taskAssignment.findMany({
-		where: { employeeId: context.employeeId, endTime: null },
-		orderBy: { startTime: "desc" },
-		include: {
-			TaskType: {
-				select: { name: true },
-			},
-		},
-	});
-
-	if (activeAssignments.length === 0) {
-		return { success: false, error: "No active task to end" };
-	}
-
-	if (activeAssignments.length > 1) {
-		return {
-			success: false,
-			error: "Multiple active task assignments found; manager intervention required",
-		};
-	}
-
-	const [activeAssignment] = activeAssignments;
-
-	await db.taskAssignment.update({
-		where: { id: activeAssignment.id },
-		data: {
-			endTime: new Date(),
-			notes: notes
-				? `${activeAssignment.notes || ""}\nWorker end note: ${notes}`.trim()
-				: activeAssignment.notes,
-		},
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "worker_ended_task",
-		employeeId: context.employeeId,
-		taskAssignmentId: activeAssignment.id,
-	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "worker_task_ended",
-		employeeId: context.employeeId,
-	});
-
-	return { success: true, message: `Ended task: ${activeAssignment.TaskType.name}` };
+	return endWorkerTask(db, { employeeId: context.employeeId, notes });
 }
 
 export async function clockIn(
@@ -323,49 +111,7 @@ export async function clockIn(
 
 	await ensureOperationalDataSeeded();
 
-	const [employee, station, activeWorkLog] = await Promise.all([
-		db.employee.findUnique({ where: { id: employeeId } }),
-		db.station.findUnique({ where: { id: stationId } }),
-		db.timeLog.findFirst({
-			where: { employeeId, type: "WORK", endTime: null, deletedAt: null },
-		}),
-	]);
-
-	if (!employee || employee.status !== "ACTIVE") {
-		return { success: false, error: "Employee is not active" };
-	}
-
-	if (!station || !station.isActive) {
-		return { success: false, error: "Station is not available" };
-	}
-
-	if (activeWorkLog) {
-		return { success: false, error: `${employee.name} is already clocked in` };
-	}
-
-	await db.timeLog.create({
-		data: {
-			employeeId,
-			stationId,
-			type: "WORK",
-			startTime: new Date(),
-			clockMethod: "MANUAL",
-			updatedAt: new Date(),
-		},
-	});
-
-	await db.employee.update({ where: { id: employeeId }, data: { lastStationId: stationId } });
-
-	publishManagerRealtimeEvent("time_log_changed", "monitor", {
-		reason: "clock_in",
-		employeeId,
-	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "clock_in",
-		employeeId,
-	});
-
-	return { success: true, message: `${employee.name} clocked in at ${station.name}` };
+	return clockInWorkSession(db, { employeeId, stationId, clockMethod: "MANUAL" });
 }
 
 export async function clockOut(
@@ -612,7 +358,7 @@ export async function checkPinStatus(_prevState: ClockActionState, formData: For
 
 	await ensureOperationalDataSeeded();
 
-	const employee = await getActiveEmployeeByCode(employeeCode);
+	const employee = await getActiveEmployeeByCode(db, employeeCode);
 
 	if (!employee?.pinHash) {
 		return { success: false, error: "Invalid employee code or PIN" };

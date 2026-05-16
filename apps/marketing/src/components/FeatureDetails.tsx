@@ -1,4 +1,4 @@
-import { IndustrialPanel, Card, CardBody, Tabs, TabList, Tab, TabPanel } from "@monorepo/design-system";
+import { IndustrialPanel, Tabs, TabList, Tab, TabPanel } from "@monorepo/design-system";
 import {
 	LiaChartBarSolid,
 	LiaChartLineSolid,

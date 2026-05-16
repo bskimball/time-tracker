@@ -55,6 +55,17 @@ export const createMockDb = () => ({
 		delete: vi.fn(),
 		count: vi.fn(),
 	},
+	operationalConfig: {
+		findMany: vi.fn(),
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		updateMany: vi.fn(),
+		upsert: vi.fn(),
+		delete: vi.fn(),
+		count: vi.fn(),
+	},
 	user: {
 		findMany: vi.fn(),
 		findUnique: vi.fn(),

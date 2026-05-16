@@ -19,7 +19,7 @@ describe("Analytics productivity employee table", () => {
 		const row = employeeCell.closest("tr");
 		expect(row).toBeTruthy();
 		expect(within(row as HTMLElement).getByText("30")).toBeInTheDocument(); // rate
-		expect(within(row as HTMLElement).getByText("TOP PERFORMER")).toBeInTheDocument();
+		expect(within(row as HTMLElement).getByText("Top Performer")).toBeInTheDocument();
 	});
 });
 

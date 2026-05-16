@@ -32,9 +32,9 @@ export default function AboutHero() {
 					</h1>
 
 					<p className="max-w-2xl text-lg leading-relaxed text-foreground/70 md:text-xl font-body border-l-4 border-primary/40 pl-6 py-2 bg-gradient-to-r from-primary/5 to-transparent">
-						Founded by industry veterans, ShiftPulse was built to solve the unique challenges
-						of warehouse and manufacturing workforce management. We're committed to helping industrial
-						operations achieve execution excellence through precision telemetry.
+						We started ShiftPulse after running warehouses where the time-clock system was slower
+						than the production line it was supposed to track. Today we help 500+ facilities
+						cut labor waste, prove compliance, and make better staffing decisions—fast.
 					</p>
 				</div>
 			</div>

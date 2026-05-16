@@ -1,6 +1,3 @@
-// Unstable RSC APIs - partial type coverage in react-router
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import {
 	createTemporaryReferenceSet,
 	decodeAction,
@@ -35,9 +32,9 @@ function getPortalHomeForRole(role: string): string {
 	}
 }
 
-function fetchServer(request: Request) {
+async function fetchServer(request: Request): Promise<Response> {
 	// Wrap RSC rendering in request context so Server Components can access request
-	return runWithRequest(request, () =>
+	const result = await runWithRequest(request, () =>
 		matchRSCServerRequest({
 			// Provide the React Server touchpoints.
 			createTemporaryReferenceSet,
@@ -58,6 +55,7 @@ function fetchServer(request: Request) {
 			},
 		})
 	);
+	return result as Response;
 }
 
 export default async function handler(request: Request) {

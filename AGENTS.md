@@ -19,3 +19,14 @@ Shift Pulse is a monorepo with a React Router web app, Astro marketing/docs site
 - Monorepo typecheck: `npm run typecheck` (runs workspace typecheck scripts).
 - Monorepo build: `npm run build` (runs workspace build scripts).
 - Web app full quality check: `cd apps/web && npm run check` (format check + lint + typecheck).
+
+## Throwaway files and scripts
+
+Never create root-level scripts or markdown files for one-off debugging, metrics checks, or temporary fixes (e.g., `fix-*.ts`, `check-*.ts`, `restart-*.sh`).
+
+Instead:
+- Use a `.tmp/` directory at the repository root for all throwaway artifacts.
+- Add `.tmp/` to `.gitignore` (already present).
+- Clean up `.tmp/` contents when the task is complete.
+
+This keeps the repository root clean and prevents accidental commits of development scaffolding.

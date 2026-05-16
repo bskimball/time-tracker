@@ -1,13 +1,14 @@
-import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc/plugin";
-import { defineConfig } from "vite";
+import honoDevServer from "@hono/vite-dev-server";
+import { defineConfig } from "vite-plus";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { VitePWA } from "vite-plugin-pwa";
-import tsconfigPaths from "vite-tsconfig-paths";
-import honoDevServer from "@hono/vite-dev-server";
+import type { ConfigEnv } from "vite";
 
-export default defineConfig(({ mode }) => {
+function createConfig({ mode }: ConfigEnv) {
 	if (mode === "api") {
 		return {
 			build: {
@@ -23,12 +24,14 @@ export default defineConfig(({ mode }) => {
 				},
 				ssr: true,
 			},
+			resolve: {
+				tsconfigPaths: true,
+			},
 		};
 	}
 
 	if (mode === "sse") {
 		return {
-			plugins: [tsconfigPaths()],
 			build: {
 				copyPublicDir: false,
 				emptyOutDir: false,
@@ -42,17 +45,34 @@ export default defineConfig(({ mode }) => {
 				},
 				ssr: true,
 			},
+			resolve: {
+				tsconfigPaths: true,
+			},
 		};
 	}
 
 	return {
+		lint: {
+			options: {
+				typeAware: true,
+				typeCheck: true,
+			},
+			categories: {
+				correctness: "warn",
+			},
+			ignorePatterns: ["dist/**"],
+		},
+		fmt: {
+			semi: true,
+			singleQuote: false,
+			useTabs: true,
+			ignorePatterns: ["dist/**"],
+		},
 		plugins: [
 			tailwindcss(),
-			tsconfigPaths(),
-			react({
-				babel: {
-					plugins: ["babel-plugin-react-compiler"],
-				},
+			react(),
+			babel({
+				presets: [reactCompilerPreset({ compilationMode: "annotation" })],
 			}),
 			rsc({
 				entries: {
@@ -111,27 +131,29 @@ export default defineConfig(({ mode }) => {
 			}),
 			honoDevServer({
 				entry: "src/routes/api/index.ts",
-				exclude: [
-					/^(?!\/api).*/, // Exclude anything that doesn't start with /api
-				],
+				exclude: [/^(?!\/api).*/],
 			}),
 			honoDevServer({
 				entry: "src/routes/sse/index.ts",
-				exclude: [
-					/^(?!\/sse).*/, // Exclude anything that doesn't start with /sse
-				],
+				exclude: [/^(?!\/sse).*/],
 			}),
 			devtoolsJson(),
 		],
-		optimizeDeps: {
-			exclude: ["@prisma/client", ".prisma/client"],
-		},
-		ssr: {
-			noExternal: ["@monorepo/design-system"],
-			external: ["@prisma/client", ".prisma/client"],
+		resolve: {
+			tsconfigPaths: true,
 		},
 		define: {
 			"import.meta.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
 		},
+		optimizeDeps: {
+			exclude: ["@prisma/client", ".prisma/client"],
+			include: ["nuqs"],
+		},
+		ssr: {
+			noExternal: ["@monorepo/design-system", "nuqs"],
+			external: ["@prisma/client", ".prisma/client"],
+		},
 	};
-});
+}
+
+export default defineConfig(createConfig as never);

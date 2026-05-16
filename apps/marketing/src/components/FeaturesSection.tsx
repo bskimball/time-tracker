@@ -11,50 +11,50 @@ import {
 const features = [
 	{
 		icon: LiaClockSolid,
-		title: "Real-Time Workforce Monitoring",
+		title: "Real-Time Workforce Visibility",
 		description:
-			"Track employee activity, task assignments, and station throughput in real time across every floor, dock, and fulfillment lane.",
-		benefits: ["Live dashboard updates", "Automated time tracking", "Performance alerts"],
+			"See who is clocked in, on break, or on task—instantly. Spot idle capacity before it costs you money and redirect labor where it is needed most.",
+		benefits: ["Live floor dashboard", "Automated punch tracking", "Idle-station alerts"],
 		group: "Monitoring",
 	},
 	{
 		icon: LiaChartBarSolid,
-		title: "Advanced Analytics & KPIs",
+		title: "Executive Reporting & KPIs",
 		description:
-			"Turn raw labor data into executive signals with custom reporting, utilization trends, and operational scorecards.",
-		benefits: ["Custom report builder", "KPI tracking", "Executive dashboards"],
+			"Stop guessing. Get daily reports on overtime trends, labor cost per unit, and productivity by station. Export to Excel in one click.",
+		benefits: ["Daily P&L-ready reports", "Overtime trend alerts", "Station-level scorecards"],
 		group: "Analytics",
 	},
 	{
 		icon: LiaSyncAltSolid,
-		title: "Offline Reliability",
+		title: "Never Lose a Minute to Downtime",
 		description:
-			"Keep production moving during outages with resilient local capture and automatic sync the moment connectivity returns.",
-		benefits: ["Offline data collection", "Automatic synchronization", "Data integrity guarantees"],
+			"Wi-Fi goes down? Workers keep punching in on their station tablets. Data syncs automatically when the network returns. No lost hours, no manual catch-up.",
+		benefits: ["Offline time capture", "Auto-sync on reconnect", "Conflict-free merge"],
 		group: "Continuity",
 	},
 	{
 		icon: LiaShieldAltSolid,
-		title: "Enterprise Security",
+		title: "Compliance You Can Prove",
 		description:
-			"Protect workforce data with strict access controls, hardened transport, and compliance-aligned operational safeguards.",
-		benefits: ["AES-256 encryption", "SOC 2 certified", "Role-based access"],
+			"Audit-ready time logs, enforced break policies, and role-based access so you pass labor inspections without the scramble. SOC 2 Type II certified.",
+		benefits: ["Audit trails", "Break-policy enforcement", "SOC 2 certified"],
 		group: "Security",
 	},
 	{
 		icon: LiaCloudSolid,
-		title: "Flexible Deployment",
+		title: "Your Stack, Your Rules",
 		description:
-			"Launch on-prem, in the cloud, or in hybrid mode without compromising telemetry, reporting, or policy enforcement.",
-		benefits: ["Multi-cloud support", "On-premise option", "Hybrid deployment"],
+			"Cloud for speed, on-prem for control, or hybrid for the best of both. The same dashboards and policies work everywhere.",
+		benefits: ["AWS / Azure / GCP", "Air-gapped option", "One policy, all sites"],
 		group: "Infrastructure",
 	},
 	{
 		icon: LiaCogSolid,
-		title: "OpenAPI Compliant",
+		title: "Plays Nice With Your Payroll",
 		description:
-			"Integrate scheduling, HRIS, payroll, and floor systems with a clean API surface, webhooks, and documented contracts.",
-		benefits: ["200+ API endpoints", "Complete documentation", "SDKs & webhooks"],
+			"Push approved hours straight to ADP, Workday, or your home-grown payroll. Open API + webhooks mean your integration team finishes in a sprint, not a quarter.",
+		benefits: ["ADP / Workday ready", "OpenAPI + webhooks", "Pre-built connectors"],
 		group: "Platform",
 	},
 ];
@@ -73,11 +73,11 @@ export default function FeaturesSection() {
 							Capabilities Matrix
 						</div>
 						<h2 className="max-w-3xl font-display text-4xl font-black tracking-[-0.04em] text-foreground md:text-5xl leading-tight">
-							Built to run the floor like the dashboard looks.
+							Turn labor data into decisions that save money.
 						</h2>
 						<p className="mt-4 max-w-2xl text-lg leading-8 text-foreground/70">
-							Every module mirrors the discipline of the web app: clear hierarchy, fast readouts,
-							and practical tools for leaders operating under real production pressure.
+							Every module is built for operators under real production pressure:
+							fast readouts, clear hierarchy, and zero wasted clicks.
 						</p>
 					</div>
 

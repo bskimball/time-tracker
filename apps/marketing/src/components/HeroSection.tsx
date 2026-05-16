@@ -57,15 +57,15 @@ export default function HeroSection() {
 						</h1>
 
 						<p className="mt-8 text-lg leading-relaxed text-foreground/70 md:text-xl font-body border-l-2 border-primary/40 pl-5">
-							Transform fulfillment and manufacturing operations with live labor telemetry,
-							operational guardrails, and executive-grade workforce dashboards built for the floor.
+							See exactly where labor hours go, eliminate time theft, and cut overtime spend 15-20%.
+							Built for warehouse and manufacturing teams that run 24/7.
 						</p>
 
 						<div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
 							<a href="/pricing" className="w-full sm:w-auto">
 								<Button
 									size="lg"
-									className="w-full sm:min-w-48 justify-center btn-mechanical px-8 py-6 text-sm shadow-[0_4px_0_0_oklch(48%_0.14_42)] hover:translate-y-[2px] hover:shadow-[0_2px_0_0_oklch(48%_0.14_42)] active:translate-y-[4px] active:shadow-none transition-all uppercase tracking-widest font-bold"
+									className="w-full sm:min-w-48 justify-center btn-mechanical px-8 py-6 text-sm uppercase tracking-widest font-bold"
 								>
 									Deploy System
 								</Button>

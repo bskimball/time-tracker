@@ -7,31 +7,31 @@ datasource db {
 }
 
 model Employee {
-  id               String    @id @default(cuid())
-  name             String
-  email            String    @unique
-  pinHash          String?   @db.VarChar(72)
-  lastStationId    String?
-  dailyHoursLimit  Float?    @default(8.0)
-  weeklyHoursLimit Float?    @default(40.0)
-  employeeCode     String?   @unique // NEW: Employee badge/code
-  phoneNumber      String?               // NEW: Contact info
-  hireDate         DateTime?             // NEW: For tenure tracking
-  status           EmployeeStatus @default(ACTIVE) // NEW
-  defaultStationId String?               // NEW: Primary assignment
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt  // NEW
-  TimeLog          TimeLog[]
-  User             User?
-  TaskAssignment   TaskAssignment[]      // NEW
-  PerformanceMetric PerformanceMetric[]  // NEW
-  EmployeeSkill    EmployeeSkill[]
-  ShiftAssignment  ShiftAssignment[]
-  CallOut          CallOut[]
-  defaultStation   Station?  @relation("DefaultStation", fields: [defaultStationId], references: [id])
-  lastStation      Station?  @relation("LastStation", fields: [lastStationId], references: [id])
-  breakPolicyId String?
-  breakPolicy   BreakPolicy? @relation(fields: [breakPolicyId], references: [id])
+  id                String              @id @default(cuid())
+  name              String
+  email             String              @unique
+  pinHash           String?             @db.VarChar(72)
+  lastStationId     String?
+  dailyHoursLimit   Float?              @default(8.0)
+  weeklyHoursLimit  Float?              @default(40.0)
+  employeeCode      String?             @unique // NEW: Employee badge/code
+  phoneNumber       String? // NEW: Contact info
+  hireDate          DateTime? // NEW: For tenure tracking
+  status            EmployeeStatus      @default(ACTIVE) // NEW
+  defaultStationId  String? // NEW: Primary assignment
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt // NEW
+  TimeLog           TimeLog[]
+  User              User?
+  TaskAssignment    TaskAssignment[] // NEW
+  PerformanceMetric PerformanceMetric[] // NEW
+  EmployeeSkill     EmployeeSkill[]
+  ShiftAssignment   ShiftAssignment[]
+  CallOut           CallOut[]
+  defaultStation    Station?            @relation("DefaultStation", fields: [defaultStationId], references: [id])
+  lastStation       Station?            @relation("LastStation", fields: [lastStationId], references: [id])
+  breakPolicyId     String?
+  breakPolicy       BreakPolicy?        @relation(fields: [breakPolicyId], references: [id])
 }
 
 enum EmployeeStatus {
@@ -69,39 +69,39 @@ model Session {
 }
 
 model Station {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  description String?                      // NEW: Station details
-  capacity    Int?                         // NEW: Max employees
-  isActive    Boolean      @default(true)  // NEW: Station availability
-  zone        String?                      // NEW: Warehouse zone
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt      // NEW
-  TimeLog     TimeLog[]
-  TaskType    TaskType[]                   // NEW
-  Shift       Shift[]
-  employeesAtLastStation Employee[] @relation("LastStation")
-  employeesWithDefault   Employee[] @relation("DefaultStation")
-  maintenanceStatus MaintenanceStatus @default(OK)
-  maintenanceNotes  String?
+  id                     String            @id @default(cuid())
+  name                   String            @unique
+  description            String? // NEW: Station details
+  capacity               Int? // NEW: Max employees
+  isActive               Boolean           @default(true) // NEW: Station availability
+  zone                   String? // NEW: Warehouse zone
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt // NEW
+  TimeLog                TimeLog[]
+  TaskType               TaskType[] // NEW
+  Shift                  Shift[]
+  employeesAtLastStation Employee[]        @relation("LastStation")
+  employeesWithDefault   Employee[]        @relation("DefaultStation")
+  maintenanceStatus      MaintenanceStatus @default(OK)
+  maintenanceNotes       String?
 }
 
 model TimeLog {
-  id          String       @id @default(cuid())
+  id          String          @id @default(cuid())
   employeeId  String
   stationId   String?
-  type        TimeLog_type @default(WORK)
-  startTime   DateTime     @default(now())
+  type        TimeLog_type    @default(WORK)
+  startTime   DateTime        @default(now())
   endTime     DateTime?
   note        String?
-  deletedAt   DateTime?    // Soft delete for corrections
-  correctedBy String?                      // NEW: Who made correction
-  taskId      String?                      // NEW: Link to task
-  clockMethod ClockMethod  @default(PIN)   // NEW: How they clocked in
-  createdAt   DateTime     @default(now())
+  deletedAt   DateTime? // Soft delete for corrections
+  correctedBy String? // NEW: Who made correction
+  taskId      String? // NEW: Link to task
+  clockMethod ClockMethod     @default(PIN) // NEW: How they clocked in
+  createdAt   DateTime        @default(now())
   updatedAt   DateTime
-  Employee    Employee     @relation(fields: [employeeId], references: [id])
-  Station     Station?     @relation(fields: [stationId], references: [id])
+  Employee    Employee        @relation(fields: [employeeId], references: [id])
+  Station     Station?        @relation(fields: [stationId], references: [id])
   Task        TaskAssignment? @relation(fields: [taskId], references: [id]) // NEW
 
   @@index([employeeId, endTime])
@@ -119,34 +119,34 @@ enum ClockMethod {
 
 // NEW: Task management
 model TaskType {
-  id          String   @id @default(cuid())
-  name        String
-  stationId   String
-  description String?
+  id                      String           @id @default(cuid())
+  name                    String
+  stationId               String
+  description             String?
   estimatedMinutesPerUnit Float? // For productivity calculation
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  Station     Station  @relation(fields: [stationId], references: [id])
-  TaskAssignment TaskAssignment[]
+  isActive                Boolean          @default(true)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  Station                 Station          @relation(fields: [stationId], references: [id])
+  TaskAssignment          TaskAssignment[]
 }
 
 model TaskAssignment {
-  id          String   @id @default(cuid())
-  employeeId  String
-  taskTypeId  String
-  source      TaskAssignmentSource @default(MANAGER)
+  id               String               @id @default(cuid())
+  employeeId       String
+  taskTypeId       String
+  source           TaskAssignmentSource @default(MANAGER)
   assignedByUserId String?
-  startTime   DateTime @default(now())
-  endTime     DateTime?
-  unitsCompleted Int?   // For productivity tracking
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  Employee    Employee @relation(fields: [employeeId], references: [id])
-  TaskType    TaskType @relation(fields: [taskTypeId], references: [id])
-  AssignedByUser User? @relation("TaskAssignedByUser", fields: [assignedByUserId], references: [id])
-  TimeLogs    TimeLog[]
+  startTime        DateTime             @default(now())
+  endTime          DateTime?
+  unitsCompleted   Int? // For productivity tracking
+  notes            String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  Employee         Employee             @relation(fields: [employeeId], references: [id])
+  TaskType         TaskType             @relation(fields: [taskTypeId], references: [id])
+  AssignedByUser   User?                @relation("TaskAssignedByUser", fields: [assignedByUserId], references: [id])
+  TimeLogs         TimeLog[]
 
   @@index([employeeId])
   @@index([taskTypeId])
@@ -161,18 +161,18 @@ enum TaskAssignmentSource {
 
 // NEW: Performance metrics for analytics
 model PerformanceMetric {
-  id          String   @id @default(cuid())
-  employeeId  String
-  date        DateTime @db.Date
-  stationId   String?
-  hoursWorked Float
+  id             String   @id @default(cuid())
+  employeeId     String
+  date           DateTime @db.Date
+  stationId      String?
+  hoursWorked    Float
   unitsProcessed Int?
-  efficiency  Float?   // Units per hour or similar
-  qualityScore Float?  // If quality metrics tracked
-  overtimeHours Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  Employee    Employee @relation(fields: [employeeId], references: [id])
+  efficiency     Float? // Units per hour or similar
+  qualityScore   Float? // If quality metrics tracked
+  overtimeHours  Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Employee       Employee @relation(fields: [employeeId], references: [id])
 
   @@unique([employeeId, date, stationId])
   @@index([date])
@@ -181,25 +181,25 @@ model PerformanceMetric {
 
 // === Skills and Certifications ===
 model Skill {
-  id             String           @id @default(cuid())
-  name           String           @unique
+  id             String          @id @default(cuid())
+  name           String          @unique
   description    String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   employeeSkills EmployeeSkill[]
 }
 
 model EmployeeSkill {
-  id           String    @id @default(cuid())
-  employeeId   String
-  skillId      String
-  certifiedAt  DateTime
-  expiresAt    DateTime?
-  level        Int
-  employee     Employee  @relation(fields: [employeeId], references: [id])
-  skill        Skill     @relation(fields: [skillId], references: [id])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  employeeId  String
+  skillId     String
+  certifiedAt DateTime
+  expiresAt   DateTime?
+  level       Int
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  skill       Skill     @relation(fields: [skillId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@unique([employeeId, skillId])
 }
@@ -218,46 +218,46 @@ model BreakPolicy {
 
 // === Scheduling (Real Data) ===
 model Shift {
-  id                String           @id @default(cuid())
+  id                String            @id @default(cuid())
   stationId         String
   startTime         DateTime
   endTime           DateTime
   requiredHeadcount Int
   shiftType         String
-  station           Station          @relation(fields: [stationId], references: [id])
+  station           Station           @relation(fields: [stationId], references: [id])
   assignments       ShiftAssignment[]
   callOuts          CallOut[]
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model ShiftAssignment {
-  id           String   @id @default(cuid())
-  shiftId      String
-  employeeId   String
-  role         String
-  status       String
-  notes        String?
-  shift        Shift    @relation(fields: [shiftId], references: [id])
-  employee     Employee @relation(fields: [employeeId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(cuid())
+  shiftId    String
+  employeeId String
+  role       String
+  status     String
+  notes      String?
+  shift      Shift    @relation(fields: [shiftId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([shiftId])
   @@index([employeeId])
 }
 
 model CallOut {
-  id           String   @id @default(cuid())
-  employeeId   String
-  shiftId      String
-  date         DateTime
-  reason       String?
-  status       String
-  employee     Employee @relation(fields: [employeeId], references: [id])
-  shift        Shift    @relation(fields: [shiftId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(cuid())
+  employeeId String
+  shiftId    String
+  date       DateTime
+  reason     String?
+  status     String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  shift      Shift    @relation(fields: [shiftId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([employeeId])
   @@index([shiftId])
@@ -279,19 +279,28 @@ model Todo {
   updatedAt DateTime
 }
 
+model OperationalConfig {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("operational_config")
+}
+
 model User {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  name         String?
-  image        String?
-  role         User_role      @default(WORKER)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime
-  employeeId   String?        @unique
-  OAuthAccount OAuthAccount[]
-  Session      Session[]
-  Employee     Employee?      @relation(fields: [employeeId], references: [id])
-  ApiKey       ApiKey[]
+  id                     String           @id @default(cuid())
+  email                  String           @unique
+  name                   String?
+  image                  String?
+  role                   User_role        @default(WORKER)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime
+  employeeId             String?          @unique
+  OAuthAccount           OAuthAccount[]
+  Session                Session[]
+  Employee               Employee?        @relation(fields: [employeeId], references: [id])
+  ApiKey                 ApiKey[]
   TaskAssignmentsCreated TaskAssignment[] @relation("TaskAssignedByUser")
 }
 

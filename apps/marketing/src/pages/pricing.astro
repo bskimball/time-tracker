@@ -4,10 +4,11 @@ import PricingHero from "../components/PricingHero.tsx";
 import PricingCards from "../components/PricingCards.tsx";
 import PricingFAQ from "../components/PricingFAQ.tsx";
 
-const title = "Pricing - ShiftPulse";
+const title = "Pricing | ShiftPulse Workforce Management";
+const description = "Transparent pricing for ShiftPulse time tracking. Simple per-user plans with no hidden fees. Start with a 14-day trial or book a demo for enterprise deployments.";
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
 	<PricingHero client:load />
 	<PricingCards client:load />
 	<PricingFAQ client:load />

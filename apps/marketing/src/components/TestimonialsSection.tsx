@@ -1,4 +1,3 @@
-import { IndustrialPanel } from "@monorepo/design-system";
 import { LiaUserTieSolid, LiaUserCogSolid, LiaUserAstronautSolid, LiaQuoteLeftSolid } from "react-icons/lia";
 
 const testimonials = [

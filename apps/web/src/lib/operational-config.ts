@@ -153,21 +153,16 @@ export async function ensureOperationalConfigSeeded() {
 }
 
 async function seedOperationalConfig() {
-	await db.$executeRawUnsafe(
-		`CREATE TABLE IF NOT EXISTS operational_config (
-			key TEXT PRIMARY KEY,
-			value TEXT NOT NULL,
-			description TEXT,
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-		)`
-	);
-
 	for (const item of DEFAULT_CONFIG) {
-		await db.$executeRaw`
-			INSERT INTO operational_config (key, value, description)
-			VALUES (${item.key}, ${item.value}, ${item.description})
-			ON CONFLICT (key) DO UPDATE SET description = EXCLUDED.description
-		`;
+		await db.operationalConfig.upsert({
+			where: { key: item.key },
+			create: {
+				key: item.key,
+				value: item.value,
+				description: item.description,
+			},
+			update: { description: item.description },
+		});
 	}
 
 	// One-time default upgrades for legacy values introduced during early bootstrap.
@@ -188,21 +183,19 @@ async function seedOperationalConfig() {
 	];
 
 	for (const item of legacyToCurrent) {
-		await db.$executeRaw`
-			UPDATE operational_config
-			SET value = ${item.next}, updated_at = NOW()
-			WHERE key = ${item.key} AND value = ${item.legacy}
-		`;
+		await db.operationalConfig.updateMany({
+			where: { key: item.key, value: item.legacy },
+			data: { value: item.next },
+		});
 	}
 }
 
 export async function getOperationalConfigMap() {
 	await ensureOperationalConfigSeeded();
 
-	const rows = await db.$queryRaw<ConfigRow[]>`
-		SELECT key, value, description
-		FROM operational_config
-	`;
+	const rows = await db.operationalConfig.findMany({
+		select: { key: true, value: true, description: true },
+	});
 
 	const map = new Map<string, ConfigRow>();
 	for (const row of rows) {

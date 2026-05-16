@@ -4,21 +4,48 @@ import ThemeToggle from "../components/ThemeToggle";
 
 export interface Props {
 	title: string;
+	description?: string;
+	image?: string;
 }
 
+const {
+	title,
+	description = "Precision workforce management and time tracking for manufacturing, fulfillment, and industrial operations.",
+	image = "/og-default.png",
+} = Astro.props;
 
-const { title } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="ShiftPulse time tracking solution for workforce management" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title || "ShiftPulse"}</title>
+
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+
+		<!-- Canonical -->
+		<link rel="canonical" href={canonicalURL} />
+
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalURL} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image, Astro.site)} />
+
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={canonicalURL} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={new URL(image, Astro.site)} />
 		<script is:inline>
 			const theme = (() => {
 				if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
@@ -70,12 +97,15 @@ const { title } = Astro.props;
 							<a href="/about" class="text-foreground/80 hover:text-foreground transition-colors font-mono text-xs uppercase tracking-wider focus-visible:text-primary outline-none relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-px after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left font-bold">
 								About
 							</a>
+							<a href="/contact" class="text-foreground/80 hover:text-foreground transition-colors font-mono text-xs uppercase tracking-wider focus-visible:text-primary outline-none relative after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-px after:bg-primary after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left font-bold">
+								Contact
+							</a>
 						</div>
 						
 						<ThemeToggle client:load />
 						<a
 							href="/pricing"
-							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-all px-5 py-2.5 font-display font-bold text-sm uppercase tracking-wide rounded-[2px] shadow-[0_2px_0_0_oklch(48%_0.14_42)] hover:translate-y-[1px] hover:shadow-[0_1px_0_0_oklch(48%_0.14_42)] active:translate-y-[2px] active:shadow-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
+							class="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-all px-5 py-2.5 font-display font-bold text-sm uppercase tracking-widest rounded-[2px] shadow-[0_2px_0_0_oklch(48%_0.14_42)] hover:translate-y-[1px] hover:shadow-[0_1px_0_0_oklch(48%_0.14_42)] active:translate-y-[2px] active:shadow-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none"
 						>
 							Deploy
 						</a>

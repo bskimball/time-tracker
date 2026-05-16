@@ -4,10 +4,11 @@ import FeaturesHero from "../components/FeaturesHero.tsx";
 import FeatureDetails from "../components/FeatureDetails.tsx";
 import FeaturesCTA from "../components/FeaturesCTA.tsx";
 
-const title = "Features - ShiftPulse";
+const title = "Features | ShiftPulse Industrial Time Tracking";
+const description = "Live labor telemetry, self-assignment workflows, capacity planning, exception alerts, and executive dashboards built for the factory floor and warehouse.";
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
 	<FeaturesHero client:load />
 	<FeatureDetails client:load />
 	<FeaturesCTA client:load />

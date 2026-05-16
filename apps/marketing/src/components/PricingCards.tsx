@@ -1,4 +1,4 @@
-import { IndustrialPanel, Button, Alert } from "@monorepo/design-system";
+import { IndustrialPanel, Button } from "@monorepo/design-system";
 import { LiaCheckSquareSolid, LiaTerminalSolid, LiaServerSolid } from "react-icons/lia";
 
 export default function PricingCards() {

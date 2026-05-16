@@ -1,0 +1,51 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ContactForm from "../components/ContactForm.tsx";
+import { IndustrialPanel } from "@monorepo/design-system";
+---
+
+<Layout
+	title="Contact | ShiftPulse"
+	description="Request a personalized demo of ShiftPulse industrial time tracking. Talk to our team about labor telemetry, self-assignment, and real-time workforce analytics."
+>
+	<div class="container mx-auto px-4 py-16 md:py-24 max-w-5xl">
+		<div class="max-w-2xl mb-12">
+			<div class="inline-flex items-center gap-2 px-3 py-1 rounded-[2px] border border-primary/30 bg-primary/10 text-primary text-xs font-mono uppercase tracking-[0.2em] mb-4">
+				<span class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> OPS CHANNEL OPEN
+			</div>
+			<h1 class="font-display text-5xl md:text-6xl font-black tracking-[-0.03em] text-foreground leading-none">
+				Let's get your floor online.
+			</h1>
+			<p class="mt-6 text-xl text-foreground/70 leading-relaxed max-w-xl">
+				Book a 20-minute live demo with one of our implementation specialists. We'll show you exactly how ShiftPulse works on your floor with your team size and workflows.
+			</p>
+		</div>
+
+		<div class="grid lg:grid-cols-5 gap-8">
+			<!-- Form -->
+			<div class="lg:col-span-3">
+				<ContactForm client:load />
+			</div>
+
+			<!-- Sidebar Info -->
+			<div class="lg:col-span-2 space-y-6">
+				<IndustrialPanel className="p-6 border-2 border-border/80">
+					<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Direct Line</div>
+					<div class="text-2xl font-display font-bold tracking-tight">+1 (415) 555-0192</div>
+					<div class="mt-1 text-sm text-foreground/60">Mon–Fri 08:00–18:00 PT</div>
+				</IndustrialPanel>
+
+				<IndustrialPanel className="p-6 border-2 border-border/80">
+					<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Email</div>
+					<a href="mailto:hello@shiftpulse.com" class="text-lg font-medium hover:text-primary transition-colors">hello@shiftpulse.com</a>
+					<div class="mt-4 text-sm text-foreground/70">For partnership, press, or enterprise procurement questions.</div>
+				</IndustrialPanel>
+
+				<div class="rounded-[2px] border-2 border-border/80 bg-muted/30 p-6 text-xs text-foreground/70 font-mono tracking-wider leading-relaxed">
+					Typical response time: &lt; 4 hours during business days.<br />
+					Enterprise deployments usually schedule a site visit within 7–10 days.
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>

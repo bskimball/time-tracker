@@ -51,7 +51,7 @@ describe("updateOperationalConfig", () => {
 				unit: "mode",
 			},
 		});
-		mockDb.$executeRaw.mockResolvedValue(1);
+		mockDb.operationalConfig.update.mockResolvedValue({});
 	});
 
 	it("rejects invalid TASK_ASSIGNMENT_MODE values", async () => {
@@ -64,7 +64,7 @@ describe("updateOperationalConfig", () => {
 		expect(result).toEqual({
 			error: "Value must be one of: MANAGER_ONLY, SELF_ASSIGN_ALLOWED, SELF_ASSIGN_REQUIRED",
 		});
-		expect(mockDb.$executeRaw).not.toHaveBeenCalled();
+		expect(mockDb.operationalConfig.update).not.toHaveBeenCalled();
 	});
 
 	it("accepts valid TASK_ASSIGNMENT_MODE values and returns refreshed entries", async () => {
@@ -74,7 +74,10 @@ describe("updateOperationalConfig", () => {
 
 		const result = await updateOperationalConfig(null, formData);
 
-		expect(mockDb.$executeRaw).toHaveBeenCalledTimes(1);
+		expect(mockDb.operationalConfig.update).toHaveBeenCalledWith({
+			where: { key: "TASK_ASSIGNMENT_MODE" },
+			data: { value: "SELF_ASSIGN_ALLOWED" },
+		});
 		expect(result?.success).toBe(true);
 		expect(result?.entries).toEqual([
 			{
@@ -105,6 +108,6 @@ describe("updateOperationalConfig", () => {
 		expect(result).toEqual({
 			error: "Only ADMIN users can update operational config",
 		});
-		expect(mockDb.$executeRaw).not.toHaveBeenCalled();
+		expect(mockDb.operationalConfig.update).not.toHaveBeenCalled();
 	});
 });

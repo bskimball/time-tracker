@@ -2,3 +2,19 @@
 @import "tailwindcss";
 @source "../../../../packages/design-system/src";
 @import "@monorepo/design-system/styles/full";
+
+/* Marketing-specific mechanical press effect for industrial buttons */
+@layer components {
+	.btn-mechanical {
+		box-shadow: 0 4px 0 0 oklch(48% 0.14 42);
+		transition: transform 80ms ease, box-shadow 80ms ease;
+	}
+	.btn-mechanical:hover {
+		transform: translateY(2px);
+		box-shadow: 0 2px 0 0 oklch(48% 0.14 42);
+	}
+	.btn-mechanical:active {
+		transform: translateY(4px);
+		box-shadow: none;
+	}
+}

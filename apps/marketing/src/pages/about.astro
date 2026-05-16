@@ -4,10 +4,12 @@ import AboutHero from "../components/AboutHero.tsx";
 import AboutCompany from "../components/AboutCompany.tsx";
 import AboutCTA from "../components/AboutCTA.tsx";
 
-const title = "About Us - ShiftPulse";
+const title = "About ShiftPulse | Industrial Operations Software";
+const description =
+	"Built by operators for operators. ShiftPulse delivers precision time tracking and workforce intelligence for manufacturing and logistics teams who demand reliability on the floor.";
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
 	<AboutHero client:load />
 	<AboutCompany client:load />
 	<AboutCTA client:load />

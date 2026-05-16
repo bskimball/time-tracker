@@ -5,20 +5,12 @@ import type { Employee, Station, TimeLog } from "@prisma/client";
 import { ensureOperationalDataSeeded } from "~/lib/ensure-operational-data";
 import { getTaskAssignmentMode } from "~/lib/operational-config";
 import { validateRequest } from "~/lib/auth";
+import { buildActiveTasksByEmployee, buildTaskOptions } from "~/lib/domain/floor-snapshot";
 
 type TimeLogWithRelations = TimeLog & {
 	Employee: Employee;
 	Station: Station | null;
 };
-
-type ActiveTaskByEmployee = Record<
-	string,
-	{
-		assignmentId: string;
-		taskTypeName: string;
-		stationName: string | null;
-	}
->;
 
 type TaskOption = {
 	id: string;
@@ -92,28 +84,8 @@ export default async function Component() {
 		}),
 	]);
 
-	const taskOptions: TaskOption[] = activeTaskTypes.map((taskType) => ({
-		id: taskType.id,
-		name: taskType.name,
-		stationName: taskType.Station.name,
-	}));
-
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>(
-		(acc, assignment) => {
-			if (acc[assignment.employeeId]) {
-				return acc;
-			}
-
-			acc[assignment.employeeId] = {
-				assignmentId: assignment.id,
-				taskTypeName: assignment.TaskType.name,
-				stationName: assignment.TaskType.Station.name,
-			};
-
-			return acc;
-		},
-		{}
-	);
+	const taskOptions: TaskOption[] = buildTaskOptions(activeTaskTypes);
+	const activeTasksByEmployee = buildActiveTasksByEmployee(activeAssignments);
 
 	const workerEmployeeId = auth.user?.role === "WORKER" ? auth.user.employeeId : null;
 

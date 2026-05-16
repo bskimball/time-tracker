@@ -1,6 +1,3 @@
-// Unstable RSC APIs - partial type coverage in react-router
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import {
 	createFromReadableStream,
 	createTemporaryReferenceSet,
@@ -32,7 +29,7 @@ setServerCallback(
 );
 
 // Get and decode the initial server payload
-createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
+void createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
 	startTransition(async () => {
 		const formState = payload.type === "render" ? await payload.formState : undefined;
 
@@ -47,7 +44,9 @@ createFromReadableStream<RSCServerPayload>(getRSCStream()).then((payload) => {
 			}
 		);
 
+		// Expose router to window for HMR
 		if (payload.type === "render") {
+			// @ts-expect-error - router exists on render payload
 			window.__router = payload.router;
 		}
 	});

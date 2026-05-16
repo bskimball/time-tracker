@@ -100,11 +100,10 @@ export async function updateOperationalConfig(
 	}
 
 	await ensureOperationalConfigSeeded();
-	await db.$executeRaw`
-		UPDATE operational_config
-		SET value = ${sanitizedValue}, updated_at = NOW()
-		WHERE key = ${key}
-	`;
+	await db.operationalConfig.update({
+		where: { key },
+		data: { value: sanitizedValue },
+	});
 
 	const entries = await getEditableOperationalConfigEntries();
 	return { success: true, entries };

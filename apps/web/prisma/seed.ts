@@ -124,13 +124,13 @@ async function main() {
 	// Create sample PIN hash (for PIN: "1234")
 	const samplePinHash = await bcrypt.hash("1234", 10);
 
-	// Create Employees for a 3-shift operation (roughly 20-30 workers per shift)
-	console.log("👥 Creating employees...");
-	const activeEmployeesPerShift = 24;
+	// Create Employees for a large 3-shift fulfillment operation
+	console.log("👥 Creating employees for large fulfillment operation...");
+	const activeEmployeesPerShift = 68; // ~204 active workers across 3 shifts
 	const shiftsPerDay = 3;
 	const activeEmployeeCount = activeEmployeesPerShift * shiftsPerDay;
-	const onLeaveCount = 6;
-	const inactiveCount = 4;
+	const onLeaveCount = 18;
+	const inactiveCount = 12;
 	const totalEmployeeCount = activeEmployeeCount + onLeaveCount + inactiveCount;
 
 	const firstNames = [
@@ -326,7 +326,6 @@ async function main() {
 	const now = new Date();
 	const daysToSeed = 730;
 	const activeEmployees = employees.filter((employee) => employee.status === "ACTIVE");
-	const taskTypeByStation = new Map(taskTypes.map((taskType) => [taskType.stationId, taskType]));
 
 	const shiftTemplates = [
 		{ label: "DAY", startHour: 6, durationHours: 8 },
@@ -519,7 +518,9 @@ async function main() {
 		`✅ Created ${shiftAssignmentRows.length} shift assignments (${activeShiftAssignmentCount} active) and ${callOutRows.length} call-outs`
 	);
 
-	console.log("📋 Creating task assignments tied to shift activity...");
+	console.log(
+		"📋 Creating high-volume task assignments (large fulfillment - multiple tasks per shift)..."
+	);
 	type CreatedTaskRecord = {
 		id: string;
 		employeeId: string;
@@ -544,45 +545,69 @@ async function main() {
 		notes: string;
 	}> = [];
 
+	// In a large fulfillment house, workers complete many small tasks per shift (pick waves, pack orders, etc.)
+	const tasksPerScheduledShift = 6;
+
 	for (const [rowIndex, row] of scheduleRows.entries()) {
-		const stationTaskType = taskTypeByStation.get(row.stationId);
-		const selectedTaskType = stationTaskType ?? taskTypes[rowIndex % taskTypes.length];
-		const taskStart = new Date(row.shiftStart.getTime() + ((rowIndex % 4) * 10 + 5) * 60 * 1000);
-		const taskEnd = row.inProgress
-			? null
-			: new Date(row.shiftEnd.getTime() - (25 + (rowIndex % 3) * 10) * 60 * 1000);
-		const spanHours = (taskEnd?.getTime() ?? now.getTime()) - taskStart.getTime();
-		const hoursWorked = Math.max(0.75, spanHours / (60 * 60 * 1000));
-		const unitsCompleted = row.inProgress
-			? Math.max(10, Math.round(hoursWorked * (10 + (rowIndex % 5))))
-			: Math.max(40, Math.round(hoursWorked * (18 + (rowIndex % 8))));
+		const shiftDurationMs = row.shiftEnd.getTime() - row.shiftStart.getTime();
+		const taskDurationMs = Math.floor(shiftDurationMs / tasksPerScheduledShift);
 
-		const taskId = crypto.randomUUID();
+		for (let t = 0; t < tasksPerScheduledShift; t++) {
+			const taskStart = new Date(
+				row.shiftStart.getTime() + t * taskDurationMs + (t % 3) * 4 * 60 * 1000
+			);
+			const isLastTask = t === tasksPerScheduledShift - 1;
+			const taskEnd =
+				row.inProgress && isLastTask
+					? null
+					: new Date(
+							Math.min(
+								row.shiftEnd.getTime() - 8 * 60 * 1000,
+								taskStart.getTime() + taskDurationMs - 6 * 60 * 1000
+							)
+						);
 
-		taskRows.push({
-			id: taskId,
-			employeeId: row.employeeId,
-			taskTypeId: selectedTaskType.id,
-			source: "MANAGER",
-			assignedByUserId: managerUser.id,
-			startTime: taskStart,
-			endTime: taskEnd,
-			unitsCompleted,
-			notes: row.inProgress
-				? `In progress - ${selectedTaskType.name}`
-				: `Completed - ${selectedTaskType.name}`,
-		});
+			const spanHours =
+				((taskEnd?.getTime() ?? now.getTime()) - taskStart.getTime()) / (60 * 60 * 1000);
+			const hoursWorked = Math.max(0.4, spanHours);
 
-		createdTasks.push({
-			id: taskId,
-			employeeId: row.employeeId,
-			stationId: row.stationId,
-			startTime: taskStart,
-			endTime: taskEnd,
-			inProgress: row.inProgress,
-			employeeIndex: row.employeeIndex,
-			dayOffset: row.dayOffset,
-		});
+			// Distribute units across multiple tasks per shift
+			const baseUnits = row.inProgress ? 12 + (rowIndex % 7) : 22 + (rowIndex % 11);
+
+			const unitsCompleted = Math.max(
+				5,
+				Math.round(hoursWorked * baseUnits * (0.85 + (t % 4) * 0.08))
+			);
+
+			const taskType = taskTypes[(rowIndex + t) % taskTypes.length];
+			const taskId = crypto.randomUUID();
+
+			taskRows.push({
+				id: taskId,
+				employeeId: row.employeeId,
+				taskTypeId: taskType.id,
+				source: (rowIndex + t) % 5 === 0 ? "WORKER" : "MANAGER", // occasional self-assignment
+				assignedByUserId: managerUser.id,
+				startTime: taskStart,
+				endTime: taskEnd,
+				unitsCompleted,
+				notes:
+					row.inProgress && isLastTask
+						? `In progress - ${taskType.name}`
+						: `Completed - ${taskType.name}`,
+			});
+
+			createdTasks.push({
+				id: taskId,
+				employeeId: row.employeeId,
+				stationId: row.stationId,
+				startTime: taskStart,
+				endTime: taskEnd,
+				inProgress: row.inProgress && isLastTask,
+				employeeIndex: row.employeeIndex,
+				dayOffset: row.dayOffset,
+			});
+		}
 	}
 
 	if (taskRows.length > 0) {
@@ -596,17 +621,19 @@ async function main() {
 
 	const activeTaskCount = createdTasks.filter((task) => task.endTime === null).length;
 
-	console.log(`✅ Created ${createdTasks.length} task assignments (${activeTaskCount} active)`);
+	console.log(
+		`✅ Created ${createdTasks.length} task assignments (${activeTaskCount} active) — ~6 tasks per shift`
+	);
 
-	console.log("🕒 Creating time logs linked to tasks...");
+	console.log("🕒 Creating time logs (one per scheduled shift)...");
 	const clockMethods = ["PIN", "CARD", "BIOMETRIC"] as const;
-	const timeLogRows = createdTasks.map((task, index) => ({
-		employeeId: task.employeeId,
-		stationId: task.stationId,
-		taskId: task.id,
-		startTime: new Date(task.startTime.getTime() - ((index % 3) * 5 + 3) * 60 * 1000),
-		endTime: task.inProgress ? null : task.endTime,
-		note: task.inProgress ? "Active shift in progress" : "Completed scheduled shift",
+	const timeLogRows = scheduleRows.map((row, index) => ({
+		employeeId: row.employeeId,
+		stationId: row.stationId,
+		taskId: null, // Time log is at shift level; tasks are detailed work within the shift
+		startTime: new Date(row.shiftStart.getTime() - ((index % 3) * 4 + 2) * 60 * 1000),
+		endTime: row.inProgress ? null : row.shiftEnd,
+		note: row.inProgress ? "Active shift in progress" : "Completed scheduled shift",
 		clockMethod: clockMethods[index % clockMethods.length],
 		updatedAt: new Date(),
 	}));
@@ -622,17 +649,37 @@ async function main() {
 	const activeTimeLogCount = timeLogRows.filter((log) => log.endTime === null).length;
 	console.log(`✅ Created ${timeLogRows.length} time logs (${activeTimeLogCount} active)`);
 
-	console.log("📈 Creating last-730-days performance metrics...");
+	console.log("📈 Creating last-730-days performance metrics (large fulfillment patterns)...");
 	const activeEmployeesForMetrics = employees.filter((employee) => employee.status === "ACTIVE");
+
+	// Realistic units-per-hour baselines for a modern large fulfillment center
 	const stationBaselineRate = new Map<string, number>([
-		["PICKING", 28],
-		["PACKING", 24],
-		["FILLING", 32],
-		["RECEIVING", 20],
-		["SHIPPING", 26],
-		["QUALITY", 18],
-		["INVENTORY", 16],
+		["PICKING", 52], // High-volume small items
+		["PACKING", 38],
+		["FILLING", 45],
+		["RECEIVING", 28],
+		["SHIPPING", 34],
+		["QUALITY", 22],
+		["INVENTORY", 19],
 	]);
+
+	// Performance tiers for realistic variance (top performers stand out)
+	const getPerformanceMultiplier = (employeeIndex: number): number => {
+		const tier = employeeIndex % 10;
+		if (tier === 0 || tier === 1) return 1.28; // Top 20% - strong performers
+		if (tier === 2 || tier === 3 || tier === 4) return 1.08; // Solid average
+		if (tier === 5 || tier === 6 || tier === 7) return 0.94; // Below average
+		return 0.82; // Bottom 20% - struggling
+	};
+
+	// Seasonal multiplier (Q4 peak for fulfillment, Jan dip)
+	const getSeasonalMultiplier = (date: Date): number => {
+		const month = date.getMonth(); // 0 = Jan
+		if (month === 10 || month === 11) return 1.22; // Nov-Dec holiday peak
+		if (month === 0 || month === 1) return 0.82; // Jan-Feb slow
+		if (month === 8 || month === 9) return 1.09; // Sep-Oct ramp up
+		return 1.0;
+	};
 
 	const metricRows: Array<{
 		employeeId: string;
@@ -650,6 +697,8 @@ async function main() {
 		metricDate.setDate(metricDate.getDate() - dayOffset);
 		metricDate.setHours(0, 0, 0, 0);
 
+		const seasonalMultiplier = getSeasonalMultiplier(metricDate);
+
 		for (const [employeeIndex, employee] of activeEmployeesForMetrics.entries()) {
 			if (!employee.defaultStationId) continue;
 
@@ -659,17 +708,20 @@ async function main() {
 
 			const station = stations.find((s) => s.id === employee.defaultStationId);
 			const stationName = station?.name ?? "PICKING";
-			const baselineRate = stationBaselineRate.get(stationName) ?? 24;
+			const baselineRate = stationBaselineRate.get(stationName) ?? 30;
 
-			const dailyVariation = ((dayOffset * 3 + employeeIndex * 5) % 11) - 5;
-			const hoursWorked = Number((7.2 + ((dayOffset + employeeIndex) % 4) * 0.45).toFixed(2));
+			const perfMultiplier = getPerformanceMultiplier(employeeIndex);
+
+			// Daily noise + performance tier + seasonal effect
+			const dailyNoise = ((dayOffset * 2 + employeeIndex * 3) % 7) - 3;
+			const hoursWorked = Number((7.5 + ((dayOffset + employeeIndex) % 3) * 0.35).toFixed(2));
 			const overtimeHours = Math.max(0, Number((hoursWorked - 8).toFixed(2)));
-			const unitsProcessed = Math.max(
-				0,
-				Math.round(hoursWorked * (baselineRate + dailyVariation * 0.65))
-			);
-			const efficiency = Number((unitsProcessed / hoursWorked).toFixed(2));
-			const qualityScore = Number((94 + ((employeeIndex + dayOffset) % 6) * 0.6).toFixed(2));
+
+			const rawUnits = hoursWorked * baselineRate * perfMultiplier * seasonalMultiplier;
+			const unitsProcessed = Math.max(0, Math.round(rawUnits + dailyNoise * 1.8));
+
+			const efficiency = Number((unitsProcessed / hoursWorked).toFixed(1));
+			const qualityScore = Number((93.5 + ((employeeIndex + dayOffset) % 7) * 0.55).toFixed(1));
 
 			metricRows.push({
 				employeeId: employee.id,
@@ -695,7 +747,7 @@ async function main() {
 	console.log(`✅ Created ${metricRows.length} performance metric rows`);
 
 	console.log("\n✨ Database seeded successfully!");
-	console.log("\n📊 Summary:");
+	console.log("\n📊 Summary (Large Fulfillment Operation):");
 	console.log(`   - Stations: ${stations.length}`);
 	console.log(
 		`   - Employees: ${employees.length} (${activeEmployeeCount} active, ${onLeaveCount} on leave, ${inactiveCount} inactive)`
@@ -706,7 +758,9 @@ async function main() {
 	);
 	console.log(`   - Call Outs: ${callOutRows.length}`);
 	console.log(`   - Task Types: ${taskTypes.length}`);
-	console.log(`   - Task Assignments: ${createdTasks.length} (${activeTaskCount} active)`);
+	console.log(
+		`   - Task Assignments: ${createdTasks.length} (${activeTaskCount} active) — ~6 tasks per shift`
+	);
 	console.log(`   - Time Logs: ${timeLogRows.length} (${activeTimeLogCount} active)`);
 	console.log(`   - Performance Metrics: ${metricRows.length}`);
 	console.log(`   - Users: 2 (Admin, Manager)`);

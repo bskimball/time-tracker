@@ -2,17 +2,7 @@ import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import { ManagerDashboard } from "./client";
 import { getActiveAlerts } from "./actions";
-
-type ActiveTaskByEmployee = Record<
-	string,
-	{
-		assignmentId: string;
-		employeeName: string;
-		taskTypeName: string;
-		stationName: string | null;
-		startTime: Date;
-	}
->;
+import { buildManagerActiveTasksByEmployee } from "~/lib/domain/floor-snapshot";
 
 async function getActiveTimeLogs() {
 	const logs = await db.timeLog.findMany({
@@ -86,24 +76,7 @@ export default async function Component() {
 		}),
 	]);
 
-	const activeTasksByEmployee = activeAssignments.reduce<ActiveTaskByEmployee>(
-		(acc, assignment) => {
-			if (acc[assignment.employeeId]) {
-				return acc;
-			}
-
-			acc[assignment.employeeId] = {
-				assignmentId: assignment.id,
-				employeeName: assignment.Employee.name,
-				taskTypeName: assignment.TaskType.name,
-				stationName: assignment.TaskType.Station.name,
-				startTime: assignment.startTime,
-			};
-
-			return acc;
-		},
-		{}
-	);
+	const activeTasksByEmployee = buildManagerActiveTasksByEmployee(activeAssignments);
 
 	const activeEmployeeIds = new Set<string>();
 	for (const log of activeTimeLogs) {

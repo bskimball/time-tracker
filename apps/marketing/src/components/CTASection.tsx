@@ -22,24 +22,24 @@ export default function CTASection() {
 								Deployment Window
 							</div>
 							<h2 className="max-w-2xl font-display text-4xl font-black tracking-[-0.04em] text-foreground md:text-5xl leading-tight">
-								Ready to Transform Your Operations?
+								See your floor in real time.
 							</h2>
 							<p className="mt-5 max-w-2xl text-lg leading-8 text-foreground/70">
-								Stand up a workforce command layer that looks and feels like the product itself:
-								measured, calm, and engineered for decision-making under pressure.
+								Book a 20-minute demo and we'll show you exactly how much labor cost you can recover
+								in your first month. No slides, just live dashboards on a real floor.
 							</p>
 
 							<div className="mt-10 flex flex-col gap-4 sm:flex-row">
-								<a href="/pricing">
-									<Button size="lg" className="btn-mechanical px-10 py-6 text-sm w-full sm:w-auto uppercase tracking-widest font-bold shadow-[0_4px_0_0_oklch(48%_0.14_42)] hover:translate-y-[2px] hover:shadow-[0_2px_0_0_oklch(48%_0.14_42)] active:translate-y-[4px] active:shadow-none transition-all">
-										Start Deployment
-									</Button>
-								</a>
-								<a href="/features">
-									<Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-border/80 bg-background px-10 py-6 text-sm uppercase tracking-widest font-bold hover:border-primary/50 hover:bg-muted/50 transition-all">
-										Schedule Demo
-									</Button>
-								</a>
+							<a href="/contact">
+								<Button size="lg" className="btn-mechanical px-10 py-6 text-sm w-full sm:w-auto uppercase tracking-widest font-bold">
+									Book a Demo
+								</Button>
+							</a>
+							<a href="/pricing">
+								<Button variant="outline" size="lg" className="w-full sm:w-auto border-2 border-border/80 bg-background px-10 py-6 text-sm uppercase tracking-widest font-bold hover:border-primary/50 hover:bg-muted/50 transition-all">
+									View Pricing
+								</Button>
+							</a>
 							</div>
 						</div>
 

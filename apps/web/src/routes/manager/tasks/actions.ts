@@ -3,7 +3,11 @@
 import { db } from "~/lib/db";
 import { validateRequest } from "~/lib/auth";
 import { getManagerTaskAssignmentAccess } from "~/lib/task-assignment-permissions";
-import { publishManagerRealtimeEvent } from "~/lib/manager-realtime";
+import {
+	assignManagerTask,
+	completeManagerTask,
+	switchManagerTask,
+} from "~/lib/domain/work-session";
 
 import type { TaskAssignment, TaskType } from "./types";
 import type { Prisma } from "@prisma/client";
@@ -61,51 +65,12 @@ export async function assignTask(data: {
 		throw new Error(access.error);
 	}
 
-	const assignment = await db.$transaction(async (tx) => {
-		// Check if employee has an active task
-		const existingAssignment = await tx.taskAssignment.findFirst({
-			where: {
-				employeeId: data.employeeId,
-				endTime: null,
-			},
-		});
-
-		if (existingAssignment) {
-			throw new Error("Employee already has an active task assignment");
-		}
-
-		// Create new task assignment
-		const assignment = await tx.taskAssignment.create({
-			data: {
-				employeeId: data.employeeId,
-				taskTypeId: data.taskTypeId,
-				source: "MANAGER",
-				assignedByUserId: access.userId,
-				startTime: new Date(),
-				notes: data.notes,
-			},
-			include: {
-				Employee: true,
-				TaskType: {
-					include: { Station: true },
-				},
-			},
-		});
-
-		return assignment;
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "assigned",
+	return assignManagerTask(db, {
 		employeeId: data.employeeId,
-		taskAssignmentId: assignment.id,
+		taskTypeId: data.taskTypeId,
+		assignedByUserId: access.userId,
+		notes: data.notes,
 	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "task_assigned",
-		employeeId: data.employeeId,
-	});
-
-	return assignment;
 }
 
 export async function assignTaskAction(
@@ -156,44 +121,7 @@ export async function completeTask(taskId: string, unitsCompleted?: number, note
 		throw new Error("Unauthorized");
 	}
 
-	// First get the current assignment to access its notes
-	const currentAssignment = await db.taskAssignment.findUnique({
-		where: { id: taskId },
-	});
-
-	if (!currentAssignment) {
-		throw new Error("Task assignment not found");
-	}
-
-	// End the task assignment
-	const assignment = await db.taskAssignment.update({
-		where: { id: taskId },
-		data: {
-			endTime: new Date(),
-			unitsCompleted: unitsCompleted,
-			notes: notes
-				? `${currentAssignment.notes || ""}\nCompletion: ${notes}`
-				: currentAssignment.notes,
-		},
-		include: {
-			Employee: true,
-			TaskType: {
-				include: { Station: true },
-			},
-		},
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "completed",
-		employeeId: assignment.employeeId,
-		taskAssignmentId: assignment.id,
-	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "task_completed",
-		employeeId: assignment.employeeId,
-	});
-
-	return assignment;
+	return completeManagerTask(db, { taskId, unitsCompleted, notes });
 }
 
 export async function switchTask(employeeId: string, newTaskTypeId: string, reason?: string) {
@@ -203,65 +131,12 @@ export async function switchTask(employeeId: string, newTaskTypeId: string, reas
 		throw new Error(access.error);
 	}
 
-	const nextAssignment = await db.$transaction(async (tx) => {
-		const [currentAssignment, employee] = await Promise.all([
-			tx.taskAssignment.findFirst({
-				where: {
-					employeeId: employeeId,
-					endTime: null,
-				},
-			}),
-			tx.employee.findUnique({
-				where: { id: employeeId },
-			}),
-		]);
-
-		if (!employee) {
-			throw new Error("Employee not found");
-		}
-
-		if (currentAssignment) {
-			await tx.taskAssignment.update({
-				where: { id: currentAssignment.id },
-				data: {
-					endTime: new Date(),
-					notes: `Switched to new task. Reason: ${reason || "Manager override"}. ${currentAssignment.notes || ""}`,
-				},
-			});
-		}
-
-		// Create new assignment
-		const nextAssignment = await tx.taskAssignment.create({
-			data: {
-				employeeId: employeeId,
-				taskTypeId: newTaskTypeId,
-				source: "MANAGER",
-				assignedByUserId: access.userId,
-				startTime: new Date(),
-				notes: reason,
-			},
-			include: {
-				Employee: true,
-				TaskType: {
-					include: { Station: true },
-				},
-			},
-		});
-
-		return nextAssignment;
-	});
-
-	publishManagerRealtimeEvent("task_assignment_changed", "tasks", {
-		reason: "switched",
+	return switchManagerTask(db, {
 		employeeId,
-		taskAssignmentId: nextAssignment.id,
+		newTaskTypeId,
+		assignedByUserId: access.userId,
+		reason,
 	});
-	publishManagerRealtimeEvent("worker_status_changed", "monitor", {
-		reason: "task_switched",
-		employeeId,
-	});
-
-	return nextAssignment;
 }
 
 export async function completeTaskAction(

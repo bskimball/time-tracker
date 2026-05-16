@@ -61,11 +61,7 @@ import {
 import type { TimeLogWithRelations } from "~/routes/time-clock/route";
 import { intervalToDuration, formatDuration as formatDurationFn } from "date-fns";
 import { IndustrialSpinner } from "~/components/industrial-spinner";
-
-const createId = () =>
-	typeof crypto !== "undefined" && crypto.randomUUID
-		? crypto.randomUUID()
-		: Math.random().toString(36).slice(2);
+import { createClientId, createOptimisticClockInLog, getAppStatusBarOffset } from "./orchestration";
 
 export function getAvailableClockMethods(
 	workerEmployeeId?: string | null
@@ -195,23 +191,7 @@ function ClockInForm({
 			const station = stations.find((s) => s.id === stationId);
 
 			if (employee && station) {
-				onOptimisticClockIn({
-					id: createId(),
-					employeeId,
-					stationId,
-					type: "WORK",
-					startTime: new Date(),
-					endTime: null,
-					note: null,
-					deletedAt: null,
-					correctedBy: null,
-					taskId: null,
-					clockMethod: "MANUAL",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					Employee: employee,
-					Station: station,
-				});
+				onOptimisticClockIn(createOptimisticClockInLog({ employee, station }));
 			}
 
 			const queued = handleOfflineSubmit(
@@ -246,7 +226,6 @@ function ClockInForm({
 		if (pinState?.success) {
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setEmployeeCode("");
-			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setPin("");
 			focusPinInput();
 			notify(pinState.message ?? "PIN action completed", "success");
@@ -261,15 +240,6 @@ function ClockInForm({
 			focusPinInput();
 		}
 	}, [kioskEnabled, focusPinInput]);
-
-	useEffect(() => {
-		if (workerEmployeeId !== undefined) {
-			setMethod("select");
-		}
-		if (typeof workerEmployeeId === "string") {
-			setSelectedEmployeeId(workerEmployeeId);
-		}
-	}, [workerEmployeeId]);
 
 	useEffect(() => {
 		if (selectState?.success) {
@@ -1648,23 +1618,10 @@ export function TimeTracking({
 	taskOptions: TaskOption[];
 	workerEmployeeId?: string | null;
 }) {
-	const getStatusBarOffset = () => {
-		if (typeof document === "undefined") {
-			return 0;
-		}
-
-		const statusBar = document.getElementById("app-status-bar");
-		if (!statusBar) {
-			return 0;
-		}
-
-		return Math.ceil(statusBar.getBoundingClientRect().bottom);
-	};
-
 	const [kioskEnabled, setKioskEnabled] = useKioskMode();
 	const pinInputRef = useRef<HTMLInputElement | null>(null);
 	const [activeDrawer, setActiveDrawer] = useState<"roster" | "logs" | null>(null);
-	const [drawerTopOffset, setDrawerTopOffset] = useState(() => getStatusBarOffset());
+	const [drawerTopOffset, setDrawerTopOffset] = useState(() => getAppStatusBarOffset());
 
 	// Optimistic state for active logs
 	const [optimisticLogs, addOptimisticLog] = useOptimistic(
@@ -1695,7 +1652,7 @@ export function TimeTracking({
 
 	useEffect(() => {
 		const unsub = subscribe((message, type) => {
-			const id = createId();
+			const id = createClientId();
 			setNotifications((prev) => [...prev, { id, message, type }]);
 			if (autoDismissTimer) {
 				window.clearTimeout(autoDismissTimer);
@@ -1748,7 +1705,7 @@ export function TimeTracking({
 		}
 
 		const updateOffset = () => {
-			setDrawerTopOffset(Math.ceil(statusBar.getBoundingClientRect().bottom));
+			setDrawerTopOffset(getAppStatusBarOffset());
 		};
 
 		const observer =

@@ -34,7 +34,6 @@ export function StationManagement({ stations: initialStations }: { stations: Sta
 			setStations(addState.stations);
 		}
 		if (addState?.success) {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setNewStationName("");
 		}
 	}, [addState]);

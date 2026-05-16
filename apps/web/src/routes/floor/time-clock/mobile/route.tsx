@@ -5,6 +5,7 @@ import {
 	MobileTimeClock,
 	type MobileTimeLogWithRelations,
 } from "~/routes/floor/mobile-time-clock/client";
+import { buildActiveTasksByEmployee, buildTaskOptions } from "~/lib/domain/floor-snapshot";
 
 export default async function Component() {
 	await ensureOperationalDataSeeded();
@@ -60,24 +61,8 @@ export default async function Component() {
 		}),
 	]);
 
-	const taskOptions = activeTaskTypes.map((taskType) => ({
-		id: taskType.id,
-		name: taskType.name,
-		stationName: taskType.Station.name,
-	}));
-
-	const activeTasksByEmployee = activeAssignments.reduce<
-		Record<string, { assignmentId: string; taskTypeName: string; stationName: string | null }>
-	>((acc, assignment) => {
-		if (!acc[assignment.employeeId]) {
-			acc[assignment.employeeId] = {
-				assignmentId: assignment.id,
-				taskTypeName: assignment.TaskType.name,
-				stationName: assignment.TaskType.Station.name,
-			};
-		}
-		return acc;
-	}, {});
+	const taskOptions = buildTaskOptions(activeTaskTypes);
+	const activeTasksByEmployee = buildActiveTasksByEmployee(activeAssignments);
 
 	const toMobileLog = (
 		log: (typeof activeLogs)[number] | (typeof activeBreaks)[number]

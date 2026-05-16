@@ -359,14 +359,16 @@ function IndustrialSidebarStatusBar({ className, children }: IndustrialSidebarSt
 		<div
 			id="app-status-bar"
 			className={cn(
-				"bg-muted/10 backdrop-blur-md px-6 py-3 sticky top-0 z-10 flex items-center justify-between border-b-2 border-border/80 relative",
+				"bg-muted/10 backdrop-blur-md px-6 py-3 sticky top-0 z-10 flex items-center border-b-2 border-border/80 relative",
 				className
 			)}
 		>
 			<div className="absolute inset-0 bg-noise opacity-[0.25] pointer-events-none mix-blend-overlay" />
-			<div className="flex items-center gap-4 relative z-10">
+			<div className="flex items-center gap-4 relative z-10 shrink-0">
 				<IndustrialLoader variant="processing" className="opacity-60" isAnimated={isAnimating} />
 			</div>
+
+			<div className="flex-1" />
 
 			<div className="flex items-center gap-3 relative z-10">
 				{children ? <div className="flex items-center">{children}</div> : null}
