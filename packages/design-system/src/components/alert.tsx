@@ -57,8 +57,8 @@ export function Alert({
 		<div
 			className={cn(
 				"relative flex gap-3 p-4 animate-fade-in",
-				"bg-card text-foreground shadow-sm",
-				"rounded-[2px] border border-border border-l-4",
+				"bg-card text-foreground shadow-[var(--shadow-border)]",
+				"rounded-[2px] border-l-4",
 				styles.container,
 				className
 			)}
@@ -78,7 +78,7 @@ export function Alert({
 			{onClose && (
 				<button
 					onClick={onClose}
-					className="shrink-0 text-lg font-bold text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-[1px] focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+					className="shrink-0 flex items-center justify-center w-10 h-10 -my-2 -mr-2 text-lg font-bold text-muted-foreground hover:text-foreground transition-colors duration-150 rounded-[1px] focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 					aria-label="Close alert"
 				>
 					✕

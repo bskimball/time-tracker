@@ -2,7 +2,7 @@
 
 import { Link } from "react-router";
 import { Nav } from "./nav";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeToggle } from "@monorepo/design-system";
 
 export function Header({
 	userName,

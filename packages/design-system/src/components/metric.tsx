@@ -22,13 +22,13 @@ export function Metric({
 				{label}
 			</dt>
 			<dd className="flex items-baseline gap-3">
-				<span className="text-4xl md:text-5xl font-display font-black tracking-tight text-foreground leading-[0.9]">
+				<span className="text-4xl md:text-5xl font-display font-black tracking-tight text-foreground leading-[0.9] tabular-nums">
 					{value}
 				</span>
 				{trend && (
 					<span
 						className={cn(
-							"text-[10px] font-mono font-bold px-2 py-0.5 border uppercase tracking-wider",
+							"text-[10px] font-mono font-bold px-2 py-0.5 border uppercase tracking-wider tabular-nums",
 							trendDirection === "up" && "text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
 							trendDirection === "down" && "text-destructive bg-destructive/10 border-destructive/20",
 							trendDirection === "neutral" && "text-muted-foreground bg-muted border-border"

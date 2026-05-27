@@ -12,8 +12,7 @@ import {
 } from "react";
 import { Link, useLocation, useNavigation } from "react-router";
 import { cn } from "~/lib/cn";
-import { Button, SafetyStripes } from "@monorepo/design-system";
-import { IndustrialLoader } from "~/components/industrial-loader";
+import { Button, IndustrialLoader, SafetyStripes } from "@monorepo/design-system";
 import {
 	LiaTachometerAltSolid,
 	LiaDesktopSolid,

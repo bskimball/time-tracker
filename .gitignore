@@ -36,6 +36,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+.tmp
 
 # Monorepo
 .turbo/
+.antigravitycli/

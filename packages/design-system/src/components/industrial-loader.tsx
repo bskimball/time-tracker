@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "~/lib/cn";
+import { cn } from "../utils/cn";
 
 interface IndustrialLoaderProps {
 	className?: string;
@@ -15,7 +15,6 @@ export function IndustrialLoader({
 	color = "primary",
 	isAnimated = true,
 }: IndustrialLoaderProps) {
-	// Color mapping to CSS variables
 	const colorVar = `var(--color-${color})`;
 
 	if (variant === "scanning") {
@@ -55,9 +54,8 @@ export function IndustrialLoader({
 		);
 	}
 
-	// Default: "processing" (TUI style blinking blocks)
 	return (
-		<div className={cn("flex items-center gap-0.5", className)} aria-label="Loading">
+		<div className={cn("flex items-center gap-0.5", className)} role="status" aria-label="Loading">
 			{[0, 1, 2].map((i) => (
 				<div
 					key={i}

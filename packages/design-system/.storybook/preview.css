@@ -1,0 +1,12 @@
+@import "../src/styles/fonts.css";
+@import "tailwindcss";
+@source "../src";
+@import "../src/styles/full.css";
+
+body {
+	margin: 0;
+}
+
+#storybook-root {
+	min-height: 100vh;
+}

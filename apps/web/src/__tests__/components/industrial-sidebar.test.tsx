@@ -3,8 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { IndustrialSidebar } from "~/components/industrial-sidebar";
-import { ThemeProvider } from "~/components/theme-provider";
-import { ThemeToggle } from "~/components/theme-toggle";
+import { ThemeProvider, ThemeToggle } from "@monorepo/design-system";
 
 const renderSidebar = () => {
 	const router = createMemoryRouter(

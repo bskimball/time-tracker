@@ -36,6 +36,7 @@ import {
 	CardHeader,
 	CardTitle,
 	CardBody,
+	IndustrialSpinner,
 } from "@monorepo/design-system";
 import { KioskContext, useKioskContext, type KioskContextValue } from "./context";
 import { useAutoRefresh, useKioskMode } from "./hooks";
@@ -60,7 +61,6 @@ import {
 } from "~/lib/domain/time-tracking";
 import type { TimeLogWithRelations } from "~/routes/time-clock/route";
 import { intervalToDuration, formatDuration as formatDurationFn } from "date-fns";
-import { IndustrialSpinner } from "~/components/industrial-spinner";
 import { createClientId, createOptimisticClockInLog, getAppStatusBarOffset } from "./orchestration";
 
 export function getAvailableClockMethods(

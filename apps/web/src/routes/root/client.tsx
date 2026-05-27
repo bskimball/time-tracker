@@ -9,8 +9,6 @@ import {
 	Links,
 	Navigate,
 } from "react-router";
-import { ThemeProvider } from "~/components/theme-provider";
-import { ThemeBlockingScript } from "~/components/theme-blocking-script";
 import { NetworkOfflineBanner } from "~/components/network-offline-banner";
 import {
 	IndustrialHeader,
@@ -18,6 +16,8 @@ import {
 	IndustrialSection,
 	SafetyStripes,
 	Button,
+	ThemeBlockingScript,
+	ThemeProvider,
 } from "@monorepo/design-system";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { LiaCheckSolid, LiaCopySolid } from "react-icons/lia";

@@ -1,14 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
 	THEME_STORAGE_KEY,
 	applyTheme,
 	getEffectiveTheme,
 	getStoredTheme,
 	setStoredTheme,
+	type ResolvedTheme,
 	type Theme,
-} from "~/lib/themes";
+} from "../theme";
 
 type ThemeProviderProps = {
 	children: React.ReactNode;
@@ -18,6 +19,7 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
 	theme: Theme;
+	resolvedTheme: ResolvedTheme;
 	setTheme: (theme: Theme) => void;
 };
 
@@ -29,42 +31,36 @@ export function ThemeProvider({
 	storageKey = THEME_STORAGE_KEY,
 	...props
 }: ThemeProviderProps) {
-	const [theme, setThemeState] = useState<Theme>(() => {
-		if (typeof window === "undefined") return defaultTheme;
-		try {
-			if (storageKey !== THEME_STORAGE_KEY) {
-				return (localStorage.getItem(storageKey) as Theme | null) || defaultTheme;
-			}
-
-			return getStoredTheme() || defaultTheme;
-		} catch {
-			return defaultTheme;
-		}
-	});
+	const [theme, setThemeState] = useState<Theme>(() => getStoredTheme(storageKey) || defaultTheme);
+	const resolvedTheme = getEffectiveTheme(theme);
 
 	useEffect(() => {
-		const effectiveTheme = getEffectiveTheme(theme);
-		applyTheme(effectiveTheme);
-		window.document.documentElement.style.colorScheme = effectiveTheme;
+		applyTheme(resolvedTheme);
+	}, [resolvedTheme]);
+
+	useEffect(() => {
+		if (theme !== "system" || typeof window === "undefined") return;
+
+		const media = window.matchMedia("(prefers-color-scheme: dark)");
+		const updateFromSystem = () => applyTheme(media.matches ? "dark" : "light");
+		media.addEventListener("change", updateFromSystem);
+		return () => media.removeEventListener("change", updateFromSystem);
 	}, [theme]);
 
 	const value = useMemo(
 		() => ({
 			theme,
+			resolvedTheme,
 			setTheme: (nextTheme: Theme) => {
 				try {
-					if (storageKey === THEME_STORAGE_KEY) {
-						setStoredTheme(nextTheme);
-					} else {
-						localStorage.setItem(storageKey, nextTheme);
-					}
+					setStoredTheme(nextTheme, storageKey);
 				} catch {
-					// Ignore localStorage errors (e.g., in private browsing mode)
+					// Ignore localStorage errors, for example in private browsing mode.
 				}
 				setThemeState(nextTheme);
 			},
 		}),
-		[theme, storageKey]
+		[theme, resolvedTheme, storageKey]
 	);
 
 	return (
@@ -74,10 +70,12 @@ export function ThemeProvider({
 	);
 }
 
-export const useTheme = () => {
+export function useTheme() {
 	const context = useContext(ThemeProviderContext);
-
 	if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
-
 	return context;
-};
+}
+
+export function useOptionalTheme() {
+	return useContext(ThemeProviderContext);
+}

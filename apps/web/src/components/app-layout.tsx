@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { IndustrialSidebar } from "~/components/industrial-sidebar";
-import { ThemeToggle } from "~/components/theme-toggle";
+import { ThemeToggle } from "@monorepo/design-system";
 import { LogoutButton } from "~/components/logout-button";
 import { LiaIdBadgeSolid } from "react-icons/lia";
 

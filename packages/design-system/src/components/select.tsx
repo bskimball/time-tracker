@@ -95,7 +95,7 @@ export function Select({
 					// Reset button defaults to match input
 					"appearance-none font-normal cursor-default",
 					// Base styles matching Input component exactly
-					"h-10 px-3 bg-input-background text-foreground border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 bg-input-background text-foreground border border-input rounded-[2px] transition duration-100",
 					// Focus states matching Input
 					"focus:outline-none focus:border-primary focus:bg-input-background focus:ring-1 focus:ring-primary",
 					// Hover state - slight darkening or border change could go here
@@ -120,7 +120,7 @@ export function Select({
 				</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-foreground border border-input shadow-industrial min-w-[var(--trigger-width)]">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-foreground shadow-[var(--shadow-border)] min-w-[var(--trigger-width)]">
 				<ListBox className="p-1 bg-input-background text-foreground w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem
@@ -209,7 +209,7 @@ export function SimpleSelect({
 			<Button
 				className={cn(
 					// Base styles matching Input component exactly
-					"h-10 px-3 bg-input-background text-foreground border border-input rounded-[2px] transition-all duration-100",
+					"h-10 px-3 bg-input-background text-foreground border border-input rounded-[2px] transition duration-100",
 					// Focus states matching Input
 					"focus:outline-none focus:border-primary focus:bg-input-background focus:ring-1 focus:ring-primary",
 					// Disabled states
@@ -225,7 +225,7 @@ export function SimpleSelect({
 				<span>{selectedLabel}</span>
 				<span className="text-muted-foreground text-[10px] font-mono">▼</span>
 			</Button>
-			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-foreground border border-input shadow-industrial min-w-[var(--trigger-width)]">
+			<Popover className="max-h-60 overflow-auto rounded-[2px] bg-input-background text-foreground shadow-[var(--shadow-border)] min-w-[var(--trigger-width)]">
 				<ListBox className="p-1 bg-input-background text-foreground w-full outline-none">
 					{options.map((option) => (
 						<ListBoxItem

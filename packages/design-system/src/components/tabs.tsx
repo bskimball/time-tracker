@@ -21,7 +21,7 @@ const TabsList = ({ className, ...props }: React.ComponentProps<typeof TabList>)
 const TabsTrigger = ({ className, ...props }: React.ComponentProps<typeof Tab>) => (
 	<Tab
 		className={(values) => cn(
-			"inline-flex items-center justify-center whitespace-nowrap rounded-[2px] px-4 py-2 text-xs font-medium transition-all duration-200 ring-offset-background",
+			"inline-flex items-center justify-center whitespace-nowrap rounded-[2px] px-4 py-2 min-h-[40px] text-xs font-medium transition duration-200 ring-offset-background",
 			"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
 			"disabled:pointer-events-none disabled:opacity-50",
 			"font-industrial uppercase tracking-wide cursor-pointer border border-transparent",

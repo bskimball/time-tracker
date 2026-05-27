@@ -10,7 +10,7 @@ export function SafetyStripes({ className, position = "top", ...props }: SafetyS
 		<div
 			className={cn(
 				"safety-stripes h-1", /* Thinner */
-				"transition-all duration-300 ease-out opacity-50",
+				"transition duration-300 ease-out opacity-50",
 				position === "top" ? "mb-6 rounded-t-[1px]" : "mt-6 rounded-b-[1px]",
 				className
 			)}
@@ -32,10 +32,10 @@ export function IndustrialPanel({
 	return (
 		<div
 			className={cn(
-				"bg-card border rounded-[2px] overflow-hidden relative",
-				"transition-all duration-200 ease-out",
-				"hover:shadow-industrial hover:-translate-y-[1px]",
-				variant === "destructive" ? "border-primary/50" : "border-border",
+				"bg-card rounded-[2px] overflow-hidden relative shadow-[var(--shadow-border)]",
+				"transition duration-200 ease-out",
+				"hover:shadow-[var(--shadow-border-hover)] hover:-translate-y-[1px]",
+				variant === "destructive" && "border border-primary/50",
 				className
 			)}
 			{...props}
@@ -63,7 +63,7 @@ export function IndustrialHeader({
 		<div
 			className={cn(
 				"bg-foreground text-background p-8 relative overflow-hidden bg-noise", /* Dark background (Braun style) */
-				"transition-all duration-300 ease-out",
+				"transition duration-300 ease-out",
 				className
 			)}
 			{...props}

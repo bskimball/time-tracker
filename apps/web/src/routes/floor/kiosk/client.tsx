@@ -10,12 +10,12 @@ import {
 	CardBody,
 	SimpleInput,
 	SimpleSelect,
+	IndustrialSpinner,
 } from "@monorepo/design-system";
 import {
 	pinToggleClock as pinToggleAction,
 	checkPinStatus as checkPinAction,
 } from "../../time-clock/actions";
-import { IndustrialSpinner } from "~/components/industrial-spinner";
 import { useKioskMode, useAutoRefresh } from "~/components/time-tracking/hooks";
 import { useOfflineActionQueue } from "~/components/time-tracking/offline-queue";
 import { KioskContext, type KioskContextValue } from "~/components/time-tracking/context";

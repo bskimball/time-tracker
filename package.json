@@ -14,10 +14,13 @@
 		"dev:web": "npm -w apps/web run dev",
 		"dev:marketing": "npm -w apps/marketing run dev",
 		"dev:docs": "npm -w apps/docs run dev",
+		"db:up": "docker compose up -d postgres",
 		"start": "concurrently \"npm -w apps/web run start\" \"npm -w apps/marketing run start\" \"npm -w apps/docs run start\"",
 		"start:web": "npm -w apps/web run start",
 		"start:marketing": "npm -w apps/marketing run start",
 		"start:docs": "npm -w apps/docs run start",
+		"storybook": "npm -w packages/design-system run storybook",
+		"build-storybook": "npm -w packages/design-system run build-storybook",
 		"lint": "npm run lint --workspaces",
 		"typecheck": "npm run typecheck --workspaces"
 	},

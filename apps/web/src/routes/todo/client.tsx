@@ -4,12 +4,8 @@ import { useFormStatus } from "react-dom";
 import { Checkbox } from "react-aria-components";
 import { toggleTodo, deleteTodo, createTodo } from "./actions";
 import { useActionState } from "react";
-import { Button } from "@monorepo/design-system";
-import { SimpleInput } from "@monorepo/design-system";
-import { Alert } from "@monorepo/design-system";
-import { Card, CardBody } from "@monorepo/design-system";
+import { Alert, Button, Card, CardBody, IndustrialSpinner, SimpleInput } from "@monorepo/design-system";
 import { cn } from "~/lib/cn";
-import { IndustrialSpinner } from "~/components/industrial-spinner";
 
 function SubmitButton() {
 	const { pending } = useFormStatus();

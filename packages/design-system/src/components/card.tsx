@@ -35,7 +35,7 @@ export function Card({ children, className = "" }: CardProps) {
 		<div
 			className={cn(
 				"rounded-none relative group overflow-hidden border-2 border-border/70 shadow-sm",
-				"bg-card text-foreground transition-all duration-300 ease-out",
+				"bg-card text-foreground transition duration-300 ease-out",
 				"hover:border-primary/40 hover:-translate-y-[1px] hover:shadow-[0_4px_10px_-4px_rgba(0,0,0,0.1)]",
 				className
 			)}

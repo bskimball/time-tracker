@@ -45,7 +45,7 @@ export function Checkbox({
 						className={cn(
 							// Base styles
 							"flex items-center justify-center w-4 h-4 mt-0.5",
-							"border border-input rounded-[1px] transition-all duration-100",
+							"border border-input rounded-[1px] transition duration-100",
 							"bg-muted/30",
 							// Focus states
 							"group-focus:outline-none group-focus:ring-1 group-focus:ring-primary group-focus:border-primary",

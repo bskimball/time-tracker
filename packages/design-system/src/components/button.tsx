@@ -18,15 +18,15 @@ interface ButtonProps extends Omit<AriaButtonProps, "className" | "isDisabled"> 
 
 const variantStyles: Record<ButtonVariant, string> = {
 	primary:
-		"bg-primary border border-white/40 text-primary-foreground shadow-none hover:bg-primary-hover active:bg-primary-active active:translate-y-[1px]",
+		"bg-primary shadow-[var(--shadow-border)] text-primary-foreground hover:bg-primary-hover hover:shadow-[var(--shadow-border-hover)] active:bg-primary-active active:shadow-none active:scale-[0.96]",
 	secondary:
-		"bg-secondary border border-white/40 text-secondary-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-secondary/90 active:bg-secondary/80 active:shadow-none active:translate-y-[1px]",
+		"bg-secondary shadow-[var(--shadow-border)] text-secondary-foreground hover:bg-secondary/90 hover:shadow-[var(--shadow-border-hover)] active:bg-secondary/80 active:shadow-none active:scale-[0.96]",
 	outline:
-		"border border-border/60 bg-background text-foreground shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-accent hover:text-foreground active:bg-accent/90 active:shadow-none active:translate-y-[1px]",
+		"bg-background shadow-[var(--shadow-border)] text-foreground hover:bg-accent hover:text-foreground hover:shadow-[var(--shadow-border-hover)] active:bg-accent/90 active:shadow-none active:scale-[0.96]",
 	ghost:
-		"text-foreground/72 dark:text-muted-foreground border border-transparent hover:bg-accent hover:text-foreground active:bg-accent/90",
+		"text-foreground/72 dark:text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent/90 active:scale-[0.96]",
 	error:
-		"bg-destructive border border-white/15 text-destructive-foreground shadow-[0_1px_0_rgba(0,0,0,0.1)] hover:bg-destructive/90 active:bg-destructive/80 active:shadow-none active:translate-y-[1px]",
+		"bg-destructive shadow-[var(--shadow-border)] text-destructive-foreground hover:bg-destructive/90 hover:shadow-[var(--shadow-border-hover)] active:bg-destructive/80 active:shadow-none active:scale-[0.96]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -47,7 +47,7 @@ export function Button({
 }: ButtonProps) {
 	const buttonClass = cn(
 		"relative overflow-hidden inline-flex items-center justify-center font-bold rounded-[2px]",
-		"transition-all duration-75 ease-out",
+		"transition duration-75 ease-out",
 		"focus:outline-none focus-visible:ring-2 ring-ring focus-visible:ring-offset-2 ring-offset-background",
 		"disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none disabled:translate-y-0",
 		"font-industrial antialiased",

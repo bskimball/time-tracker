@@ -54,7 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 						// Layout & Base
 						"w-full h-10 px-3 rounded-[2px]",
 						"bg-input-background text-foreground",
-						"font-mono text-sm transition-all duration-150",
+						"font-mono text-sm transition duration-150",
 
 							// Borders - Precision Industrial (Hairline, High Contrast)
 							"border border-input hover:border-input-hover",
@@ -100,7 +100,7 @@ export function SimpleInput(props: React.ComponentProps<"input">) {
 		className={cn(
 			"w-full h-10 px-3 rounded-[2px]",
 			"bg-input-background text-foreground",
-			"font-mono text-sm transition-all duration-150",
+			"font-mono text-sm transition duration-150",
 			"border border-input hover:border-input-hover",
 			"focus:outline-none focus:border-primary focus:bg-input-background focus:ring-1 focus:ring-primary",
 				"disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
